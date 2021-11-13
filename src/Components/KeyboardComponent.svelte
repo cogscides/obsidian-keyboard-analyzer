@@ -2,7 +2,7 @@
   import type { App } from 'obsidian'
   import type ShortcutsView from 'src/ShortcutsView'
   import type KeyboardAnalizerPlugin from 'src/main'
-  import type KeyboardAnalizerSettings from 'src/main'
+  import type { KeyboardAnalizerSettings } from 'src/Interfaces'
 
   export let app: App
   export let plugin: KeyboardAnalizerPlugin

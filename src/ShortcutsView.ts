@@ -1,5 +1,6 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian'
 import type KeyboardAnalizerPlugin from 'src/main'
+import KeyboardAnalizerSettings from 'src/main'
 // import { openOrSwitch } from 'obsidian-community-lib'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
 import KeyboardComponent from './Components/KeyboardComponent.svelte'
@@ -25,7 +26,7 @@ export default class ShortcutsView extends ItemView {
     return 'Keyboard Shortcuts'
   }
 
-  icon = 'KB-ICON'
+  icon = 'keyboard-glyph'
 
   async onOpen(): Promise<void> {
     await this.draw()
@@ -40,7 +41,7 @@ export default class ShortcutsView extends ItemView {
     const { settings } = this.plugin
 
     contentEl.empty()
-    contentEl.addClass('KB-View')
+    contentEl.addClass('KB-view')
 
     // this.component?.$destroy()
 
