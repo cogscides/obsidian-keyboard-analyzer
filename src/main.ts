@@ -6,18 +6,22 @@ import {
   Notice,
   Plugin,
   PluginSettingTab,
+  setIcon,
   Setting,
+  WorkspaceLeaf,
 } from 'obsidian'
 import { openView, wait } from 'obsidian-community-lib'
+import ShortcutsView from 'src/ShortcutsView'
+import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
 
 // Remember to rename these classes and interfaces!
 
 interface KeyboardAnalizerSettings {
-  mySetting: string
+  showStatusBarItem: string
 }
 
 const DEFAULT_SETTINGS: KeyboardAnalizerSettings = {
-  mySetting: 'default',
+  showStatusBarItem: 'true',
 }
 
 export default class KeyboardAnalizerPlugin extends Plugin {
@@ -26,6 +30,28 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   async onload() {
     console.log('loading keyboard analizer plugin')
     await this.loadSettings()
+
+    this.registerPluginHotkeys()
+    // this.setWorkspaceAttribute();
+    this.addStatusBarIndicator.apply(this)
+
+    this.addCommand({
+      id: 'show-shortcuts-analyzer-view',
+      name: 'Open Keyboard Shorcuts Analizer View',
+      checkCallback: (checking: boolean) => {
+        let checkResult =
+          this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+            .length === 0
+
+        if (checkResult) {
+          // Only perform work when checking is false
+          if (!checking) {
+            openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+          }
+          return true
+        }
+      },
+    })
 
     // This creates an icon in the left ribbon.
     // const ribbonIconEl = this.addRibbonIcon(
@@ -39,14 +65,11 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     // Perform additional things with the ribbon
     // ribbonIconEl.addClass('my-plugin-ribbon-class')
 
-    // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-    const statusBarEl = this.addStatusBarItem()
-    statusBarEl.setText('Shortcuts')
-    statusBarEl.addClass('mod-clickable')
+    this.registerView(
+      VIEW_TYPE_SHORTCUTS_ANALYZER,
+      (leaf: WorkspaceLeaf) => new ShortcutsView(leaf, this)
+    )
 
-    this.registerDomEvent(statusBarEl, 'click', async () => {
-      console.log('click')
-    })
     // let checkResult =
     //   this.app.workspace.getLeavesOfType(VIEW_TYPE_GRAPH_ANALYSIS)
     //     .length === 0
@@ -64,57 +87,8 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     //   }
     // });
 
-    // This adds a simple command that can be triggered anywhere
-    this.addCommand({
-      id: 'open-sample-modal-simple',
-      name: 'Open sample modal (simple)',
-      callback: () => {
-        new SampleModal(this.app).open()
-      },
-    })
-    // This adds an editor command that can perform some operation on the current editor instance
-    this.addCommand({
-      id: 'sample-editor-command',
-      name: 'Sample editor command',
-      editorCallback: (editor: Editor, view: MarkdownView) => {
-        console.log(editor.getSelection())
-        editor.replaceSelection('Sample Editor Command')
-      },
-    })
-    // This adds a complex command that can check whether the current state of the app allows execution of the command
-    this.addCommand({
-      id: 'open-sample-modal-complex',
-      name: 'Open sample modal (complex)',
-      checkCallback: (checking: boolean) => {
-        // Conditions to check
-        const markdownView =
-          this.app.workspace.getActiveViewOfType(MarkdownView)
-        if (markdownView) {
-          // If checking is true, we're simply "checking" if the command can be run.
-          // If checking is false, then we want to actually perform the operation.
-          if (!checking) {
-            new SampleModal(this.app).open()
-          }
-
-          // This command will only show up in Command Palette when the check function returns true
-          return true
-        }
-      },
-    })
-
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new KeyboardAnalyzerSettingTab(this.app, this))
-
-    // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-    // Using this function will automatically remove the event listener when this plugin is disabled.
-    this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-      console.log('click', evt)
-    })
-
-    // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-    // this.registerInterval(
-    //   window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000)
-    // )
   }
 
   onunload() {}
@@ -126,23 +100,66 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings)
   }
+
+  addStatusBarIndicator() {
+    // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
+    const statusBarEl = this.addStatusBarItem()
+    statusBarEl.setText('Shortcuts')
+    statusBarEl.addClass('mod-clickable')
+    // statusBarEl.setAttribute("aria-label", "Shortcuts");
+
+    // create the status bar icon
+    // const icon = statusBarEl.createSpan("status-bar-item-segment icon");
+    // setIcon(icon, "pane-layout"); // inject svg icon
+
+    // create the status bar text
+
+    // register click handler
+    statusBarEl.addEventListener('click', (evt) => this.onStatusBarClick(evt))
+  }
+
+  async onStatusBarClick(evt: MouseEvent) {
+    console.log('click')
+    let checkResult =
+      this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+        .length === 0
+
+    if (checkResult) {
+      openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+      return true
+    }
+  }
+
+  registerPluginHotkeys() {
+    this.addCommand({
+      id: 'show-shortcuts-analyzer-view',
+      name: 'Open Keyboard Shorcuts Analizer View',
+      checkCallback: (checking: boolean) => {
+        let checkResult =
+          this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+            .length === 0
+
+        if (checkResult) {
+          // Only perform work when checking is false
+          if (!checking) {
+            openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+          }
+          return true
+        }
+      },
+    })
+  }
 }
 
-class SampleModal extends Modal {
-  constructor(app: App) {
-    super(app)
-  }
+// onOpen() {
+//   const { contentEl } = this
+//   contentEl.setText('Woah!')
+// }
 
-  onOpen() {
-    const { contentEl } = this
-    contentEl.setText('Woah!')
-  }
-
-  onClose() {
-    const { contentEl } = this
-    contentEl.empty()
-  }
-}
+// onClose() {
+//   const { contentEl } = this
+//   contentEl.empty()
+// }
 
 class KeyboardAnalyzerSettingTab extends PluginSettingTab {
   plugin: KeyboardAnalizerPlugin
@@ -159,16 +176,17 @@ class KeyboardAnalyzerSettingTab extends PluginSettingTab {
 
     containerEl.createEl('h2', { text: 'Settings for my awesome plugin.' })
 
+    // todo: change for switcher
     new Setting(containerEl)
       .setName('Setting #1')
       .setDesc("It's a secret")
       .addText((text) =>
         text
           .setPlaceholder('Enter your secret')
-          .setValue(this.plugin.settings.mySetting)
+          .setValue(this.plugin.settings.showStatusBarItem)
           .onChange(async (value) => {
             console.log('Secret: ' + value)
-            this.plugin.settings.mySetting = value
+            this.plugin.settings.showStatusBarItem = value
             await this.plugin.saveSettings()
           })
       )

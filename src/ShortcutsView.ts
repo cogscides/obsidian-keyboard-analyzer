@@ -1,8 +1,8 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian'
 import type KeyboardAnalizerPlugin from 'src/main'
-import { openOrSwitch } from 'obsidian-community-lib'
+// import { openOrSwitch } from 'obsidian-community-lib'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
-import KeyboardComponent from 'src/KeyboardComponent'
+import KeyboardComponent from './Components/KeyboardComponent.svelte'
 
 export default class ShortcutsView extends ItemView {
   private plugin: KeyboardAnalizerPlugin
