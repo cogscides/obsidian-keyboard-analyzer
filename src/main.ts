@@ -141,19 +141,28 @@ export default class KeyboardAnalizerPlugin extends Plugin {
       this.app.workspace
         .getLeaf()
         .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
-      openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+      // openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView) // OPEN SIDE PANEL
       return true
     }
   }
 
   async addShortcutsView(startup: boolean = false) {
-    if (
-      startup &&
-      this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER).length
-    )
-      return this.app.workspace.getLeaf(false)
-    if (this.full) {
-      this.app.workspace.revealLeaf(this.full.leaf)
+    let checkResult =
+      this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+        .length === 0
+
+    if (checkResult) {
+      this.app.workspace
+        .getLeaf()
+        .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+      // if (
+      //   startup &&
+      //   this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER).length
+      // )
+      //   return this.app.workspace.getLeaf(false)
+      // if (this.full) {
+      //   this.app.workspace.revealLeaf(this.full.leaf)
+      // }
     }
   }
 
