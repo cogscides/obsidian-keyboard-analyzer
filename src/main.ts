@@ -42,23 +42,23 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     // this.setWorkspaceAttribute();
     this.addStatusBarIndicator.apply(this)
 
-    this.addCommand({
-      id: 'show-shortcuts-analyzer-view',
-      name: 'Open Keyboard Shorcuts Analizer View',
-      checkCallback: (checking: boolean) => {
-        let checkResult =
-          this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
-            .length === 0
+    // this.addCommand({
+    //   id: 'show-shortcuts-analyzer-view',
+    //   name: 'Open Keyboard Shorcuts Analizer View',
+    //   checkCallback: (checking: boolean) => {
+    //     let checkResult =
+    //       this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+    //         .length === 0
 
-        if (checkResult) {
-          // Only perform work when checking is false
-          if (!checking) {
-            openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
-          }
-          return true
-        }
-      },
-    })
+    //     if (checkResult) {
+    //       // Only perform work when checking is false
+    //       if (!checking) {
+    //         openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+    //       }
+    //       return true
+    //     }
+    //   },
+    // })
 
     // This creates an icon in the left ribbon.
     // const ribbonIconEl = this.addRibbonIcon(
@@ -133,17 +133,7 @@ export default class KeyboardAnalizerPlugin extends Plugin {
 
   async onStatusBarClick(evt: MouseEvent) {
     console.log('click')
-    let checkResult =
-      this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
-        .length === 0
-
-    if (checkResult) {
-      this.app.workspace
-        .getLeaf()
-        .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
-      // openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView) // OPEN SIDE PANEL
-      return true
-    }
+    this.addShortcutsView()
   }
 
   async addShortcutsView(startup: boolean = false) {
@@ -170,8 +160,19 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     this.addCommand({
       id: 'show-shortcuts-analyzer-view',
       name: 'Open Keyboard Shorcuts Analizer View',
-      checkCallback: () => {
-        this.addShortcutsView()
+      checkCallback: (checking: boolean) => {
+        let checkResult =
+          this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+            .length === 0
+
+        if (checkResult) {
+          // Only perform work when checking is false
+          if (!checking) {
+            this.addShortcutsView()
+            // openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+          }
+          return true
+        }
         // let checkResult =
         //   this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
         //     .length === 0
