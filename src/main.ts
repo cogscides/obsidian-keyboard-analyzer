@@ -104,7 +104,9 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     this.addSettingTab(new KeyboardAnalyzerSettingTab(this.app, this))
   }
 
-  onunload() {}
+  async onunload() {
+    this.app.workspace.detachLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+  }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
@@ -133,7 +135,19 @@ export default class KeyboardAnalizerPlugin extends Plugin {
 
   async onStatusBarClick(evt: MouseEvent) {
     console.log('click')
-    this.addShortcutsView()
+    if (evt.ctrlKey == true) {
+      let checkResult =
+        this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+          .length === 0
+
+      if (checkResult) {
+        this.app.workspace
+          .getLeaf(true)
+          .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+      }
+    } else {
+      this.addShortcutsView()
+    }
   }
 
   async addShortcutsView(startup: boolean = false) {

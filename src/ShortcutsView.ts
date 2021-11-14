@@ -42,6 +42,8 @@ export default class ShortcutsView extends ItemView {
 
     contentEl.empty()
     contentEl.addClass('KB-view')
+    contentEl.addClass('markdown-preview-view')
+    contentEl.addClass('is-readable-line-width')
 
     // this.component?.$destroy()
 

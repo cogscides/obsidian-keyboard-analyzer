@@ -3,6 +3,7 @@
   import type ShortcutsView from 'src/ShortcutsView'
   import type KeyboardAnalizerPlugin from 'src/main'
   import type { KeyboardAnalizerSettings } from 'src/Interfaces'
+  import { keyboard_svg } from 'src/Constants'
 
   export let app: App
   export let plugin: KeyboardAnalizerPlugin
@@ -17,8 +18,11 @@
   }
 </script>
 
-<div>
-  <h1>Hello Maaaan!</h1>
+<div class="markdown-preview-sizer markdown-preview-section">
+  <h1>Hello Maaaan 123!</h1>
+  <div class="keyboard_svg_wrapper">
+    {@html keyboard_svg}
+  </div>
   This app: {props.app}
   plugin: {props.plugin}
   settings: {props.settings}
@@ -26,4 +30,8 @@
 </div>
 
 <style>
+  .keyboard_svg_wrapper {
+    width: 100%;
+    height: auto;
+  }
 </style>
