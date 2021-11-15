@@ -1,22 +1,23 @@
-import type { Command } from 'obsidian'
+import type { Command, Hotkey } from 'obsidian'
 
-const getNestedObject = (nestedObj: any, pathArr: Array<string>) => {
+const getNestedObject = (nestedObj: any, pathArr: Array<any>) => {
   return pathArr.reduce(
     (obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined),
     nestedObj
   )
 }
 
-function hilite(keys: Array<string>, how: Object) {
-  // need to check if existing key combo is overridden by undefining it
-  if (keys && keys[1][0] !== undefined) {
-    return how + keys.flat(2).join('+').replace('Mod', 'Ctrl') + how
-  } else {
-    return how + '–' + how
-  }
-}
+// function hilite(keys: Array<string>, how: Object) {
+//   // need to check if existing key combo is overridden by undefining it
+//   if (keys && keys[1][0] !== undefined) {
+//     return how + keys.flat(2).join('+').replace('Mod', 'Ctrl') + how
+//   } else {
+//     return how + '–' + how
+//   }
+// }
 
-// function getHotkey(arr: Array<Hotkey>): string {}, highlight = true) {
+//@ts-ignore
+// function getHotkey(arr: Array<any>, highlight = true) {
 //   let hi = highlight ? '**' : ''
 //   let defkeys = arr.hotkeys
 //     ? [
@@ -37,7 +38,29 @@ function hilite(keys: Array<string>, how: Object) {
 //@ts-ignore
 export function getCommands(app: App) {
   const commands: Command[] = Object.values(app.commands.commands)
+  // need to check if existing key combo is overridden by undefining it
+  let defkeys = commands
+    ? [
+        [getNestedObject(commands, [0, 'modifiers'])],
+        [getNestedObject(commands, [0, 'key'])],
+      ]
+    : undefined
+  let ck = app.hotkeyManager.customKeys
+  var hotkeys = ck
+    ? [
+        [getNestedObject(ck, [0, 'modifiers'])],
+        [getNestedObject(ck, [0, 'key'])],
+      ]
+    : undefined
+
+  console.log('commands:')
   console.log(commands)
+
+  console.log('defkeys:')
+  console.log(defkeys)
+
+  console.log('hotkeys:')
+  console.log(hotkeys)
 
   return commands
 }
