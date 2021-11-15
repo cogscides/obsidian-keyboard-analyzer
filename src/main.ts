@@ -119,13 +119,13 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   addStatusBarIndicator() {
     // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
     const statusBarEl = this.addStatusBarItem()
-    statusBarEl.setText('Shortcuts')
+    // statusBarEl.setText('Shortcuts')
     statusBarEl.addClass('mod-clickable')
     // statusBarEl.setAttribute("aria-label", "Shortcuts");
 
     // create the status bar icon
-    // const icon = statusBarEl.createSpan("status-bar-item-segment icon");
-    // setIcon(icon, "pane-layout"); // inject svg icon
+    const icon = statusBarEl.createSpan('status-bar-item-segment icon')
+    setIcon(icon, 'keyboard-glyph') // inject svg icon
 
     // create the status bar text
 
