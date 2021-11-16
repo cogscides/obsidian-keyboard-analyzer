@@ -1,4 +1,4 @@
-import type { Command, Hotkey } from 'obsidian'
+import type { Command, Hotkey, Modifier } from 'obsidian'
 
 const getNestedObject = (nestedObj: any, pathArr: Array<any>) => {
   return pathArr.reduce(
@@ -37,30 +37,50 @@ const getNestedObject = (nestedObj: any, pathArr: Array<any>) => {
 
 //@ts-ignore
 export function getCommands(app: App) {
-  const commands: Command[] = Object.values(app.commands.commands)
+  let commands: Command[] = Object.values(app.commands.commands)
+
+  function checkUndefinedCommands(item: Command) {
+    // function to remove undefined and without hotkeys
+    if (item.hotkeys != undefined && item.hotkeys.length < 0) {
+      console.log(item)
+    }
+    return item.hotkeys != undefined && item.hotkeys.length > 0
+  }
+
+  commands = commands.filter(checkUndefinedCommands)
+
+  // commands.filter((command) =>
+  //   command.hotkeys === undefined && command.hotkeys.length > 0
+  //     ? console.log(command.hotkeys)
+  //     : false
+  // )
+
   // need to check if existing key combo is overridden by undefining it
-  let defkeys = commands
-    ? [
-        [getNestedObject(commands, [0, 'modifiers'])],
-        [getNestedObject(commands, [0, 'key'])],
-      ]
-    : undefined
-  let ck = app.hotkeyManager.customKeys
-  var hotkeys = ck
-    ? [
-        [getNestedObject(ck, [0, 'modifiers'])],
-        [getNestedObject(ck, [0, 'key'])],
-      ]
-    : undefined
+  // let defkeys = commands
+  //   ? [
+  //       [getNestedObject(commands, [0, 'modifiers'])],
+  //       [getNestedObject(commands, [0, 'key'])],
+  //     ]
+  //   : undefined
+  // let ck = app.hotkeyManager.customKeys
+  // var hotkeys = ck
+  //   ? [
+  //       [getNestedObject(ck, [0, 'modifiers'])],
+  //       [getNestedObject(ck, [0, 'key'])],
+  //     ]
+  //   : undefined
+
+  // console.log('app.commands:')
+  // console.log(app.commands)
 
   console.log('commands:')
   console.log(commands)
 
-  console.log('defkeys:')
-  console.log(defkeys)
+  // console.log('defkeys:')
+  // console.log(defkeys)
 
-  console.log('hotkeys:')
-  console.log(hotkeys)
+  // console.log('hotkeys:')
+  // console.log(hotkeys)
 
   return commands
 }
