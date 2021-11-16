@@ -38,17 +38,19 @@ const getNestedObject = (nestedObj: any, pathArr: Array<any>) => {
 //@ts-ignore
 export function getCommands(app: App) {
   let commands: Command[] = Object.values(app.commands.commands)
+  console.log(Object.values(app.commands))
 
   function checkUndefinedCommands(item: Command) {
     // function to remove undefined and without hotkeys
     if (item.hotkeys != undefined && item.hotkeys.length < 0) {
       console.log(item)
     }
-    return item.hotkeys != undefined && item.hotkeys.length > 0
+    return item.hotkeys != undefined
+    // && item.hotkeys.length > 0
   }
 
   commands = commands.filter(checkUndefinedCommands)
-
+  console.log(commands)
   // commands.filter((command) =>
   //   command.hotkeys === undefined && command.hotkeys.length > 0
   //     ? console.log(command.hotkeys)
