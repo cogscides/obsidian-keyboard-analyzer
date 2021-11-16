@@ -5,6 +5,7 @@
   import type { KeyboardAnalizerSettings } from 'src/Interfaces'
   import { getCommands } from 'src/AppShortcuts'
   import { keyboard_svg } from 'src/Constants'
+  import KeyboardLayout from './KeyboardLayout.svelte'
 
   export let app: App
   export let plugin: KeyboardAnalizerPlugin
@@ -24,8 +25,11 @@
 
 <div class="markdown-preview-sizer markdown-preview-section">
   <h1>Hello Maaaan 123!</h1>
-  <div class="keyboard_svg_wrapper">
+  <!-- <div class="keyboard_svg_wrapper">
     {@html keyboard_svg}
+  </div> -->
+  <div class="keyboard_svg_wrapper">
+    <KeyboardLayout />
   </div>
   <ul>
     {#each cmds as command, i}
