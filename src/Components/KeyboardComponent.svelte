@@ -136,5 +136,6 @@
   }
 
   .KB-view > .hotkey-list-container {
+    padding-right: 0px !important;
   }
 </style>
