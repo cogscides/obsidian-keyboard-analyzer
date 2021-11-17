@@ -30,7 +30,9 @@ export default {
     commonjs({
       include: ['node_modules/**'],
     }),
-    json(),
+    json({
+      compact: true,
+    }),
     svelte({
       emitCss: false,
       preprocess: autoPreprocess(),

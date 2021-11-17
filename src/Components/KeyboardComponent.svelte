@@ -4,7 +4,7 @@
   import type KeyboardAnalizerPlugin from 'src/main'
   import type { KeyboardAnalizerSettings } from 'src/Interfaces'
   import { getCommands } from 'src/AppShortcuts'
-  import { keyboard_svg } from 'src/Constants'
+  // import { keyboard_svg } from 'src/Constants'
   import KeyboardLayout from './KeyboardLayout.svelte'
 
   export let app: App
