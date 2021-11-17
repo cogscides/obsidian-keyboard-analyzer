@@ -1,37 +1,32 @@
 <script lang="ts">
   import { kb_layout_ansi104eng } from 'src/Constants'
-  import KeyDividerComponent from 'src/Components/KeyDividerComponent.svelte'
   import type {
     KeyboardLayoutJSON,
     KeyProperty,
     KeyLiteral,
   } from 'src/Interfaces'
-  // import * as json from 'src/keyboard-layout-object.json'
+  import { createEventDispatcher } from 'svelte'
 
-  // console.log('get string')
-  // console.log(kb_layout_ansi104eng)
-  let keyboardLayoutJSON = kb_layout_ansi104eng
+  export let value: string = ''
+  export let styleProperty: string = ''
 
-  // function jsonEscape(str: string) {
-  //   return str
-  //     .replace(/\n/g, '\\\\n')
-  //     .replace(/\r/g, '\\\\r')
-  //     .replace(/\t/g, '\\\\t')
-  // }
+  const dispatch = createEventDispatcher()
 
-  // console.log('then parse layout')
-  // let keyboardLayoutJSON = JSON.parse(jsonEscape(kb_layout_ansi104eng))
-  console.log(keyboardLayoutJSON)
+  let keyboardKeys = kb_layout_ansi104eng
+  console.log(keyboardKeys)
 </script>
 
-<div>
-  {#each keyboardLayoutJSON as row}
+<div class="keyboard">
+  {#each keyboardKeys as row}
     <div class="kb-layout-row">
       {#each row as key}
         {#if typeof key === 'string'}
-          <div class="kb-layout-key">{key}</div>
+          <button class="kb-layout-key">{key}</button>
         {:else if key.w != undefined}
-          <KeyDividerComponent properties={key} />
+          <div class="kb-layout-divider" style="flex-grow: {key.w}">
+            {key.w}
+          </div>
+          <!-- <KeyDividerComponent properties={key} /> -->
         {/if}
       {/each}
     </div>
@@ -46,17 +41,45 @@
   xmlns="http://www.w3.org/2000/svg"
 > -->
 <style>
-  .kb-layout-row {
-    display: flex;
+  .keyboard {
+    width: calc(100% - 1.8vh);
+    font-size: 3vh;
+  }
+
+  .keyboard > .button .kb-layout-key {
+    white-space: nowrap;
+    text-shadow: 0 0 0.5vh #fff;
+    border-radius: 0.5vh;
     width: 100%;
+    text-align: center;
+    line-height: 9vh;
+    color: #fff;
+    background: radial-gradient(ellipse at center, #333 0%, #222 100%);
+    margin: 0.4vh;
+    padding-left: 1% !important;
+    padding-right: 1% !important;
+
+    /* flex: 0.5 1 20px; */
+    /* height: 3em; */
+    /* white-space: nowrap; */
+    /* text-shadow: 0 0 0.5vh #fff; */
+    /* border-radius: 0.5vh; */
+    /* width: 100%; */
+    /* line-height: 9vh; */
+    /* background: radial-gradient(ellipse at center, #333 0%,#222 100%); */
+    /* padding-right: auto; */
+  }
+
+  .kb-layout-row {
+    width: 100%;
+    height: 6vh;
+    background: #0f0f0f;
+    display: flex;
   }
 
   .kb-layout-key {
     flex: 1 1 auto;
-    padding: 2px 4px;
-    width: 1em;
-    height: 1em;
-    background-color: var(--background-color);
+    height: 3em;
   }
 
   .small {

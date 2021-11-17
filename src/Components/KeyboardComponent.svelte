@@ -28,9 +28,7 @@
   <!-- <div class="keyboard_svg_wrapper">
     {@html keyboard_svg}
   </div> -->
-  <div class="keyboard_svg_wrapper">
-    <KeyboardLayout />
-  </div>
+  <KeyboardLayout />
   <div class="hotkey-settings-container">
     <div class="hotkey-search-container">
       <input type="text" placeholder="Filter..." />
