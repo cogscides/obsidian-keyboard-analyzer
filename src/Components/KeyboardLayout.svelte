@@ -17,15 +17,20 @@
 </script>
 
 <div class="keyboard">
-  {#each keyboardKeys as row}
-    <div class="kb-layout-row">
+  <button>Hello</button>
+  {#each keyboardKeys as row, i}
+    <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
       {#each row as key}
         {#if typeof key === 'string'}
-          <button class="kb-layout-key">{key}</button>
-        {:else if key.w != undefined}
-          <div class="kb-layout-divider" style="flex-grow: {key.w}">
+          {#if key.length == 0}
+            <div class="kb-layout-key">{key}</div>
+          {:else}
+            <div class="kb-layout-key small" id={key}>{@html key}</div>
+          {/if}
+        {:else if key.w}
+          <!-- <div class="kb-layout-divider" style="flex-grow: {key.w}">
             {key.w}
-          </div>
+          </div> -->
           <!-- <KeyDividerComponent properties={key} /> -->
         {/if}
       {/each}
@@ -41,27 +46,43 @@
   xmlns="http://www.w3.org/2000/svg"
 > -->
 <style>
-  .keyboard {
+  /* .keyboard {
     width: calc(100% - 1.8vh);
     font-size: 3vh;
-  }
+  } */
 
-  .keyboard > .button .kb-layout-key {
+  .kb-layout-key {
+    flex: 0 0 auto;
+    height: 3em !important;
+    width: 100%;
     white-space: nowrap;
+    border-radius: 0.3em;
+    min-width: 1rem !important;
+    white-space: nowrap;
+    color: var(--text-normal);
+    /* background-color: var(--interactive-normal); */
+    background-color: var(--background-modifier-border);
+    margin-right: 0.3em;
+    margin-bottom: 0.3em;
+    padding-left: 1%;
+    padding-right: 1%;
+    /* margin: 0.4vh;
+
+    /* white-space: nowrap !important;
     text-shadow: 0 0 0.5vh #fff;
     border-radius: 0.5vh;
     width: 100%;
     text-align: center;
-    line-height: 9vh;
+    line-height: 1em;
     color: #fff;
     background: radial-gradient(ellipse at center, #333 0%, #222 100%);
     margin: 0.4vh;
     padding-left: 1% !important;
     padding-right: 1% !important;
+    white-space: nowrap !important; */
 
     /* flex: 0.5 1 20px; */
     /* height: 3em; */
-    /* white-space: nowrap; */
     /* text-shadow: 0 0 0.5vh #fff; */
     /* border-radius: 0.5vh; */
     /* width: 100%; */
@@ -70,19 +91,38 @@
     /* padding-right: auto; */
   }
 
+  .kb-layout-key:hover {
+    /* background-color: var(--interactive-hover); */
+    background-color: var(--interactive-accent);
+    user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+  }
+
   .kb-layout-row {
     width: 100%;
-    height: 6vh;
-    background: #0f0f0f;
+    /* height: 5vh; */
+    height: auto;
+    background-color: var(--background-primary);
     display: flex;
+
+    /* width: 100%;
+    height: 3em;
+    background: #0f0f0f;
+    display: flex; */
   }
 
-  .kb-layout-key {
+  /* .kb-layout-key {
     flex: 1 1 auto;
-    height: 3em;
-  }
+    height: 3em !important;
+    min-width: 2em !important;
+  } */
 
   .small {
-    color: red;
+    font-size: 75%;
+    line-height: 1em;
+    text-align: left;
   }
 </style>

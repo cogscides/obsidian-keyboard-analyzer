@@ -36,7 +36,7 @@
     <div class="search-results">
       Found {cmds.length} assigned hotkeys
     </div>
-    <div class="hotkey-list-container">
+    <div class="kb-analizer-hotkey-list-container">
       {#each cmds as command, i}
         {#if command.hotkeys != undefined && command.hotkeys.length > 0}
           <div class="kbanalizer-setting-item">
@@ -133,7 +133,7 @@
     position: relative;
   }
 
-  .KB-view > .hotkey-list-container {
+  .kb-analizer-hotkey-list-container {
     padding-right: 0px !important;
   }
 </style>
