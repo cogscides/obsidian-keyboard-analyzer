@@ -10,32 +10,21 @@
   // import { createEventDispatcher } from 'svelte'
 
   let value: Array<string> = ['one', 'two']
-  // export let styleProperty: string = ''
 
   // Keyboard
   let keyboardKeys = kb_layout_ansi104eng
   console.log(keyboardKeys)
 
-  // Events
-  // const dispatch = createEventDispatcher()
-
-  function handlePickKey(key: string = 'default') {
-    // console.log(`Notify fired! Detail: ${key}`)
-    console.log(key)
+  export const handlePickKey = (value: any) => {
     console.log(value)
-
-    // dispatch('key-picked', {
-    //   key: key,
-    // })
   }
 
-  function test(event: Event) {}
   // $: value = {}
 </script>
 
 <div class="keyboard">
   {#each value as selectedKey}
-    <button on:click={(event) => test(event)}>{selectedKey}</button>
+    <button on:click={handlePickKey}>{selectedKey}</button>
   {/each}
 
   {#each keyboardKeys as row, i}
@@ -43,12 +32,7 @@
       {#each row as key}
         {#if typeof key === 'string'}
           {#if key.length == 0}
-            <div
-              on:click={() => {
-                handlePickKey(key)
-              }}
-              class="kb-layout-key"
-            >
+            <div class="kb-layout-key">
               {key}
             </div>
           {:else}

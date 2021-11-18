@@ -14,6 +14,9 @@
 
   let cmds = getCommands(app)
 
+  const handlePickKey = (value: any) => {
+    console.log(value)
+  }
   $: props = {
     app,
     plugin,
@@ -28,6 +31,7 @@
   <!-- <div class="keyboard_svg_wrapper">
     {@html keyboard_svg}
   </div> -->
+  <button on:click={handlePickKey}>test me</button>
   <KeyboardLayout />
   <div class="hotkey-settings-container">
     <div class="hotkey-search-container">
