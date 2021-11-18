@@ -1,29 +1,56 @@
 <script lang="ts">
+  import console from 'console'
+
   import { kb_layout_ansi104eng } from 'src/Constants'
-  import type {
-    KeyboardLayoutJSON,
-    KeyProperty,
-    KeyLiteral,
-  } from 'src/Interfaces'
-  import { createEventDispatcher } from 'svelte'
+  // import type {
+  //   KeyboardLayoutJSON,
+  //   KeyProperty,
+  //   KeyLiteral,
+  // } from 'src/Interfaces'
+  // import { createEventDispatcher } from 'svelte'
 
-  export let value: string = ''
-  export let styleProperty: string = ''
+  let value: Array<string> = ['one', 'two']
+  // export let styleProperty: string = ''
 
-  const dispatch = createEventDispatcher()
-
+  // Keyboard
   let keyboardKeys = kb_layout_ansi104eng
   console.log(keyboardKeys)
+
+  // Events
+  // const dispatch = createEventDispatcher()
+
+  function handlePickKey(key: string = 'default') {
+    // console.log(`Notify fired! Detail: ${key}`)
+    console.log(key)
+    console.log(value)
+
+    // dispatch('key-picked', {
+    //   key: key,
+    // })
+  }
+
+  function test(event: Event) {}
+  // $: value = {}
 </script>
 
 <div class="keyboard">
-  <button>Hello</button>
+  {#each value as selectedKey}
+    <button on:click={(event) => test(event)}>{selectedKey}</button>
+  {/each}
+
   {#each keyboardKeys as row, i}
     <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
       {#each row as key}
         {#if typeof key === 'string'}
           {#if key.length == 0}
-            <div class="kb-layout-key">{key}</div>
+            <div
+              on:click={() => {
+                handlePickKey(key)
+              }}
+              class="kb-layout-key"
+            >
+              {key}
+            </div>
           {:else}
             <div class="kb-layout-key small" id={key}>{@html key}</div>
           {/if}
