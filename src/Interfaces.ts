@@ -15,6 +15,22 @@ export type KeyProperty = {
   value: number
 }
 
+export type Key = {
+  color: string
+  label: string
+  output: string
+  // textColor: Array<string | undefined> = [];
+  // textSize: Array<number | undefined> = [];
+  // default: { textColor: string; textSize: number } = {
+  //   textColor: "#000000",
+  //   textSize: 3
+  // };
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface KeyboardLayoutJSON extends Array<KeyTypes> {
   // itemList: KeyObj[]
 }
