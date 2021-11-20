@@ -32,7 +32,7 @@
     {@html keyboard_svg}
   </div> -->
   <button on:click={handlePickKey}>test me</button>
-  <KeyboardLayout />
+  <KeyboardLayout {app} />
   <div class="hotkey-settings-container">
     <div class="hotkey-search-container">
       <input type="text" placeholder="Filter..." />

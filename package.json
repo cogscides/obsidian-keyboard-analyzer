@@ -39,6 +39,7 @@
     "obsidian-community-lib": "^1.2.0",
     "standard-version": "^9.3.2",
     "svelte": "3.35.0",
-    "svelte-icons": "^2.1.0"
+    "svelte-icons": "^2.1.0",
+    "svelte-watch-resize": "^1.0.3"
   }
 }

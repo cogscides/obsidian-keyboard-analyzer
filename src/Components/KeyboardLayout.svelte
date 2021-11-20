@@ -1,35 +1,66 @@
 <script lang="ts">
   import { kb_layout_ansi104eng } from 'src/Constants'
   import KeyboardKey from './KeyboardKey.svelte'
+  import { watchResize } from 'svelte-watch-resize'
+  import { onMount } from 'svelte'
   // import type {
   //   KeyboardLayoutJSON,
   //   KeyProperty,
   //   KeyLiteral,
   // } from 'src/Interfaces'
+  export let app: App
+  let measuredWidth: number
 
   let value: Array<string> = ['one', 'two']
 
   // Keyboard
   let keyboardKeys = kb_layout_ansi104eng
-  console.log(keyboardKeys)
+  // console.log(keyboardKeys)
+
+  // let scale = Math.min(
+  //   availableWidth / contentWidth,
+  //   availableHeight / contentHeight
+  // )
+  console.log(app.vault.config)
+  // console.log(readableWidth)
 
   function KeyClick(e: any) {
     console.log(e.detail)
   }
 
+  // onMount(() => {
+  //   const view = document.getElementsByClassName(
+  //     'view-content KB-view markdown-preview-view is-readable-line-width'
+  //   )[0].firstChild
+  //   console.log(view)
+  //   const style = getComputedStyle(view)
+  //   // const readableWidth = style.maxWidth
+  //   // const readableWidth = style
+  //   // console.log(readableWidth)
+  // })
+
+  // $: measuredWidth = keyboardDiv?.getBoundingClientRect()?.width
   // $: value = {}
 </script>
 
-<div class="keyboard">
-  {#each value as selectedKey}
-    <!-- <button
-      on:click={(e) => {
-        console.log(e)
-      }}
-      >{selectedKey}
-    </button> -->
-  {/each}
+<!-- {#each value as selectedKey} -->
+<!-- <button
+    on:click={(e) => {
+      console.log(e)
+    }}
+    >{selectedKey}
+  </button> -->
+<!-- {/each} -->
 
+Keyboard Widht: {measuredWidth}
+
+<div
+  class="keyboard"
+  use:watchResize={(e) => {
+    console.log('resize')
+  }}
+  bind:offsetWidth={measuredWidth}
+>
   {#each keyboardKeys as row, i}
     <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
       {#each row as key}
