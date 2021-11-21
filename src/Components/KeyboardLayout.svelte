@@ -8,8 +8,10 @@
   //   KeyProperty,
   //   KeyLiteral,
   // } from 'src/Interfaces'
-  export let app: App
+  // export let app: App
   let measuredWidth: number
+  let measuredHeight: number
+  let isLowerThanReadable: boolean
 
   let value: Array<string> = ['one', 'two']
 
@@ -21,7 +23,7 @@
   //   availableWidth / contentWidth,
   //   availableHeight / contentHeight
   // )
-  console.log(app.vault.config)
+  // console.log(app.vault.config)
   // console.log(readableWidth)
 
   function KeyClick(e: any) {
@@ -29,15 +31,30 @@
   }
 
   // onMount(() => {
-  //   const view = document.getElementsByClassName(
-  //     'view-content KB-view markdown-preview-view is-readable-line-width'
-  //   )[0].firstChild
+  // function getKbViewDom(dom: HTMLCollection) {
+  //   for (let i = 0; i < dom.length; i++) {
+  //     console.log(dom[i].children.item)
+  //   }
+  // }
+
+  // getKbViewDom(view)
+
+  // const view = document.getElementsByClassName(
+  //   'view-content KB-view markdown-preview-view is-readable-line-width'
+  // )[0].firstChild
   //   console.log(view)
   //   const style = getComputedStyle(view)
   //   // const readableWidth = style.maxWidth
   //   // const readableWidth = style
   //   // console.log(readableWidth)
   // })
+  const ReadableMaxWidthPX = getComputedStyle(
+    document.querySelector(
+      '.markdown-preview-view.is-readable-line-width .markdown-preview-sizer'
+    )
+  ).getPropertyValue('max-width')
+
+  const ReadableMaxWidth = parseInt(ReadableMaxWidthPX, 10)
 
   // $: measuredWidth = keyboardDiv?.getBoundingClientRect()?.width
   // $: value = {}
@@ -52,14 +69,18 @@
   </button> -->
 <!-- {/each} -->
 
-Keyboard Widht: {measuredWidth}
-
+<br />
+ReadableMaxWidth: {ReadableMaxWidthPX} <br />
+Keyboard Widht: {measuredWidth} <br />
+Keyboard Height: {measuredHeight} <br />
+isLowerThan: {measuredWidth < ReadableMaxWidth ? true : false} <br />
 <div
   class="keyboard"
   use:watchResize={(e) => {
     console.log('resize')
   }}
   bind:offsetWidth={measuredWidth}
+  bind:offsetHeight={measuredHeight}
 >
   {#each keyboardKeys as row, i}
     <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
