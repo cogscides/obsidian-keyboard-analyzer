@@ -8,7 +8,7 @@
   //   KeyProperty,
   //   KeyLiteral,
   // } from 'src/Interfaces'
-  // export let app: App
+
   let measuredWidth: number
   let measuredHeight: number
   let isLowerThanReadable: boolean

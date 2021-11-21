@@ -26,9 +26,10 @@
     "obsidian": "^0.12.17",
     "rollup": "^2.58.3",
     "rollup-plugin-ignore": "^1.0.10",
-    "rollup-plugin-svelte": "7.1.0",
+    "rollup-plugin-svelte": "^7.1.0",
     "sanitize-html": "^2.5.2",
     "source-map-js": "^0.6.2",
+    "svelte": "^3.44.2",
     "svelte-check": "^1.6.0",
     "svelte-preprocess": "^4.9.8",
     "tslib": "^2.3.1",
@@ -38,7 +39,6 @@
     "@tsconfig/svelte": "^2.0.1",
     "obsidian-community-lib": "^1.2.0",
     "standard-version": "^9.3.2",
-    "svelte": "3.35.0",
     "svelte-icons": "^2.1.0",
     "svelte-watch-resize": "^1.0.3"
   }

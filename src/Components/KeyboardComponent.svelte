@@ -17,6 +17,9 @@
   const handlePickKey = (value: any) => {
     console.log(value)
   }
+
+  console.log(app.hotkeyManager)
+
   $: props = {
     app,
     plugin,
@@ -33,6 +36,8 @@
   </div> -->
   <button on:click={handlePickKey}>test me</button>
   <KeyboardLayout {app} />
+  <!-- <KeyboardLayout /> -->
+
   <div class="hotkey-settings-container">
     <div class="hotkey-search-container">
       <input type="text" placeholder="Filter..." />
