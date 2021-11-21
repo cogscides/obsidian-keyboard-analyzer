@@ -36,8 +36,6 @@
     console.log(e.detail)
   }
 
-  $: scaleFactor
-
   // onMount(() => {
   // function getKbViewDom(dom: HTMLCollection) {
   //   for (let i = 0; i < dom.length; i++) {
