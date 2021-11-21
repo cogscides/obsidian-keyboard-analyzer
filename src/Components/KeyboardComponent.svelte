@@ -35,8 +35,9 @@
     {@html keyboard_svg}
   </div> -->
   <button on:click={handlePickKey}>test me</button>
-  <KeyboardLayout {app} />
-  <!-- <KeyboardLayout /> -->
+  <!-- <KeyboardLayout {app} /> -->
+
+  <KeyboardLayout />
 
   <div class="hotkey-settings-container">
     <div class="hotkey-search-container">

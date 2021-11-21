@@ -8,16 +8,22 @@
   //   KeyProperty,
   //   KeyLiteral,
   // } from 'src/Interfaces'
+  let wrapperWidth: number
+  let wrapperHeight: number
 
-  let measuredWidth: number
-  let measuredHeight: number
+  let keyboardWidth: number
+  let keyboardHeight: number
+
+  let readableMaxWidthPX: string
+  let readableMaxWidth: number
   let isLowerThanReadable: boolean
+
+  let scaleFactor: number = 1
 
   let value: Array<string> = ['one', 'two']
 
   // Keyboard
   let keyboardKeys = kb_layout_ansi104eng
-  // console.log(keyboardKeys)
 
   // let scale = Math.min(
   //   availableWidth / contentWidth,
@@ -29,6 +35,8 @@
   function KeyClick(e: any) {
     console.log(e.detail)
   }
+
+  $: scaleFactor
 
   // onMount(() => {
   // function getKbViewDom(dom: HTMLCollection) {
@@ -48,15 +56,16 @@
   //   // const readableWidth = style
   //   // console.log(readableWidth)
   // })
-  const ReadableMaxWidthPX = getComputedStyle(
-    document.querySelector(
-      '.markdown-preview-view.is-readable-line-width .markdown-preview-sizer'
-    )
-  ).getPropertyValue('max-width')
+  onMount(() => {
+    readableMaxWidthPX = getComputedStyle(
+      document.querySelector(
+        '.markdown-preview-view.is-readable-line-width .markdown-preview-sizer'
+      )
+    ).getPropertyValue('max-width')
+    readableMaxWidth = parseInt(readableMaxWidthPX, 10)
+  })
 
-  const ReadableMaxWidth = parseInt(ReadableMaxWidthPX, 10)
-
-  // $: measuredWidth = keyboardDiv?.getBoundingClientRect()?.width
+  // $: keyboardWidth = keyboardDiv?.getBoundingClientRect()?.width
   // $: value = {}
 </script>
 
@@ -70,40 +79,57 @@
 <!-- {/each} -->
 
 <br />
-ReadableMaxWidth: {ReadableMaxWidthPX} <br />
-Keyboard Widht: {measuredWidth} <br />
-Keyboard Height: {measuredHeight} <br />
-isLowerThan: {measuredWidth < ReadableMaxWidth ? true : false} <br />
+ReadableMaxWidth: {readableMaxWidthPX} <br />
+Keyboard Widht: {keyboardWidth} <br />
+Keyboard Height: {keyboardHeight} <br />
+isLowerThan: {keyboardWidth < readableMaxWidth ? true : false} <br />
+
+wrapperW: {wrapperWidth} <br />
+wrapperH: {wrapperHeight}<br />
+
 <div
-  class="keyboard"
+  class="scaleable-wrapper"
+  id="scaleable-wrapper"
+  bind:offsetWidth={wrapperWidth}
+  bind:offsetHeight={wrapperHeight}
   use:watchResize={(e) => {
-    console.log('resize')
+    console.log(`resize`)
+    scaleFactor = Math.min(
+      wrapperWidth / keyboardWidth,
+      wrapperHeight / keyboardHeight
+    )
+    console.log(scaleFactor)
   }}
-  bind:offsetWidth={measuredWidth}
-  bind:offsetHeight={measuredHeight}
 >
-  {#each keyboardKeys as row, i}
-    <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
-      {#each row as key}
-        {#if typeof key === 'string'}
-          {#if key.length == 0}
-            <KeyboardKey bind:label={key} on:keyClick={KeyClick}
-              >Zero{key}</KeyboardKey
-            >
-          {:else}
-            <KeyboardKey bind:label={key} on:keyClick={KeyClick}
-              >{key}</KeyboardKey
-            >
+  <div
+    class="keyboard"
+    bind:offsetWidth={keyboardWidth}
+    bind:offsetHeight={keyboardHeight}
+    style="transform: translate(-50%, -50%) scale({scaleFactor})"
+  >
+    {#each keyboardKeys as row, i}
+      <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
+        {#each row as key}
+          {#if typeof key === 'string'}
+            {#if key.length == 0}
+              <KeyboardKey bind:label={key} on:keyClick={KeyClick}
+                >Zero{key}</KeyboardKey
+              >
+            {:else}
+              <KeyboardKey bind:label={key} on:keyClick={KeyClick}
+                >{key}</KeyboardKey
+              >
+            {/if}
+          {:else if key.w}
+            <!-- <div class="kb-layout-divider" style="flex-grow: {key.w}">
+              {key.w}
+            </div> -->
+            <!-- <KeyDividerComponent properties={key} /> -->
           {/if}
-        {:else if key.w}
-          <!-- <div class="kb-layout-divider" style="flex-grow: {key.w}">
-            {key.w}
-          </div> -->
-          <!-- <KeyDividerComponent properties={key} /> -->
-        {/if}
-      {/each}
-    </div>
-  {/each}
+        {/each}
+      </div>
+    {/each}
+  </div>
 </div>
 
 <!-- <svg
@@ -118,6 +144,24 @@ isLowerThan: {measuredWidth < ReadableMaxWidth ? true : false} <br />
     width: calc(100% - 1.8vh);
     font-size: 3vh;
   } */
+  .keyboard {
+    width: 100%;
+    height: 100%;
+    padding: 50px;
+    text-align: center;
+    background: white;
+    position: relative;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+  }
+
+  .scaleable-wrapper {
+    resize: both;
+    position: relative;
+    height: 38.2%;
+  }
 
   .kb-layout-row {
     width: 100%;
