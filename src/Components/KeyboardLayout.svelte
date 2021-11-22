@@ -9,6 +9,8 @@
   //   KeyProperty,
   //   KeyLiteral,
   // } from 'src/Interfaces'
+  let wrapperWidth: number
+  let wrapperHeight: number
 
   let measuredWidth: number
   let measuredHeight: number
@@ -41,12 +43,18 @@ Keyboard Widht: {measuredWidth} <br />
 Keyboard Height: {measuredHeight} <br />
 
 <div
-  class="keyboard"
+  class="scaleable-wrapper"
+  id="scaleable-wrapper"
+  bind:offsetWidth={wrapperWidth}
+  bind:offsetHeight={wrapperHeight}
   use:watchResize={(e) => {
-    console.log('resize')
+    console.log(`resize`)
+    // scaleFactor = Math.min(
+    //   wrapperWidth / keyboardWidth,
+    //   wrapperHeight / keyboardHeight
+    // )
+    // console.log(scaleFactor)
   }}
-  bind:offsetWidth={measuredWidth}
-  bind:offsetHeight={measuredHeight}
 >
   {#each keyboardKeys as row, i}
     <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
@@ -75,6 +83,24 @@ Keyboard Height: {measuredHeight} <br />
     width: calc(100% - 1.8vh);
     font-size: 3vh;
   } */
+  .keyboard {
+    width: 100%;
+    height: 100%;
+    padding: 50px;
+    text-align: center;
+    background: white;
+    position: relative;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+  }
+
+  .scaleable-wrapper {
+    resize: both;
+    position: relative;
+    height: 38.2%;
+  }
 
   .kb-layout-row {
     width: 100%;
