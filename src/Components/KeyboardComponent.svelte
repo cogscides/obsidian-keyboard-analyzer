@@ -11,6 +11,24 @@
   export let plugin: KeyboardAnalizerPlugin
   export let settings: KeyboardAnalizerSettings
   export let view: ShortcutsView
+  let viewWidth: number
+
+  const ro = new ResizeObserver((entries) => {
+    for (let entry of entries) {
+      viewWidth = entry.contentRect.width
+    }
+  })
+  ro.observe(document.querySelector('#KB-view'))
+
+  let contentWidth: number
+  console.log(
+    parseInt(
+      getComputedStyle(document.querySelector('#KB-view')).getPropertyValue(
+        'width'
+      ),
+      10
+    )
+  )
 
   let cmds = getCommands(app)
 
@@ -29,14 +47,14 @@
   }
 </script>
 
-<div class="markdown-preview-sizer markdown-preview-section">
+<div id="keyboard-view-content" bind:offsetWidth={contentWidth}>
   <h1>Hello Maaaan 123!</h1>
-  <!-- <div class="keyboard_svg_wrapper">
-    {@html keyboard_svg}
-  </div> -->
+  viewWidth: {viewWidth} <br />
+  contentWidth: {contentWidth} <br />
   <button on:click={handlePickKey}>test me</button>
-  <KeyboardLayout {app} />
-  <!-- <KeyboardLayout /> -->
+
+  <!-- <KeyboardLayout {app} /> -->
+  <KeyboardLayout />
 
   <div class="hotkey-settings-container">
     <div class="hotkey-search-container">
@@ -88,9 +106,8 @@
 </div>
 
 <style>
-  .keyboard_svg_wrapper {
-    width: 100%;
-    height: auto;
+  #keyboard-view-content {
+    width: 700px;
   }
 
   .KB-view > .hotkey-setting-container {

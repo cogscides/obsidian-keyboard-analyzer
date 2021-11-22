@@ -25,19 +25,26 @@ export type Key = {
   //   textColor: "#000000",
   //   textSize: 3
   // };
-  x: number
-  y: number
   width: number
   height: number
 }
 
-export interface KeyboardLayoutJSON extends Array<KeyTypes> {
-  // itemList: KeyObj[]
+export type FreeSpace = {
+  x: number
+  y: number
 }
+
+export type Row = [Key | FreeSpace]
+
+export type Keyboard = [Row]
+
+// export interface KeyboardLayoutJSON extends Array<KeyTypes> {
+// itemList: KeyObj[]
+// }
 
 // Create a type which represents only one of the above types
 // but you aren't sure which it is yet.
-export type KeyTypes = KeyLiteral | KeyProperty
+// export type KeyTypes = KeyLiteral | KeyProperty
 
 // export interface KayboardLayoutResults {
 //   hover:

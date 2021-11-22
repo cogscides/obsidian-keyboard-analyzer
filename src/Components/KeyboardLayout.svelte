@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Key, FreeSpace } from 'src/Interfaces'
   import { kb_layout_ansi104eng } from 'src/Constants'
   import KeyboardKey from './KeyboardKey.svelte'
   import { watchResize } from 'svelte-watch-resize'
@@ -11,53 +12,19 @@
 
   let measuredWidth: number
   let measuredHeight: number
-  let isLowerThanReadable: boolean
 
-  let value: Array<string> = ['one', 'two']
+  let keyboardKeys = kb_layout_ansi104eng
+
+  function generateKeyboardObject(keyboardString: string) {}
+
+  // let selected: Array<string> = ['one', 'two']
 
   // Keyboard
-  let keyboardKeys = kb_layout_ansi104eng
   // console.log(keyboardKeys)
-
-  // let scale = Math.min(
-  //   availableWidth / contentWidth,
-  //   availableHeight / contentHeight
-  // )
-  // console.log(app.vault.config)
-  // console.log(readableWidth)
 
   function KeyClick(e: any) {
     console.log(e.detail)
   }
-
-  // onMount(() => {
-  // function getKbViewDom(dom: HTMLCollection) {
-  //   for (let i = 0; i < dom.length; i++) {
-  //     console.log(dom[i].children.item)
-  //   }
-  // }
-
-  // getKbViewDom(view)
-
-  // const view = document.getElementsByClassName(
-  //   'view-content KB-view markdown-preview-view is-readable-line-width'
-  // )[0].firstChild
-  //   console.log(view)
-  //   const style = getComputedStyle(view)
-  //   // const readableWidth = style.maxWidth
-  //   // const readableWidth = style
-  //   // console.log(readableWidth)
-  // })
-  const ReadableMaxWidthPX = getComputedStyle(
-    document.querySelector(
-      '.markdown-preview-view.is-readable-line-width .markdown-preview-sizer'
-    )
-  ).getPropertyValue('max-width')
-
-  const ReadableMaxWidth = parseInt(ReadableMaxWidthPX, 10)
-
-  // $: measuredWidth = keyboardDiv?.getBoundingClientRect()?.width
-  // $: value = {}
 </script>
 
 <!-- {#each value as selectedKey} -->
@@ -70,10 +37,9 @@
 <!-- {/each} -->
 
 <br />
-ReadableMaxWidth: {ReadableMaxWidthPX} <br />
 Keyboard Widht: {measuredWidth} <br />
 Keyboard Height: {measuredHeight} <br />
-isLowerThan: {measuredWidth < ReadableMaxWidth ? true : false} <br />
+
 <div
   class="keyboard"
   use:watchResize={(e) => {
@@ -84,22 +50,13 @@ isLowerThan: {measuredWidth < ReadableMaxWidth ? true : false} <br />
 >
   {#each keyboardKeys as row, i}
     <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
-      {#each row as key}
-        {#if typeof key === 'string'}
-          {#if key.length == 0}
-            <KeyboardKey bind:label={key} on:keyClick={KeyClick}
-              >Zero{key}</KeyboardKey
-            >
-          {:else}
-            <KeyboardKey bind:label={key} on:keyClick={KeyClick}
-              >{key}</KeyboardKey
-            >
+      {#each row as entry}
+        {#if typeof entry == 'string'}
+          {#if entry}
+            <KeyboardKey bind:stringLabel={entry} on:keyClick={KeyClick} />
           {/if}
-        {:else if key.w}
-          <!-- <div class="kb-layout-divider" style="flex-grow: {key.w}">
-            {key.w}
-          </div> -->
-          <!-- <KeyDividerComponent properties={key} /> -->
+        {:else if typeof entry == 'object'}
+          <KeyboardKey bind:xDivider={entry.x} bind:yDivider={entry.y} />
         {/if}
       {/each}
     </div>

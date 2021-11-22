@@ -1,3 +1,6 @@
 /* Sets all the text color to red! */
-body {
+#KB-view {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
