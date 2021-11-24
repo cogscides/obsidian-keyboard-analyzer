@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { App } from 'obsidian'
   import type ShortcutsView from 'src/ShortcutsView'
+  import { kbWinNum, kb_layout_ansi104eng } from 'src/Constants'
   import type KeyboardAnalizerPlugin from 'src/main'
-  import type { KeyboardAnalizerSettings } from 'src/Interfaces'
+  import type { KeyboardAnalizerSettings, Keyboard } from 'src/Interfaces'
   import { getCommands } from 'src/AppShortcuts'
   // import { keyboard_svg } from 'src/Constants'
   import KeyboardLayout from './KeyboardLayout.svelte'
+  import { onMount } from 'svelte'
 
   export let app: App
   export let plugin: KeyboardAnalizerPlugin
@@ -13,30 +15,34 @@
   export let view: ShortcutsView
   let viewWidth: number
 
-  const ro = new ResizeObserver((entries) => {
-    for (let entry of entries) {
-      viewWidth = entry.contentRect.width
-    }
-  })
-  ro.observe(document.querySelector('#KB-view'))
+  let keyboardString = kb_layout_ansi104eng
+  let keyboardWinObject: Keyboard = kbWinNum
 
-  let contentWidth: number
-  console.log(
-    parseInt(
-      getComputedStyle(document.querySelector('#KB-view')).getPropertyValue(
-        'width'
-      ),
-      10
-    )
-  )
+  // const ro = new ResizeObserver((entries) => {
+  //   for (let entry of entries) {
+  //     viewWidth = entry.contentRect.width
+  //   }
+  // })
+
+  // onMount(() => {
+  //   ro.observe(document.querySelector('#KB-view'))
+
+  //   console.log(
+  //     parseInt(
+  //       getComputedStyle(document.querySelector('#KB-view')).getPropertyValue(
+  //         'width'
+  //       ),
+  //       10
+  //     )
+  //   )
+  // })
 
   let cmds = getCommands(app)
-
-  const handlePickKey = (value: any) => {
-    console.log(value)
-  }
-
   console.log(app.hotkeyManager)
+
+  // const handlePickKey = (value: any) => {
+  //   console.log(value)
+  // }
 
   $: props = {
     app,
@@ -47,67 +53,89 @@
   }
 </script>
 
-<div id="keyboard-view-content" bind:offsetWidth={contentWidth}>
-  <h1>Hello Maaaan 123!</h1>
-  viewWidth: {viewWidth} <br />
-  contentWidth: {contentWidth} <br />
-  <button on:click={handlePickKey}>test me</button>
+<div style="width: 100%; height:100%;">
+  <div
+    class="markdown-preview-view is-readable-line-width"
+    id="keyboard-preview-view"
+    bind:offsetWidth={viewWidth}
+  >
+    <div class="markdown-preview-sizer markdown-preview-section">
+      <h1>Hello Maaaan 123!</h1>
+      <code
+        >viewWidth: {viewWidth}<br />
+        {#if viewWidth >= 1281}
+          viewClass: default
+        {:else if viewWidth < 1281 && viewWidth >= 481}
+          viewClass: tablet
+        {:else if viewWidth < 481}
+          viewClass: mobile
+        {/if}</code
+      >
 
-  <!-- <KeyboardLayout {app} /> -->
-  <KeyboardLayout />
+      <!-- <button on:click={handlePickKey}>test me</button> -->
 
-  <div class="hotkey-settings-container">
-    <div class="hotkey-search-container">
-      <input type="text" placeholder="Filter..." />
-    </div>
-    <div class="search-results">
-      Found {cmds.length} assigned hotkeys
-    </div>
-    <div class="kb-analizer-hotkey-list-container">
-      {#each cmds as command, i}
-        {#if command.hotkeys != undefined && command.hotkeys.length > 0}
-          <div class="kbanalizer-setting-item">
-            <div class="setting-item-info">
-              <div class="setting-item-name">
-                {i}. {command.name}
-              </div>
-            </div>
-            <div class="kbanalizer-setting-item-control">
-              <div class="setting-command-hotkeys">
-                {#each command.hotkeys as hotkey}
-                  {#if hotkey.modifiers}
-                    <span class="kbanalizer-setting-hotkey">
-                      {#each hotkey.modifiers as modifier}
-                        {#if modifier == 'Mod'}
-                          {'Ctrl'} + {' '}
-                        {:else}
-                          {modifier} + {' '}
-                        {/if}
-                      {/each}
-                      {#if hotkey.key.length > 1}
+      <!-- <KeyboardLayout {app} /> -->
+      <!-- <KeyboardLayout bind:keyboardKeys={keyboardString} /> -->
+      <KeyboardLayout bind:keyboardObject={keyboardWinObject} />
+
+      <div class="hotkey-settings-container">
+        <div class="hotkey-search-container">
+          <input type="text" placeholder="Filter..." />
+        </div>
+        <div class="search-results">
+          Found {cmds.length} assigned hotkeys
+        </div>
+        <div class="kb-analizer-hotkey-list-container">
+          {#each cmds as command, i}
+            {#if command.hotkeys != undefined && command.hotkeys.length > 0}
+              <div class="kbanalizer-setting-item">
+                <div class="setting-item-info">
+                  <div class="setting-item-name">
+                    {i}. {command.name}
+                  </div>
+                </div>
+                <div class="kbanalizer-setting-item-control">
+                  <div class="setting-command-hotkeys">
+                    {#each command.hotkeys as hotkey}
+                      {#if hotkey.modifiers}
+                        <span class="kbanalizer-setting-hotkey">
+                          {#each hotkey.modifiers as modifier}
+                            {#if modifier == 'Mod'}
+                              {'Ctrl'} + {' '}
+                            {:else}
+                              {modifier} + {' '}
+                            {/if}
+                          {/each}
+                          {#if hotkey.key.length > 1}
+                            {hotkey.key}
+                          {:else}
+                            {hotkey.key.toUpperCase()}
+                          {/if}
+                        </span>
+                      {:else if hotkey.key.length > 1}
                         {hotkey.key}
                       {:else}
                         {hotkey.key.toUpperCase()}
                       {/if}
-                    </span>
-                  {:else if hotkey.key.length > 1}
-                    {hotkey.key}
-                  {:else}
-                    {hotkey.key.toUpperCase()}
-                  {/if}
-                {/each}
+                    {/each}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        {/if}
-      {/each}
+            {/if}
+          {/each}
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <style>
-  #keyboard-view-content {
-    width: 700px;
+  .keyboard-wrapper {
+    max-width: 700px;
+  }
+
+  #KB-view {
+    padding: 0px !important;
   }
 
   .KB-view > .hotkey-setting-container {
@@ -115,6 +143,10 @@
     overflow: visible;
     flex-direction: column;
     padding-bottom: 60px;
+  }
+
+  #keyboard-preview-view {
+    overflow-x: hidden;
   }
 
   .search-results {

@@ -1,6 +1,5 @@
 <script lang="ts">
-  import type { Key, FreeSpace } from 'src/Interfaces'
-  import { kb_layout_ansi104eng } from 'src/Constants'
+  import type { Key, FreeSpace, Keyboard } from 'src/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount } from 'svelte'
@@ -12,17 +11,24 @@
   let wrapperWidth: number
   let wrapperHeight: number
 
-  let measuredWidth: number
-  let measuredHeight: number
-
-  let keyboardKeys = kb_layout_ansi104eng
-
-  function generateKeyboardObject(keyboardString: string) {}
+  // export let keyboardKeys: any
+  export let keyboardObject: Keyboard
 
   // let selected: Array<string> = ['one', 'two']
 
   // Keyboard
   // console.log(keyboardKeys)
+
+  // event key event with UID https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode
+  // window.addEventListener(
+  //   'keydown',
+  //   function (event) {
+  //     const p = document.createElement('p')
+  //     someInput.textContent = `KeyboardEvent: key='${event.key}' | code='${event.code}'`
+  //     document.getElementById('output').appendChild(someInput)
+  //   },
+  //   true
+  // )
 
   function KeyClick(e: any) {
     console.log(e.detail)
@@ -38,13 +44,8 @@
   </button> -->
 <!-- {/each} -->
 
-<br />
-Keyboard Widht: {measuredWidth} <br />
-Keyboard Height: {measuredHeight} <br />
-
 <div
-  class="scaleable-wrapper"
-  id="scaleable-wrapper"
+  id="keyboard"
   bind:offsetWidth={wrapperWidth}
   bind:offsetHeight={wrapperHeight}
   use:watchResize={(e) => {
@@ -56,16 +57,35 @@ Keyboard Height: {measuredHeight} <br />
     // console.log(scaleFactor)
   }}
 >
-  {#each keyboardKeys as row, i}
+  <!-- {#if keyboardKeys}
+    <br />
+    Keyboard Widht: {wrapperWidth} <br />
+    Keyboard Height: {wrapperHeight} <br />
+
+    {#if wrapperWidth >= 1281}
+      Class: default
+    {:else if wrapperWidth < 1281 && wrapperWidth >= 481}
+      Class: tablet
+    {:else if wrapperWidth < 481}
+      Class: mobile
+    {/if} -->
+  <!-- {#each keyboardKeys as row, i}
+      <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
+        {#each row as entry}
+          {#if typeof entry == 'string'}
+            {#if entry}
+              <KeyboardKey bind:stringLabel={entry} on:keyClick={KeyClick} />
+            {/if}
+          {:else if typeof entry == 'object'}
+            <KeyboardKey bind:xDivider={entry.x} bind:yDivider={entry.y} />
+          {/if}
+        {/each}
+      </div>
+    {/each} -->
+  {#each keyboardObject as row, i}
     <div class="kb-layout-row" id={'Row-' + (+i + 1).toString()}>
       {#each row as entry}
-        {#if typeof entry == 'string'}
-          {#if entry}
-            <KeyboardKey bind:stringLabel={entry} on:keyClick={KeyClick} />
-          {/if}
-        {:else if typeof entry == 'object'}
-          <KeyboardKey bind:xDivider={entry.x} bind:yDivider={entry.y} />
-        {/if}
+        <KeyboardKey bind:keyObj={entry} on:keyClick={KeyClick} />
       {/each}
     </div>
   {/each}
@@ -83,7 +103,8 @@ Keyboard Height: {measuredHeight} <br />
     width: calc(100% - 1.8vh);
     font-size: 3vh;
   } */
-  .keyboard {
+
+  /* .keyboard {
     width: 100%;
     height: 100%;
     padding: 50px;
@@ -94,13 +115,13 @@ Keyboard Height: {measuredHeight} <br />
     top: 50%;
     transform: translate(-50%, -50%);
     transform-origin: center center;
-  }
+  } */
 
-  .scaleable-wrapper {
+  /* .scaleable-wrapper {
     resize: both;
     position: relative;
     height: 38.2%;
-  }
+  } */
 
   .kb-layout-row {
     width: 100%;

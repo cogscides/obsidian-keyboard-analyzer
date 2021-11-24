@@ -1,3 +1,5 @@
+import type { Keyboard } from 'src/Interfaces'
+
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
 
 export const kb_layout_ansi104eng = [
@@ -147,5 +149,27 @@ export const kb_layout_ansi104eng = [
     { x: 0.25, w: 2 },
     '0<br>Ins',
     '.<br>Del',
+  ],
+]
+
+export const kbWinNum: Keyboard = [
+  [
+    {
+      label: 'F1',
+      output: 'output F1',
+    },
+    {
+      label: 'F2',
+      width: 2,
+      height: 1,
+    },
+    {
+      x: 2,
+    },
+    {
+      label: 'F3',
+      width: 1,
+      height: 2,
+    },
   ],
 ]

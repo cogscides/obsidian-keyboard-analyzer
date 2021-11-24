@@ -16,17 +16,23 @@ export type KeyProperty = {
 }
 
 export type Key = {
-  color: string
-  label: string
-  output: string
+  color?: string
+  label?: string
+  output?: string | null
   // textColor: Array<string | undefined> = [];
   // textSize: Array<number | undefined> = [];
   // default: { textColor: string; textSize: number } = {
   //   textColor: "#000000",
   //   textSize: 3
   // };
-  width: number
-  height: number
+  width?: number
+  height?: number
+  x?: number
+  y?: number
+  default?: {
+    textColor: string
+    textSize: string
+  }
 }
 
 export type FreeSpace = {
@@ -34,7 +40,7 @@ export type FreeSpace = {
   y: number
 }
 
-export type Row = [Key | FreeSpace]
+export type Row = Key[]
 
 export type Keyboard = [Row]
 
