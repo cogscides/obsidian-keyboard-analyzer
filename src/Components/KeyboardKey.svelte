@@ -10,7 +10,9 @@
 
   // Key Defaults
   if (keyObj.label) {
-    keyObj.color = 'default-color'
+    if (!keyObj.color) {
+      keyObj.color = 'default-color'
+    }
     if (!keyObj.width) {
       keyObj.width = 1
     }
@@ -26,41 +28,28 @@
   //   keyObj.height = 1
   // }
 
-  // export let freeSpace: FreeSpace
-
   const dispatch = createEventDispatcher()
   const handleClick = () => {
     dispatch('keyClick', keyObj)
   }
-  // export let props: Key = {
-
-  // }
 </script>
 
-<!-- {#if stringLabel}
-  <div class="kb-layout-key small" id={stringLabel} on:click={handleClick}>
-    {@html stringLabel}
-  </div>
-{:else if xDivider > yDivider}
-  <div
-    class="kb-divider"
-    style="width: {xDivider * 24}px; height: {yDivider * 24}px"
-  /> -->
-
 {#if keyObj.label}
-  <div class="kb-layout-key small" id={keyObj.label} on:click={handleClick}>
+  <div
+    class="kb-layout-key small {keyObj.color ? keyObj.color : ''}"
+    style={keyObj.width ? `flex-basis: calc(${keyObj.width}*5.6%)` : ''}
+    id={keyObj.label}
+    on:click={handleClick}
+  >
     {@html keyObj.label}
   </div>
 {:else if keyObj.x || keyObj.y}
   <div
     class="kb-divider"
-    style="width: {keyObj.x * 24}px; height: {keyObj.y * 24}px"
+    style="width: {keyObj.x * 12}px; height: {keyObj.y * 12}px"
   />
 {/if}
 
-<!-- <div class="kb-layout-key small" id={keyObj.label} on:click={handleClick}>
-  {@html keyObj.label}
-</div> -->
 <style>
   .kb-layout-key {
     /* flex: 0 0 auto; */

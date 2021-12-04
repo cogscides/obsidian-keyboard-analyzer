@@ -35,14 +35,9 @@ export type Key = {
   }
 }
 
-export type FreeSpace = {
-  x: number
-  y: number
-}
+export type Row = Key[] | Array<Row> | Key
 
-export type Row = Key[]
-
-export type Keyboard = [Row]
+export type Keyboard = Row[] | Key
 
 // export interface KeyboardLayoutJSON extends Array<KeyTypes> {
 // itemList: KeyObj[]
