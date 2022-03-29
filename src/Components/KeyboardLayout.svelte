@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Key, Keyboard } from 'src/Interfaces'
+  import type { Key, Row, Keyboard } from 'src/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount } from 'svelte'
@@ -29,13 +29,11 @@
       id={'Row-' + (+i + 1).toString()}
     >
       {#each row as entry}
-        {#if typeof entry == Row}
-          typeof Row
-        {:else if typeof entry == Key}
-          typeof Key
-        {/if}
-        {typeof entry}
-        <KeyboardKey bind:keyObj={entry} on:keyClick={KeyClick} />
+          <KeyboardKey bind:keyObj={entry} on:keyClick={KeyClick} />
+        <!-- {console.log(typeof entry)} -->
+        <!-- {:else if typeof entry == Key}
+          typeof Key -->
+        <!-- {/if} -->
       {/each}
     </div>
   {/each}

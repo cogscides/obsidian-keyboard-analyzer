@@ -332,6 +332,6 @@ export const kbWinNum: Keyboard = [
       { label: '0<br>Ins', width: 2 },
       { label: '.<br>Del' },
     ],
-    { label: 'Enter', height: 2 },
+    [{ label: 'Enter', height: 2 }],
   ],
 ]
