@@ -1,6 +1,192 @@
-import type { Keyboard } from 'src/Interfaces'
-
+import type { KeyboardInterface } from 'src/Interfaces'
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
+
+export const keyboard_svelte = [
+  {
+    row: 0,
+    value: 'Esc',
+  },
+  {
+    row: 0,
+    value: 'F1',
+  },
+  {
+    row: 0,
+    value: 'F2',
+  },
+  {
+    row: 0,
+    value: 'F3',
+  },
+  {
+    row: 0,
+    value: 'F4',
+  },
+  {
+    row: 0,
+    value: 'F5',
+  },
+  {
+    row: 0,
+    value: 'F6',
+  },
+  {
+    row: 0,
+    value: 'F7',
+  },
+  {
+    row: 0,
+    value: 'F8',
+  },
+  {
+    row: 0,
+    value: 'F9',
+  },
+  {
+    row: 0,
+    value: 'F10',
+  },
+  {
+    row: 0,
+    value: 'F11',
+  },
+  {
+    row: 0,
+    value: 'F12',
+  },
+  {
+    row: 0,
+    value: 'PrtSc',
+  },
+  {
+    row: 0,
+    value: 'ScrollLock',
+  },
+  {
+    row: 0,
+    value: 'Pause',
+  },
+  {
+    row: 0,
+    value: 'Insert',
+  },
+  {
+    row: 0,
+    value: 'Home',
+  },
+  {
+    row: 0,
+    value: 'PageUp',
+  },
+  {
+    row: 1,
+    value: 'Tab',
+  },
+  {
+    row: 1,
+    value: 'Q',
+  },
+  {
+    row: 1,
+    value: 'W',
+  },
+  {
+    row: 1,
+    value: 'E',
+  },
+  {
+    row: 1,
+    value: 'R',
+  },
+  {
+    row: 1,
+    value: 'T',
+  },
+  {
+    row: 1,
+    value: 'Y',
+  },
+  {
+    row: 2,
+    value: 'Caps Lock',
+  },
+  {
+    row: 2,
+    value: 'A',
+  },
+  {
+    row: 2,
+    value: 'S',
+  },
+  {
+    row: 2,
+    value: 'D',
+  },
+  {
+    row: 2,
+    value: 'F',
+  },
+  {
+    row: 2,
+    value: 'G',
+  },
+  {
+    row: 2,
+    value: 'H',
+  },
+  {
+    row: 2,
+    value: 'J',
+  },
+  {
+    row: 2,
+    value: 'K',
+  },
+  {
+    row: 2,
+    value: 'L',
+  },
+  {
+    row: 2,
+    value: ';',
+  },
+  {
+    row: 2,
+    value: ':',
+  },
+  {
+    row: 2,
+    value: "'",
+  },
+  {
+    row: 2,
+    value: 'Enter',
+  },
+  {
+    row: 3,
+    value: 'Shift',
+  },
+  {
+    row: 3,
+    value: 'Z',
+  },
+  {
+    row: 3,
+    value: 'X',
+  },
+  {
+    row: 3,
+    value: 'C',
+  },
+  {
+    row: 3,
+    value: 'V',
+  },
+  {
+    row: 3,
+    value: 'B',
+  },
+]
 
 export const kb_layout_ansi104eng = [
   [
@@ -152,7 +338,7 @@ export const kb_layout_ansi104eng = [
   ],
 ]
 
-export const kbWinNum: Keyboard = [
+export const kbWinNum: KeyboardInterface = [
   [
     {
       label: 'Esc',

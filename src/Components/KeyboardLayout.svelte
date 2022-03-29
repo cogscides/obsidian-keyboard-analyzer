@@ -1,16 +1,14 @@
 <script lang="ts">
-  import type { Key, Row, Keyboard } from 'src/Interfaces'
-  import KeyboardKey from './KeyboardKey.svelte'
+  import type { Key, Row, KeyboardInterface } from 'src/Interfaces'
   import { watchResize } from 'svelte-watch-resize'
-  import { onMount } from 'svelte'
   let wrapperWidth: number
   let wrapperHeight: number
+  // @ts-ignore
+  import Keyboard from 'svelte-keyboard'
+  export let keyboardObject = 'standart'
 
-  // export let keyboardKeys: any
-  export let keyboardObject: Keyboard
-
-  function KeyClick(e: any) {
-    console.log(e.detail)
+  const onKeydown = (event: any) => {
+    console.log(event.detail)
   }
 </script>
 
@@ -22,21 +20,7 @@
     console.log(`resize`)
   }}
 >
-  {#each keyboardObject as row, i}
-    <div
-      class="kb-layout-row"
-      alt="outer row"
-      id={'Row-' + (+i + 1).toString()}
-    >
-      {#each row as entry}
-          <KeyboardKey bind:keyObj={entry} on:keyClick={KeyClick} />
-        <!-- {console.log(typeof entry)} -->
-        <!-- {:else if typeof entry == Key}
-          typeof Key -->
-        <!-- {/if} -->
-      {/each}
-    </div>
-  {/each}
+  <Keyboard on:keydown={onKeydown} custom={keyboardObject} />
 </div>
 
 <style>

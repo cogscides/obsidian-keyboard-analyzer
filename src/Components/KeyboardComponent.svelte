@@ -1,12 +1,18 @@
 <script lang="ts">
   import type { App } from 'obsidian'
   import type ShortcutsView from 'src/ShortcutsView'
-  import { kbWinNum, kb_layout_ansi104eng } from 'src/Constants'
   import type KeyboardAnalizerPlugin from 'src/main'
-  import type { KeyboardAnalizerSettings, Keyboard } from 'src/Interfaces'
-  import { getCommands } from 'src/AppShortcuts'
-  // import { keyboard_svg } from 'src/Constants'
+  import type {
+    KeyboardAnalizerSettings,
+    KeyboardInterface,
+  } from 'src/Interfaces'
   import KeyboardLayout from './KeyboardLayout.svelte'
+  import { getCommands } from 'src/AppShortcuts'
+  import {
+    kbWinNum,
+    kb_layout_ansi104eng,
+    keyboard_svelte,
+  } from 'src/Constants'
   import { onMount } from 'svelte'
 
   export let app: App
@@ -15,8 +21,9 @@
   export let view: ShortcutsView
   let viewWidth: number
 
-  let keyboardString = kb_layout_ansi104eng
-  let keyboardWinObject: Keyboard = kbWinNum
+  let keyboardObject = keyboard_svelte
+  // let keyboardString = kb_layout_ansi104eng
+  // let keyboardWinObject: KeyboardInterface = kbWinNum
 
   // const ro = new ResizeObserver((entries) => {
   //   for (let entry of entries) {
@@ -76,7 +83,7 @@
 
       <!-- <KeyboardLayout {app} /> -->
       <!-- <KeyboardLayout bind:keyboardKeys={keyboardString} /> -->
-      <KeyboardLayout bind:keyboardObject={keyboardWinObject} />
+      <KeyboardLayout bind:keyboardObject />
 
       <div class="hotkey-settings-container">
         <div class="hotkey-search-container">

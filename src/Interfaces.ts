@@ -37,7 +37,7 @@ export type Key = {
 
 export type Row = Key[] | Array<Key[]>
 
-export type KeyboardBody = Row[]
+export type KeyboardInterface = Row[]
 
 // export interface KeyboardLayoutJSON extends Array<KeyTypes> {
 // itemList: KeyObj[]
