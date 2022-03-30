@@ -55,30 +55,6 @@ export const keyboard_svelte = [
     value: 'F12',
   },
   {
-    row: 0,
-    value: 'PrtSc',
-  },
-  {
-    row: 0,
-    value: 'ScrollLock',
-  },
-  {
-    row: 0,
-    value: 'Pause',
-  },
-  {
-    row: 0,
-    value: 'Insert',
-  },
-  {
-    row: 0,
-    value: 'Home',
-  },
-  {
-    row: 0,
-    value: 'PageUp',
-  },
-  {
     row: 1,
     value: 'Tab',
   },
@@ -105,6 +81,30 @@ export const keyboard_svelte = [
   {
     row: 1,
     value: 'Y',
+  },
+  {
+    row: 1,
+    value: 'U',
+  },
+  {
+    row: 1,
+    value: 'I',
+  },
+  {
+    row: 1,
+    value: 'O',
+  },
+  {
+    row: 1,
+    value: 'P',
+  },
+  {
+    row: 1,
+    value: '{',
+  },
+  {
+    row: 1,
+    value: '}',
   },
   {
     row: 2,
@@ -164,7 +164,8 @@ export const keyboard_svelte = [
   },
   {
     row: 3,
-    value: 'Shift',
+    value: 'LShift',
+    display: 'Shift',
   },
   {
     row: 3,
@@ -186,6 +187,69 @@ export const keyboard_svelte = [
     row: 3,
     value: 'B',
   },
+  {
+    row: 3,
+    value: 'N',
+  },
+  {
+    row: 3,
+    value: 'M',
+  },
+  {
+    row: 3,
+    value: ',',
+  },
+  {
+    row: 3,
+    value: '.',
+  },
+  {
+    row: 3,
+    value: '/',
+  },
+  {
+    row: 3,
+    value: 'RShift',
+    display: 'Shift',
+  },
+  {
+    row: 4,
+    value: 'LControl',
+    display: 'Ctrl',
+  },
+  {
+    row: 4,
+    value: 'LWin',
+    display: 'Win',
+  },
+  {
+    row: 4,
+    value: 'LAlt',
+    display: 'Alt',
+  },
+  {
+    row: 4,
+    value: 'Space',
+  },
+  {
+    row: 4,
+    value: 'RAlt',
+    display: 'Alt',
+  },
+  {
+    row: 4,
+    value: 'RWin',
+    display: 'Win',
+  },
+  {
+    row: 4,
+    value: 'Menu',
+    display: 'Menu',
+  },
+  {
+    row: 4,
+    value: 'RControl',
+  },
 ]
 
 // keyboard layout in rows for number pad
@@ -196,15 +260,11 @@ export const keyboard_svelte_num = [
   },
   {
     row: 0,
-    value: '7',
+    value: '/',
   },
   {
     row: 0,
-    value: '8',
-  },
-  {
-    row: 0,
-    value: '9',
+    value: '*',
   },
   {
     row: 0,
@@ -212,15 +272,15 @@ export const keyboard_svelte_num = [
   },
   {
     row: 1,
-    value: '4',
+    value: '7',
   },
   {
     row: 1,
-    value: '5',
+    value: '8',
   },
   {
     row: 1,
-    value: '6',
+    value: '9',
   },
   {
     row: 1,
@@ -228,30 +288,46 @@ export const keyboard_svelte_num = [
   },
   {
     row: 2,
+    value: '4',
+  },
+  {
+    row: 2,
+    value: '5',
+  },
+  {
+    row: 2,
+    value: '6',
+  },
+  {
+    row: 2,
+    value: '+',
+  },
+  {
+    row: 3,
     value: '1',
   },
   {
-    row: 2,
+    row: 3,
     value: '2',
   },
   {
-    row: 2,
+    row: 3,
     value: '3',
   },
   {
-    row: 2,
-    value: 'E',
+    row: 3,
+    value: 'Enter',
   },
   {
-    row: 3,
+    row: 4,
     value: '0',
   },
   {
-    row: 3,
+    row: 4,
     value: '.',
   },
   {
-    row: 3,
+    row: 4,
     value: '=',
   },
 ]

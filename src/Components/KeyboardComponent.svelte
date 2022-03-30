@@ -68,6 +68,7 @@
     id="keyboard-preview-view"
     bind:offsetWidth={viewWidth}
   >
+    <KeyboardLayout bind:keyboardObj_qwerty bind:keyboardObj_num />
     <div class="markdown-preview-sizer markdown-preview-section">
       <h1>Hello Maaaan 123!</h1>
       <code
@@ -85,7 +86,6 @@
 
       <!-- <KeyboardLayout {app} /> -->
       <!-- <KeyboardLayout bind:keyboardKeys={keyboardString} /> -->
-      <KeyboardLayout bind:keyboardObj_qwerty bind:keyboardObj_num />
 
       <div class="hotkey-settings-container">
         <div class="hotkey-search-container">

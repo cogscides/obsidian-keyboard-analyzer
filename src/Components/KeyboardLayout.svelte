@@ -25,20 +25,57 @@
   use:watchResize={(e) => {
     console.log(`resize`)
   }}
+  style="display: flex; flex-direction: row; flex-wrap: nowrap; width: 100%; justify-content: center;"
 >
-  // resizable flex div of two keyboard blocks in full width
-  <div
-    id="KB-view"
-    class="KB-view"
-    style="display: flex; flex-direction: row; flex-wrap: nowrap; width: 100%;"
-  >
-    <Keyboard_qwerty on:keydown={onKeydown} custom={keyboardObj_qwerty} />
-    <Keyboard_num on:keydown={onKeydown} custom={keyboardObj_num} />
+  <div id="keyboard-qwerty">
+    <Keyboard_qwerty
+      on:keydown={onKeydown}
+      custom={keyboardObj_qwerty}
+      id="keyboard-qwerty"
+      --height="4vh"
+      --background="#efefef"
+      --flex="1"
+      --flex-shrink="0"
+      --flex-grow="1"
+      --font-size="0.75vw"
+      --min-width="1vw"
+      noSwap={['Shift']}
+    />
+  </div>
+  <div id="keyboard-num">
+    <Keyboard_num
+      on:keydown={onKeydown}
+      custom={keyboardObj_num}
+      --height="4vh"
+      --background="#efefef"
+      --flex="1"
+      --flex-shrink="0"
+      --flex-grow="1"
+      --font-size="0.75vw"
+      --min-width="1vw"
+      noSwap={['Shift']}
+    />
   </div>
 </div>
 
+// html of proportionally resizable keys in flexbox container
+
+
+
 <!-- <Keyboard_numpad on:keydown={onKeydown} custom={keyboardObj_num} /> -->
 <style>
+  :global(.svelte-keyboard) {
+    width: 100%;
+  }
+
+  .keyboard-qwerty {
+    flex: 3;
+  }
+
+  .keyboard-num {
+    flex: 1;
+  }
+
   .kb-layout-row {
     width: 100%;
     /* height: 5vh; */
