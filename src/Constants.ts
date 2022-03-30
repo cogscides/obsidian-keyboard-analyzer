@@ -188,6 +188,74 @@ export const keyboard_svelte = [
   },
 ]
 
+// keyboard layout in rows for number pad
+export const keyboard_svelte_num = [
+  {
+    row: 0,
+    value: 'Num Lock',
+  },
+  {
+    row: 0,
+    value: '7',
+  },
+  {
+    row: 0,
+    value: '8',
+  },
+  {
+    row: 0,
+    value: '9',
+  },
+  {
+    row: 0,
+    value: '-',
+  },
+  {
+    row: 1,
+    value: '4',
+  },
+  {
+    row: 1,
+    value: '5',
+  },
+  {
+    row: 1,
+    value: '6',
+  },
+  {
+    row: 1,
+    value: '+',
+  },
+  {
+    row: 2,
+    value: '1',
+  },
+  {
+    row: 2,
+    value: '2',
+  },
+  {
+    row: 2,
+    value: '3',
+  },
+  {
+    row: 2,
+    value: 'E',
+  },
+  {
+    row: 3,
+    value: '0',
+  },
+  {
+    row: 3,
+    value: '.',
+  },
+  {
+    row: 3,
+    value: '=',
+  },
+]
+
 export const kb_layout_ansi104eng = [
   [
     'Esc',

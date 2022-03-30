@@ -12,6 +12,7 @@
     kbWinNum,
     kb_layout_ansi104eng,
     keyboard_svelte,
+    keyboard_svelte_num,
   } from 'src/Constants'
   import { onMount } from 'svelte'
 
@@ -21,7 +22,8 @@
   export let view: ShortcutsView
   let viewWidth: number
 
-  let keyboardObject = keyboard_svelte
+  let keyboardObj_qwerty = keyboard_svelte
+  let keyboardObj_num = keyboard_svelte_num
   // let keyboardString = kb_layout_ansi104eng
   // let keyboardWinObject: KeyboardInterface = kbWinNum
 
@@ -83,7 +85,7 @@
 
       <!-- <KeyboardLayout {app} /> -->
       <!-- <KeyboardLayout bind:keyboardKeys={keyboardString} /> -->
-      <KeyboardLayout bind:keyboardObject />
+      <KeyboardLayout bind:keyboardObj_qwerty bind:keyboardObj_num />
 
       <div class="hotkey-settings-container">
         <div class="hotkey-search-container">
