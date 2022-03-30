@@ -13,6 +13,7 @@
     kb_layout_ansi104eng,
     keyboard_svelte,
     keyboard_svelte_num,
+    keyboard_svelte_other,
   } from 'src/Constants'
   import { onMount } from 'svelte'
 
@@ -24,6 +25,7 @@
 
   let keyboardObj_qwerty = keyboard_svelte
   let keyboardObj_num = keyboard_svelte_num
+  let keyboardObj_other = keyboard_svelte_other
   // let keyboardString = kb_layout_ansi104eng
   // let keyboardWinObject: KeyboardInterface = kbWinNum
 
@@ -68,7 +70,11 @@
     id="keyboard-preview-view"
     bind:offsetWidth={viewWidth}
   >
-    <KeyboardLayout bind:keyboardObj_qwerty bind:keyboardObj_num />
+    <KeyboardLayout
+      bind:keyboardObj_qwerty
+      bind:keyboardObj_other
+      bind:keyboardObj_num
+    />
     <div class="markdown-preview-sizer markdown-preview-section">
       <h1>Hello Maaaan 123!</h1>
       <code

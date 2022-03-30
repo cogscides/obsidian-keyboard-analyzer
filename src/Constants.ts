@@ -252,6 +252,62 @@ export const keyboard_svelte = [
   },
 ]
 
+// keyboard layout for other keys and cursor keys
+export const keyboard_svelte_other = [
+  {
+    row: 0,
+    value: 'Insert',
+  },
+  {
+    row: 0,
+    value: 'Home',
+  },
+  {
+    row: 0,
+    value: 'Page Up',
+  },
+  {
+    row: 1,
+    value: 'Delete',
+  },
+  {
+    row: 1,
+    value: 'End',
+  },
+  {
+    row: 1,
+    value: 'Page Down',
+  },
+  {
+    row: 2,
+    value: '',
+  },
+  {
+    row: 3,
+    value: '',
+  },
+  {
+    row: 3,
+    value: 'Up',
+  },
+  {
+    row: 3,
+    value: '',
+  },
+  {
+    row: 4,
+    value: 'Left',
+  },
+  {
+    row: 4,
+    value: 'Down',
+  },
+  {
+    row: 4,
+    value: 'Right',
+  },
+]
+
 // keyboard layout in rows for number pad
 export const keyboard_svelte_num = [
   {

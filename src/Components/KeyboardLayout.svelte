@@ -6,11 +6,12 @@
   // @ts-ignore
   import Keyboard from 'svelte-keyboard'
   export let keyboardObj_qwerty: any = 'standart'
+  export let keyboardObj_other: any = 'standart'
   export let keyboardObj_num: any = 'standart'
 
   // instance of Keyboard
   let Keyboard_qwerty: Keyboard = Keyboard
-  // let Keyboard_add: Keyboard
+  let Keyboard_other: Keyboard = Keyboard
   let Keyboard_num: Keyboard = Keyboard
 
   const onKeydown = (event: any) => {
@@ -25,36 +26,54 @@
   use:watchResize={(e) => {
     console.log(`resize`)
   }}
-  style="display: flex; flex-direction: row; flex-wrap: nowrap; width: 100%; justify-content: center;"
 >
-  <div id="keyboard-qwerty">
-    <Keyboard_qwerty
-      on:keydown={onKeydown}
-      custom={keyboardObj_qwerty}
-      id="keyboard-qwerty"
-      --height="4vh"
-      --background="#efefef"
-      --flex="1"
-      --flex-shrink="0"
-      --flex-grow="1"
-      --font-size="0.75vw"
-      --min-width="1vw"
-      noSwap={['Shift']}
-    />
-  </div>
-  <div id="keyboard-num">
-    <Keyboard_num
-      on:keydown={onKeydown}
-      custom={keyboardObj_num}
-      --height="4vh"
-      --background="#efefef"
-      --flex="1"
-      --flex-shrink="0"
-      --flex-grow="1"
-      --font-size="0.75vw"
-      --min-width="1vw"
-      noSwap={['Shift']}
-    />
+  <div id="keyboard-layout">
+    <div id="keyboard-qwerty">
+      <Keyboard_qwerty
+        on:keydown={onKeydown}
+        custom={keyboardObj_qwerty}
+        id="keyboard-qwerty"
+        --height="4vh"
+        --background="#efefef"
+        --flex="1"
+        --flex-shrink="0"
+        --flex-grow="1"
+        --font-size="0.75vw"
+        --min-width="1vw"
+        --margin="0.05rem"
+        noSwap={['Shift']}
+      />
+    </div>
+    <div id="keyboard-other">
+      <Keyboard_other
+        on:keydown={onKeydown}
+        custom={keyboardObj_other}
+        --height="4vh"
+        --background="#efefef"
+        --flex="1"
+        --flex-shrink="0"
+        --flex-grow="1"
+        --font-size="0.75vw"
+        --min-width="1vw"
+        --margin="0.05rem"
+        noSwap={['Shift']}
+      />
+    </div>
+    <div id="keyboard-num">
+      <Keyboard_num
+        on:keydown={onKeydown}
+        custom={keyboardObj_num}
+        --height="4vh"
+        --background="#efefef"
+        --flex="1"
+        --flex-shrink="0"
+        --flex-grow="1"
+        --font-size="0.75vw"
+        --min-width="1vw"
+        --margin="0.05rem"
+        noSwap={['Shift']}
+      />
+    </div>
   </div>
 </div>
 
@@ -68,11 +87,27 @@
     width: 100%;
   }
 
-  .keyboard-qwerty {
+  :global(.svelte-keyboard button.key) {
+    padding: 6px 12px;
+  }
+
+  #keyboard-layout {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: center;
+  }
+
+  #keyboard-qwerty {
     flex: 3;
   }
 
-  .keyboard-num {
+  #keyboard-other {
+    flex: 1;
+  }
+
+  #keyboard-num {
     flex: 1;
   }
 
