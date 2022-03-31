@@ -34,13 +34,14 @@
         custom={keyboardObj_qwerty}
         id="keyboard-qwerty"
         --height="4vh"
+        --border-radius="0"
         --background="#efefef"
         --flex="1"
         --flex-shrink="0"
         --flex-grow="1"
-        --font-size="0.75vw"
+        --font-size="12px"
         --min-width="1vw"
-        --margin="0.05rem"
+        --margin="0.1rem"
         noSwap={['Shift']}
       />
     </div>
@@ -49,13 +50,14 @@
         on:keydown={onKeydown}
         custom={keyboardObj_other}
         --height="4vh"
+        --border-radius="0"
         --background="#efefef"
         --flex="1"
         --flex-shrink="0"
         --flex-grow="1"
-        --font-size="0.75vw"
+        --font-size="12px"
         --min-width="1vw"
-        --margin="0.05rem"
+        --margin="0.1rem"
         noSwap={['Shift']}
       />
     </div>
@@ -64,13 +66,14 @@
         on:keydown={onKeydown}
         custom={keyboardObj_num}
         --height="4vh"
+        --border-radius="0"
         --background="#efefef"
         --flex="1"
         --flex-shrink="0"
         --flex-grow="1"
-        --font-size="0.75vw"
+        --font-size="12px"
         --min-width="1vw"
-        --margin="0.05rem"
+        --margin="0.1rem"
         noSwap={['Shift']}
       />
     </div>
@@ -85,10 +88,20 @@
 <style>
   :global(.svelte-keyboard) {
     width: 100%;
+    /* transform: scale(0.5); */
+  }
+
+  :global(.svelte-keyboard button.key--) {
+    background: transparent;
   }
 
   :global(.svelte-keyboard button.key) {
-    padding: 6px 12px;
+    padding: 4px 0px;
+    text-align: center;
+  }
+
+  #keyboard {
+    padding: 0 5vw;
   }
 
   #keyboard-layout {
