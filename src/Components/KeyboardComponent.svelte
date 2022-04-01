@@ -6,6 +6,7 @@
     KeyboardAnalizerSettings,
     KeyboardInterface,
   } from 'src/Interfaces'
+  import { watchResize } from 'svelte-watch-resize'
   import KeyboardLayout from './KeyboardLayout.svelte'
   import { getCommands } from 'src/AppShortcuts'
   import {
@@ -17,39 +18,33 @@
   } from 'src/Constants'
   import { onMount } from 'svelte'
 
+  // obsidian init
   export let app: App
   export let plugin: KeyboardAnalizerPlugin
   export let settings: KeyboardAnalizerSettings
   export let view: ShortcutsView
   let viewWidth: number
+  let viewMode: string = 'desktop'
 
+  // instance of Keyboard
   let keyboardObj_qwerty = keyboard_svelte
   let keyboardObj_num = keyboard_svelte_num
   let keyboardObj_other = keyboard_svelte_other
-  // let keyboardString = kb_layout_ansi104eng
-  // let keyboardWinObject: KeyboardInterface = kbWinNum
 
-  // const ro = new ResizeObserver((entries) => {
-  //   for (let entry of entries) {
-  //     viewWidth = entry.contentRect.width
-  //   }
-  // })
-
-  // onMount(() => {
-  //   ro.observe(document.querySelector('#KB-view'))
-
-  //   console.log(
-  //     parseInt(
-  //       getComputedStyle(document.querySelector('#KB-view')).getPropertyValue(
-  //         'width'
-  //       ),
-  //       10
-  //     )
-  //   )
-  // })
-
+  // receive hotkeys
   let cmds = getCommands(app)
-  console.log(app.hotkeyManager)
+  // console.log(app.hotkeyManager)
+
+  function handleLeftResize(node: any) {
+    // check screen resolution variable "viewWidth" and update state to viewMode
+    if (viewWidth < 768) {
+      viewMode = 'mobile'
+    } else if (viewWidth >= 768 && viewWidth < 1280) {
+      viewMode = 'laptop'
+    } else if (viewWidth >= 1281) {
+      viewMode = 'desktop'
+    }
+  }
 
   // const handlePickKey = (value: any) => {
   //   console.log(value)
@@ -64,26 +59,28 @@
   }
 </script>
 
-<div style="width: 100%; height:100%;">
+<div id="keyboard-component" style="width: 100%; height:100%;" class={viewMode}>
   <div
     class="markdown-preview-view is-readable-line-width"
     id="keyboard-preview-view"
     bind:offsetWidth={viewWidth}
+    use:watchResize={handleLeftResize}
   >
     <KeyboardLayout
       bind:keyboardObj_qwerty
       bind:keyboardObj_other
       bind:keyboardObj_num
+      screenState={viewMode}
     />
     <div class="markdown-preview-sizer markdown-preview-section">
       <h1>Hello Maaaan 123!</h1>
       <code
         >viewWidth: {viewWidth}<br />
         {#if viewWidth >= 1281}
-          viewClass: default
-        {:else if viewWidth < 1281 && viewWidth >= 481}
-          viewClass: tablet
-        {:else if viewWidth < 481}
+          viewClass: desktop
+        {:else if viewWidth < 1280 && viewWidth >= 769}
+          viewClass: laptop
+        {:else if viewWidth < 768}
           viewClass: mobile
         {/if}</code
       >

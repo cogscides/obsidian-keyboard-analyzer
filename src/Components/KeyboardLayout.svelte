@@ -1,13 +1,12 @@
 <script lang="ts">
-  import type { Key, Row, KeyboardInterface } from 'src/Interfaces'
   import { watchResize } from 'svelte-watch-resize'
-  let wrapperWidth: number
-  let wrapperHeight: number
+
   // @ts-ignore
   import Keyboard from 'svelte-keyboard'
   export let keyboardObj_qwerty: any = 'standart'
   export let keyboardObj_other: any = 'standart'
   export let keyboardObj_num: any = 'standart'
+  export let screenState: string = 'desktop'
 
   // instance of Keyboard
   let Keyboard_qwerty: Keyboard = Keyboard
@@ -19,14 +18,7 @@
   }
 </script>
 
-<div
-  id="keyboard"
-  bind:offsetWidth={wrapperWidth}
-  bind:offsetHeight={wrapperHeight}
-  use:watchResize={(e) => {
-    console.log(`resize`)
-  }}
->
+<div id="keyboard" class={screenState}>
   <div id="keyboard-layout">
     <div id="keyboard-qwerty">
       <Keyboard_qwerty
@@ -80,10 +72,6 @@
   </div>
 </div>
 
-// html of proportionally resizable keys in flexbox container
-
-
-
 <!-- <Keyboard_numpad on:keydown={onKeydown} custom={keyboardObj_num} /> -->
 <style>
   :global(.svelte-keyboard) {
@@ -101,7 +89,7 @@
   }
 
   #keyboard {
-    padding: 0 5vw;
+    width: 100%;
   }
 
   #keyboard-layout {
@@ -110,6 +98,17 @@
     flex-wrap: nowrap;
     width: 100%;
     justify-content: center;
+    margin: 0 auto;
+  }
+
+  .desktop #keyboard-layout {
+    max-width: 1280px;
+  }
+  .laptop #keyboard-layout {
+    max-width: 800px;
+  }
+  .mobile #keyboard-layout {
+    max-width: 100%;
   }
 
   #keyboard-qwerty {
