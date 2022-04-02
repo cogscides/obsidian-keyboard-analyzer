@@ -13,6 +13,9 @@
   let Keyboard_other: Keyboard = Keyboard
   let Keyboard_num: Keyboard = Keyboard
 
+  // special symbols
+  $: specialClasses = { '': 'invisible' }
+
   const onKeydown = (event: any) => {
     console.log(event.detail)
   }
@@ -39,6 +42,7 @@
     <div id="keyboard-other">
       <Keyboard_other
         on:keydown={onKeydown}
+        keyClass={specialClasses}
         custom={keyboardObj_other}
         --border-radius="0"
         --background="#efefef"
@@ -77,8 +81,20 @@
     /* transform: scale(0.5); */
   }
 
+  /* :global(.svelte-keyboard:nth-last-child(1)) {
+    display: none;
+  } */
+
   :global(.svelte-keyboard button.key--) {
-    background: transparent;
+    background: transparent !important;
+    background-color: transparent;
+    user-select: none;
+    background-color: unset !important;
+    color: unset !important;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
   }
 
   :global(.svelte-keyboard button.key--.active) {
@@ -93,6 +109,12 @@
     text-align: center;
     color: var(--text-normal);
     background-color: var(--background-secondary-alt);
+  }
+  :global(.svelte-keyboard button.key:hover) {
+    background-color: var(--interactive-accent);
+  }
+  :global(.svelte-keyboard button.key:active) {
+    background-color: red;
   }
 
   #keyboard {
@@ -153,8 +175,11 @@
 
   /* mobile adj */
   .mobile #keyboard-layout {
+    justify-content: flex-start;
     max-width: 100%;
     transition: max-width 1s;
+    overflow-x: scroll;
+    padding-bottom: 1rem;
   }
 
   #keyboard.mobile {

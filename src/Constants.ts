@@ -264,7 +264,8 @@ export const keyboard_svelte_other = [
   },
   {
     row: 0,
-    value: 'Page Up',
+    value: 'Pg Up',
+    display: 'Page Up',
   },
   {
     row: 1,
@@ -276,7 +277,8 @@ export const keyboard_svelte_other = [
   },
   {
     row: 1,
-    value: 'Page Down',
+    value: 'Pg Down',
+    display: 'Pg Down',
   },
   {
     row: 2,
