@@ -25,7 +25,6 @@
         on:keydown={onKeydown}
         custom={keyboardObj_qwerty}
         id="keyboard-qwerty"
-        --height="4vh"
         --border-radius="0"
         --background="#efefef"
         --flex="1"
@@ -41,7 +40,6 @@
       <Keyboard_other
         on:keydown={onKeydown}
         custom={keyboardObj_other}
-        --height="4vh"
         --border-radius="0"
         --background="#efefef"
         --flex="1"
@@ -57,7 +55,6 @@
       <Keyboard_num
         on:keydown={onKeydown}
         custom={keyboardObj_num}
-        --height="4vh"
         --border-radius="0"
         --background="#efefef"
         --flex="1"
@@ -76,6 +73,7 @@
 <style>
   :global(.svelte-keyboard) {
     width: 100%;
+    height: 100%;
     /* transform: scale(0.5); */
   }
 
@@ -83,9 +81,18 @@
     background: transparent;
   }
 
+  :global(.svelte-keyboard button.key--.active) {
+    background: transparent;
+  }
+
   :global(.svelte-keyboard button.key) {
     padding: 4px 0px;
+    border-radius: 4px;
+    font-size: 12px;
+    height: 100%;
     text-align: center;
+    color: var(--text-normal);
+    background-color: var(--background-secondary-alt);
   }
 
   #keyboard {
@@ -97,20 +104,69 @@
     flex-direction: row;
     flex-wrap: nowrap;
     width: 100%;
+    height: 100%;
     justify-content: center;
     margin: 0 auto;
+    transition: width 2s;
   }
 
+  :global(.svelte-keyboard .page.visible) {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  :global(.svelte-keyboard > .page) {
+    display: block;
+  }
+
+  :global(.svelte-keyboard .page > .row) {
+    height: 100%;
+  }
+
+  /* desktop adj */
   .desktop #keyboard-layout {
     max-width: 1280px;
-  }
-  .laptop #keyboard-layout {
-    max-width: 800px;
-  }
-  .mobile #keyboard-layout {
-    max-width: 100%;
+    transition: max-width 1s;
   }
 
+  #keyboard.desktop {
+    height: 360px;
+    transition: height 1s;
+  }
+  :global(#keyboard.desktop .row) {
+    margin: 4px 0;
+  }
+
+  /* laptop adj */
+  .laptop #keyboard-layout {
+    max-width: 800px;
+    transition: max-width 1s;
+  }
+  #keyboard.laptop {
+    height: 280px;
+    transition: height 1s;
+  }
+  :global(#keyboard.laptop .row) {
+    margin: 2px 0;
+  }
+
+  /* mobile adj */
+  .mobile #keyboard-layout {
+    max-width: 100%;
+    transition: max-width 1s;
+  }
+
+  #keyboard.mobile {
+    height: 280px;
+    transition: height 1s;
+  }
+
+  :global(#keyboard.mobile .row) {
+    margin: 2px 0;
+  }
+
+  /* key groups */
   #keyboard-qwerty {
     flex: 3;
   }
@@ -123,6 +179,7 @@
     flex: 1;
   }
 
+  /* rows */
   .kb-layout-row {
     width: 100%;
     /* height: 5vh; */
