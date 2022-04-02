@@ -35,7 +35,6 @@
         --flex-grow="1"
         --font-size="12px"
         --min-width="1vw"
-        --margin="0.1rem"
         noSwap={['Shift']}
       />
     </div>
@@ -51,7 +50,6 @@
         --flex-grow="1"
         --font-size="12px"
         --min-width="1vw"
-        --margin="0.1rem"
         noSwap={['Shift']}
       />
     </div>
@@ -66,7 +64,6 @@
         --flex-grow="1"
         --font-size="12px"
         --min-width="1vw"
-        --margin="0.1rem"
         noSwap={['Shift']}
       />
     </div>
@@ -108,6 +105,7 @@
     height: 100%;
     text-align: center;
     color: var(--text-normal);
+    margin: 0px 2px;
     background-color: var(--background-secondary-alt);
   }
   :global(.svelte-keyboard button.key:hover) {
@@ -159,6 +157,9 @@
   :global(#keyboard.desktop .row) {
     margin: 4px 0;
   }
+  :global(#keyboard.desktop button.key) {
+    padding: 6px 16px 8px 16px;
+  }
 
   /* laptop adj */
   .laptop #keyboard-layout {
@@ -171,6 +172,9 @@
   }
   :global(#keyboard.laptop .row) {
     margin: 2px 0;
+  }
+  :global(#keyboard.desktop button.key) {
+    /* padding: 6px 16px 8px 16px; */
   }
 
   /* mobile adj */
@@ -189,6 +193,11 @@
 
   :global(#keyboard.mobile .row) {
     margin: 2px 0;
+  }
+
+  :global(#keyboard.mobile button.key) {
+    padding: 6px;
+    min-height: 34px;
   }
 
   /* key groups */
