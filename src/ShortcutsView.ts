@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf } from 'obsidian'
 import type KeyboardAnalizerPlugin from 'src/main'
 // import KeyboardAnalizerSettings from 'src/main'
 // import { openOrSwitch } from 'obsidian-community-lib'
+// @ts-ignore
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
 import KeyboardComponent from './Components/KeyboardComponent.svelte'
 

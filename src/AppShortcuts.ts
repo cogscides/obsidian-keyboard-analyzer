@@ -1,90 +1,81 @@
-import type { Command, Hotkey, Modifier } from 'obsidian'
+import type { Command, Hotkey, Modifier, App } from 'obsidian'
 
-const getNestedObject = (nestedObj: any, pathArr: Array<any>) => {
-  return pathArr.reduce(
-    (obj, key) => (obj && obj[key] !== 'undefined' ? obj[key] : undefined),
-    nestedObj
-  )
-}
+//@ts-ignore V0.0.1
+// export function getCommands(app: App) {
+//   let commands: Command[] = Object.values(app.commands.commands)
+//   // console.log(Object.values(app.commands.commands))
 
-// function hilite(keys: Array<string>, how: Object) {
-//   // need to check if existing key combo is overridden by undefining it
-//   if (keys && keys[1][0] !== undefined) {
-//     return how + keys.flat(2).join('+').replace('Mod', 'Ctrl') + how
-//   } else {
-//     return how + '–' + how
+//   // check
+//   console.log('hotkeyManager: ')
+//   console.log(app.hotkeyManager)
+
+//   if (app.hotkeyManager.customKeys) {
+//     // for each key in customKeys (which is an object) get the value (which is an array of hotkeys)
+//     // for each hotkey in the array, get the command and add it to the commands array
+//     Object.values(app.hotkeyManager.customKeys).forEach((hotkeys: Hotkey[]) => {
+//       hotkeys.forEach((hotkey: Hotkey) => {
+//         console.log('hotkey: ', hotkey)
+
+//         // commands.push(hotkey)
+//       })
+//     })
 //   }
+
+//   function checkUndefinedCommands(item: Command) {
+//     // function to remove undefined and without hotkeys
+//     if (item.hotkeys != undefined) {
+//       console.log(item)
+//     }
+
+//     // from key-promoter plugin
+
+//     // if (command.hotkeys) {
+//     //   command.hotkeys.forEach((hotkey: Hotkey) => {
+//     //     let hotkeyDescription = ''
+//     //     hotkeyDescription += hotkey.modifiers
+//     //       .map((modifier) => {
+//     //         if (modifier === 'Mod') {
+//     //           return 'Ctrl/Cmd'
+//     //         }
+//     //         if (modifier === 'Meta') {
+//     //           return 'Win/Cmd'
+//     //         }
+//     //         return modifier
+//     //       })
+//     //       .join('+')
+//     //     hotkeyDescription += '+' + hotkey.key
+//     //     hotkeys.push(hotkeyDescription)
+//     //   })
+//     //   console.log(hotkeys)
+
+//     return item.hotkeys != undefined
+//     // && item.hotkeys.length > 0
+//   }
+
+//   console.log('commands:')
+//   commands = commands.filter(checkUndefinedCommands)
+//   console.log(commands)
+
+//   console.log('commands-2:')
+
+//   let hotKeyDict = Object.assign(
+//     {},
+//     ...app.hotkeyManager.bakedIds.map((id: any, i: number) => ({
+//       [id]: app.hotkeyManager.bakedHotkeys[i],
+//     }))
+//   )
+//   console.log(hotKeyDict)
+
+//   return commands
 // }
 
-//@ts-ignore
-// function getHotkey(arr: Array<any>, highlight = true) {
-//   let hi = highlight ? '**' : ''
-//   let defkeys = arr.hotkeys
-//     ? [
-//         [getNestedObject(arr.hotkeys, [0, 'modifiers'])],
-//         [getNestedObject(arr.hotkeys, [0, 'key'])],
-//       ]
-//     : undefined
-//   let ck = app.hotkeyManager.customKeys[arr.id]
-//   var hotkeys = ck
-//     ? [
-//         [getNestedObject(ck, [0, 'modifiers'])],
-//         [getNestedObject(ck, [0, 'key'])],
-//       ]
-//     : undefined
-//   return hotkeys ? hilite(hotkeys, hi) : hilite(defkeys, '')
-// }
-
-//@ts-ignore
-export function getCommands(app: App) {
-  let commands: Command[] = Object.values(app.commands.commands)
-  console.log(Object.values(app.commands.commands))
-
-  function checkUndefinedCommands(item: Command) {
-    // function to remove undefined and without hotkeys
-    if (item.hotkeys != undefined && item.hotkeys.length < 0) {
-      console.log(item)
-    }
-    return item.hotkeys != undefined
-    // && item.hotkeys.length > 0
-  }
-
-  commands = commands.filter(checkUndefinedCommands)
-  console.log(commands)
-  // commands.filter((command) =>
-  //   command.hotkeys === undefined && command.hotkeys.length > 0
-  //     ? console.log(command.hotkeys)
-  //     : false
-  // )
-
-  // need to check if existing key combo is overridden by undefining it
-  // let defkeys = commands
-  //   ? [
-  //       [getNestedObject(commands, [0, 'modifiers'])],
-  //       [getNestedObject(commands, [0, 'key'])],
-  //     ]
-  //   : undefined
-  // let ck = app.hotkeyManager.customKeys
-  // var hotkeys = ck
-  //   ? [
-  //       [getNestedObject(ck, [0, 'modifiers'])],
-  //       [getNestedObject(ck, [0, 'key'])],
-  //     ]
-  //   : undefined
-
-  // console.log('app.commands:')
-  // console.log(app.commands)
-
-  console.log('commands:')
-  console.log(commands)
-
-  // console.log('defkeys:')
-  // console.log(defkeys)
-
-  // console.log('hotkeys:')
-  // console.log(hotkeys)
-
-  return commands
+export function getHotkeysV2(app: App) {
+  let tKeyDict: Hotkey[] = Object.assign(
+    {},
+    ...app.hotkeyManager.bakedIds.map((id: any, i: any) => ({
+      [id]: app.hotkeyManager.bakedHotkeys[i],
+    }))
+  )
+  console.log(tKeyDict)
+  return tKeyDict
 }
-
-// export const commands: Command[] = Object.values(this.app.commands.commands)

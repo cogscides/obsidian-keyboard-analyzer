@@ -99,7 +99,7 @@
   }
 
   :global(.svelte-keyboard button.key) {
-    padding: 4px 0px;
+    padding: 4px 16px;
     border-radius: 4px;
     font-size: 12px;
     height: 100%;
@@ -148,6 +148,10 @@
   .desktop #keyboard-layout {
     max-width: 1280px;
     transition: max-width 1s;
+  }
+
+  :global(.svelte-keyboard button.key) {
+    padding: 4px 12px;
   }
 
   #keyboard.desktop {
@@ -213,23 +217,14 @@
     flex: 1;
   }
 
-  /* rows */
-  .kb-layout-row {
-    width: 100%;
-    /* height: 5vh; */
-    height: auto;
-    /* background-color: var(--background-primary); */
-    display: flex;
-
-    /* width: 100%;
-    height: 3em;
-    background: #0f0f0f;
-    display: flex; */
+  /* key classes */
+  :global(button.key--LShift) {
+    flex: 1;
   }
-
-  /* .kb-layout-key {
-    flex: 1 1 auto;
-    height: 3em !important;
-    min-width: 2em !important;
-  } */
+  :global(button.key--RShift) {
+    flex: 2.5;
+  }
+  :global(button.key--Caps) {
+    flex: 2.5;
+  }
 </style>

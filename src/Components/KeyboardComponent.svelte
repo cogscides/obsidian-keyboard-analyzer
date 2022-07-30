@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { App } from 'obsidian'
+  import type { App, Hotkey, Command } from 'obsidian'
   import type ShortcutsView from 'src/ShortcutsView'
   import type KeyboardAnalizerPlugin from 'src/main'
   import type {
@@ -8,7 +8,7 @@
   } from 'src/Interfaces'
   import { watchResize } from 'svelte-watch-resize'
   import KeyboardLayout from './KeyboardLayout.svelte'
-  import { getCommands } from 'src/AppShortcuts'
+  import { getHotkeysV2 } from 'src/AppShortcuts'
   import {
     kbWinNum,
     kb_layout_ansi104eng,
@@ -32,8 +32,12 @@
   let keyboardObj_other = keyboard_svelte_other
 
   // receive hotkeys
-  let cmds = getCommands(app)
+  // let cmds = getCommands(app)
+  let cmds2: Hotkey[] = getHotkeysV2(app)
   // console.log(app.hotkeyManager)
+
+  // let cmdsSorted = cmds2.map((name, i) => [name, cmds2[i]]).sort()
+  // console.log(cmdsSorted)
 
   function handleLeftResize(node: any) {
     // check screen resolution variable "viewWidth" and update state to viewMode
@@ -55,7 +59,7 @@
     plugin,
     settings,
     view,
-    cmds,
+    cmds2,
   }
 </script>
 
@@ -95,45 +99,47 @@
           <input type="text" placeholder="Filter..." />
         </div>
         <div class="search-results">
-          Found {cmds.length} assigned hotkeys
+          Found {Object.keys(cmds2).length} assigned hotkeys
         </div>
+        {#each cmds2 as hotkey, key}
+          hotkey
+        {/each}
         <div class="kb-analizer-hotkey-list-container">
-          {#each cmds as command, i}
-            {#if command.hotkeys != undefined && command.hotkeys.length > 0}
-              <div class="kbanalizer-setting-item">
-                <div class="setting-item-info">
-                  <div class="setting-item-name">
-                    {i}. {command.name}
-                  </div>
-                </div>
-                <div class="kbanalizer-setting-item-control">
-                  <div class="setting-command-hotkeys">
-                    {#each command.hotkeys as hotkey}
-                      {#if hotkey.modifiers}
-                        <span class="kbanalizer-setting-hotkey">
-                          {#each hotkey.modifiers as modifier}
-                            {#if modifier == 'Mod'}
-                              {'Ctrl'} + {' '}
-                            {:else}
-                              {modifier} + {' '}
-                            {/if}
-                          {/each}
-                          {#if hotkey.key.length > 1}
-                            {hotkey.key}
-                          {:else}
-                            {hotkey.key.toUpperCase()}
-                          {/if}
-                        </span>
-                      {:else if hotkey.key.length > 1}
-                        {hotkey.key}
-                      {:else}
-                        {hotkey.key.toUpperCase()}
-                      {/if}
-                    {/each}
-                  </div>
+          {#each cmds2 as hotkey}
+            <div class="kbanalizer-setting-item">
+              <div class="setting-item-info">
+                <div class="setting-item-name">
+                  {hotkey}
+                  something
                 </div>
               </div>
-            {/if}
+              <!-- <div class="kbanalizer-setting-item-control">
+                <div class="setting-command-hotkeys">
+                  {#each command.hotkeys as hotkey}
+                    {#if hotkey.modifiers}
+                      <span class="kbanalizer-setting-hotkey">
+                        {#each hotkey.modifiers as modifier}
+                          {#if modifier == 'Mod'}
+                            {'Ctrl'} + {' '}
+                          {:else}
+                            {modifier} + {' '}
+                          {/if}
+                        {/each}
+                        {#if hotkey.key.length > 1}
+                          {hotkey.key}
+                        {:else}
+                          {hotkey.key.toUpperCase()}
+                        {/if}
+                      </span>
+                    {:else if hotkey.key.length > 1}
+                      {hotkey.key}
+                    {:else}
+                      {hotkey.key.toUpperCase()}
+                    {/if}
+                  {/each}
+                </div>
+              </div> -->
+            </div>
           {/each}
         </div>
       </div>

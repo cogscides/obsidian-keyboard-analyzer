@@ -5,6 +5,7 @@ import {
   Modal,
   Notice,
   Plugin,
+  Hotkey,
   PluginSettingTab,
   setIcon,
   Setting,
@@ -12,6 +13,7 @@ import {
 } from 'obsidian'
 import { openView, wait } from 'obsidian-community-lib'
 import ShortcutsView from 'src/ShortcutsView'
+// @ts-ignore
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
 import type { KeyboardAnalizerSettings } from 'src/Interfaces'
 
