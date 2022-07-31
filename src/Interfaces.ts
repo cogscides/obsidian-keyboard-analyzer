@@ -1,5 +1,11 @@
+import type { Hotkey } from 'obsidian'
+
 export interface KeyboardAnalizerSettings {
   showStatusBarItem: string
+}
+
+export type allHotkeys = {
+  [key: string]: Hotkey
 }
 
 // export interface KeyObj {

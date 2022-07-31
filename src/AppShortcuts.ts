@@ -1,4 +1,5 @@
 import type { Command, Hotkey, Modifier, App } from 'obsidian'
+import type { allHotkeys } from 'src/Interfaces'
 
 //@ts-ignore V0.0.1
 // export function getCommands(app: App) {
@@ -70,7 +71,11 @@ import type { Command, Hotkey, Modifier, App } from 'obsidian'
 // }
 
 export function getHotkeysV2(app: App) {
-  let tKeyDict: Hotkey[] = Object.assign(
+  app.hotkeyManager.bake()
+  console.log('baked hotkeys:', app.hotkeyManager.bakedIds)
+  // TODO combine hotkey id and hotkey
+  // https://stackoverflow.com/questions/5100376/how-to-watch-for-array-changes#:~:text=I%20used%20the%20following%20code%20to%20listen%20to%20changes%20to%20an%20array.
+  let tKeyDict: allHotkeys = Object.assign(
     {},
     ...app.hotkeyManager.bakedIds.map((id: any, i: any) => ({
       [id]: app.hotkeyManager.bakedHotkeys[i],

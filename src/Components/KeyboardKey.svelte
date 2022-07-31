@@ -53,9 +53,9 @@
 <style>
   .kb-layout-key {
     /* flex: 0 0 auto; */
-    height: 3em;
+    height: 20px;
     /* width: 100%; */
-    flex-basis: 5.6%;
+    width: 20px;
     white-space: nowrap;
     border-radius: 4px;
     /* min-width: 1rem !important; */

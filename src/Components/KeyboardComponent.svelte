@@ -5,6 +5,7 @@
   import type {
     KeyboardAnalizerSettings,
     KeyboardInterface,
+    allHotkeys,
   } from 'src/Interfaces'
   import { watchResize } from 'svelte-watch-resize'
   import KeyboardLayout from './KeyboardLayout.svelte'
@@ -33,20 +34,39 @@
 
   // receive hotkeys
   // let cmds = getCommands(app)
-  let cmds2: Hotkey[] = getHotkeysV2(app)
-  // console.log(app.hotkeyManager)
+
+  let cmds2: allHotkeys = getHotkeysV2(app)
+  // hotkeys fetched from inside the keyboard component -> move to view
+  // console.log(cmds2)
 
   // let cmdsSorted = cmds2.map((name, i) => [name, cmds2[i]]).sort()
   // console.log(cmdsSorted)
 
-  function handleLeftResize(node: any) {
+  // convert hotkeys object cmds2 to array of objects with name and assigned hotkey
+  let hotkeysList: any = [
+    ...Object.keys(cmds2).map((name) => {
+      return {
+        name,
+        ...cmds2[name],
+      }
+    }),
+  ]
+
+  // track resize and assign device classes to each width
+  function handleResize() {
     // check screen resolution variable "viewWidth" and update state to viewMode
-    if (viewWidth < 768) {
-      viewMode = 'mobile'
-    } else if (viewWidth >= 768 && viewWidth < 1280) {
-      viewMode = 'laptop'
-    } else if (viewWidth >= 1281) {
-      viewMode = 'desktop'
+    if (viewWidth >= 1400) {
+      viewMode = 'xxl'
+    } else if (viewWidth >= 1200 && viewWidth < 1400) {
+      viewMode = 'xl'
+    } else if (viewWidth >= 992 && viewWidth < 1200) {
+      viewMode = 'lg'
+    } else if (viewWidth >= 768 && viewWidth < 992) {
+      viewMode = 'md'
+    } else if (viewWidth >= 576 && viewWidth < 768) {
+      viewMode = 'sm'
+    } else if (viewWidth < 576) {
+      viewMode = 'xs'
     }
   }
 
@@ -63,30 +83,27 @@
   }
 </script>
 
-<div id="keyboard-component" style="width: 100%; height:100%;" class={viewMode}>
-  <div
-    class="markdown-preview-view is-readable-line-width"
-    id="keyboard-preview-view"
-    bind:offsetWidth={viewWidth}
-    use:watchResize={handleLeftResize}
-  >
+<div
+  id="keyboard-component"
+  class={viewMode}
+  use:watchResize={handleResize}
+  bind:offsetWidth={viewWidth}
+>
+  <div class="markdown-preview-view" id="keyboard-preview-view">
     <KeyboardLayout
       bind:keyboardObj_qwerty
       bind:keyboardObj_other
       bind:keyboardObj_num
       screenState={viewMode}
     />
-    <div class="markdown-preview-sizer markdown-preview-section">
+    <div
+      id="hotkeys-wrapper"
+      class="markdown-preview-sizer markdown-preview-section"
+    >
       <h1>Hello Maaaan 123!</h1>
       <code
         >viewWidth: {viewWidth}<br />
-        {#if viewWidth >= 1281}
-          viewClass: desktop
-        {:else if viewWidth < 1280 && viewWidth >= 769}
-          viewClass: laptop
-        {:else if viewWidth < 768}
-          viewClass: mobile
-        {/if}</code
+        viewClass: {viewMode}</code
       >
 
       <!-- <button on:click={handlePickKey}>test me</button> -->
@@ -99,18 +116,22 @@
           <input type="text" placeholder="Filter..." />
         </div>
         <div class="search-results">
-          Found {Object.keys(cmds2).length} assigned hotkeys
+          Found {hotkeysList.length} assigned hotkeys
         </div>
-        {#each cmds2 as hotkey, key}
-          hotkey
-        {/each}
         <div class="kb-analizer-hotkey-list-container">
-          {#each cmds2 as hotkey}
+          {#each hotkeysList as hotkey, i}
             <div class="kbanalizer-setting-item">
               <div class="setting-item-info">
                 <div class="setting-item-name">
-                  {hotkey}
-                  something
+                  {i + 1}
+                  {hotkey.name}
+                  {#if hotkeysList[hotkey.name] == typeof Array}
+                    {#each hotkeysList[hotkey.name] as modifiers}
+                      {modifiers}
+                    {/each}
+                  {:else}
+                    {hotkey.key} - {hotkey.modifiers}
+                  {/if}
                 </div>
               </div>
               <!-- <div class="kbanalizer-setting-item-control">
@@ -148,68 +169,7 @@
 </div>
 
 <style>
-  .keyboard-wrapper {
-    max-width: 700px;
-  }
-
-  #KB-view {
-    padding: 0px !important;
-  }
-
-  .KB-view > .hotkey-setting-container {
-    display: flex;
-    overflow: visible;
-    flex-direction: column;
-    padding-bottom: 60px;
-  }
-
-  #keyboard-preview-view {
-    overflow-x: hidden;
-  }
-
-  .search-results {
-    color: var(--text-muted);
-    padding: 0px 20px 20px 0px;
-    /* border-bottom: 1px solid var(--background-modifier-border) !important; */
-  }
-
-  /* .KB-view > .setting-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0 12px 0;
-    border-top: 1px solid var(--background-modifier-border);
-  } */
-
-  .kbanalizer-setting-item {
-    display: flex;
-    align-items: center;
-    border-top: 1px solid var(--background-modifier-border);
-    padding: 18px 0px 18px 0px;
-  }
-
-  .kbanalizer-setting-item-control {
-    flex: 1 0 auto !important;
-    flex-shrink: 0 !important;
-  }
-
-  .KB-view > .setting-command-hotkeys {
-    flex-shrink: 0 !important;
-    flex: 1 0 auto !important;
-  }
-
-  .kbanalizer-setting-hotkey {
-    min-height: 24px !important;
-    position: relative;
-    font-size: 12px;
-    background-color: var(--background-secondary-alt);
-    border-radius: 4px;
-    padding: 4px 10px;
-    min-height: 24px;
-    align-self: flex-end;
-    position: relative;
-  }
-
-  .kb-analizer-hotkey-list-container {
-    padding-right: 0px !important;
+  #hotkeys-wrapper {
+    background-color: black;
   }
 </style>
