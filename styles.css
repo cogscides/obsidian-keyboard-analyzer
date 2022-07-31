@@ -7,32 +7,32 @@
 
 /* // Extra Small devices (landscape phones, 576px and up) */
 #keyboard-component.xs {
-  background-color: #f5f5f5;
+  /* background-color: #f5f5f5; */
 }
 
 /* // Small devices (landscape phones, 576px and up) */
 #keyboard-component.sm {
-  background-color: aqua;
+  /* background-color: aqua; */
 }
 
 /* // Medium devices (tablets, 768px and up) */
 #keyboard-component.md {
-  background-color: blueviolet;
+  /* background-color: blueviolet; */
 }
 
 /* // Large devices (desktops, 992px and up) */
 #keyboard-component.lg {
-  background-color: chartreuse;
+  /* background-color: chartreuse; */
 }
 
 /* // X-Large devices (large desktops, 1200px and up) */
 #keyboard-component.xl {
-  background-color: darkcyan;
+  /* background-color: darkcyan; */
 }
 
 /* // XX-Large devices (larger desktops, 1400px and up) */
 #keyboard-component.xxl {
-  background-color: darkgoldenrod;
+  /* background-color: darkgoldenrod; */
 }
 
 #keyboard-component {
@@ -58,6 +58,11 @@
   overflow-x: hidden;
 }
 
+#hotkeys-wrapper {
+  background-color: transparent;
+  max-width: 992px;
+}
+
 .search-results {
   color: var(--text-muted);
   padding: 0px 20px 20px 0px;
@@ -70,6 +75,14 @@
     padding: 12px 0 12px 0;
     border-top: 1px solid var(--background-modifier-border);
   } */
+
+#keyboard-component .setting-item-info small {
+  color: var(--text-muted);
+}
+
+#keyboard-component .hotkey-search-container {
+  padding: 8px 0px 12px 0px;
+}
 
 .kbanalizer-setting-item {
   display: flex;
@@ -91,7 +104,7 @@
 .kbanalizer-setting-hotkey {
   min-height: 24px !important;
   position: relative;
-  font-size: 12px;
+  font-size: 14px;
   background-color: var(--background-secondary-alt);
   border-radius: 4px;
   padding: 4px 10px;

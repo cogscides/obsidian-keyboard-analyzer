@@ -723,3 +723,14 @@ export const kbWinNum: KeyboardInterface = [
     [{ label: 'Enter', height: 2 }],
   ],
 ]
+
+export const SpecialSymbols: {
+  [key: string]: string
+} = {
+  Command: '⌘',
+  Option: '⌥',
+  ArrowLeft: '←',
+  ArrowUp: '↑',
+  ArrowRight: '→',
+  ArrowDown: '↓',
+}

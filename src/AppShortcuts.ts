@@ -57,14 +57,6 @@ import type { allHotkeys } from 'src/Interfaces'
 //   commands = commands.filter(checkUndefinedCommands)
 //   console.log(commands)
 
-//   console.log('commands-2:')
-
-//   let hotKeyDict = Object.assign(
-//     {},
-//     ...app.hotkeyManager.bakedIds.map((id: any, i: number) => ({
-//       [id]: app.hotkeyManager.bakedHotkeys[i],
-//     }))
-//   )
 //   console.log(hotKeyDict)
 
 //   return commands
@@ -72,15 +64,40 @@ import type { allHotkeys } from 'src/Interfaces'
 
 export function getHotkeysV2(app: App) {
   app.hotkeyManager.bake()
-  console.log('baked hotkeys:', app.hotkeyManager.bakedIds)
+
+  // let hotKeys = app.hotkeyManager.bakedHotkeys.map((k: any) =>
+  //   [...k.modifiers.split(','), k.key].join('+')
+  // )
+  // console.log('baked Hotkeys:', hotKeys)
+
+  // console.log(app.hotkeyManager)
+
+  // console.log(
+  //   app.hotkeyManager.bakedIds
+  //     .map((name: string, i: any) => [name, hotKeys[i]])
+  //     .sort()
+  // )
+
   // TODO combine hotkey id and hotkey
   // https://stackoverflow.com/questions/5100376/how-to-watch-for-array-changes#:~:text=I%20used%20the%20following%20code%20to%20listen%20to%20changes%20to%20an%20array.
-  let tKeyDict: allHotkeys = Object.assign(
-    {},
-    ...app.hotkeyManager.bakedIds.map((id: any, i: any) => ({
-      [id]: app.hotkeyManager.bakedHotkeys[i],
-    }))
-  )
-  console.log(tKeyDict)
-  return tKeyDict
+
+  // app.hotkeyManager.bakedIds and app.hotkeyManager.bakedHotkeys are two arrays of the same length
+  // app.hotkeyManager.bakedIds is an array of strings
+  // app.hotkeyManager.bakedHotkeys is an array of Hotkey objects
+  // id may have several hotkeys
+  // combine the two arrays into a dictionary with the key being the id and the value being the array of hotkeys
+  // ids are not unique, if there are multiple hotkeys with the same id, the value will be an array of hotkeys
+
+  let hotKeyDict: { [id: string]: Hotkey[] } = {}
+  app.hotkeyManager.bakedIds.forEach((id: string, i: number) => {
+    if (hotKeyDict[id]) {
+      hotKeyDict[id].push(app.hotkeyManager.bakedHotkeys[i])
+    } else {
+      hotKeyDict[id] = [app.hotkeyManager.bakedHotkeys[i]]
+    }
+    
+  })
+
+  console.log(hotKeyDict)
+  return hotKeyDict
 }

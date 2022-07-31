@@ -1,34 +1,34 @@
 <script lang="ts">
   import type { App } from 'obsidian'
   import { openOrSwitch } from 'obsidian-community-lib'
-  import type AnalysisView from 'src/AnalysisView'
-  import { LINKED, NOT_LINKED, TD_MEASURE, TD_NODE } from 'src/constants'
-  import type {
-    CoCitationRes,
-    GraphAnalysisSettings,
-    Subtype,
-  } from 'src/Interfaces'
+  // import type AnalysisView from 'src/AnalysisView'
+  // import { LINKED, NOT_LINKED, TD_MEASURE, TD_NODE } from 'src/constants'
+  // import type {
+  //   CoCitationRes,
+  //   GraphAnalysisSettings,
+  //   Subtype,
+  // } from 'src/Interfaces'
   import type GraphAnalysisPlugin from 'src/main'
-  import {
-    debug,
-    dropPath,
-    hoverPreview,
-    jumpToSelection,
-    looserIsLinked,
-    openMenu,
-    presentPath,
-    roundNumber,
-  } from 'src/Utility'
+  // import {
+  //   debug,
+  //   dropPath,
+  //   hoverPreview,
+  //   jumpToSelection,
+  //   looserIsLinked,
+  //   openMenu,
+  //   presentPath,
+  //   roundNumber,
+  // } from 'src/Utility'
   import { onMount } from 'svelte'
   import FaLink from 'svelte-icons/fa/FaLink.svelte'
-  import ExtensionIcon from './ExtensionIcon.svelte'
-  import SubtypeOptions from './SubtypeOptions.svelte'
+  // import ExtensionIcon from './ExtensionIcon.svelte'
+  // import SubtypeOptions from './SubtypeOptions.svelte'
 
   export let app: App
-  export let plugin: GraphAnalysisPlugin
-  export let settings: GraphAnalysisSettings
-  export let view: AnalysisView
-  export let currSubtype: Subtype
+  // export let plugin: GraphAnalysisPlugin
+  // export let settings: GraphAnalysisSettings
+  // export let view: AnalysisView
+  // export let currSubtype: Subtype
 
   let currFile = app.workspace.getActiveFile()
   $: currNode = currFile?.path
