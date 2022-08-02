@@ -113,6 +113,10 @@
   position: relative;
 }
 
+.kbanalizer-setting-hotkey.is-customized {
+  background-color: var(--text-selection);
+}
+
 .kb-analizer-hotkey-list-container {
   padding-right: 0px !important;
 }

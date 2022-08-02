@@ -7,10 +7,13 @@ export function getHotkeysV2(app: App) {
 
   let hotKeyDict: hotkeyDict = {}
   app.hotkeyManager.bakedIds.forEach((id: string, i: number) => {
-    if (hotKeyDict[id]) {
-      hotKeyDict[id].push(app.hotkeyManager.bakedHotkeys[i])
-    } else {
-      hotKeyDict[id] = [app.hotkeyManager.bakedHotkeys[i]]
+    if (getCommandNameById(id, app) !== '') {
+      if (hotKeyDict[id]) {
+        hotKeyDict[id].push(app.hotkeyManager.bakedHotkeys[i])
+        console.log(hotKeyDict[id])
+      } else {
+        hotKeyDict[id] = [app.hotkeyManager.bakedHotkeys[i]]
+      }
     }
   })
 

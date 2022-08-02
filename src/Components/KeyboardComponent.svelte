@@ -177,14 +177,21 @@
               <div class="kbanalizer-setting-item-control setting-item-control">
                 <div class="setting-command-hotkeys">
                   {#each commands[key] as hotkey}
-                    <span class="kbanalizer-setting-hotkey setting-hotkey">
+                    <span
+                      class="kbanalizer-setting-hotkey setting-hotkey {isCustomizedHotkey(
+                        key,
+                        hotkey,
+                        app
+                      )
+                        ? 'is-customized'
+                        : ''}"
+                    >
                       {prepareModifiersString(hotkey.modifiers)}{hotkey.key in
                       SpecialSymbols
                         ? SpecialSymbols[hotkey.key]
                         : hotkey.key.length === 1
                         ? hotkey.key.toUpperCase()
                         : hotkey.key}
-                      {isCustomizedHotkey(key, hotkey, app) ? '*' : ''}
                     </span>
                     <!-- {#if isCustomHotkey(entry.name, hotkey)} -->
                     <!-- <span
