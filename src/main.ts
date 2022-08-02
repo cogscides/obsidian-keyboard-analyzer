@@ -133,6 +133,8 @@ export default class KeyboardAnalizerPlugin extends Plugin {
 
     // register click handler
     statusBarEl.addEventListener('click', (evt) => this.onStatusBarClick(evt))
+    // TODO update view on click
+    // TODO update view when commands added or hotkeys changed
   }
 
   async onStatusBarClick(evt: MouseEvent) {

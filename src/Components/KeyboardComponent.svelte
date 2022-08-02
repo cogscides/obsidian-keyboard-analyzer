@@ -9,11 +9,17 @@
   import type {
     KeyboardAnalizerSettings,
     KeyboardInterface,
-    allHotkeys,
+    hotkeyDict,
   } from 'src/Interfaces'
   // funcs
-  import { getHotkeysV2 } from 'src/AppShortcuts'
-  import { getSortedModifiers } from 'src/Utility'
+  import {
+    getHotkeysV2,
+    getCommandNameById,
+    getConvertedModifiers,
+    sortModifiers,
+    prepareModifiersString,
+    isCustomizedHotkey,
+  } from 'src/AppShortcuts'
   // layout
   import KeyboardLayout from './KeyboardLayout.svelte'
   import {
@@ -41,74 +47,54 @@
   // receive hotkeys
   // let cmds = getCommands(app)
 
-  let cmds2: any = getHotkeysV2(app)
+  let commands: hotkeyDict = getHotkeysV2(app)
+  $: visibleCommands = sortCommandsArrayByName(commands)
+
   // hotkeys fetched from inside the keyboard component -> move to view
   // console.log(cmds2)
 
   // convert cmds2 to sorted list of command objects
-  let cmds: any[] = []
-  for (let cmd of Object.keys(cmds2)) {
-    cmds.push({
-      name: cmd,
-      hotkeys: cmds2[cmd],
-      // description: cmd.description,
-      // shortcut: cmd.shortcut,
-      // category: cmd.category,
-      // hidden: cmd.hidden,
-    })
+  // let cmds: any[] = []
+  // for (let cmd of Object.keys(cmds2)) {
+  //   cmds.push({
+  //     name: cmd,
+  //     hotkeys: cmds2[cmd],
+  //     // description: cmd.description,
+  //     // shortcut: cmd.shortcut,
+
+  //     // hidden: cmd.hidden,
+  //   })
+  // }
+
+  // function to trigger sort commands by name, alphabetically
+  function sortCommandsArrayByName(cmds: hotkeyDict) {
+    let sortedCmds: hotkeyDict = {}
+    let cmdsNames: string[] = Object.keys(cmds)
+    cmdsNames.sort()
+    for (let cmdName of cmdsNames) {
+      sortedCmds[cmdName] = cmds[cmdName]
+    }
+    return sortedCmds
   }
 
-  // sort commands by name
-  cmds.sort((a, b) => {
-    if (a.name < b.name) return -1
-    if (a.name > b.name) return 1
-    return 0
-  })
+  // amount of commands
+  let commandsCount: number = 0
 
-  // sort command hotkeys with sortModifiers()
-  for (let entry of cmds) {
-    for (let hotkey of entry.hotkeys) {
-      hotkey.modifiers = getSortedModifiers(hotkey.modifiers).join(',')
+  // function to update amount of hotkeys for all commands
+  function updateCommandsCount() {
+    commandsCount = Object.keys(commands).length
+  }
+  updateCommandsCount()
+
+  let allHotkeysCount: number = 0
+  // function to count hotkeys for all commands
+  function countHotkeys() {
+    allHotkeysCount = 0
+    for (let command of Object.keys(commands)) {
+      allHotkeysCount += commands[command].length
     }
   }
-
-  // get the command name from the hotkey usind app.commands.commands
-  function getCommandNameById(id: string) {
-    let cmd = app.commands.commands[id]
-    if (cmd) {
-      return cmd.name
-    }
-    return ''
-  }
-
-  // check if hotkey is Customized
-  // if reassigned return true
-  // https://forum.obsidian.md/t/dataviewjs-snippet-showcase/17847/37
-  let customKeys = app.hotkeyManager.customKeys
-  function isCustomHotkey(name: string, hotkey: Hotkey) {
-    let customHotkey = customKeys[name]
-    if (customHotkey) {
-      for (let i = 0; i < customHotkey.length; i++) {
-        if (
-          customHotkey[i].key === hotkey.key &&
-          customHotkey[i].modifiers === hotkey.modifiers
-        ) {
-          return true
-        }
-      }
-    }
-  }
-
-  // console.log(cmds)
-  console.log('customKeys', customKeys)
-
-  // amount of hotkeys for all commands
-  let hotkeysCount = 0
-  for (let cmd of cmds) {
-    hotkeysCount += cmd.hotkeys.length
-  }
-
-  // get a list of all hotkeys
+  countHotkeys()
 
   // track resize and assign device classes to each width
   function handleResize() {
@@ -140,7 +126,7 @@
     plugin,
     settings,
     view,
-    cmds2,
+    commands,
   }
 </script>
 
@@ -159,11 +145,11 @@
     />
     <div
       id="hotkeys-wrapper"
-      class="markdown-preview-sizer markdown-preview-section"
+      class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"
     >
       <h1>Hello Maaaan 123!</h1>
-      <code
-        >viewWidth: {viewWidth}<br />
+      <code>
+        viewWidth: {viewWidth}<br />
         viewClass: {viewMode}</code
       >
 
@@ -177,32 +163,37 @@
           <input type="text" placeholder="Filter..." />
         </div>
         <div class="search-results">
-          {hotkeysCount} hotkeys in {cmds.length} commands.
+          {allHotkeysCount} hotkeys in {commandsCount} commands.
         </div>
-        <div class="kb-analizer-hotkey-list-container">
-          {#each cmds as entry}
-            <div class="kbanalizer-setting-item">
+        <div class="hotkey-list-container">
+          {#each Object.keys(visibleCommands) as key, index}
+            <div class="kbanalizer-setting-item setting-item">
               <div class="setting-item-info">
                 <div class="setting-item-name">
-                  {getCommandNameById(entry.name)}
+                  {getCommandNameById(key, app)}
                 </div>
-                <small>{entry.name}</small>
+                <small>{key}</small>
               </div>
-              <div class="kbanalizer-setting-item-control">
+              <div class="kbanalizer-setting-item-control setting-item-control">
                 <div class="setting-command-hotkeys">
-                  {#each entry.hotkeys as hotkey}
-                    <span class="kbanalizer-setting-hotkey">
-                      {hotkey.modifiers
-                        ? hotkey.modifiers.split(',').join('+') + '+'
-                        : ''}{hotkey.key in SpecialSymbols
+                  {#each commands[key] as hotkey}
+                    <span class="kbanalizer-setting-hotkey setting-hotkey">
+                      {prepareModifiersString(hotkey.modifiers)}{hotkey.key in
+                      SpecialSymbols
                         ? SpecialSymbols[hotkey.key]
+                        : hotkey.key.length === 1
+                        ? hotkey.key.toUpperCase()
                         : hotkey.key}
-                      {#if isCustomHotkey(entry.name, hotkey)}
-                        <span class="default-hotkey"
-                          ><small>default</small></span
-                        >
-                      {/if}
+                      {isCustomizedHotkey(key, hotkey, app) ? '*' : ''}
                     </span>
+                    <!-- {#if isCustomHotkey(entry.name, hotkey)} -->
+                    <!-- <span
+                        class="custom-hotkey"
+                        style="background-color: red;"
+                      >
+                        ><small>default</small></span
+                      >
+                    {/if} -->
                   {/each}
                 </div>
               </div>
