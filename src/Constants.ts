@@ -733,4 +733,5 @@ export const SpecialSymbols: {
   ArrowUp: '↑',
   ArrowRight: '→',
   ArrowDown: '↓',
+  Space: '⎵',
 }

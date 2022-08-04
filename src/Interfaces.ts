@@ -1,11 +1,27 @@
-// import type { Hotkey } from 'obsidian'
+import type { Hotkey, Modifier } from 'obsidian'
 
 export interface KeyboardAnalizerSettings {
   showStatusBarItem: string
 }
 
-export type hotkeyDict = {
-  [id: string]: { modifiers: string; key: string }[]
+export interface hotkeyEntry {
+  modifiers: Modifier[]
+  key: string
+  backedModifiers?: string
+  isCustom?: boolean
+}
+
+export interface commandEntry {
+  id: string
+  pluginName: string
+  cmdName: string
+  hotkeys: hotkeyEntry[]
+}
+
+export interface commandsArray extends Array<commandEntry> {}
+
+export interface hotkeyDict {
+  [id: string]: commandEntry
 }
 
 // export interface KeyObj {

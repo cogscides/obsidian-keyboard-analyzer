@@ -47,20 +47,57 @@
   padding: 0px !important;
 }
 
-.KB-view > .hotkey-setting-container {
+#keyboard-component .hotkey-setting-container {
   display: flex;
-  overflow: visible;
+  overflow: unset;
   flex-direction: column;
   padding-bottom: 60px;
+  height: fit-content;
+}
+#keyboard-component .hotkey-list-container {
+  overflow: unset;
 }
 
 #keyboard-preview-view {
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
+}
+
+.setting-item-name span.suggestion-prefix {
+  color: var(--text-muted);
+  font-size: 90%;
+  font-style: italic;
+  text-transform: uppercase;
 }
 
 #hotkeys-wrapper {
   background-color: transparent;
   max-width: 992px;
+}
+
+#keyboard-component .hotkey-search-container {
+  padding: 8px 0px 12px 0px;
+  position: relative;
+  width: fit-content;
+}
+
+#keyboard-component .hotkey-search-container input {
+  height: 40px;
+}
+
+#keyboard-component .hotkey-search-container .search-input-clear-button {
+  position: absolute;
+  right: 8px;
+  top: 18px;
+  color: var(--text-faint);
+  cursor: var(--cursor);
+}
+
+#keyboard-component .hotkey-search-container .search-input-clear-button:before {
+  position: absolute;
+  right: 3px;
+  top: -3px;
+  font-size: 22px;
+  content: '\D7';
 }
 
 .search-results {
@@ -80,8 +117,22 @@
   color: var(--text-muted);
 }
 
-#keyboard-component .hotkey-search-container {
-  padding: 8px 0px 12px 0px;
+#keyboard-component.is-mobile .setting-item {
+  flex-direction: column;
+}
+
+#keyboard-component .hotkey-list-container {
+  padding: 0px 0px 64px 0px;
+}
+
+#keyboard-component .hotkey-list-container .setting-item:first-child {
+  padding: 18px 0px 18px 0px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+#keyboard-component .hotkey-list-container .setting-item:last-child {
+  padding: 18px 0px 18px 0px;
+  border-bottom: 1px solid var(--background-modifier-border);
 }
 
 .kbanalizer-setting-item {

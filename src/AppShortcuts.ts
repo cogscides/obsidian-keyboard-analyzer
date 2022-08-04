@@ -1,30 +1,63 @@
 import type { Command, Hotkey, Modifier, App } from 'obsidian'
 import type { EntryType } from 'perf_hooks'
-import type { hotkeyDict } from 'src/Interfaces'
+import type { hotkeyDict, hotkeyEntry } from 'src/Interfaces'
 
 export function getHotkeysV2(app: App) {
   app.hotkeyManager.bake()
+  let hotKeyDict: hotkeyDict = {} as hotkeyDict
 
-  let hotKeyDict: hotkeyDict = {}
-  app.hotkeyManager.bakedIds.forEach((id: string, i: number) => {
-    if (getCommandNameById(id, app) !== '') {
-      if (hotKeyDict[id]) {
-        hotKeyDict[id].push(app.hotkeyManager.bakedHotkeys[i])
-        console.log(hotKeyDict[id])
-      } else {
-        hotKeyDict[id] = [app.hotkeyManager.bakedHotkeys[i]]
+  const hkm = app.hotkeyManager
+
+  Object.entries(app.commands.commands).forEach(([id, command]) => {
+    let isBuiltInCommand = command.name.split(':').length === 1
+    let pluginName: string = isBuiltInCommand
+      ? 'App'
+      : command.name.split(':', 2)[0]
+    let cmdName: string = isBuiltInCommand
+      ? command.name
+      : command.name.split(':', 2)[1].trim()
+    let hotkeys: Hotkey[] = (hkm.getHotkeys(command.id) ||
+      hkm.getDefaultHotkeys(command.id) ||
+      []) as Hotkey[]
+
+    // function to prepare hotkey object
+    function prepareHotkey(hotkey: Hotkey) {
+      let hotkeyObj: hotkeyEntry = {} as hotkeyEntry
+      if (hotkey.modifiers) {
+        hotkeyObj.modifiers = hotkey.modifiers
+        hotkeyObj.backedModifiers = getConvertedModifiers(
+          hotkey.modifiers
+        ).join(',')
       }
+      hotkeyObj.key = hotkey.key
+      hotkeyObj.isCustom = isCustomizedHotkey(id, hotkey, app)
+      return hotkeyObj
     }
+
+    // assign hotkey to hotkeyDict
+    hotkeys.forEach((hotkey) => {
+      let hotkeyObj = prepareHotkey(hotkey)
+      if (!hotKeyDict[id]) {
+        hotKeyDict[id] = {
+          id,
+          pluginName,
+          cmdName,
+          hotkeys: [hotkeyObj],
+        }
+      } else {
+        hotKeyDict[id].hotkeys.push(hotkeyObj)
+      }
+    })
   })
 
-  // console.log(hotKeyDict)
+  console.log(hotKeyDict)
   return hotKeyDict
 }
 
 export function getCommandNameById(id: string, app: App) {
   let cmd = app.commands.commands[id]
   if (cmd) {
-    return cmd.name
+    return cmd.name as string
   }
   return ''
 }
@@ -33,41 +66,63 @@ export function getCommandNameById(id: string, app: App) {
 // app.hotkeyManager.customKeys store all custom hotkeys
 // if reassigned return true
 // https://forum.obsidian.md/t/dataviewjs-snippet-showcase/17847/37
-export function isCustomizedHotkey(
-  id: string,
-  { modifiers, key }: { modifiers: string; key: string },
-  app: App
-) {
-  let customizedHotkeys: { modifiers: string[]; key: string }[] | undefined =
-    app.hotkeyManager.customKeys[id]
-  if (customizedHotkeys) {
-    console.log(id)
-
-    for (let hotkey of customizedHotkeys) {
-      // prepare customHotkey modifiers
-      let osModifiers = getConvertedModifiers(hotkey.modifiers)
-      let sortedModifiers = sortModifiers(osModifiers)
-      let customHotkeyModifiersString = sortedModifiers.join(',')
-
-      // prepare inputed modifiers
-      let inputModifiers = sortModifiers(
-        unbakeModifiersToArray(modifiers)
-      ).join(',')
-
+export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
+  let customKeys = app.hotkeyManager.customKeys
+  if (customKeys[id]) {
+    for (let customHotkey of customKeys[id]) {
       if (
-        customHotkeyModifiersString !== inputModifiers ||
-        hotkey.key !== key
+        customHotkey.modifiers === hotkey.modifiers &&
+        customHotkey.key === hotkey.key
       ) {
+        return true
+      } else {
         return false
       }
     }
-    return true
-
-    // console.log(customizedHotkeys)
-  } else if (customizedHotkeys === undefined) {
-    return false
   }
+  return false
 }
+
+// check if hotkey is Customized
+// app.hotkeyManager.customKeys store all custom hotkeys
+// if reassigned return true
+// https://forum.obsidian.md/t/dataviewjs-snippet-showcase/17847/37
+// export function isCustomizedHotkey(
+//   id: string,
+//   { modifiers, key }: { modifiers: Modifier[]; key: string } | Hotkey,
+//   app: App
+// ) {
+//   let customizedHotkeys: { modifiers: string[]; key: string }[] | undefined | Hotkey =
+//     app.hotkeyManager.customKeys[id]
+//   if (customizedHotkeys) {
+//     console.log(id)
+
+//     for (let hotkey of customizedHotkeys) {
+//       // prepare customHotkey modifiers
+//       let osModifiers = getConvertedModifiers(hotkey.modifiers)
+//       let sortedModifiers = sortModifiers(osModifiers)
+//       let customHotkeyModifiersString = sortedModifiers.join(',')
+
+//       // prepare inputed modifiers
+//       let inputModifiers = sortModifiers(
+//         unbakeModifiersToArray(modifiers)
+//       ).join(',')
+
+//       if (
+//         customHotkeyModifiersString !== inputModifiers ||
+//         hotkey.key !== key
+//       ) {
+//         return false
+//       }
+//     }
+//     return true
+
+//     // console.log(customizedHotkeys)
+//   } else if (customizedHotkeys === undefined) {
+//     return false
+//   }
+// }
+
 // function isCustomHotkey(name: string, hotkey: string) {
 //   let customHotkeysFound: Hotkey[] = customKeys[name] // if customId exists
 
@@ -100,7 +155,9 @@ export function isCustomizedHotkey(
 // Mod = Cmd on MacOS and Ctrl on other OS
 // Ctrl = Ctrl key for every OS
 // Meta = Cmd on MacOS and Win key on other OS
-export function getConvertedModifiers(modifiers: string[]) {
+export function getConvertedModifiers(modifiers: Modifier[]) {
+  console.log(modifiers)
+
   let convertedModifiers = modifiers.map((modifier: Modifier) => {
     if (modifier === 'Mod') {
       // check macos
@@ -120,11 +177,34 @@ export function getConvertedModifiers(modifiers: string[]) {
     }
     return modifier
   })
-  return convertedModifiers
+  return convertedModifiers as string[]
+}
+
+// unconvert modifier to OS specific modifier, check which OS is running
+// e.g. 'Ctrl' -> 'Mod' on Windows, 'Cmd' on Mac
+// Mod = Cmd on MacOS and Ctrl on other OS
+// Ctrl = Ctrl key for every OS
+// Meta = Cmd on MacOS and Win key on other OS
+export function getUnconvertedModifiers(modifiers: Modifier[]) {
+  let unconvertedModifiers: Modifier[] = modifiers.map((modifier: string) => {
+    if (modifier === 'Ctrl') {
+      return 'Ctrl'
+    }
+    if (modifier === 'Cmd' && process.platform === 'darwin') {
+      return 'Mod'
+    }
+    if (modifier === 'Win') {
+      return 'Meta'
+    }
+    if (modifier === 'Cmd' && process.platform === 'darwin') {
+      return 'Meta'
+    }
+  })
+  return unconvertedModifiers as string[]
 }
 
 // sort modifiers
-export function sortModifiers(modifiers: string[]) {
+export function sortModifiers(modifiers: Modifier[] | string[]) {
   let sortedModifiers = modifiers.sort((a: String, b: String) => {
     if (a === 'Mod') {
       return -1
@@ -157,7 +237,7 @@ export function sortModifiers(modifiers: string[]) {
       return 1
     }
   })
-  return sortedModifiers
+  return sortedModifiers as Modifier[]
 }
 
 // bake Hotkey.modifiers to string
@@ -188,10 +268,10 @@ export function unbakeModifiersToArray(
 }
 
 //  prepare modifiers to display in the UI: sort, convert to OS specific
-export function prepareModifiersString(modifiers: string) {
-  if (modifiers === '') {
+export function prepareModifiersString(modifiers: string[]) {
+  if (modifiers.length) {
     return ''
   } else {
-    return sortModifiers(unbakeModifiersToArray(modifiers)).join(' + ') + ' + '
+    return sortModifiers(modifiers).join(' + ') + ' + '
   }
 }
