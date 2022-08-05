@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { flip } from 'svelte/animate'
   import type { commandsArray } from 'src/Interfaces'
-
-  import { createEventDispatcher } from 'svelte'
   import { SpecialSymbols } from 'src/Constants'
   import {
     prepareModifiersString,
@@ -11,15 +8,7 @@
   } from 'src/AppShortcuts'
 
   export let visibleCommands: commandsArray
-
-  const dispatch = createEventDispatcher()
-
-  function sendPluginName(e: any) {
-    const clicked = e.target.innerHTML
-    dispatch('pluginNameClicked', clicked)
-  }
-
-  // console.log(visibleCommands)
+  console.log(visibleCommands)
 </script>
 
 <!-- <button on:click={handlePickKey}>test me</button> -->
@@ -32,19 +21,16 @@
   class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"
 >
   <div class="hotkey-list-container">
-    {#each visibleCommands as cmdEntry (cmdEntry.id)}
-      <div
-        class="kbanalizer-setting-item setting-item"
-        animate:flip={{ duration: 150 }}
-      >
+    {#each visibleCommands as cmdEntry}
+      <div class="kbanalizer-setting-item setting-item">
         <div class="setting-item-info">
           <div class="setting-item-name">
-            <span class="suggestion-prefix" on:click={sendPluginName}>
+            <span class="suggestion-prefix">
               {cmdEntry.pluginName}
             </span>
             {cmdEntry.cmdName}
           </div>
-          <!-- <small>{cmdEntry.id}</small> -->
+          <small>{cmdEntry.id}</small>
         </div>
         <div class="kbanalizer-setting-item-control setting-item-control">
           <div class="setting-command-hotkeys">
@@ -54,11 +40,9 @@
                   ? 'is-customized'
                   : ''}"
               >
-                {hotkey.modifiers.length !== 0
-                  ? getConvertedModifiers(sortModifiers(hotkey.modifiers)).join(
-                      ' + '
-                    )
-                  : ''} + {hotkey.key in SpecialSymbols
+                {getConvertedModifiers(sortModifiers(hotkey.modifiers)).join(
+                  ' + '
+                )} + {hotkey.key in SpecialSymbols
                   ? SpecialSymbols[hotkey.key]
                   : hotkey.key.length === 1
                   ? hotkey.key.toUpperCase()
