@@ -10,6 +10,8 @@ export default class ShortcutsView extends ItemView {
   private plugin: KeyboardAnalizerPlugin
   private component: KeyboardComponent
 
+  navigation = true
+
   constructor(leaf: WorkspaceLeaf, plugin: KeyboardAnalizerPlugin) {
     super(leaf)
     this.plugin = plugin

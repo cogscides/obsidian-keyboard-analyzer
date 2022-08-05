@@ -3,7 +3,7 @@ import type { EntryType } from 'perf_hooks'
 import type { hotkeyDict, hotkeyEntry } from 'src/Interfaces'
 
 export function getHotkeysV2(app: App) {
-  app.hotkeyManager.bake()
+  // app.hotkeyManager.bake()
   let hotKeyDict: hotkeyDict = {} as hotkeyDict
 
   const hkm = app.hotkeyManager

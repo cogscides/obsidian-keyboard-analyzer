@@ -1,8 +1,9 @@
 <script lang="ts">
   // ext
   import type { App, Hotkey, Command } from 'obsidian'
+  import { Scope } from 'obsidian'
   import { watchResize } from 'svelte-watch-resize'
-  import { onMount } from 'svelte'
+  import { onMount, onDestroy } from 'svelte'
   // @ts-ignore
 
   // types
@@ -44,6 +45,21 @@
   let viewWidth: number
   let viewMode: string = 'desktop'
 
+  // Implements Cmd+F functionality for focus on input field
+  const view_scope = new Scope(app.scope)
+
+  view_scope.register(['Mod'], 'f', (e) => {
+    // if ctrl + f is pressed focus on input field
+    if (e.ctrlKey && e.key === 'f') {
+      input.focus()
+    }
+  })
+
+  // bind component
+  let keyboardComponentHTML: HTMLElement
+  // bind input element
+  let input: HTMLInputElement
+
   // instance of Keyboard
   let keyboardObj_qwerty = keyboard_svelte
   let keyboardObj_num = keyboard_svelte_num
@@ -61,21 +77,31 @@
 
   $: visibleCommands = search
     ? commandsArray.filter((command) => {
-        return (
-          command.cmdName.toLowerCase().includes(search.toLowerCase()) ||
-          command.pluginName
-            .toLocaleLowerCase()
-            .includes(search.toLowerCase()) ||
-          command.hotkeys.some((hotkey) => {
-            return (
-              (hotkey.modifiers.length !== 0 &&
-                hotkey.backedModifiers
-                  .toLocaleLowerCase()
-                  .includes(search.toLowerCase())) ||
-              hotkey.key.toLocaleLowerCase().includes(search.toLowerCase())
-            )
-          })
-        )
+        let fullName =
+          command.pluginName.toLocaleLowerCase() +
+          ' ' +
+          command.cmdName.toLowerCase()
+
+        // get array of search words and search in fullName
+        let searchWords = search
+          .toLocaleLowerCase()
+          .split(' ')
+          .filter((word) => word.length > 0)
+
+        // return true if all search word are in fullName, hotkeys or key
+        return searchWords.every((word) => {
+          return (
+            fullName.includes(word) ||
+            command.hotkeys.some((hotkey) => {
+              return (
+                hotkey.key.toLocaleLowerCase().includes(word) ||
+                getConvertedModifiers(hotkey.modifiers).some((modifier) =>
+                  modifier.toLocaleLowerCase().includes(word)
+                )
+              )
+            })
+          )
+        })
       })
     : sortCommandsArrayByName(commandsArray)
 
@@ -83,22 +109,6 @@
   const ClearSearch = () => {
     search = ''
   }
-
-  // hotkeys fetched from inside the keyboard component -> move to view
-  // console.log(cmds2)
-
-  // convert cmds2 to sorted list of command objects
-  // let cmds: any[] = []
-  // for (let cmd of Object.keys(cmds2)) {
-  //   cmds.push({
-  //     name: cmd,
-  //     hotkeys: cmds2[cmd],
-  //     // description: cmd.description,
-  //     // shortcut: cmd.shortcut,
-
-  //     // hidden: cmd.hidden,
-  //   })
-  // }
 
   // function to trigger sort commands by name, alphabetically
   function sortCommandsArrayByName(
@@ -183,6 +193,12 @@
   //   console.log(value)
   // }
 
+  onMount(() => input.focus())
+
+  onDestroy(() => {
+    app.keymap.popScope(view_scope)
+  })
+
   $: props = {
     app,
     plugin,
@@ -197,32 +213,43 @@
   class="{viewMode} {viewMode === 'xs' ? 'is-mobile' : ''}"
   use:watchResize={handleResize}
   bind:offsetWidth={viewWidth}
+  bind:this={keyboardComponentHTML}
+  on:mouseenter={() => app.keymap.pushScope(view_scope)}
+  on:mouseleave={() => app.keymap.popScope(view_scope)}
 >
-  <div class="markdown-preview-view" id="keyboard-preview-view">
+  <!-- markdown-preview-view -->
+  <div class="" id="keyboard-preview-view">
     <!-- <KeyboardLayout
       bind:keyboardObj_qwerty
       bind:keyboardObj_other
       bind:keyboardObj_num
       screenState={viewMode}
     /> -->
-    <div class="hotkey-settings-container">
-      <code>
-        viewWidth: {viewWidth}<br />
-        viewClass: {viewMode}</code
-      >
-      <div class="hotkey-search-container">
-        <input type="text" placeholder="Filter..." bind:value={search} />
-        <div class="search-input-clear-button" on:click={ClearSearch} />
+    <div class="shortcuts-wrapper">
+      <div class="hotkey-settings-container">
+        <code>
+          viewWidth: {viewWidth}<br />
+          viewClass: {viewMode}</code
+        >
+        <div class="hotkey-search-container">
+          <input
+            type="text"
+            placeholder="Filter..."
+            bind:value={search}
+            bind:this={input}
+          />
+          <div class="search-input-clear-button" on:click={ClearSearch} />
+        </div>
+        <div class="search-results community-plugin-search-summary u-muted">
+          {allHotkeysCount} hotkeys in {commandsCount} commands.
+        </div>
       </div>
-      <div class="search-results community-plugin-search-summary u-muted">
-        {allHotkeysCount} hotkeys in {commandsCount} commands.
-      </div>
-    </div>
 
-    <CommandsList
-      bind:visibleCommands
-      on:pluginNameClicked={handlePluginNameClicked}
-    />
+      <CommandsList
+        bind:visibleCommands
+        on:pluginNameClicked={handlePluginNameClicked}
+      />
+    </div>
   </div>
 </div>
 

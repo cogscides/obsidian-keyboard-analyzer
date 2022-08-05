@@ -45,6 +45,7 @@
 
 #KB-view {
   padding: 0px !important;
+  overflow-y: overlay;
 }
 
 #keyboard-component .hotkey-setting-container {
@@ -77,9 +78,16 @@
   cursor: pointer;
 }
 
-#hotkeys-wrapper {
+/* #hotkeys-wrapper {
   background-color: transparent;
+  
+} */
+
+.shortcuts-wrapper {
+  padding: 24px;
   max-width: 992px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #keyboard-component .hotkey-search-container {
@@ -91,9 +99,9 @@
 }
 
 #keyboard-component .hotkey-search-container input {
-  width: 340px;
+  /* width: 340px; */
   font-size: 16px;
-  height: 40px;
+  /* height: 40px; */
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button {
@@ -130,7 +138,9 @@
 }
 
 #keyboard-component.is-mobile .setting-item {
+  display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 #keyboard-component .hotkey-list-container {
