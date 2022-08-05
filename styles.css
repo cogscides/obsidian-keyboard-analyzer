@@ -62,11 +62,19 @@
   /* overflow-x: hidden; */
 }
 
-.setting-item-name span.suggestion-prefix {
+#keyboard-component .setting-item-name span.suggestion-prefix {
   color: var(--text-muted);
   font-size: 90%;
   font-style: italic;
   text-transform: uppercase;
+}
+
+#keyboard-component .hotkey-settings-container {
+  height: fit-content;
+}
+
+#keyboard-component .setting-item-name span.suggestion-prefix:hover {
+  cursor: pointer;
 }
 
 #hotkeys-wrapper {
@@ -76,11 +84,15 @@
 
 #keyboard-component .hotkey-search-container {
   padding: 8px 0px 12px 0px;
+  margin-left: 0px;
+  margin-right: 0px;
   position: relative;
   width: fit-content;
 }
 
 #keyboard-component .hotkey-search-container input {
+  width: 340px;
+  font-size: 16px;
   height: 40px;
 }
 

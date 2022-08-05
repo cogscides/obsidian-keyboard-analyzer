@@ -31,6 +31,7 @@ export function getHotkeysV2(app: App) {
       }
       hotkeyObj.key = hotkey.key
       hotkeyObj.isCustom = isCustomizedHotkey(id, hotkey, app)
+
       return hotkeyObj
     }
 
@@ -156,7 +157,7 @@ export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
 // Ctrl = Ctrl key for every OS
 // Meta = Cmd on MacOS and Win key on other OS
 export function getConvertedModifiers(modifiers: Modifier[]) {
-  console.log(modifiers)
+  // console.log(modifiers)
 
   let convertedModifiers = modifiers.map((modifier: Modifier) => {
     if (modifier === 'Mod') {
@@ -272,6 +273,6 @@ export function prepareModifiersString(modifiers: string[]) {
   if (modifiers.length) {
     return ''
   } else {
-    return sortModifiers(modifiers).join(' + ') + ' + '
+    return getConvertedModifiers(sortModifiers(modifiers)).join(' + ') + ' + '
   }
 }

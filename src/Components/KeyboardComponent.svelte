@@ -3,6 +3,8 @@
   import type { App, Hotkey, Command } from 'obsidian'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount } from 'svelte'
+  // @ts-ignore
+
   // types
   import type ShortcutsView from 'src/ShortcutsView'
   import type KeyboardAnalizerPlugin from 'src/main'
@@ -57,7 +59,30 @@
 
   let search: string = undefined
 
-  $: visibleCommands = sortCommandsArrayByName(commandsArray)
+  $: visibleCommands = search
+    ? commandsArray.filter((command) => {
+        return (
+          command.cmdName.toLowerCase().includes(search.toLowerCase()) ||
+          command.pluginName
+            .toLocaleLowerCase()
+            .includes(search.toLowerCase()) ||
+          command.hotkeys.some((hotkey) => {
+            return (
+              (hotkey.modifiers.length !== 0 &&
+                hotkey.backedModifiers
+                  .toLocaleLowerCase()
+                  .includes(search.toLowerCase())) ||
+              hotkey.key.toLocaleLowerCase().includes(search.toLowerCase())
+            )
+          })
+        )
+      })
+    : sortCommandsArrayByName(commandsArray)
+
+  // on click clear button clear search
+  const ClearSearch = () => {
+    search = ''
+  }
 
   // hotkeys fetched from inside the keyboard component -> move to view
   // console.log(cmds2)
@@ -94,8 +119,20 @@
       })
     }
 
-    console.log(sortedCmds)
+    // console.log(sortedCmds)
     return sortedCmds
+  }
+
+  // handle component events
+  function handlePluginNameClicked(event: CustomEvent) {
+    let pluginName: string = event.detail
+    if (search === '' || search === undefined) {
+      search = pluginName
+    } else if (search.startsWith(pluginName)) {
+      search = search.replace(pluginName, '')
+    } else {
+      search = pluginName + search
+    }
   }
 
   // ###############################################################################
@@ -174,15 +211,18 @@
         viewClass: {viewMode}</code
       >
       <div class="hotkey-search-container">
-        <input type="text" placeholder="Filter..." />
-        <div class="search-input-clear-button" />
+        <input type="text" placeholder="Filter..." bind:value={search} />
+        <div class="search-input-clear-button" on:click={ClearSearch} />
       </div>
       <div class="search-results community-plugin-search-summary u-muted">
         {allHotkeysCount} hotkeys in {commandsCount} commands.
       </div>
     </div>
 
-    <CommandsList bind:visibleCommands />
+    <CommandsList
+      bind:visibleCommands
+      on:pluginNameClicked={handlePluginNameClicked}
+    />
   </div>
 </div>
 
