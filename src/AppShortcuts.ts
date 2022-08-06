@@ -68,20 +68,51 @@ export function getCommandNameById(id: string, app: App) {
 // if reassigned return true
 // https://forum.obsidian.md/t/dataviewjs-snippet-showcase/17847/37
 export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
-  let customKeys = app.hotkeyManager.customKeys
-  if (customKeys[id]) {
-    for (let customHotkey of customKeys[id]) {
+  let isCustom: boolean = false
+  let customKeys = app.hotkeyManager.customKeys[id]
+  let defaultKeys = app.hotkeyManager.getDefaultHotkeys(id)
+
+  if (id === 'editor:save-file') {
+    console.log(id, defaultKeys)
+  }
+  if (customKeys) {
+    // if command found in customKeys, check if hotkey is customized
+    // for each hotkey in customKeys, check if it is customized
+    for (let customHotkey of customKeys) {
+      // compare arrays of modifiers, all modifiers must be the same
       if (
-        customHotkey.modifiers === hotkey.modifiers &&
+        customHotkey.modifiers.length === hotkey.modifiers.length &&
+        customHotkey.modifiers.every((modifier, index) => {
+          return modifier === hotkey.modifiers[index]
+        }) &&
         customHotkey.key === hotkey.key
       ) {
-        return true
+        isCustom = true
       } else {
-        return false
+        isCustom = false
       }
     }
   }
-  return false
+
+  // check if hotkey is default
+  if (defaultKeys !== undefined) {
+    for (let defaultHotkey of defaultKeys) {
+      if (
+        defaultHotkey.modifiers.length === hotkey.modifiers.length &&
+        defaultHotkey.modifiers.every((modifier, index) => {
+          return modifier === hotkey.modifiers[index]
+        }) &&
+        defaultHotkey.key === hotkey.key
+      ) {
+        isCustom = false
+      } else {
+        isCustom = true
+      }
+    }
+  } else if (defaultKeys === undefined) {
+    isCustom = true
+  }
+  return isCustom
 }
 
 // check if hotkey is Customized

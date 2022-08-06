@@ -734,4 +734,5 @@ export const SpecialSymbols: {
   ArrowRight: '→',
   ArrowDown: '↓',
   Space: '⎵',
+  ' ': '⎵',
 }
