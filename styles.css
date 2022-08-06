@@ -45,7 +45,11 @@
 
 #KB-view {
   padding: 0px !important;
-  overflow-y: overlay;
+}
+
+.shortcuts-wrapper {
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 #keyboard-component .hotkey-setting-container {
@@ -78,16 +82,9 @@
   cursor: pointer;
 }
 
-/* #hotkeys-wrapper {
+#hotkeys-wrapper {
   background-color: transparent;
-  
-} */
-
-.shortcuts-wrapper {
-  padding: 24px;
   max-width: 992px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 #keyboard-component .hotkey-search-container {
@@ -99,9 +96,14 @@
 }
 
 #keyboard-component .hotkey-search-container input {
-  /* width: 340px; */
+  height: 40px;
+  width: 340px;
   font-size: 16px;
-  /* height: 40px; */
+}
+
+#keyboard-component .community-plugin-search-summary.u-muted {
+  padding-left: 0px;
+  padding-right: 0px;
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button {
@@ -120,27 +122,25 @@
   content: '\D7';
 }
 
-#keyboard-component .search-results {
+.search-results {
   color: var(--text-muted);
-  padding: 0px 0px 20px 0px;
+  padding: 0px 20px 20px 0px;
   /* border-bottom: 1px solid var(--background-modifier-border) !important; */
 }
 
 /* .KB-view > .setting-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0 12px 0;
-    border-top: 1px solid var(--background-modifier-border);
-  } */
+  display: flex;
+  align-items: center;
+  padding: 12px 0 12px 0;
+  border-top: 1px solid var(--background-modifier-border);
+} */
 
 #keyboard-component .setting-item-info small {
   color: var(--text-muted);
 }
 
 #keyboard-component.is-mobile .setting-item {
-  display: flex;
   flex-direction: column;
-  align-items: flex-start;
 }
 
 #keyboard-component .hotkey-list-container {
@@ -148,12 +148,12 @@
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
-  padding: 18px 0px 18px 0px;
+  padding-top: 18px;
   border-top: 1px solid var(--background-modifier-border);
 }
 
 #keyboard-component .hotkey-list-container .setting-item:last-child {
-  padding: 18px 0px 18px 0px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
