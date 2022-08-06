@@ -31,13 +31,13 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     )
     const leaf = leaves.length ? leaves[0] : null
     if (leaf && leaf.view && leaf.view instanceof ShortcutsView)
-      console.log('Already opened')
+      console.log('Keyboard Analyzer')
 
     return leaf.view
   }
 
   async onload() {
-    console.log('loading keyboard analizer plugin')
+    console.log('Keyboard Analyzer v' + this.manifest.version + ' loaded')
     await this.loadSettings()
 
     this.registerPluginHotkeys()
@@ -96,11 +96,11 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     //   }
     // });
 
-    this.addRibbonIcon('dice', 'Print leaf types', () => {
-      this.app.workspace.iterateAllLeaves((leaf) => {
-        console.log(leaf.getViewState().type)
-      })
-    })
+    // this.addRibbonIcon('dice', 'Print leaf types', () => {
+    //   this.app.workspace.iterateAllLeaves((leaf) => {
+    //     console.log(leaf.getViewState().type)
+    //   })
+    // })
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new KeyboardAnalyzerSettingTab(this.app, this))
@@ -120,19 +120,19 @@ export default class KeyboardAnalizerPlugin extends Plugin {
 
   addStatusBarIndicator() {
     // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-    const statusBarEl = this.addStatusBarItem()
+    const statusBarIcon = this.addStatusBarItem()
     // statusBarEl.setText('Shortcuts')
-    statusBarEl.addClass('mod-clickable')
-    // statusBarEl.setAttribute("aria-label", "Shortcuts");
+    statusBarIcon.addClass('mod-clickable')
+    statusBarIcon.setAttribute('aria-label', 'Keyboard Shortcuts')
 
     // create the status bar icon
-    const icon = statusBarEl.createSpan('status-bar-item-segment icon')
-    setIcon(icon, 'keyboard-glyph') // inject svg icon
+    const icon = statusBarIcon.createSpan('icon')
 
     // create the status bar text
 
     // register click handler
-    statusBarEl.addEventListener('click', (evt) => this.onStatusBarClick(evt))
+    setIcon(icon, 'keyboard-glyph') // inject svg icon
+    icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
     // TODO update view on click
     // TODO update view when commands added or hotkeys changed
   }

@@ -1,9 +1,10 @@
 <script lang="ts">
   // ext
-  import type { App, Hotkey, Command } from 'obsidian'
+  import type { App, Hotkey, Command, Modifier } from 'obsidian'
   import { Scope } from 'obsidian'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount, onDestroy } from 'svelte'
+  import { RefreshCw as RefreshIcon } from 'lucide-svelte'
   // @ts-ignore
 
   // types
@@ -19,7 +20,6 @@
   // funcs
   import {
     getHotkeysV2,
-    getCommandNameById,
     getConvertedModifiers,
     sortModifiers,
     isCustomizedHotkey,
@@ -80,6 +80,7 @@
   }
 
   let search: string = undefined
+  let activeSearchModifiers: string[] = []
 
   $: visibleCommands = search
     ? commandsArray.filter((command) => {
@@ -114,6 +115,71 @@
   // on click clear button clear search
   const ClearSearch = () => {
     search = ''
+  }
+
+  // on focus modifier keydown event add to activeSearchModifiers array
+  // if modifier is already in array remove it
+  const onModifierKeyDown = (e: KeyboardEvent) => {
+    // using if state condition getModifierState
+    if (
+      e.getModifierState('Shift') ||
+      e.getModifierState('Alt') ||
+      e.getModifierState('Control')
+    ) {
+      switch (e.key) {
+        case 'Shift':
+          if (activeSearchModifiers.includes('Shift')) {
+            activeSearchModifiers.splice(
+              activeSearchModifiers.indexOf('Shift'),
+              1
+            )
+          } else {
+            activeSearchModifiers.push('Shift')
+          }
+          break
+        case 'Alt':
+          if (activeSearchModifiers.includes('Alt')) {
+            activeSearchModifiers.splice(
+              activeSearchModifiers.indexOf('Alt'),
+              1
+            )
+          } else {
+            activeSearchModifiers.push('Alt')
+          }
+          break
+        case 'Meta':
+          if (activeSearchModifiers.includes('Meta')) {
+            activeSearchModifiers.splice(
+              activeSearchModifiers.indexOf('Meta'),
+              1
+            )
+          } else {
+            activeSearchModifiers.push('Meta')
+          }
+          break
+        case 'Control':
+          if (activeSearchModifiers.includes('Control')) {
+            activeSearchModifiers.splice(
+              activeSearchModifiers.indexOf('Control'),
+              1
+            )
+          } else {
+            activeSearchModifiers.push('Control')
+          }
+          break
+        default:
+          console.log('unknown key: ', e.key)
+          console.log('please report this to the developer')
+
+          break
+      }
+    }
+    if (e.key === 'Backspace' && e.getModifierState('Control')) {
+      activeSearchModifiers = activeSearchModifiers.slice(0, -1)
+    } else if (e.key === 'Escape') {
+      activeSearchModifiers = []
+    }
+    console.log(activeSearchModifiers)
   }
 
   // function to trigger sort commands by name, alphabetically
@@ -233,24 +299,42 @@
     /> -->
     <div class="shortcuts-wrapper">
       <div class="hotkey-settings-container">
-        <code>
-          viewWidth: {viewWidth}<br />
-          viewClass: {viewMode}</code
-        >
-        <div class="hotkey-search-container">
-          <input
-            type="text"
-            placeholder="Filter..."
-            bind:value={search}
-            bind:this={input}
-          />
-          <div class="search-input-clear-button" on:click={ClearSearch} />
+        <code> {viewMode} :: {viewWidth}</code>
+        <div class="hotkey-search-menu">
+          <div class="hotkey-search-container">
+            <input
+              type="text"
+              placeholder="Filter..."
+              bind:value={search}
+              bind:this={input}
+              on:keydown={onModifierKeyDown}
+            />
+            <!-- (event) => {
+                if (event.ctrlKey === true) {
+                  console.log('ctrl')
+                } else if (event.altKey === true) {
+                  console.log('alt')
+                } else if (event.shiftKey === true) {
+                  console.log('shift')
+                } else if (event.key === 'Enter') {
+                  console.log('enter')
+                } else {
+                  // console.log(event.key)
+                }
+              } -->
+            <div class="search-input-clear-button" on:click={ClearSearch} />
+          </div>
+          <button
+            on:click={() => refreshCommandsList()}
+            aria-label="Refresh Commands"
+          >
+            <RefreshIcon size={16} />
+          </button>
         </div>
         <div class="search-results">
           <div class="community-plugin-search-summary u-muted">
             {allHotkeysCount} hotkeys in {commandsCount} commands.
           </div>
-          <button on:click={() => refreshCommandsList()}>Refresh</button>
         </div>
       </div>
 

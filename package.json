@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@tsconfig/svelte": "^2.0.1",
+    "lucide-svelte": "^0.84.0",
     "obsidian-community-lib": "^2.0.2",
     "standard-version": "^9.3.2",
     "svelte-icons": "^2.1.0",
