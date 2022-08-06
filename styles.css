@@ -75,7 +75,7 @@
 }
 
 #keyboard-preview-view {
-  /* overflow-x: hidden; */
+  overflow-x: hidden;
 }
 
 #keyboard-component .setting-item-name span.suggestion-prefix {
