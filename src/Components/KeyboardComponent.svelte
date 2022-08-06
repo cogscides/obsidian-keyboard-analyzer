@@ -73,6 +73,12 @@
     (key: string) => commands[key]
   )
 
+  // function to refresh commands list
+  function refreshCommandsList() {
+    commands = getHotkeysV2(app)
+    commandsArray = Object.keys(commands).map((key: string) => commands[key])
+  }
+
   let search: string = undefined
 
   $: visibleCommands = search
@@ -240,8 +246,11 @@
           />
           <div class="search-input-clear-button" on:click={ClearSearch} />
         </div>
-        <div class="search-results community-plugin-search-summary u-muted">
-          {allHotkeysCount} hotkeys in {commandsCount} commands.
+        <div class="search-results">
+          <div class="community-plugin-search-summary u-muted">
+            {allHotkeysCount} hotkeys in {commandsCount} commands.
+          </div>
+          <button on:click={() => refreshCommandsList()}>Refresh</button>
         </div>
       </div>
 

@@ -120,9 +120,9 @@
   content: '\D7';
 }
 
-.search-results {
+#keyboard-component .search-results {
   color: var(--text-muted);
-  padding: 0px 20px 20px 0px;
+  padding: 0px 0px 20px 0px;
   /* border-bottom: 1px solid var(--background-modifier-border) !important; */
 }
 
