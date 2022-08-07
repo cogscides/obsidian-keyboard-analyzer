@@ -43,6 +43,7 @@
   export let view: ShortcutsView
   let viewWidth: number
   let viewMode: string = 'desktop'
+  let filterIsOpen: boolean = false
 
   // Implements Cmd+F functionality for focus on input field
   const view_scope = new Scope(app.scope)
@@ -312,11 +313,72 @@
         </div>
         <button
           id="hotkey-filter-button"
+          class={filterIsOpen ? 'is-active' : ''}
           aria-label="Filter Commands"
-          on:click={() => refreshCommandsList()}
+          on:click={() =>
+            filterIsOpen ? (filterIsOpen = false) : (filterIsOpen = true)}
         >
           <FilterIcon size={16} />
         </button>
+        <div
+          class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
+        >
+          <div class="popup-filter-menu-body-title">
+            <div class="popup-filter-menu-body-title-text">
+              Show Commands with the following hotkeys:
+            </div>
+            <div
+              class="popup-filter-menu-body-title-clear"
+              on:click={ClearSearch}
+            />
+          </div>
+          <div class="popup-filter-menu-body-search">
+            <input type="text" placeholder="Filter..." />
+            <!-- <input
+              type="text"
+              placeholder="Filter..."
+              bind:value={search}
+              bind:this={input}
+              on:keydown={onModifierKeyDown}
+            /> -->
+          </div>
+          <div class="popup-filter-menu-body-list">
+            <div
+              class="popup-filter-menu-body-list-item"
+              on:click={() => {
+                console.log('Meta')
+              }}
+            >
+              <div class="popup-filter-menu-body-list-item-text">Meta</div>
+            </div>
+            <div
+              class="popup-filter-menu-body-list-item"
+              on:click={() => {
+                console.log('Control')
+              }}
+            >
+              <div class="popup-filter-menu-body-list-item-text">Control</div>
+            </div>
+            <div
+              class="popup-filter-menu-body-list-item"
+              on:click={() => {
+                console.log('Alt')
+              }}
+            >
+              <div class="popup-filter-menu-body-list-item-text">Alt</div>
+            </div>
+            <div
+              class="popup-filter-menu-body-list-item"
+              on:click={() => {
+                console.log('Shift')
+              }}
+            >
+              <div class="popup-filter-menu-body-list-item-text">Shift</div>
+            </div>
+          </div>
+          <!-- popup darker background -->
+          <div class="popup-filter-menu-background" />
+        </div>
         <!-- filter menu here -->
         <!-- </div> -->
         <!-- <div class="search-results"> -->
@@ -330,72 +392,6 @@
         >
           <RefreshIcon size={16} />
         </button>
-        <!-- filter popup position absolute -->
-        <div id="popup-filter-menu">
-          <div class="popup-filter-menu-header">
-            <div class="popup-filter-menu-header-title">Filter Commands</div>
-            <div
-              class="popup-filter-menu-header-close"
-              on:click={() => {
-                console.log('CloseFilterMenu')
-              }}
-            />
-          </div>
-          <div class="popup-filter-menu-body">
-            <div class="popup-filter-menu-body-title">
-              <div class="popup-filter-menu-body-title-text">
-                Show Commands with the following hotkeys:
-              </div>
-              <div
-                class="popup-filter-menu-body-title-clear"
-                on:click={ClearSearch}
-              />
-            </div>
-            <div class="popup-filter-menu-body-search">
-              <input
-                type="text"
-                placeholder="Filter..."
-                bind:value={search}
-                bind:this={input}
-                on:keydown={onModifierKeyDown}
-              />
-            </div>
-            <div class="popup-filter-menu-body-list">
-              <div
-                class="popup-filter-menu-body-list-item"
-                on:click={() => {
-                  console.log('Meta')
-                }}
-              >
-                <div class="popup-filter-menu-body-list-item-text">Meta</div>
-              </div>
-              <div
-                class="popup-filter-menu-body-list-item"
-                on:click={() => {
-                  console.log('Control')
-                }}
-              >
-                <div class="popup-filter-menu-body-list-item-text">Control</div>
-              </div>
-              <div
-                class="popup-filter-menu-body-list-item"
-                on:click={() => {
-                  console.log('Alt')
-                }}
-              >
-                <div class="popup-filter-menu-body-list-item-text">Alt</div>
-              </div>
-              <div
-                class="popup-filter-menu-body-list-item"
-                on:click={() => {
-                  console.log('Shift')
-                }}
-              >
-                <div class="popup-filter-menu-body-list-item-text">Shift</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <CommandsList
