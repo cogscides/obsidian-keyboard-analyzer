@@ -56,23 +56,34 @@
 
 #KB-view {
   padding: 0px !important;
+  overflow-y: scroll;
 }
 
-.shortcuts-wrapper {
-  padding-left: 24px;
-  padding-right: 24px;
-}
-
-#keyboard-component .hotkey-setting-container {
+/* #keyboard-component .hotkey-setting-container {
   display: flex;
   overflow: unset;
   flex-direction: column;
   padding-bottom: 60px;
   height: fit-content;
+} */
+#keyboard-component .hotkey-settings-container {
+  height: fit-content;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  /* overflow: visible; */
 }
-#keyboard-component .hotkey-list-container {
-  overflow: unset;
+
+#hotkeys-wrapper.hotkey-settings-container {
+  width: 100%;
 }
+
+/* Keyboard */
 
 #keyboard-preview-view {
   overflow-x: hidden;
@@ -85,49 +96,40 @@
   text-transform: uppercase;
 }
 
-#keyboard-component .hotkey-settings-container {
-  height: fit-content;
-}
-
 #keyboard-component .setting-item-name span.suggestion-prefix:hover {
   cursor: pointer;
 }
 
 .shortcuts-wrapper {
-  max-width: 992px;
+  max-width: 768px;
+  padding-left: 24px;
+  padding-right: 24px;
+  margin: 0px auto;
 }
 
-/* #hotkeys-wrapper {
-  background-color: transparent;
-  max-width: 992px;
-} */
-
-.hotkey-search-menu {
+/* .hotkey-search-menu {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   flex-direction: row;
-}
+} */
 
 #keyboard-component .hotkey-search-container {
   padding: 8px 0px 12px 0px;
   margin-left: 0px;
-  margin-right: 0px;
+  margin-right: auto;
   position: relative;
   /* width: fit-content; */
-  max-width: 400px;
-  flex-grow: 2;
-  width: auto; /* This is needed to make the search input work properly */
+  /* max-width: 400px; */
+  /* flex-grow: 2; */
+  /* width: auto; */
+  flex-basis: 100%;
 }
 
 #keyboard-component.xs .hotkey-search-container {
   max-width: unset;
   flex-grow: 2;
-  flex-basis: 100%;
-}
-
-#keyboard-component.xs .hotkey-search-container {
   flex-basis: 100%;
 }
 
@@ -138,23 +140,36 @@
 }
 
 .hotkey-search-container button {
-  height: 40px;
+  /* height: 40px; */
+  height: fit-content;
+  width: fit-content;
+  flex-shrink: 0;
 }
 
-button.hotkey-refresh-button {
-  background-color: transparent !important;
-  border: none !important;
-  margin-right: unset !important;
+#hotkey-filter-button {
   width: fit-content;
-  box-shadow: none;
+  margin-right: 8px;
 }
 
 #keyboard-component .community-plugin-search-summary.u-muted {
   padding-left: 0px;
   padding-right: 0px;
-  width: 100%;
+  /* width: 100%; */
+  flex-grow: 1;
   padding-bottom: 0px;
   border-bottom: none;
+  flex-shrink: 2;
+}
+
+button#hotkey-refresh-button {
+  background-color: transparent !important;
+  border: none !important;
+  margin-right: unset !important;
+  width: fit-content;
+  box-shadow: none;
+  flex-grow: 0;
+  flex-shrink: 0;
+  padding: 4px;
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button {
@@ -182,6 +197,12 @@ button.hotkey-refresh-button {
   border-bottom: none;
 }
 
+#keyboard-component .hotkey-list-container {
+  padding: 0px 0px 64px 0px;
+  width: 100%;
+  overflow: unset;
+}
+
 /* .KB-view > .setting-item {
   display: flex;
   align-items: center;
@@ -195,10 +216,6 @@ button.hotkey-refresh-button {
 
 #keyboard-component.is-mobile .setting-item {
   flex-direction: column;
-}
-
-#keyboard-component .hotkey-list-container {
-  padding: 0px 0px 64px 0px;
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
