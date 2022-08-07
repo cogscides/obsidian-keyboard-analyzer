@@ -93,19 +93,21 @@
   cursor: pointer;
 }
 
-#hotkeys-wrapper {
-  background-color: transparent;
+.shortcuts-wrapper {
   max-width: 992px;
 }
+
+/* #hotkeys-wrapper {
+  background-color: transparent;
+  max-width: 992px;
+} */
 
 .hotkey-search-menu {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.hotkey-search-container button {
-  height: fit-content;
+  flex-wrap: wrap;
+  flex-direction: row;
 }
 
 #keyboard-component .hotkey-search-container {
@@ -113,18 +115,46 @@
   margin-left: 0px;
   margin-right: 0px;
   position: relative;
-  width: fit-content;
+  /* width: fit-content; */
+  max-width: 400px;
+  flex-grow: 2;
+  width: auto; /* This is needed to make the search input work properly */
+}
+
+#keyboard-component.xs .hotkey-search-container {
+  max-width: unset;
+  flex-grow: 2;
+  flex-basis: 100%;
+}
+
+#keyboard-component.xs .hotkey-search-container {
+  flex-basis: 100%;
 }
 
 #keyboard-component .hotkey-search-container input {
   height: 40px;
-  width: 340px;
+  width: 100%;
   font-size: 16px;
+}
+
+.hotkey-search-container button {
+  height: 40px;
+}
+
+button.hotkey-refresh-button {
+  background-color: transparent !important;
+  border: none !important;
+  margin-right: unset !important;
+  width: fit-content;
+  box-shadow: none;
 }
 
 #keyboard-component .community-plugin-search-summary.u-muted {
   padding-left: 0px;
   padding-right: 0px;
+  width: 100%;
+  padding-bottom: 0px;
+  border-bottom: none;
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button {
@@ -145,8 +175,11 @@
 
 .search-results {
   color: var(--text-muted);
-  padding: 0px 20px 20px 0px;
-  /* border-bottom: 1px solid var(--background-modifier-border) !important; */
+  display: flex;
+  align-items: center;
+  padding-bottom: 20px;
+  padding-top: 8px;
+  border-bottom: none;
 }
 
 /* .KB-view > .setting-item {

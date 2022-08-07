@@ -1,4 +1,5 @@
 <script lang="ts">
+  // @ts-ignore
   import { flip } from 'svelte/animate'
   import { createEventDispatcher } from 'svelte'
 

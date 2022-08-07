@@ -4,8 +4,7 @@
   import { Scope } from 'obsidian'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount, onDestroy } from 'svelte'
-  import { RefreshCw as RefreshIcon } from 'lucide-svelte'
-  // @ts-ignore
+  import { RefreshCw as RefreshIcon, Filter as FilterIcon } from 'lucide-svelte'
 
   // types
   import type ShortcutsView from 'src/ShortcutsView'
@@ -309,33 +308,29 @@
               bind:this={input}
               on:keydown={onModifierKeyDown}
             />
-            <!-- (event) => {
-                if (event.ctrlKey === true) {
-                  console.log('ctrl')
-                } else if (event.altKey === true) {
-                  console.log('alt')
-                } else if (event.shiftKey === true) {
-                  console.log('shift')
-                } else if (event.key === 'Enter') {
-                  console.log('enter')
-                } else {
-                  // console.log(event.key)
-                }
-              } -->
             <div class="search-input-clear-button" on:click={ClearSearch} />
           </div>
           <button
+            class="hotkey-filter-button"
+            aria-label="Filter Commands"
             on:click={() => refreshCommandsList()}
-            aria-label="Refresh Commands"
           >
-            <RefreshIcon size={16} />
+            <FilterIcon size={16} />
           </button>
+          <!-- filter menu here -->
         </div>
-        <div class="search-results">
-          <div class="community-plugin-search-summary u-muted">
-            {allHotkeysCount} hotkeys in {commandsCount} commands.
-          </div>
+        <!-- <div class="search-results"> -->
+        <div class="community-plugin-search-summary u-muted">
+          {allHotkeysCount} hotkeys in {commandsCount} commands.
         </div>
+        <button
+          class="hotkey-refresh-button"
+          aria-label="Refresh Commands"
+          on:click={() => refreshCommandsList()}
+        >
+          <RefreshIcon size={16} />
+        </button>
+        <!-- </div> -->
       </div>
 
       <CommandsList

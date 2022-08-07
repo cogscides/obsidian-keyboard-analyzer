@@ -11,7 +11,7 @@ export function getHotkeysV2(app: App) {
   Object.entries(app.commands.commands).forEach(([id, command]) => {
     let isBuiltInCommand = command.name.split(':').length === 1
     let pluginName: string = isBuiltInCommand
-      ? 'App'
+      ? command.id.charAt(0).toUpperCase() + command.id.split(':')[0].slice(1)
       : command.name.split(':', 2)[0]
     let cmdName: string = isBuiltInCommand
       ? command.name
