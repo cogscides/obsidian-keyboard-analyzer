@@ -15,7 +15,9 @@ export function getHotkeysV2(app: App) {
       : command.name.split(':', 2)[0]
     let cmdName: string = isBuiltInCommand
       ? command.name
-      : command.name.split(':', 2)[1].trim()
+      : // split by ":" remove the first element (plugin name) and join with ":"
+
+        command.name.split(':').slice(1).join(':')
     let hotkeys: Hotkey[] = (hkm.getHotkeys(command.id) ||
       hkm.getDefaultHotkeys(command.id) ||
       []) as Hotkey[]
