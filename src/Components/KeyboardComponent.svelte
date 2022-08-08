@@ -213,13 +213,6 @@
     let pluginName: string = event.detail
     if (search === '' || search === undefined) {
       search = pluginName
-      let targetScroll = document.querySelector('.hotkey-search-container')
-      console.log(targetScroll)
-
-      targetScroll.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
     } else if (search.startsWith(pluginName)) {
       search = search.replace(pluginName, '')
     } else {
