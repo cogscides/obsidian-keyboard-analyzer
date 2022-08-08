@@ -4,7 +4,9 @@
   import { Scope } from 'obsidian'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount, onDestroy } from 'svelte'
+  import { fly, fade, slide } from 'svelte/transition'
   import { RefreshCw as RefreshIcon, Filter as FilterIcon } from 'lucide-svelte'
+  import { clickOutside } from 'svelte-use-click-outside'
 
   // types
   import type ShortcutsView from 'src/ShortcutsView'
@@ -44,6 +46,7 @@
   let viewWidth: number
   let viewMode: string = 'desktop'
   let filterIsOpen: boolean = false
+  let refrashIsActive: boolean = false
 
   // Implements Cmd+F functionality for focus on input field
   const view_scope = new Scope(app.scope)
@@ -210,6 +213,13 @@
     let pluginName: string = event.detail
     if (search === '' || search === undefined) {
       search = pluginName
+      let targetScroll = document.querySelector('.hotkey-search-container')
+      console.log(targetScroll)
+
+      targetScroll.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
     } else if (search.startsWith(pluginName)) {
       search = search.replace(pluginName, '')
     } else {
@@ -315,70 +325,86 @@
           id="hotkey-filter-button"
           class={filterIsOpen ? 'is-active' : ''}
           aria-label="Filter Commands"
-          on:click={() =>
-            filterIsOpen ? (filterIsOpen = false) : (filterIsOpen = true)}
+          on:click={() => {
+            console.log('filter: ', filterIsOpen)
+            filterIsOpen = !filterIsOpen
+          }}
         >
           <FilterIcon size={16} />
         </button>
-        <div
-          class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
-        >
-          <div class="popup-filter-menu-body-title">
-            <div class="popup-filter-menu-body-title-text">
-              Show Commands with the following hotkeys:
+        {#if filterIsOpen}
+          <div
+            use:clickOutside={() =>
+              // await timeout 40ms
+              setTimeout(() => {
+                if (filterIsOpen) {
+                  filterIsOpen = false
+                }
+              }, 40)}
+            transition:slide
+            class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
+          >
+            <div transition:fade>
+              <div class="popup-filter-menu-body-title">
+                <div class="popup-filter-menu-body-title-text">
+                  Show Commands with the following hotkeys:
+                </div>
+                <div
+                  class="popup-filter-menu-body-title-clear"
+                  on:click={ClearSearch}
+                />
+              </div>
+              <div class="popup-filter-menu-body-search">
+                <input type="text" placeholder="Filter..." />
+                <!-- <input
+                type="text"
+                placeholder="Filter..."
+                bind:value={search}
+                bind:this={input}
+                on:keydown={onModifierKeyDown}
+                /> -->
+              </div>
+              <div class="popup-filter-menu-body-list">
+                <div
+                  class="popup-filter-menu-body-list-item"
+                  on:click={() => {
+                    console.log('Meta')
+                  }}
+                >
+                  <div class="popup-filter-menu-body-list-item-text">Meta</div>
+                </div>
+                <div
+                  class="popup-filter-menu-body-list-item"
+                  on:click={() => {
+                    console.log('Control')
+                  }}
+                >
+                  <div class="popup-filter-menu-body-list-item-text">
+                    Control
+                  </div>
+                </div>
+                <div
+                  class="popup-filter-menu-body-list-item"
+                  on:click={() => {
+                    console.log('Alt')
+                  }}
+                >
+                  <div class="popup-filter-menu-body-list-item-text">Alt</div>
+                </div>
+                <div
+                  class="popup-filter-menu-body-list-item"
+                  on:click={() => {
+                    console.log('Shift')
+                  }}
+                >
+                  <div class="popup-filter-menu-body-list-item-text">Shift</div>
+                </div>
+              </div>
             </div>
-            <div
-              class="popup-filter-menu-body-title-clear"
-              on:click={ClearSearch}
-            />
+            <!-- popup darker background -->
+            <div class="popup-filter-menu-background" />
           </div>
-          <div class="popup-filter-menu-body-search">
-            <input type="text" placeholder="Filter..." />
-            <!-- <input
-              type="text"
-              placeholder="Filter..."
-              bind:value={search}
-              bind:this={input}
-              on:keydown={onModifierKeyDown}
-            /> -->
-          </div>
-          <div class="popup-filter-menu-body-list">
-            <div
-              class="popup-filter-menu-body-list-item"
-              on:click={() => {
-                console.log('Meta')
-              }}
-            >
-              <div class="popup-filter-menu-body-list-item-text">Meta</div>
-            </div>
-            <div
-              class="popup-filter-menu-body-list-item"
-              on:click={() => {
-                console.log('Control')
-              }}
-            >
-              <div class="popup-filter-menu-body-list-item-text">Control</div>
-            </div>
-            <div
-              class="popup-filter-menu-body-list-item"
-              on:click={() => {
-                console.log('Alt')
-              }}
-            >
-              <div class="popup-filter-menu-body-list-item-text">Alt</div>
-            </div>
-            <div
-              class="popup-filter-menu-body-list-item"
-              on:click={() => {
-                console.log('Shift')
-              }}
-            >
-              <div class="popup-filter-menu-body-list-item-text">Shift</div>
-            </div>
-          </div>
-          <!-- popup darker background -->
-          <div class="popup-filter-menu-background" />
-        </div>
+        {/if}
         <!-- filter menu here -->
         <!-- </div> -->
         <!-- <div class="search-results"> -->
@@ -388,7 +414,15 @@
         <button
           id="hotkey-refresh-button"
           aria-label="Refresh Commands"
-          on:click={() => refreshCommandsList()}
+          class={refrashIsActive ? 'animation-is-active' : ''}
+          on:click={() => {
+            refrashIsActive = true
+            // set animation timeout
+            setTimeout(() => {
+              refrashIsActive = false
+            }, 1000)
+            refreshCommandsList()
+          }}
         >
           <RefreshIcon size={16} />
         </button>

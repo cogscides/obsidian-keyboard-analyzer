@@ -204,14 +204,36 @@
 }
 
 button#hotkey-refresh-button {
-  background-color: transparent !important;
-  border: none !important;
-  margin-right: unset !important;
+  background-color: transparent;
+  border: none;
+  margin-right: unset;
   width: fit-content;
   box-shadow: none;
   flex-grow: 0;
   flex-shrink: 0;
   padding: 4px;
+}
+
+button#hotkey-refresh-button.animation-is-active .lucide-refresh-cw {
+  animation-name: rotation;
+  animation-duration: 0.8s;
+  /* ease-in animation timing */
+  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation-fill-mode: both;
+}
+
+button#hotkey-refresh-button:hover {
+  cursor: pointer;
+  color: var(--text-accent);
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button {
@@ -220,6 +242,11 @@ button#hotkey-refresh-button {
   top: 18px;
   color: var(--text-faint);
   cursor: var(--cursor);
+  background-color: transparent;
+}
+
+#keyboard-component .hotkey-search-container .search-input-clear-button:hover {
+  color: var(--text-error);
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button:before {
