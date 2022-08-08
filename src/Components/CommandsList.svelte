@@ -9,6 +9,7 @@
     prepareModifiersString,
     getConvertedModifiers,
     sortModifiers,
+    isHotkeyDuplicate,
   } from 'src/AppShortcuts'
 
   export let visibleCommands: commandsArray
@@ -43,7 +44,7 @@
             </span>
             {cmdEntry.cmdName}
           </div>
-          <!-- <small>{cmdEntry.id}</small> -->
+          <small>{cmdEntry.id}</small>
         </div>
         <div class="kbanalizer-setting-item-control setting-item-control">
           <div class="setting-command-hotkeys">
@@ -51,6 +52,8 @@
               <span
                 class="kbanalizer-setting-hotkey setting-hotkey {hotkey.isCustom
                   ? 'is-customized'
+                  : ''} {isHotkeyDuplicate(cmdEntry.id, hotkey)
+                  ? 'is-duplicate'
                   : ''}"
               >
                 {hotkey.modifiers.length !== 0

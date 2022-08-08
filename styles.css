@@ -178,8 +178,8 @@
 }
 
 .is-mobile .popup-filter-menu-container {
-  left: 12px;
-  width: calc(100% - 24px);
+  left: 20px;
+  width: calc(100% - 40px);
 }
 
 /* .is-mobile .popup-filter-menu-background {
@@ -285,6 +285,7 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-component.is-mobile .setting-item {
   flex-direction: column;
+  align-items: flex-start;
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
@@ -328,6 +329,12 @@ button#hotkey-refresh-button:hover {
 
 .kbanalizer-setting-hotkey.is-customized {
   background-color: var(--text-selection);
+}
+
+.kbanalizer-setting-hotkey.is-duplicate {
+  cursor: pointer;
+  color: var(--text-normal);
+  background-color: var(--background-modifier-error);
 }
 
 .kb-analizer-hotkey-list-container {

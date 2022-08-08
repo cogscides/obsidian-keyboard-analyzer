@@ -53,7 +53,7 @@ export function getHotkeysV2(app: App) {
     })
   })
 
-  console.log(hotKeyDict)
+  // console.log(hotKeyDict)
   return hotKeyDict
 }
 
@@ -74,9 +74,9 @@ export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
   let customKeys = app.hotkeyManager.customKeys[id]
   let defaultKeys = app.hotkeyManager.getDefaultHotkeys(id)
 
-  if (id === 'editor:save-file') {
-    console.log(id, defaultKeys)
-  }
+  // if (id === 'editor:save-file') {
+  //   console.log(id, defaultKeys)
+  // }
   if (customKeys) {
     // if command found in customKeys, check if hotkey is customized
     // for each hotkey in customKeys, check if it is customized
@@ -117,68 +117,36 @@ export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
   return isCustom
 }
 
-// check if hotkey is Customized
-// app.hotkeyManager.customKeys store all custom hotkeys
-// if reassigned return true
-// https://forum.obsidian.md/t/dataviewjs-snippet-showcase/17847/37
-// export function isCustomizedHotkey(
-//   id: string,
-//   { modifiers, key }: { modifiers: Modifier[]; key: string } | Hotkey,
-//   app: App
-// ) {
-//   let customizedHotkeys: { modifiers: string[]; key: string }[] | undefined | Hotkey =
-//     app.hotkeyManager.customKeys[id]
-//   if (customizedHotkeys) {
-//     console.log(id)
+// return true if hotkey duplicated with other hotkey
+export function isHotkeyDuplicate(commandID: string, hotkey: Hotkey) {
+  let isDuplicate = false
+  let commands = getHotkeysV2(app)
+  console.log('---')
 
-//     for (let hotkey of customizedHotkeys) {
-//       // prepare customHotkey modifiers
-//       let osModifiers = getConvertedModifiers(hotkey.modifiers)
-//       let sortedModifiers = sortModifiers(osModifiers)
-//       let customHotkeyModifiersString = sortedModifiers.join(',')
+  for (let command of Object.entries(commands)) {
+    let currentCommandID = command[0]
+    let currentHotkeys = command[1].hotkeys
 
-//       // prepare inputed modifiers
-//       let inputModifiers = sortModifiers(
-//         unbakeModifiersToArray(modifiers)
-//       ).join(',')
+    if (currentCommandID !== commandID) {
+      for (let currentHotkey of currentHotkeys) {
+        if (
+          currentHotkey.key === hotkey.key &&
+          currentHotkey.modifiers.length === hotkey.modifiers.length &&
+          currentHotkey.modifiers.every((modifier, index) => {
+            return modifier === hotkey.modifiers[index]
+          })
+        ) {
+          console.log(currentCommandID, commandID)
+          console.log(currentHotkey, hotkey)
 
-//       if (
-//         customHotkeyModifiersString !== inputModifiers ||
-//         hotkey.key !== key
-//       ) {
-//         return false
-//       }
-//     }
-//     return true
+          isDuplicate = true
+        }
+      }
+    }
+  }
 
-//     // console.log(customizedHotkeys)
-//   } else if (customizedHotkeys === undefined) {
-//     return false
-//   }
-// }
-
-// function isCustomHotkey(name: string, hotkey: string) {
-//   let customHotkeysFound: Hotkey[] = customKeys[name] // if customId exists
-
-//   if (customHotkeysFound) {
-//     for (let customHotkey of customHotkeysFound) {
-//       // check if hotkey.modifiers is equal to customHotkey.modifiers
-//       // use convertModifier() to convert modifiers to OS specific modifiers
-//       if (
-//         getConvertedModifiers(hotkey.modifiers).join(',') ===
-//           getSortedModifiers(customHotkey.modifiers.join(',')).join(',') &&
-//         hotkey.key === customHotkey.key
-//       ) {
-//         console.log(hotkey, 'equal to', customHotkey)
-//         return true
-//       } else {
-//         return false
-//       }
-//     }
-//   }
-//   return false
-//   // console.log(name, ':', hotkey, ':', customHotkey)
-// }
+  return isDuplicate
+}
 
 // ^^^^^^
 // MODIFIERS
