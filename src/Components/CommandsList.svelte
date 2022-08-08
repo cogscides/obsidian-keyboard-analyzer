@@ -18,7 +18,7 @@
   const dispatch = createEventDispatcher()
   function sendPluginName(e: any) {
     const clicked = e.target.innerHTML
-    dispatch('pluginNameClicked', clicked)
+    dispatch('plugin-name-clicked', clicked)
   }
 </script>
 

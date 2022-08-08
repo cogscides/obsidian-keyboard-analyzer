@@ -207,6 +207,9 @@
   border-bottom: none;
   flex-shrink: 2;
 }
+#keyboard-component .community-plugin-search-summary.u-muted span {
+  text-align: center;
+}
 
 button#hotkey-refresh-button {
   background-color: transparent;
