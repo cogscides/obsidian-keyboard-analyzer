@@ -212,6 +212,8 @@
   function handlePluginNameClicked(event: CustomEvent) {
     let pluginName: string = event.detail
     if (search === '' || search === undefined) {
+      // scroll to input field
+      input.focus()
       search = pluginName
     } else if (search.startsWith(pluginName)) {
       search = search.replace(pluginName, '')

@@ -75,7 +75,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  padding-bottom: 16px;
+  padding-bottom: 10px;
   /* overflow: visible; */
 }
 
@@ -114,9 +114,11 @@
 } */
 
 #keyboard-component .hotkey-search-container {
-  padding: 8px 0px 12px 0px;
+  padding: 8px 0px 8px 0px;
   margin-left: 0px;
   margin-right: auto;
+  margin-top: 0px;
+  margin-bottom: 0px;
   position: relative;
   /* width: fit-content; */
   /* max-width: 400px; */
@@ -147,6 +149,9 @@
 #hotkey-filter-button {
   width: fit-content;
   margin-right: 8px;
+  margin-top: 8px;
+  margin-bottom: 0px;
+  height: 32px;
 }
 
 #hotkey-filter-button:hover {
