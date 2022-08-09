@@ -49,13 +49,16 @@
   // INITIALIZE SEARCH MENU
   let search: string
   let input: HTMLInputElement
+  let activeSearchModifiers: string[]
+
   // Implements Cmd+F functionality for focus on input field
   // thanks to @Fevol - https://discord.com/channels/686053708261228577/840286264964022302/1005131941240115221
   const view_scope = new Scope(app.scope)
   view_scope.register(['Mod'], 'f', (e) => {
-    // if ctrl + f is pressed focus on input field
     if (e.ctrlKey && e.key === 'f') {
+      console.log('ctrl + f pressed in scope')
       input.focus()
+      return false
     }
   })
 
@@ -219,7 +222,9 @@
   //   console.log(value)
   // }
 
-  onMount(() => input.focus())
+  onMount(() => {
+    input.focus()
+  })
 
   onDestroy(() => {
     app.keymap.popScope(view_scope)
@@ -241,7 +246,10 @@
   bind:offsetWidth={viewWidth}
   bind:this={keyboardComponentHTML}
   on:mouseenter={() => app.keymap.pushScope(view_scope)}
-  on:mouseleave={() => app.keymap.popScope(view_scope)}
+  on:mouseleave={() => {
+    // console.log('mouseleave')
+    app.keymap.popScope(view_scope)
+  }}
 >
   <!-- markdown-preview-view -->
   <div class="" id="keyboard-preview-view">
@@ -258,6 +266,7 @@
         bind:search
         bind:searchCommandsCount
         bind:searchHotkeysCount
+        bind:activeSearchModifiers
         on:refresh-commands={handleRefreshClicked}
       />
 

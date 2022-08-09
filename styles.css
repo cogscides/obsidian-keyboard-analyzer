@@ -114,68 +114,134 @@
 } */
 
 #keyboard-component .hotkey-search-container {
-  padding: 8px 0px 8px 0px;
-  margin-left: 0px;
-  margin-right: auto;
+  display: block;
+  padding: 0px;
   margin-top: 0px;
   margin-bottom: 0px;
   position: relative;
-  /* width: fit-content; */
-  /* max-width: 400px; */
-  /* flex-grow: 2; */
-  /* width: auto; */
-  flex-basis: 100%;
+  flex-grow: 2;
 }
 
 #keyboard-component.xs .hotkey-search-container {
-  max-width: unset;
+  /* max-width: unset;
   flex-grow: 2;
-  flex-basis: 100%;
+  flex-basis: 100%; */
+}
+
+.search-wrapper {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  border-radius: 4px;
+  padding: 8px 14px;
+  padding-top: 6px;
+}
+
+.search-wrapper:focus {
+  background: var(--color-d-blacker);
+  border: 1px solid var(--color-d-gray-50);
+  box-shadow: 0px 0px 0px 3px var(--color-d-gray-60);
+}
+
+.meta-search-wrapper {
+  transform: translate(-50%, -50%);
+  top: 50%;
+  right: 8px;
+  position: absolute;
+}
+
+.modifiers-wrapper {
+  display: flex;
+  width: fit-content;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex-shrink: 1;
+  align-items: center;
+}
+
+kbd.modifier {
+  padding: 2px 4px;
+  margin-right: 4px;
+  background-color: var(--background-secondary-alt);
+}
+
+.modifiers-wrapper kbd.modifier:last-child {
+  margin-right: 12px;
 }
 
 #keyboard-component .hotkey-search-container input {
   height: 40px;
   width: 100%;
   font-size: 16px;
+  padding: unset;
+  padding-bottom: 2px;
+  padding-right: 48px;
+  border: unset;
+  border-radius: unset;
+  background: unset;
+  color: var(--text-normal);
+  box-shadow: unset;
 }
 
 .meta-search-indicator {
-  background: #ee1212;
-  border: rgba(0, 0, 0, 0.2) solid 1px;
-  width: 12px;
-  height: 12px;
+  border: rgba(230, 12, 12, 1) solid 2px;
+  width: 17px;
+  height: 17px;
   border-radius: 50%;
+  right: 9px;
+  transform: translate(-50%, -50%);
   box-shadow: 0px 0px 1px 1px #c415151a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
 }
 
 .meta-search-indicator .inner-circle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
   background: #ee1212;
+  width: 7px;
   border-radius: 50%;
-  align-self: center;
-  padding: 33%;
+  height: 7px;
 }
 
 .pulse {
-  animation: pulse-animation 2s infinite;
+  animation: pulse-animation 1s infinite;
 }
 
 @keyframes pulse-animation {
   0% {
-    box-shadow: 0 0 0 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0 0px rgba(10, 228, 112, 0.5);
   }
   100% {
-    box-shadow: 0 0 0 16px rgba(0, 0, 0, 0);
+    box-shadow: 0 0 0 8px rgba(183, 38, 38, 0);
   }
 }
 
-.hotkey-search-container button {
-  /* height: 40px; */
-  height: fit-content;
-  width: fit-content;
-  flex-shrink: 0;
+#keyboard-component .hotkey-search-container .search-input-clear-button {
+  position: absolute;
+  right: 0px;
+  top: -50% !important;
+  transform: translate(-50%, -50%);
+  top: 18px;
+  color: var(--text-faint);
+  cursor: var(--cursor);
+  background-color: transparent;
+}
+
+#keyboard-component .hotkey-search-container .search-input-clear-button:hover {
+  color: var(--text-error);
+}
+
+#keyboard-component .hotkey-search-container .search-input-clear-button:before {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  content: '\D7';
 }
 
 #hotkey-filter-button {
@@ -193,6 +259,13 @@
 #hotkey-filter-button.is-active {
   color: var(--text-primary);
   background-color: var(--interactive-accent);
+}
+
+.hotkey-search-container button {
+  /* height: 40px; */
+  height: fit-content;
+  width: fit-content;
+  flex-shrink: 0;
 }
 
 .popup-filter-menu-container:not(.is-open) {
@@ -274,27 +347,6 @@ button#hotkey-refresh-button:hover {
   100% {
     transform: rotate(360deg);
   }
-}
-
-#keyboard-component .hotkey-search-container .search-input-clear-button {
-  position: absolute;
-  right: 8px;
-  top: 18px;
-  color: var(--text-faint);
-  cursor: var(--cursor);
-  background-color: transparent;
-}
-
-#keyboard-component .hotkey-search-container .search-input-clear-button:hover {
-  color: var(--text-error);
-}
-
-#keyboard-component .hotkey-search-container .search-input-clear-button:before {
-  position: absolute;
-  right: 3px;
-  top: -3px;
-  font-size: 22px;
-  content: '\D7';
 }
 
 .search-results {

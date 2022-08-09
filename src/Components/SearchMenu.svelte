@@ -1,15 +1,15 @@
 <script lang="ts">
-  // Types
+  // TYPES
   import type { App, Hotkey, Command, Modifier } from 'obsidian'
 
-  // External
+  // EXTERNAL
   import { createEventDispatcher } from 'svelte'
   import { fly, fade, slide, blur } from 'svelte/transition'
   import { RefreshCw as RefreshIcon, Filter as FilterIcon } from 'lucide-svelte'
   // @ts-ignore
   import { clickOutside } from 'svelte-use-click-outside'
 
-  // Utils
+  // UTILS
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'
 
   export let inputHTML: HTMLInputElement
@@ -28,8 +28,10 @@
     search = ''
   }
 
-  // dispatch refresh commands
+  // EVENT DISPATHCHERs
   const dispatch = createEventDispatcher()
+
+  // 1. refresh commands
   function sendRefreshCommands(e: any) {
     refreshIsActive = true
     // set animation timeout
@@ -41,6 +43,7 @@
   }
 
   // dispatch filter event on filters change
+  // TODO
 
   // on focus modifier keydown event add to activeSearchModifiers array
   // if modifier is already in array remove it
@@ -53,6 +56,7 @@
     ) {
       switch (e.key) {
         case 'Shift':
+          console.log('Shift key pressed')
           if (activeSearchModifiers.includes('Shift')) {
             activeSearchModifiers.splice(
               activeSearchModifiers.indexOf('Shift'),
@@ -61,6 +65,7 @@
           } else {
             activeSearchModifiers.push('Shift')
           }
+          activeSearchModifiers = activeSearchModifiers
           break
         case 'Alt':
           if (activeSearchModifiers.includes('Alt')) {
@@ -71,6 +76,7 @@
           } else {
             activeSearchModifiers.push('Alt')
           }
+          activeSearchModifiers = activeSearchModifiers
           break
         case 'Meta':
           if (activeSearchModifiers.includes('Meta')) {
@@ -81,6 +87,7 @@
           } else {
             activeSearchModifiers.push('Meta')
           }
+          activeSearchModifiers = activeSearchModifiers
           break
         case 'Control':
           if (activeSearchModifiers.includes('Control')) {
@@ -91,6 +98,7 @@
           } else {
             activeSearchModifiers.push('Control')
           }
+          activeSearchModifiers = activeSearchModifiers
           break
         default:
           console.log('unknown key: ', e.key)
@@ -108,25 +116,32 @@
     } else if (e.key === 'Escape') {
       activeSearchModifiers = []
     }
-    console.log(activeSearchModifiers)
+    console.log('child:', activeSearchModifiers)
   }
 </script>
 
 <div class="hotkey-settings-container">
   <!-- <div class="hotkey-search-menu"> -->
-  <div class="hotkey-search-container">
-    <input
-      type="text"
-      placeholder="Filter..."
-      bind:value={search}
-      bind:this={inputHTML}
-      on:keydown={onModifierKeyDown}
-    />
-    <div>
-      <div class="meta-search-indicator pulse">
-        <div class="inner-circle" />
+  <div class="search-wrapper">
+    <div class="modifiers-wrapper">
+      {#each activeSearchModifiers as modifier}
+        <kbd class="modifier">{modifier}</kbd>
+      {/each}
+    </div>
+    <div class="hotkey-search-container">
+      <input
+        type="text"
+        placeholder="Filter..."
+        bind:value={search}
+        bind:this={inputHTML}
+        on:keydown={onModifierKeyDown}
+      />
+      <div class="meta-search-wrapper">
+        <div class="meta-search-indicator pulse">
+          <div class="inner-circle" />
+        </div>
+        <div class="search-input-clear-button" on:click={ClearSearch} />
       </div>
-      <div class="search-input-clear-button" on:click={ClearSearch} />
     </div>
   </div>
   <button
