@@ -2,6 +2,7 @@
   // @ts-ignore
   import { flip } from 'svelte/animate'
   import { createEventDispatcher } from 'svelte'
+  import { fly, fade, slide, blur } from 'svelte/transition'
 
   import type { commandsArray } from 'src/Interfaces'
   import { SpecialSymbols } from 'src/Constants'
@@ -35,7 +36,8 @@
     {#each visibleCommands as cmdEntry (cmdEntry.id)}
       <div
         class="kbanalizer-setting-item setting-item"
-        animate:flip={{ duration: 150 }}
+        animate:flip={{ duration: 400 }}
+        in:fade={{ duration: 150 }}
       >
         <div class="setting-item-info">
           <div class="setting-item-name">

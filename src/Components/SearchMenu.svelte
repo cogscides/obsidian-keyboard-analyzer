@@ -99,6 +99,10 @@
           break
       }
     }
+    if (e.key === 'Escape') {
+      // unfocus input field
+      inputHTML.blur()
+    }
     if (e.key === 'Backspace' && e.getModifierState('Control')) {
       activeSearchModifiers = activeSearchModifiers.slice(0, -1)
     } else if (e.key === 'Escape') {
@@ -118,7 +122,12 @@
       bind:this={inputHTML}
       on:keydown={onModifierKeyDown}
     />
-    <div class="search-input-clear-button" on:click={ClearSearch} />
+    <div>
+      <div class="meta-search-indicator pulse">
+        <div class="inner-circle" />
+      </div>
+      <div class="search-input-clear-button" on:click={ClearSearch} />
+    </div>
   </div>
   <button
     id="hotkey-filter-button"

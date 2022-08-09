@@ -124,6 +124,7 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     // statusBarEl.setText('Shortcuts')
     statusBarIcon.addClass('mod-clickable')
     statusBarIcon.setAttribute('aria-label', 'Keyboard Shortcuts')
+    statusBarIcon.style.order = '10'
 
     // create the status bar icon
     const icon = statusBarIcon.createSpan('icon')
