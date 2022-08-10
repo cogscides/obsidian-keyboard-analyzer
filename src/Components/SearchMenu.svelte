@@ -9,6 +9,7 @@
     RefreshCw as RefreshIcon,
     Filter as FilterIcon,
     X as CrossIcon,
+    CircleDot as CircleDotIcon,
   } from 'lucide-svelte'
   // @ts-ignore
   import { clickOutside } from 'svelte-use-click-outside'
@@ -24,12 +25,23 @@
   export let searchCommandsCount: number
   export let searchHotkeysCount: number
 
+  export let keyboardListenerIsActive: boolean = false
   let filterIsOpen: boolean = false
   let refreshIsActive: boolean = false
 
   // on click clear button clear search
   const ClearSearch = () => {
-    search = ''
+    if (search === '') {
+      activeSearchModifiers = []
+    } else {
+      search = ''
+    }
+  }
+
+  // on click activate keyboard listener
+  const ActivateKeyboardListener = () => {
+    keyboardListenerIsActive = !keyboardListenerIsActive
+    inputHTML.focus()
   }
 
   // EVENT DISPATHCHERs
@@ -54,9 +66,10 @@
   const onModifierKeyDown = (e: KeyboardEvent) => {
     // using if state condition getModifierState
     if (
-      e.getModifierState('Shift') ||
-      e.getModifierState('Alt') ||
-      e.getModifierState('Control')
+      keyboardListenerIsActive &&
+      (e.getModifierState('Shift') ||
+        e.getModifierState('Alt') ||
+        e.getModifierState('Control'))
     ) {
       switch (e.key) {
         case 'Shift':
@@ -66,6 +79,8 @@
               activeSearchModifiers.indexOf('Shift'),
               1
             )
+            e.preventDefault()
+            inputHTML.scrollIntoView({ behavior: 'smooth', block: 'center' })
           } else {
             activeSearchModifiers.push('Shift')
           }
@@ -110,21 +125,20 @@
 
           break
       }
-    }
-    if (e.key === 'Escape') {
-      // unfocus input field
-      inputHTML.blur()
-    }
-    if (e.key === 'Backspace' && e.getModifierState('Control')) {
-      activeSearchModifiers = activeSearchModifiers.slice(0, -1)
     } else if (e.key === 'Escape') {
-      activeSearchModifiers = []
+      if (keyboardListenerIsActive) {
+        keyboardListenerIsActive = false
+      } else {
+        inputHTML.blur()
+      }
+    } else if (e.key === 'Backspace' && inputHTML.selectionStart === 0) {
+      activeSearchModifiers = activeSearchModifiers.slice(0, -1)
+      activeSearchModifiers = activeSearchModifiers
     }
-    console.log('child:', activeSearchModifiers)
   }
 </script>
 
-<div class="hotkey-settings-container">
+<div class="hotkey-settings-container" on:keydown={onModifierKeyDown}>
   <!-- <div class="hotkey-search-menu"> -->
   <div class="search-wrapper">
     <div class="modifiers-wrapper">
@@ -138,13 +152,23 @@
         placeholder="Filter..."
         bind:value={search}
         bind:this={inputHTML}
-        on:keydown={onModifierKeyDown}
       />
       <div class="meta-search-wrapper">
-        <div class="meta-search-indicator pulse">
-          <div class="inner-circle" />
+        <div
+          class="keyboard-icon icon {keyboardListenerIsActive ? 'pulse' : ''}"
+          aria-label={keyboardListenerIsActive
+            ? '`Esc` to Deactivate'
+            : `\`${getConvertedModifiers(['Mod'])[0]}+F\` to Activate`}
+          on:click={ActivateKeyboardListener}
+        >
+          <CircleDotIcon size={20} />
         </div>
-        <CrossIcon class="clear-icon" size={16} on:click={ClearSearch} />
+        <!-- <div class="meta-search-indicator pulse">
+          <div class="inner-circle" />
+        </div> -->
+        <div class="clear-icon icon" on:click={ClearSearch}>
+          <CrossIcon size={20} />
+        </div>
         <!-- <div class="search-input-clear-button" on:click={ClearSearch} /> -->
       </div>
     </div>
@@ -154,7 +178,7 @@
     class={filterIsOpen ? 'is-active' : ''}
     aria-label="Filter Commands"
     on:click={() => {
-      console.log('filter: ', filterIsOpen)
+      // console.log('filter: ', filterIsOpen)
       filterIsOpen = !filterIsOpen
     }}
   >

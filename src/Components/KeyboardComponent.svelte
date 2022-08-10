@@ -49,6 +49,7 @@
   // INITIALIZE SEARCH MENU
   let search: string
   let input: HTMLInputElement
+  let keyboardListenerIsActive: boolean = false
   let activeSearchModifiers: string[]
 
   // Implements Cmd+F functionality for focus on input field
@@ -57,7 +58,11 @@
   view_scope.register(['Mod'], 'f', (e) => {
     if (e.ctrlKey && e.key === 'f') {
       console.log('ctrl + f pressed in scope')
-      input.focus()
+      if (input === document.activeElement) {
+        keyboardListenerIsActive = true
+      } else {
+        input.focus()
+      }
       return false
     }
   })
@@ -267,6 +272,7 @@
         bind:searchCommandsCount
         bind:searchHotkeysCount
         bind:activeSearchModifiers
+        bind:keyboardListenerIsActive
         on:refresh-commands={handleRefreshClicked}
       />
 

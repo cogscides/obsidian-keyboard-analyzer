@@ -186,10 +186,16 @@ kbd.modifier {
   box-shadow: unset;
 }
 
-.meta-search-indicator {
-  border: rgba(230, 12, 12, 1) solid 2px;
-  width: 17px;
-  height: 17px;
+#keyboard-component .hotkey-search-container div.icon {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
+
+.keyboard-icon {
+  cursor: pointer;
+  color: var(--text-faint);
+  opacity: var(--icon-muted);
   border-radius: 50%;
   right: 9px;
   top: 50%;
@@ -198,16 +204,25 @@ kbd.modifier {
   position: absolute;
 }
 
-.meta-search-indicator .inner-circle {
+.keyboard-icon:hover {
+  border-color: var(--interactive-accent);
+  opacity: 1;
+}
+
+.keyboard-icon.pulse {
+  color: var(--text-accent);
+}
+
+/* .meta-search-indicator .inner-circle {
   position: absolute;
   transform: translate(-50%, -50%);
   top: 50%;
   left: 50%;
-  background: #ee1212;
+  background: var(--interactive-accent);
   width: 7px;
   border-radius: 50%;
   height: 7px;
-}
+} */
 
 .pulse {
   animation: pulse-animation 1s infinite;
@@ -218,7 +233,7 @@ kbd.modifier {
     box-shadow: 0 0 0 0px rgba(10, 228, 112, 0.5);
   }
   100% {
-    box-shadow: 0 0 0 8px rgba(183, 38, 38, 0);
+    box-shadow: 0 0 0 10px rgba(183, 38, 38, 0);
   }
 }
 
@@ -286,7 +301,7 @@ kbd.modifier {
 .popup-filter-menu-container {
   position: absolute;
   background-color: var(--background-primary-alt);
-  top: 128px;
+  top: 148px;
   outline: 2px solid var(--background-modifier-form-field-highlighted);
   width: fit-content;
   z-index: 150000;
