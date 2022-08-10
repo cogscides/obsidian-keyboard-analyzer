@@ -69,14 +69,12 @@
 #keyboard-component .hotkey-settings-container {
   height: fit-content;
   width: 100%;
-  /* overflow: hidden; */
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   padding-bottom: 10px;
-  /* overflow: visible; */
 }
 
 #hotkeys-wrapper.hotkey-settings-container {
@@ -122,11 +120,11 @@
   flex-grow: 2;
 }
 
-#keyboard-component.xs .hotkey-search-container {
-  /* max-width: unset;
+/* #keyboard-component.xs .hotkey-search-container { */
+/* max-width: unset;
   flex-grow: 2;
   flex-basis: 100%; */
-}
+/* } */
 
 .search-wrapper {
   width: 100%;
@@ -138,7 +136,8 @@
   color: var(--text-normal);
   border-radius: 4px;
   padding: 8px 14px;
-  padding-top: 6px;
+  margin-bottom: 12px;
+  margin-top: 20px;
 }
 
 .search-wrapper:focus {
@@ -178,7 +177,7 @@ kbd.modifier {
   width: 100%;
   font-size: 16px;
   padding: unset;
-  padding-bottom: 2px;
+  /* padding-bottom: 2px; */
   padding-right: 48px;
   border: unset;
   border-radius: unset;
@@ -193,6 +192,7 @@ kbd.modifier {
   height: 17px;
   border-radius: 50%;
   right: 9px;
+  top: 50%;
   transform: translate(-50%, -50%);
   box-shadow: 0px 0px 1px 1px #c415151a;
   position: absolute;
@@ -233,21 +233,32 @@ kbd.modifier {
   background-color: transparent;
 }
 
-#keyboard-component .hotkey-search-container .search-input-clear-button:hover {
+.clear-icon {
+  color: var(--text-faint);
+  cursor: var(--cursor);
+  top: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.clear-icon:hover {
   color: var(--text-error);
 }
 
-#keyboard-component .hotkey-search-container .search-input-clear-button:before {
+/* #keyboard-component .hotkey-search-container .search-input-clear-button:hover {
+  color: var(--text-error);
+} */
+
+/* #keyboard-component .hotkey-search-container .search-input-clear-button:before {
   position: absolute;
   transform: translate(-50%, -50%);
   font-size: 22px;
   content: '\D7';
-}
+} */
 
 #hotkey-filter-button {
   width: fit-content;
   margin-right: 8px;
-  margin-top: 8px;
   margin-bottom: 0px;
   height: 32px;
 }

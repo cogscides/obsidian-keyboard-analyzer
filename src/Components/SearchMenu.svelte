@@ -5,7 +5,11 @@
   // EXTERNAL
   import { createEventDispatcher } from 'svelte'
   import { fly, fade, slide, blur } from 'svelte/transition'
-  import { RefreshCw as RefreshIcon, Filter as FilterIcon } from 'lucide-svelte'
+  import {
+    RefreshCw as RefreshIcon,
+    Filter as FilterIcon,
+    X as CrossIcon,
+  } from 'lucide-svelte'
   // @ts-ignore
   import { clickOutside } from 'svelte-use-click-outside'
 
@@ -140,7 +144,8 @@
         <div class="meta-search-indicator pulse">
           <div class="inner-circle" />
         </div>
-        <div class="search-input-clear-button" on:click={ClearSearch} />
+        <CrossIcon class="clear-icon" size={16} on:click={ClearSearch} />
+        <!-- <div class="search-input-clear-button" on:click={ClearSearch} /> -->
       </div>
     </div>
   </div>
