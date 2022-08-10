@@ -64,6 +64,7 @@
   // on focus modifier keydown event add to activeSearchModifiers array
   // if modifier is already in array remove it
   const onModifierKeyDown = (e: KeyboardEvent) => {
+    let searchOnInit = search
     // using if state condition getModifierState
     if (
       keyboardListenerIsActive &&
@@ -120,7 +121,7 @@
           activeSearchModifiers = activeSearchModifiers
           break
         default:
-          console.log('unknown key: ', e.key)
+          console.log('unknown modifier: ', e.key)
           console.log('please report this to the developer')
 
           break
@@ -133,6 +134,15 @@
       }
     } else if (e.key === 'Backspace' && inputHTML.selectionStart === 0) {
       activeSearchModifiers = activeSearchModifiers.slice(0, -1)
+      activeSearchModifiers = activeSearchModifiers
+    } else if (keyboardListenerIsActive) {
+      if (activeSearchModifiers.includes(e.key)) {
+        e.preventDefault()
+        activeSearchModifiers.splice(activeSearchModifiers.indexOf(e.key), 1)
+      } else {
+        e.preventDefault()
+        activeSearchModifiers.push(e.key)
+      }
       activeSearchModifiers = activeSearchModifiers
     }
   }
