@@ -63,9 +63,8 @@
 
   // on focus modifier keydown event add to activeSearchModifiers array
   // if modifier is already in array remove it
+  // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
   const onModifierKeyDown = (e: KeyboardEvent) => {
-    let searchOnInit = search
-    // using if state condition getModifierState
     if (
       keyboardListenerIsActive &&
       (e.getModifierState('Shift') ||
@@ -132,9 +131,14 @@
       } else {
         inputHTML.blur()
       }
-    } else if (e.key === 'Backspace' && inputHTML.selectionStart === 0) {
-      activeSearchModifiers = activeSearchModifiers.slice(0, -1)
-      activeSearchModifiers = activeSearchModifiers
+    } else if (e.key === 'Backspace' && keyboardListenerIsActive !== true) {
+      if (search === '') {
+        e.preventDefault()
+        activeSearchModifiers = activeSearchModifiers.slice(0, -1)
+        activeSearchModifiers = activeSearchModifiers
+      } else {
+        search = search.slice(0, -1)
+      }
     } else if (keyboardListenerIsActive) {
       if (activeSearchModifiers.includes(e.key)) {
         e.preventDefault()
