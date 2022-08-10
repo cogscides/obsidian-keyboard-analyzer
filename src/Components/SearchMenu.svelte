@@ -20,6 +20,7 @@
   export let inputHTML: HTMLInputElement
   export let search: string
   export let activeSearchModifiers: string[] = []
+  export let activeSearchKey: string = ''
   // export let allCommandsCount: number = 0
   // export let allHotkeysCount: number = 0
   export let searchCommandsCount: number
@@ -65,6 +66,19 @@
   // if modifier is already in array remove it
   // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
   const onModifierKeyDown = (e: KeyboardEvent) => {
+    function pushModifier(modifier: string) {
+      if (!activeSearchModifiers.includes(modifier)) {
+        activeSearchModifiers.push(modifier)
+      }
+      activeSearchModifiers = activeSearchModifiers
+    }
+
+    function spliceModifier(modifier: Modifier) {
+      // splice modifier from activeSearchModifiers array
+      activeSearchModifiers.splice(activeSearchModifiers.indexOf(modifier), 1)
+      activeSearchModifiers = activeSearchModifiers
+    }
+
     if (
       keyboardListenerIsActive &&
       (e.getModifierState('Shift') ||
@@ -73,51 +87,35 @@
     ) {
       switch (e.key) {
         case 'Shift':
-          console.log('Shift key pressed')
           if (activeSearchModifiers.includes('Shift')) {
-            activeSearchModifiers.splice(
-              activeSearchModifiers.indexOf('Shift'),
-              1
-            )
-            e.preventDefault()
-            inputHTML.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            console.log('Shift is already in array')
+
+            spliceModifier('Shift')
           } else {
-            activeSearchModifiers.push('Shift')
+            pushModifier('Shift')
           }
-          activeSearchModifiers = activeSearchModifiers
           break
         case 'Alt':
           if (activeSearchModifiers.includes('Alt')) {
-            activeSearchModifiers.splice(
-              activeSearchModifiers.indexOf('Alt'),
-              1
-            )
+            spliceModifier('Alt')
           } else {
-            activeSearchModifiers.push('Alt')
+            pushModifier('Alt')
           }
-          activeSearchModifiers = activeSearchModifiers
           break
         case 'Meta':
+          // OSX ONLY
           if (activeSearchModifiers.includes('Meta')) {
-            activeSearchModifiers.splice(
-              activeSearchModifiers.indexOf('Meta'),
-              1
-            )
+            spliceModifier('Meta')
           } else {
-            activeSearchModifiers.push('Meta')
+            pushModifier('Meta')
           }
-          activeSearchModifiers = activeSearchModifiers
           break
         case 'Control':
           if (activeSearchModifiers.includes('Control')) {
-            activeSearchModifiers.splice(
-              activeSearchModifiers.indexOf('Control'),
-              1
-            )
+            spliceModifier('Ctrl')
           } else {
-            activeSearchModifiers.push('Control')
+            pushModifier('Ctrl')
           }
-          activeSearchModifiers = activeSearchModifiers
           break
         default:
           console.log('unknown modifier: ', e.key)
@@ -128,26 +126,42 @@
     } else if (e.key === 'Escape') {
       if (keyboardListenerIsActive) {
         keyboardListenerIsActive = false
-      } else {
+      } else if (keyboardListenerIsActive === false) {
         inputHTML.blur()
       }
-    } else if (e.key === 'Backspace' && keyboardListenerIsActive !== true) {
-      if (search === '') {
-        e.preventDefault()
-        activeSearchModifiers = activeSearchModifiers.slice(0, -1)
-        activeSearchModifiers = activeSearchModifiers
-      } else {
-        search = search.slice(0, -1)
+    } else if (e.key === 'Backspace') {
+      if (
+        keyboardListenerIsActive === true &&
+        activeSearchKey !== 'Backspace'
+      ) {
+        activeSearchKey = 'Backspace'
+      } else if (keyboardListenerIsActive === true && search === 'Backspace') {
+        activeSearchKey = ''
+      } else if (keyboardListenerIsActive === false) {
+        if (search === '' || inputHTML.selectionStart === 0) {
+          if (activeSearchKey !== '') {
+            activeSearchKey = ''
+          } else if (activeSearchModifiers.length > 0) {
+            activeSearchModifiers.pop()
+            activeSearchModifiers = activeSearchModifiers
+          }
+        }
       }
-    } else if (keyboardListenerIsActive) {
-      if (activeSearchModifiers.includes(e.key)) {
+    } else if (keyboardListenerIsActive === true) {
+      console.log('activekey: ', activeSearchKey)
+      console.log('key clicked: ', e.key)
+      if (activeSearchKey !== e.key) {
+        console.log('active key: ', activeSearchKey)
+        console.log('key clicked: ', e.key)
+
         e.preventDefault()
-        activeSearchModifiers.splice(activeSearchModifiers.indexOf(e.key), 1)
-      } else {
+        activeSearchKey = e.key
+      } else if (activeSearchKey === e.key) {
+        console.log('active key: ', activeSearchKey)
+        console.log('key clicked: ', e.key)
         e.preventDefault()
-        activeSearchModifiers.push(e.key)
+        activeSearchKey = ''
       }
-      activeSearchModifiers = activeSearchModifiers
     }
   }
 </script>
@@ -156,9 +170,14 @@
   <!-- <div class="hotkey-search-menu"> -->
   <div class="search-wrapper">
     <div class="modifiers-wrapper">
-      {#each activeSearchModifiers as modifier}
-        <kbd class="modifier">{modifier}</kbd>
-      {/each}
+      {#if activeSearchModifiers.length > 0 || activeSearchKey !== null}
+        {#each activeSearchModifiers as modifier}
+          <kbd class="modifier">{modifier}</kbd>
+        {/each}
+        {#if activeSearchKey !== ''}
+          <kbd class="modifier">{activeSearchKey}</kbd>
+        {/if}
+      {/if}
     </div>
     <div class="hotkey-search-container">
       <input
