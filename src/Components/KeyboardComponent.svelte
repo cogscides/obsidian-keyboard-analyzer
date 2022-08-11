@@ -47,17 +47,18 @@
   let viewMode: string = 'desktop'
 
   // INITIALIZE SEARCH MENU
-  let search: string
+  let search: string = ''
   let input: HTMLInputElement
   let keyboardListenerIsActive: boolean = false
-  let activeSearchModifiers: string[]
+  let activeSearchModifiers: string[] = []
+  let activeSearchKey: string = ''
 
   // Implements Cmd+F functionality for focus on input field
   // thanks to @Fevol - https://discord.com/channels/686053708261228577/840286264964022302/1005131941240115221
   const view_scope = new Scope(app.scope)
   view_scope.register(['Mod'], 'f', (e) => {
     if (e.ctrlKey && e.key === 'f') {
-      console.log('ctrl + f pressed in scope')
+      // console.log('ctrl + f pressed in scope')
       if (input === document.activeElement) {
         keyboardListenerIsActive = true
       } else {
@@ -115,49 +116,79 @@
   function filterCommandsArray(
     cmds: commandsArray,
     search: string,
-    type: string = 'name'
+    activeSearchModifiers: string[],
+    activeSearchKey: string
   ) {
     let filteredCmds: commandsArray = []
 
     // filter commands by name when type is name
-    if (type === 'name') {
-      filteredCmds = cmds.filter((command) => {
-        let fullName =
-          command.pluginName.toLocaleLowerCase() +
-          ' ' +
-          command.cmdName.toLowerCase()
+    filteredCmds = cmds.filter((command) => {
+      let fullName =
+        command.pluginName.toLocaleLowerCase() +
+        ' ' +
+        command.cmdName.toLowerCase()
 
-        // get array of search words and search in fullName
-        let searchWords = search
-          .toLocaleLowerCase()
-          .split(' ')
-          .filter((word) => word.length > 0)
+      // get array of search words and search in fullName
+      let searchWords = search
+        .toLocaleLowerCase()
+        .split(' ')
+        .filter((word) => word.length > 0)
 
-        // return true if all search word are in fullName, hotkeys or key
-        return searchWords.every((word) => {
-          return (
-            fullName.includes(word) ||
-            command.hotkeys.some((hotkey) => {
-              return (
-                hotkey.key.toLocaleLowerCase().includes(word) ||
-                getConvertedModifiers(hotkey.modifiers).some((modifier) =>
-                  modifier.toLocaleLowerCase().includes(word)
-                )
+      // return true if all search word are in fullName, hotkeys or key
+      return searchWords.every((word) => {
+        return (
+          fullName.includes(word) ||
+          command.hotkeys.some((hotkey) => {
+            return (
+              hotkey.key.toLocaleLowerCase().includes(word) ||
+              getConvertedModifiers(hotkey.modifiers).some((modifier) =>
+                modifier.toLocaleLowerCase().includes(word)
               )
-            })
+            )
+          })
+        )
+      })
+    })
+
+    // filter commands by activeSearchModifiers
+    if (activeSearchModifiers.length > 0) {
+      // console.log('filtering by modifiers:', activeSearchModifiers)
+
+      filteredCmds = filteredCmds.filter((command) => {
+        // filter by activeSearchModifiers in command.hotkeys
+        // if one of activeSearchModifiers is not in any of hotkeys modifiers return false
+        return command.hotkeys.some((hotkey) => {
+          return activeSearchModifiers.every((modifier) => {
+            return getConvertedModifiers(hotkey.modifiers).includes(modifier)
+          })
+        })
+      })
+    }
+
+    // filter commands by activeSearchKey
+    if (activeSearchKey !== '') {
+      filteredCmds = filteredCmds.filter((command) => {
+        return command.hotkeys.some((hotkey) => {
+          return (
+            hotkey.key.toLocaleLowerCase() ===
+            activeSearchKey.toLocaleLowerCase()
           )
         })
       })
     }
 
     // console.log(filteredCmds)
+    sortCommandsArrayByName(filteredCmds)
     return filteredCmds
   }
 
   // REACTIVE PROPERTIES
-  $: visibleCommands = search
-    ? filterCommandsArray(commandsArray, search)
-    : sortCommandsArrayByName(commandsArray)
+  $: visibleCommands = filterCommandsArray(
+    commandsArray,
+    search,
+    activeSearchModifiers,
+    activeSearchKey
+  )
 
   // HANDLE COMPONENT EVENTS
 
@@ -272,6 +303,7 @@
         bind:searchCommandsCount
         bind:searchHotkeysCount
         bind:activeSearchModifiers
+        bind:activeSearchKey
         bind:keyboardListenerIsActive
         on:refresh-commands={handleRefreshClicked}
       />

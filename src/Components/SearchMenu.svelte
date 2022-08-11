@@ -19,7 +19,7 @@
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'
 
   export let inputHTML: HTMLInputElement
-  export let search: string
+  export let search: string = ''
   export let activeSearchModifiers: string[] = []
   export let activeSearchKey: string = ''
   // export let allCommandsCount: number = 0
@@ -71,8 +71,8 @@
     function pushModifier(modifier: string) {
       if (!activeSearchModifiers.includes(modifier)) {
         activeSearchModifiers.push(modifier)
+        activeSearchModifiers = activeSearchModifiers
       }
-      activeSearchModifiers = activeSearchModifiers
     }
 
     function spliceModifier(modifier: Modifier) {
@@ -90,8 +90,6 @@
       switch (e.key) {
         case 'Shift':
           if (activeSearchModifiers.includes('Shift')) {
-            console.log('Shift is already in array')
-
             spliceModifier('Shift')
           } else {
             pushModifier('Shift')
