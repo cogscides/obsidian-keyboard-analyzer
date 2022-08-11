@@ -13,6 +13,7 @@
   } from 'lucide-svelte'
   // @ts-ignore
   import { clickOutside } from 'svelte-use-click-outside'
+  import { JavaSciptKeyCodes, SpecialSymbols } from 'src/Constants'
 
   // UTILS
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'
@@ -34,6 +35,7 @@
   const ClearSearch = () => {
     if (search === '') {
       activeSearchModifiers = []
+      activeSearchKey = ''
     } else {
       search = ''
     }
@@ -111,18 +113,21 @@
           }
           break
         case 'Control':
-          if (activeSearchModifiers.includes('Control')) {
+          if (activeSearchModifiers.includes('Ctrl')) {
             spliceModifier('Ctrl')
           } else {
             pushModifier('Ctrl')
           }
           break
         default:
+          // TODO: triggers if two modifiers are pressed at the same time
           console.log('unknown modifier: ', e.key)
           console.log('please report this to the developer')
 
           break
       }
+      // return to stop event propagation
+      return
     } else if (e.key === 'Escape') {
       if (keyboardListenerIsActive) {
         keyboardListenerIsActive = false
@@ -130,35 +135,41 @@
         inputHTML.blur()
       }
     } else if (e.key === 'Backspace') {
+      // TODO clear activeSearchKey
       if (
         keyboardListenerIsActive === true &&
         activeSearchKey !== 'Backspace'
       ) {
+        e.preventDefault()
         activeSearchKey = 'Backspace'
-      } else if (keyboardListenerIsActive === true && search === 'Backspace') {
+      } else if (
+        keyboardListenerIsActive === true &&
+        activeSearchKey === 'Backspace'
+      ) {
+        e.preventDefault()
         activeSearchKey = ''
       } else if (keyboardListenerIsActive === false) {
+        // TODO fix clearence of activeSearchKey
         if (search === '' || inputHTML.selectionStart === 0) {
           if (activeSearchKey !== '') {
             activeSearchKey = ''
-          } else if (activeSearchModifiers.length > 0) {
+          } else if (
+            activeSearchKey === '' &&
+            activeSearchModifiers.length > 0
+          ) {
             activeSearchModifiers.pop()
             activeSearchModifiers = activeSearchModifiers
           }
         }
       }
     } else if (keyboardListenerIsActive === true) {
-      console.log('activekey: ', activeSearchKey)
-      console.log('key clicked: ', e.key)
-      if (activeSearchKey !== e.key) {
-        console.log('active key: ', activeSearchKey)
-        console.log('key clicked: ', e.key)
-
+      // @ts-ignore
+      if (!(e.keyCode in JavaSciptKeyCodes)) {
+        activeSearchKey = 'Key' + e.keyCode.toString()
+      } else if (activeSearchKey !== JavaSciptKeyCodes[e.keyCode].Key) {
         e.preventDefault()
-        activeSearchKey = e.key
-      } else if (activeSearchKey === e.key) {
-        console.log('active key: ', activeSearchKey)
-        console.log('key clicked: ', e.key)
+        activeSearchKey = JavaSciptKeyCodes[e.keyCode].Key
+      } else if (activeSearchKey === JavaSciptKeyCodes[e.keyCode].Key) {
         e.preventDefault()
         activeSearchKey = ''
       }
@@ -171,11 +182,17 @@
   <div class="search-wrapper">
     <div class="modifiers-wrapper">
       {#if activeSearchModifiers.length > 0 || activeSearchKey !== null}
-        {#each activeSearchModifiers as modifier}
+        {#each sortModifiers(activeSearchModifiers) as modifier}
           <kbd class="modifier">{modifier}</kbd>
         {/each}
         {#if activeSearchKey !== ''}
-          <kbd class="modifier">{activeSearchKey}</kbd>
+          <kbd class="modifier"
+            >{activeSearchKey in SpecialSymbols
+              ? SpecialSymbols[activeSearchKey]
+              : activeSearchKey.length === 1
+              ? activeSearchKey.toUpperCase()
+              : activeSearchKey}</kbd
+          >
         {/if}
       {/if}
     </div>
