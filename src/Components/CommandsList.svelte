@@ -3,6 +3,7 @@
   import { flip } from 'svelte/animate'
   import { createEventDispatcher } from 'svelte'
   import { fly, fade, slide, blur } from 'svelte/transition'
+  import { Hotkey } from 'obsidian'
 
   import type { commandsArray } from 'src/Interfaces'
   import { SpecialSymbols } from 'src/Constants'
@@ -15,6 +16,23 @@
 
   export let visibleCommands: commandsArray
   // console.log(visibleCommands)
+
+  export let FilterSettings: any
+
+  function renderHotkey(hotkey: Hotkey) {
+    let modifiersString =
+      hotkey.modifiers.length !== 0
+        ? getConvertedModifiers(sortModifiers(hotkey.modifiers)).join(' + ') +
+          ' + '
+        : ''
+    let key =
+      hotkey.key in SpecialSymbols
+        ? SpecialSymbols[hotkey.key]
+        : hotkey.key.length === 1
+        ? hotkey.key.toUpperCase()
+        : hotkey.key
+    return modifiersString + key
+  }
 
   const dispatch = createEventDispatcher()
   function sendPluginName(e: any) {
@@ -46,28 +64,29 @@
             </span>
             {cmdEntry.cmdName}
           </div>
-          <small>{cmdEntry.id}</small>
+          {#if FilterSettings.DisplayIDs}
+            <small in:fade={{ duration: 400 }} out:fly={{ duration: 300 }}>
+              {cmdEntry.id}
+            </small>
+          {/if}
         </div>
         <div class="kbanalizer-setting-item-control setting-item-control">
           <div class="setting-command-hotkeys">
             {#each cmdEntry.hotkeys as hotkey}
-              <span
-                class="kbanalizer-setting-hotkey setting-hotkey {hotkey.isCustom
-                  ? 'is-customized'
-                  : ''} {isHotkeyDuplicate(cmdEntry.id, hotkey)
-                  ? 'is-duplicate'
-                  : ''}"
-              >
-                {hotkey.modifiers.length !== 0
-                  ? getConvertedModifiers(sortModifiers(hotkey.modifiers)).join(
-                      ' + '
-                    ) + ' + '
-                  : ''}{hotkey.key in SpecialSymbols
-                  ? SpecialSymbols[hotkey.key]
-                  : hotkey.key.length === 1
-                  ? hotkey.key.toUpperCase()
-                  : hotkey.key}
-              </span>
+              {#if isHotkeyDuplicate(cmdEntry.id, hotkey)}
+                <span
+                  class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
+                  class:is-duplicate={FilterSettings.HighlightDuplicates}
+                  on:click={() => dispatch('duplicate-hotkey-clicked', hotkey)}
+                  >{renderHotkey(hotkey)}</span
+                >
+              {:else}
+                <span
+                  class="kbanalizer-setting-hotkey setting-hotkey"
+                  class:is-customized={hotkey.isCustom &&
+                    FilterSettings.HighlightCustom}>{renderHotkey(hotkey)}</span
+                >
+              {/if}
             {/each}
           </div>
         </div>

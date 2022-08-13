@@ -53,18 +53,36 @@
   let activeSearchModifiers: string[] = []
   let activeSearchKey: string = ''
 
+  let FilterSettings: any = {
+    FeaturedFirst: false,
+    HighlightCustom: false,
+    HighlightDuplicates: false,
+    DisplayWOhotkeys: false,
+    DisplayIDs: false,
+  }
+
   // Implements Cmd+F functionality for focus on input field
   // thanks to @Fevol - https://discord.com/channels/686053708261228577/840286264964022302/1005131941240115221
   const view_scope = new Scope(app.scope)
   view_scope.register(['Mod'], 'f', (e) => {
     if (e.ctrlKey && e.key === 'f') {
       // console.log('ctrl + f pressed in scope')
-      if (input === document.activeElement) {
+      if (
+        input === document.activeElement &&
+        keyboardListenerIsActive === false
+      ) {
         keyboardListenerIsActive = true
+        return false
+      } else if (
+        input === document.activeElement &&
+        keyboardListenerIsActive === true
+      ) {
+        keyboardListenerIsActive = false
+        return false
       } else {
         input.focus()
+        return false
       }
-      return false
     }
   })
 
@@ -121,8 +139,8 @@
   ) {
     let filteredCmds: commandsArray = []
 
-    // filter commands by name when type is name
-    filteredCmds = cmds.filter((command) => {
+    // function to filter commands by search string
+    function filterByName(command: commandEntry) {
       let fullName =
         command.pluginName.toLocaleLowerCase() +
         ' ' +
@@ -148,34 +166,41 @@
           })
         )
       })
-    })
+    }
 
     // filter commands by activeSearchModifiers
-    if (activeSearchModifiers.length > 0) {
-      // console.log('filtering by modifiers:', activeSearchModifiers)
-
-      filteredCmds = filteredCmds.filter((command) => {
-        // filter by activeSearchModifiers in command.hotkeys
-        // if one of activeSearchModifiers is not in any of hotkeys modifiers return false
-        return command.hotkeys.some((hotkey) => {
-          return activeSearchModifiers.every((modifier) => {
-            return getConvertedModifiers(hotkey.modifiers).includes(modifier)
-          })
+    // if no activeSearchModifiers, filter by all commands
+    function filterByModifiers(command: commandEntry) {
+      return command.hotkeys.some((hotkey) => {
+        return activeSearchModifiers.every((modifier) => {
+          return getConvertedModifiers(hotkey.modifiers).includes(modifier)
         })
+      })
+    }
+
+    // filter commands by activeSearchModifiers
+    function filterByKey(command: commandEntry) {
+      return command.hotkeys.some((hotkey) => {
+        return (
+          hotkey.key.toLocaleLowerCase() === activeSearchKey.toLocaleLowerCase()
+        )
       })
     }
 
     // filter commands by activeSearchKey
-    if (activeSearchKey !== '') {
-      filteredCmds = filteredCmds.filter((command) => {
-        return command.hotkeys.some((hotkey) => {
-          return (
-            hotkey.key.toLocaleLowerCase() ===
-            activeSearchKey.toLocaleLowerCase()
-          )
-        })
+    // if (activeSearchKey !== '') {
+
+    filteredCmds = cmds
+      .filter((command) => {
+        return (
+          filterByName(command) &&
+          (activeSearchModifiers.length === 0 || filterByModifiers(command)) &&
+          (activeSearchKey === '' || filterByKey(command))
+        )
       })
-    }
+      .sort((a: commandEntry, b: commandEntry) => {
+        return a.pluginName.localeCompare(b.pluginName)
+      })
 
     // console.log(filteredCmds)
     sortCommandsArrayByName(filteredCmds)
@@ -203,6 +228,30 @@
       search = search.replace(pluginName, '')
     } else {
       search = pluginName + search
+    }
+  }
+
+  function handleDuplicateHotkeyClicked(event: CustomEvent) {
+    let listedHotkey: Hotkey = event.detail
+    let listedModifiers: string[] = getConvertedModifiers(
+      listedHotkey.modifiers
+    )
+
+    // check if modifiers and ket already active search then remove them
+    if (
+      activeSearchModifiers.every((modifier: string) => {
+        return listedModifiers.includes(modifier)
+      }) &&
+      activeSearchKey.toLocaleLowerCase() ===
+        listedHotkey.key.toLocaleLowerCase()
+    ) {
+      activeSearchModifiers = []
+      activeSearchKey = ''
+    } else {
+      // add modifiers and key to active search
+      activeSearchModifiers = listedModifiers
+      activeSearchKey = listedHotkey.key
+      search = ''
     }
   }
 
@@ -305,11 +354,14 @@
         bind:activeSearchModifiers
         bind:activeSearchKey
         bind:keyboardListenerIsActive
+        bind:FilterSettings
         on:refresh-commands={handleRefreshClicked}
       />
 
       <CommandsList
         bind:visibleCommands
+        bind:FilterSettings
+        on:duplicate-hotkey-clicked={handleDuplicateHotkeyClicked}
         on:plugin-name-clicked={handlePluginNameClicked}
       />
     </div>

@@ -75,21 +75,25 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 10px;
+  overflow: visible;
+  position: relative;
 }
 
 #hotkeys-wrapper.hotkey-settings-container {
   width: 100%;
 }
 
-#keyboard-preview-view {
+/* #keyboard-preview-view {
+  height: 100%;
   overflow-x: hidden;
-}
+} */
 
 #keyboard-component .setting-item-name span.suggestion-prefix {
   color: var(--text-muted);
   font-size: 90%;
   font-style: italic;
   text-transform: uppercase;
+  padding-right: 6px;
 }
 
 #keyboard-component .setting-item-name span.suggestion-prefix:hover {
@@ -166,6 +170,12 @@ kbd.modifier {
   padding: 2px 4px;
   margin-right: 4px;
   background-color: var(--background-secondary-alt);
+  cursor: pointer;
+  transition: background-color 0.5s ease;
+}
+
+kbd.modifier:hover {
+  background-color: var(--text-selection);
 }
 
 .modifiers-wrapper kbd.modifier:last-child {
@@ -177,6 +187,8 @@ kbd.modifier {
   width: 100%;
   font-size: 16px;
   padding: unset;
+  margin-top: 0px;
+  margin-bottom: 0px;
   /* padding-bottom: 2px; */
   padding-right: 48px;
   border: unset;
@@ -273,6 +285,7 @@ kbd.modifier {
 
 #hotkey-filter-button {
   width: fit-content;
+  margin-top: 0px;
   margin-right: 8px;
   margin-bottom: 0px;
   height: 32px;
@@ -301,21 +314,28 @@ kbd.modifier {
 .popup-filter-menu-container {
   position: absolute;
   background-color: var(--background-primary-alt);
-  top: 148px;
+  top: 128px;
   outline: 2px solid var(--background-modifier-form-field-highlighted);
   width: fit-content;
   z-index: 150000;
   border-radius: 6px;
   border: 1px solid var(--background-modifier-border);
-  padding: 24px;
+  padding-left: 24px;
+  padding-top: 24px;
+  padding-right: 32px;
+  padding-bottom: 16px;
   box-shadow: 0px 45px 18px rgba(5, 5, 5, 0.01),
     0px 25px 15px rgba(5, 5, 5, 0.03), 0px 11px 11px rgba(5, 5, 5, 0.04),
     0px 3px 6px rgba(5, 5, 5, 0.05), 0px 0px 0px rgba(5, 5, 5, 0.05);
 }
 
-.is-mobile .popup-filter-menu-container {
-  left: 20px;
-  width: calc(100% - 40px);
+/* .is-mobile .popup-filter-menu-container { */
+/* left: 20px;
+  width: calc(100% - 40px); */
+/* } */
+
+#keyboard-component.is-mobile .popup-filter-menu-container .setting-item {
+  flex-direction: row;
 }
 
 /* .is-mobile .popup-filter-menu-background {
@@ -385,6 +405,7 @@ button#hotkey-refresh-button:hover {
 }
 
 #keyboard-component .hotkey-list-container {
+  user-select: text;
   padding: 0px 0px 64px 0px;
   width: 100%;
   overflow: unset;
@@ -397,13 +418,21 @@ button#hotkey-refresh-button:hover {
   border-top: 1px solid var(--background-modifier-border);
 } */
 
-#keyboard-component .setting-item-info small {
-  color: var(--text-muted);
+#keyboard-component .hotkey-list-container .setting-item {
+  padding-left: 6px;
+}
+
+#keyboard-component .hotkey-list-container .setting-item:hover {
+  background-color: var(--background-secondary, --color-d-gray-60);
 }
 
 #keyboard-component.is-mobile .setting-item {
   flex-direction: column;
   align-items: flex-start;
+}
+
+#keyboard-component .setting-item-info small {
+  color: var(--text-muted);
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
@@ -443,6 +472,7 @@ button#hotkey-refresh-button:hover {
   min-height: 24px;
   align-self: flex-end;
   position: relative;
+  transition: background-color 0.5s ease;
 }
 
 .kbanalizer-setting-hotkey.is-customized {

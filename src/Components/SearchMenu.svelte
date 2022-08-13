@@ -27,17 +27,23 @@
   export let searchCommandsCount: number
   export let searchHotkeysCount: number
 
+  export let FilterSettings: any
+
   export let keyboardListenerIsActive: boolean = false
   let filterIsOpen: boolean = false
   let refreshIsActive: boolean = false
+
+  // Event handling to remove modifier clicked
 
   // on click clear button clear search
   const ClearSearch = () => {
     if (search === '') {
       activeSearchModifiers = []
       activeSearchKey = ''
+      inputHTML.focus()
     } else {
       search = ''
+      inputHTML.focus()
     }
   }
 
@@ -181,16 +187,33 @@
     <div class="modifiers-wrapper">
       {#if activeSearchModifiers.length > 0 || activeSearchKey !== null}
         {#each sortModifiers(activeSearchModifiers) as modifier}
-          <kbd class="modifier">{modifier}</kbd>
+          <kbd
+            class="modifier"
+            in:slide={{ duration: 200 }}
+            out:fade={{ duration: 100 }}
+            on:click={() => {
+              activeSearchModifiers.splice(
+                activeSearchModifiers.indexOf(modifier),
+                1
+              )
+              activeSearchModifiers = activeSearchModifiers
+              inputHTML.focus()
+            }}>{modifier}</kbd
+          >
         {/each}
         {#if activeSearchKey !== ''}
-          <kbd class="modifier"
+          <kbd
+            in:slide={{ duration: 200 }}
+            out:fade={{ duration: 100 }}
+            class="modifier"
+            style="padding-left: 8px; padding-right: 8px;"
+            on:click={() => (activeSearchKey = '')}
             >{activeSearchKey in SpecialSymbols
               ? SpecialSymbols[activeSearchKey]
               : activeSearchKey.length === 1
               ? activeSearchKey.toUpperCase()
-              : activeSearchKey}</kbd
-          >
+              : activeSearchKey}
+          </kbd>
         {/if}
       {/if}
     </div>
@@ -205,8 +228,10 @@
         <div
           class="keyboard-icon icon {keyboardListenerIsActive ? 'pulse' : ''}"
           aria-label={keyboardListenerIsActive
-            ? '`Esc` to Deactivate'
-            : `\`${getConvertedModifiers(['Mod'])[0]}+F\` to Activate`}
+            ? 'Press Esc to deactivate key listener'
+            : `Press ${
+                getConvertedModifiers(['Mod'])[0]
+              }+F to activate key listener`}
           on:click={ActivateKeyboardListener}
         >
           <CircleDotIcon size={20} />
@@ -245,57 +270,77 @@
       class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
     >
       <div transition:fade>
-        <div class="popup-filter-menu-body-title">
-          <div class="popup-filter-menu-body-title-text">
-            Show Commands with the following hotkeys:
-          </div>
+        <div class="setting-item mod-toggle popup-filter-menu">
           <div
-            class="popup-filter-menu-body-title-clear"
-            on:click={ClearSearch}
-          />
+            class="checkbox-container"
+            class:is-enabled={FilterSettings.FeaturedFirst}
+            on:click={() => {
+              FilterSettings.FeaturedFirst = !FilterSettings.FeaturedFirst
+            }}
+          >
+            <input
+              type="checkbox"
+              tabindex="0"
+              bind:checked={FilterSettings.FeaturedFirst}
+            />
+          </div>
+          <div class="setting-item-name popup-filter-title">
+            Display featured first
+          </div>
         </div>
-        <div class="popup-filter-menu-body-search">
-          <input type="text" placeholder="Filter..." />
-          <!-- <input
-          type="text"
-          placeholder="Filter..."
-          bind:value={search}
-          bind:this={input}
-          on:keydown={onModifierKeyDown}
-          /> -->
+        <div class="setting-item mod-toggle popup-filter-menu">
+          <div
+            class="checkbox-container"
+            class:is-enabled={FilterSettings.HighlightCustom}
+            on:click={() => {
+              FilterSettings.HighlightCustom = !FilterSettings.HighlightCustom
+            }}
+          >
+            <input
+              type="checkbox"
+              tabindex="0"
+              bind:checked={FilterSettings.HighlightCustom}
+            />
+          </div>
+          <div class="setting-item-name popup-filter-title">
+            Highlight custom hotkeys
+          </div>
         </div>
-        <div class="popup-filter-menu-body-list">
+        <div class="setting-item mod-toggle popup-filter-menu">
           <div
-            class="popup-filter-menu-body-list-item"
+            class="checkbox-container"
+            class:is-enabled={FilterSettings.HighlightDuplicates}
             on:click={() => {
-              console.log('Meta')
+              FilterSettings.HighlightDuplicates =
+                !FilterSettings.HighlightDuplicates
             }}
           >
-            <div class="popup-filter-menu-body-list-item-text">Meta</div>
+            <input
+              type="checkbox"
+              tabindex="0"
+              bind:checked={FilterSettings.HighlightDuplicates}
+            />
           </div>
-          <div
-            class="popup-filter-menu-body-list-item"
-            on:click={() => {
-              console.log('Control')
-            }}
-          >
-            <div class="popup-filter-menu-body-list-item-text">Control</div>
+          <div class="setting-item-name popup-filter-title">
+            Highlight hotkey duplicates
           </div>
+        </div>
+        <div class="setting-item mod-toggle popup-filter-menu">
           <div
-            class="popup-filter-menu-body-list-item"
+            class="checkbox-container"
+            class:is-enabled={FilterSettings.DisplayIDs}
             on:click={() => {
-              console.log('Alt')
+              FilterSettings.DisplayIDs = !FilterSettings.DisplayIDs
             }}
           >
-            <div class="popup-filter-menu-body-list-item-text">Alt</div>
+            <input
+              type="checkbox"
+              tabindex="0"
+              bind:checked={FilterSettings.DisplayIDs}
+            />
           </div>
-          <div
-            class="popup-filter-menu-body-list-item"
-            on:click={() => {
-              console.log('Shift')
-            }}
-          >
-            <div class="popup-filter-menu-body-list-item-text">Shift</div>
+          <div class="setting-item-name popup-filter-title">
+            Display command ID's
           </div>
         </div>
       </div>

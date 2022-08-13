@@ -178,7 +178,7 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   registerPluginHotkeys() {
     this.addCommand({
       id: 'show-shortcuts-analyzer-view',
-      name: 'Open Keyboard Shorcuts Analizer View',
+      name: 'Open Shorcuts View',
       checkCallback: (checking: boolean) => {
         let checkResult =
           this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
