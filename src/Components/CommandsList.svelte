@@ -1,11 +1,11 @@
 <script lang="ts">
+  import type { Hotkey } from 'obsidian'
+  import type { commandsArray, PluginSettings } from 'src/Interfaces'
   // @ts-ignore
   import { flip } from 'svelte/animate'
   import { createEventDispatcher } from 'svelte'
   import { fly, fade, slide, blur } from 'svelte/transition'
-  import { Hotkey } from 'obsidian'
 
-  import type { commandsArray } from 'src/Interfaces'
   import { SpecialSymbols } from 'src/Constants'
   import {
     prepareModifiersString,
@@ -13,11 +13,12 @@
     sortModifiers,
     isHotkeyDuplicate,
   } from 'src/AppShortcuts'
+  import { Star as StarIcon } from 'lucide-svelte'
 
   export let visibleCommands: commandsArray
   // console.log(visibleCommands)
 
-  export let FilterSettings: any
+  export let settings: PluginSettings
 
   function renderHotkey(hotkey: Hotkey) {
     let modifiersString =
@@ -39,6 +40,10 @@
     const clicked = e.target.innerHTML
     dispatch('plugin-name-clicked', clicked)
   }
+
+  $: props = {
+    settings,
+  }
 </script>
 
 <!-- <button on:click={handlePickKey}>test me</button> -->
@@ -54,18 +59,28 @@
     {#each visibleCommands as cmdEntry (cmdEntry.id)}
       <div
         class="kbanalizer-setting-item setting-item"
-        animate:flip={{ duration: 400 }}
-        in:fade={{ duration: 150 }}
+        class:is-starred={settings.featuredCommandIDs.includes(cmdEntry.id)}
+        animate:flip={{ duration: 200 }}
+        transition:fade={{ duration: 200 }}
       >
+        <!-- out:fade={{ duration: 100 }} -->
         <div class="setting-item-info">
           <div class="setting-item-name">
             <span class="suggestion-prefix" on:click={sendPluginName}>
               {cmdEntry.pluginName}
             </span>
-            {cmdEntry.cmdName}
+            <span class="command-name">{cmdEntry.cmdName}</span>
+            <div
+              class="star-icon icon"
+              on:click={() => {
+                dispatch('star-clicked', cmdEntry.id)
+              }}
+            >
+              <StarIcon size={16} />
+            </div>
           </div>
-          {#if FilterSettings.DisplayIDs}
-            <small in:fade={{ duration: 400 }} out:fly={{ duration: 300 }}>
+          {#if settings.filterSettings.DisplayIDs}
+            <small in:fade={{ duration: 150 }}>
               {cmdEntry.id}
             </small>
           {/if}
@@ -76,7 +91,8 @@
               {#if isHotkeyDuplicate(cmdEntry.id, hotkey)}
                 <span
                   class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
-                  class:is-duplicate={FilterSettings.HighlightDuplicates}
+                  class:is-duplicate={settings.filterSettings
+                    .HighlightDuplicates}
                   on:click={() => dispatch('duplicate-hotkey-clicked', hotkey)}
                   >{renderHotkey(hotkey)}</span
                 >
@@ -84,7 +100,8 @@
                 <span
                   class="kbanalizer-setting-hotkey setting-hotkey"
                   class:is-customized={hotkey.isCustom &&
-                    FilterSettings.HighlightCustom}>{renderHotkey(hotkey)}</span
+                    settings.filterSettings.HighlightCustom}
+                  >{renderHotkey(hotkey)}</span
                 >
               {/if}
             {/each}

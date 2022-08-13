@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Key, FreeSpace } from 'src/Interfaces'
+  import type { Key } from 'src/Interfaces'
   import { createEventDispatcher } from 'svelte'
 
   // export let stringLabel: string

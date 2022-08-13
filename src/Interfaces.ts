@@ -1,7 +1,17 @@
 import type { Hotkey, Modifier } from 'obsidian'
 
-export interface KeyboardAnalizerSettings {
-  showStatusBarItem: string
+export interface FilterSettings {
+  FeaturedFirst: boolean
+  HighlightCustom: boolean
+  HighlightDuplicates: boolean
+  DisplayWOhotkeys: boolean
+  DisplayIDs: boolean
+}
+
+export interface PluginSettings {
+  showStatusBarItem: boolean
+  filterSettings: FilterSettings
+  featuredCommandIDs?: string[]
 }
 
 export interface hotkeyEntry {

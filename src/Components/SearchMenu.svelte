@@ -1,6 +1,8 @@
 <script lang="ts">
   // TYPES
+  import type KeyboardAnalizerPlugin from 'src/main'
   import type { App, Hotkey, Command, Modifier } from 'obsidian'
+  import type { FilterSettings } from 'src/Interfaces'
 
   // EXTERNAL
   import { createEventDispatcher } from 'svelte'
@@ -18,24 +20,23 @@
   // UTILS
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'
 
+  // PLUGIN
+  export let plugin: KeyboardAnalizerPlugin
+
+  // COMPONENT VARIABLES
   export let inputHTML: HTMLInputElement
   export let search: string = ''
   export let activeSearchModifiers: string[] = []
   export let activeSearchKey: string = ''
-  // export let allCommandsCount: number = 0
-  // export let allHotkeysCount: number = 0
   export let searchCommandsCount: number
   export let searchHotkeysCount: number
 
-  export let FilterSettings: any
+  export let FilterSettings: FilterSettings
 
   export let keyboardListenerIsActive: boolean = false
   let filterIsOpen: boolean = false
   let refreshIsActive: boolean = false
 
-  // Event handling to remove modifier clicked
-
-  // on click clear button clear search
   const ClearSearch = () => {
     if (search === '') {
       activeSearchModifiers = []
@@ -47,7 +48,6 @@
     }
   }
 
-  // on click activate keyboard listener
   const ActivateKeyboardListener = () => {
     keyboardListenerIsActive = !keyboardListenerIsActive
     inputHTML.focus()
@@ -67,8 +67,9 @@
     console.log('RefreshCommands sent to dispatcher')
   }
 
-  // dispatch filter event on filters change
-  // TODO
+  function dispatchFeaturedFirstOptionTriggered(e: any) {
+    dispatch('featured-first-option-triggered')
+  }
 
   // on focus modifier keydown event add to activeSearchModifiers array
   // if modifier is already in array remove it
@@ -189,8 +190,8 @@
         {#each sortModifiers(activeSearchModifiers) as modifier}
           <kbd
             class="modifier"
-            in:slide={{ duration: 200 }}
-            out:fade={{ duration: 100 }}
+            in:slide={{ duration: 100 }}
+            out:fade={{ duration: 50 }}
             on:click={() => {
               activeSearchModifiers.splice(
                 activeSearchModifiers.indexOf(modifier),
@@ -203,8 +204,8 @@
         {/each}
         {#if activeSearchKey !== ''}
           <kbd
-            in:slide={{ duration: 200 }}
-            out:fade={{ duration: 100 }}
+            in:slide={{ duration: 100 }}
+            out:fade={{ duration: 50 }}
             class="modifier"
             style="padding-left: 8px; padding-right: 8px;"
             on:click={() => (activeSearchKey = '')}
@@ -274,9 +275,7 @@
           <div
             class="checkbox-container"
             class:is-enabled={FilterSettings.FeaturedFirst}
-            on:click={() => {
-              FilterSettings.FeaturedFirst = !FilterSettings.FeaturedFirst
-            }}
+            on:click={dispatchFeaturedFirstOptionTriggered}
           >
             <input
               type="checkbox"
@@ -294,6 +293,7 @@
             class:is-enabled={FilterSettings.HighlightCustom}
             on:click={() => {
               FilterSettings.HighlightCustom = !FilterSettings.HighlightCustom
+              plugin.saveSettings()
             }}
           >
             <input
@@ -313,6 +313,7 @@
             on:click={() => {
               FilterSettings.HighlightDuplicates =
                 !FilterSettings.HighlightDuplicates
+              plugin.saveSettings()
             }}
           >
             <input
@@ -331,6 +332,7 @@
             class:is-enabled={FilterSettings.DisplayIDs}
             on:click={() => {
               FilterSettings.DisplayIDs = !FilterSettings.DisplayIDs
+              plugin.saveSettings()
             }}
           >
             <input

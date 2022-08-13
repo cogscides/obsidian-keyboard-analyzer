@@ -14,16 +14,15 @@ import {
 import { openView, wait } from 'obsidian-community-lib'
 import ShortcutsView from 'src/ShortcutsView'
 // @ts-ignore
-import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
-import type { KeyboardAnalizerSettings } from 'src/Interfaces'
-
-// Remember to rename these classes and interfaces!
-const DEFAULT_SETTINGS: KeyboardAnalizerSettings = {
-  showStatusBarItem: 'true',
-}
+import {
+  VIEW_TYPE_SHORTCUTS_ANALYZER,
+  DEFAULT_FILTER_SETTINGS,
+  DEFAULT_PLUGIN_SETTINGS,
+} from 'src/Constants'
+import type { PluginSettings } from 'src/Interfaces'
 
 export default class KeyboardAnalizerPlugin extends Plugin {
-  settings: KeyboardAnalizerSettings
+  settings: PluginSettings
 
   get full() {
     const leaves = this.app.workspace.getLeavesOfType(
@@ -111,7 +110,11 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+    this.settings = Object.assign(
+      {},
+      DEFAULT_PLUGIN_SETTINGS,
+      await this.loadData()
+    )
   }
 
   async saveSettings() {
@@ -234,15 +237,28 @@ class KeyboardAnalyzerSettingTab extends PluginSettingTab {
     containerEl.createEl('h2', { text: 'Settings for my awesome plugin.' })
 
     // todo: change for switcher
+    // new Setting(containerEl)
+    //   .setName('Setting #1')
+    //   .setDesc("It's a secret")
+    //   .addText((text) =>
+    //     text
+    //       .setPlaceholder('Enter your secret')
+    //       .setValue(this.plugin.settings.showStatusBarItem)
+    //       .onChange(async (value) => {
+    //         console.log('Secret: ' + value)
+    //         this.plugin.settings.showStatusBarItem = value
+    //         await this.plugin.saveSettings()
+    //       })
+    //   )
+
+    // checkbox for showing status bar item
     new Setting(containerEl)
-      .setName('Setting #1')
-      .setDesc("It's a secret")
-      .addText((text) =>
-        text
-          .setPlaceholder('Enter your secret')
-          .setValue(this.plugin.settings.showStatusBarItem)
-          .onChange(async (value) => {
-            console.log('Secret: ' + value)
+      .setName('Show Status Bar Item')
+      .setDesc('Show the status bar item')
+      .addToggle((checkbox: any) =>
+        checkbox
+          .setChecked(this.plugin.settings.showStatusBarItem)
+          .onChange(async (value: boolean) => {
             this.plugin.settings.showStatusBarItem = value
             await this.plugin.saveSettings()
           })

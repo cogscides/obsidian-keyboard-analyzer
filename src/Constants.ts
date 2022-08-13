@@ -1,5 +1,23 @@
-import type { KeyboardInterface } from 'src/Interfaces'
+import type {
+  PluginSettings,
+  FilterSettings,
+  KeyboardInterface,
+} from 'src/Interfaces'
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
+
+export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
+  FeaturedFirst: false,
+  HighlightCustom: false,
+  HighlightDuplicates: false,
+  DisplayWOhotkeys: false,
+  DisplayIDs: false,
+}
+
+export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
+  showStatusBarItem: true,
+  filterSettings: DEFAULT_FILTER_SETTINGS,
+  featuredCommandIDs: [],
+}
 
 export const keyboard_svelte = [
   {

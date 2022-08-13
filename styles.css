@@ -66,6 +66,7 @@
   padding-bottom: 60px;
   height: fit-content;
 } */
+
 #keyboard-component .hotkey-settings-container {
   height: fit-content;
   width: 100%;
@@ -79,14 +80,20 @@
   position: relative;
 }
 
-#hotkeys-wrapper.hotkey-settings-container {
-  width: 100%;
-}
-
 /* #keyboard-preview-view {
   height: 100%;
   overflow-x: hidden;
 } */
+
+#keyboard-component .setting-item-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#keyboard-component .setting-item-name .command-name {
+  padding-right: 8px;
+}
 
 #keyboard-component .setting-item-name span.suggestion-prefix {
   color: var(--text-muted);
@@ -98,6 +105,25 @@
 
 #keyboard-component .setting-item-name span.suggestion-prefix:hover {
   cursor: pointer;
+}
+
+#keyboard-component .setting-item .star-icon {
+  display: none;
+}
+
+#keyboard-component .setting-item:hover .star-icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+#keyboard-component .setting-item .star-icon:hover {
+  color: var(--text-accent);
+}
+
+#keyboard-component .setting-item.is-starred .star-icon {
+  color: var(--text-accent);
+  display: flex;
 }
 
 .shortcuts-wrapper {
@@ -334,10 +360,6 @@ kbd.modifier:hover {
   width: calc(100% - 40px); */
 /* } */
 
-#keyboard-component.is-mobile .popup-filter-menu-container .setting-item {
-  flex-direction: row;
-}
-
 /* .is-mobile .popup-filter-menu-background {
   position: relative;
   top: 0px;
@@ -418,13 +440,23 @@ button#hotkey-refresh-button:hover {
   border-top: 1px solid var(--background-modifier-border);
 } */
 
+/* -------------------------------------------------------------- */
+/* SETTING ITEMS                                                  */
+/* -------------------------------------------------------------- */
+
 #keyboard-component .hotkey-list-container .setting-item {
+  background-color: var(--background-primary);
   padding-left: 6px;
+  transition: background-color 0.2s ease-in-out;
 }
 
-#keyboard-component .hotkey-list-container .setting-item:hover {
+#keyboard-component .hotkey-list-container .setting-item.is-starred {
   background-color: var(--background-secondary, --color-d-gray-60);
 }
+
+/* #keyboard-component .hotkey-list-container .setting-item:hover {
+  background-color: var(--background-secondary, --color-d-gray-60);
+} */
 
 #keyboard-component.is-mobile .setting-item {
   flex-direction: column;
@@ -443,6 +475,10 @@ button#hotkey-refresh-button:hover {
 #keyboard-component .hotkey-list-container .setting-item:last-child {
   padding-bottom: 18px;
   border-bottom: 1px solid var(--background-modifier-border);
+}
+
+#keyboard-component.is-mobile .popup-filter-menu-container .setting-item {
+  flex-direction: row;
 }
 
 .kbanalizer-setting-item {

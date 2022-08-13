@@ -9,7 +9,7 @@
   import type ShortcutsView from 'src/ShortcutsView'
   import type KeyboardAnalizerPlugin from 'src/main'
   import type {
-    KeyboardAnalizerSettings,
+    PluginSettings,
     KeyboardInterface,
     hotkeyDict,
     commandEntry,
@@ -31,6 +31,7 @@
     keyboard_svelte_num,
     keyboard_svelte_other,
     SpecialSymbols,
+    DEFAULT_FILTER_SETTINGS,
   } from 'src/Constants'
 
   // LAYOUT
@@ -41,7 +42,7 @@
   // INITIALIZE PROPERTIES
   export let app: App
   export let plugin: KeyboardAnalizerPlugin
-  export let settings: KeyboardAnalizerSettings
+  export let settings: PluginSettings
   export let view: ShortcutsView
   let viewWidth: number
   let viewMode: string = 'desktop'
@@ -53,36 +54,27 @@
   let activeSearchModifiers: string[] = []
   let activeSearchKey: string = ''
 
-  let FilterSettings: any = {
-    FeaturedFirst: false,
-    HighlightCustom: false,
-    HighlightDuplicates: false,
-    DisplayWOhotkeys: false,
-    DisplayIDs: false,
-  }
-
   // Implements Cmd+F functionality for focus on input field
   // thanks to @Fevol - https://discord.com/channels/686053708261228577/840286264964022302/1005131941240115221
   const view_scope = new Scope(app.scope)
   view_scope.register(['Mod'], 'f', (e) => {
+    console.log('ctrl + f pressed in scope')
+    console.log(document.activeElement)
     if (e.ctrlKey && e.key === 'f') {
-      // console.log('ctrl + f pressed in scope')
       if (
         input === document.activeElement &&
         keyboardListenerIsActive === false
       ) {
         keyboardListenerIsActive = true
-        return false
       } else if (
         input === document.activeElement &&
         keyboardListenerIsActive === true
       ) {
         keyboardListenerIsActive = false
-        return false
       } else {
         input.focus()
-        return false
       }
+      return false
     }
   })
 
@@ -107,6 +99,10 @@
     commandsArray = Object.keys(commands).map((key: string) => commands[key])
   }
 
+  function triggerRenderCommands() {
+    visibleCommands = visibleCommands
+  }
+
   // 2. sort commands array
   function sortCommandsArrayByName(
     cmds: commandsArray,
@@ -127,6 +123,24 @@
     }
 
     // console.log(sortedCmds)
+    return sortedCmds
+  }
+
+  // sort commands by featured commands first
+  function sortByFeaturedFirst(cmds: commandsArray, featured: string[]) {
+    let sortedCmds: commandsArray = []
+    let featuredCmds: commandsArray = []
+    let otherCmds: commandsArray = []
+
+    // sort commands by name when type is name
+    cmds.forEach((cmd: commandEntry) => {
+      if (featured.includes(cmd.id)) {
+        featuredCmds.push(cmd)
+      } else {
+        otherCmds.push(cmd)
+      }
+    }),
+      (sortedCmds = featuredCmds.concat(otherCmds))
     return sortedCmds
   }
 
@@ -203,7 +217,15 @@
       })
 
     // console.log(filteredCmds)
-    sortCommandsArrayByName(filteredCmds)
+    // sortCommandsArrayByName(filteredCmds)
+
+    if (settings.filterSettings.FeaturedFirst) {
+      filteredCmds = sortByFeaturedFirst(
+        filteredCmds,
+        settings.featuredCommandIDs
+      )
+    }
+
     return filteredCmds
   }
 
@@ -231,6 +253,14 @@
     }
   }
 
+  function handleFeaturedFirstOptionClicked(event: CustomEvent) {
+    settings.filterSettings.FeaturedFirst =
+      !settings.filterSettings.FeaturedFirst
+    plugin.saveSettings()
+    // settings.filterSettings.FeaturedFirst is triggered
+    triggerRenderCommands()
+  }
+
   function handleDuplicateHotkeyClicked(event: CustomEvent) {
     let listedHotkey: Hotkey = event.detail
     let listedModifiers: string[] = getConvertedModifiers(
@@ -255,9 +285,26 @@
     }
   }
 
+  function handleStarIconClicked(event: CustomEvent) {
+    let pluginName: string = event.detail
+
+    if (settings.featuredCommandIDs.includes(pluginName)) {
+      settings.featuredCommandIDs = settings.featuredCommandIDs.filter(
+        (id: string) => id !== pluginName
+      )
+      plugin.saveSettings()
+    } else {
+      // add pluginName to settings.featuredCommandIDs
+      settings.featuredCommandIDs.push(pluginName)
+      settings = settings
+      plugin.saveSettings()
+    }
+    triggerRenderCommands()
+  }
+
   // 2. if refresh button is clicked
   function handleRefreshClicked() {
-    console.log('RefreshCommands received')
+    // console.log('RefreshCommands received')
 
     refreshCommandsList()
   }
@@ -330,10 +377,13 @@
   use:watchResize={handleResize}
   bind:offsetWidth={viewWidth}
   bind:this={keyboardComponentHTML}
-  on:mouseenter={() => app.keymap.pushScope(view_scope)}
+  on:mouseenter={() => {
+    app.keymap.pushScope(view_scope)
+    console.log('mouseenter:', app.keymap)
+  }}
   on:mouseleave={() => {
-    // console.log('mouseleave')
     app.keymap.popScope(view_scope)
+    // console.log('mouseleave:', app.keymap)
   }}
 >
   <!-- markdown-preview-view -->
@@ -354,13 +404,16 @@
         bind:activeSearchModifiers
         bind:activeSearchKey
         bind:keyboardListenerIsActive
-        bind:FilterSettings
+        bind:FilterSettings={settings.filterSettings}
+        bind:plugin
+        on:featured-first-option-triggered={handleFeaturedFirstOptionClicked}
         on:refresh-commands={handleRefreshClicked}
       />
 
       <CommandsList
         bind:visibleCommands
-        bind:FilterSettings
+        bind:settings
+        on:star-clicked={handleStarIconClicked}
         on:duplicate-hotkey-clicked={handleDuplicateHotkeyClicked}
         on:plugin-name-clicked={handlePluginNameClicked}
       />
