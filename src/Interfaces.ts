@@ -38,16 +38,7 @@ export interface hotkeyDict {
 //   key: any
 // }
 
-export type KeyLiteral = {
-  symbol: string
-}
-
-export type KeyProperty = {
-  property: any
-  value: number
-}
-
-export type Key = {
+export interface Key {
   color?: string
   label?: string
   output?: string | null
@@ -61,24 +52,18 @@ export type Key = {
   height?: number
   x?: number
   y?: number
-  default?: {
-    textColor: string
-    textSize: string
-  }
 }
 
-export type Row = Key[] | Array<Key[]>
+export interface Row {
+  count: number
+  keys: Key[]
+  heightRatio?: number
+}
 
-export type KeyboardInterface = Row[]
+export interface KeyboardSection {
+  name: string
+  rows: Row[]
+  gridRatio: number
+}
 
-// export interface KeyboardLayoutJSON extends Array<KeyTypes> {
-// itemList: KeyObj[]
-// }
-
-// Create a type which represents only one of the above types
-// but you aren't sure which it is yet.
-// export type KeyTypes = KeyLiteral | KeyProperty
-
-// export interface KayboardLayoutResults {
-//   hover:
-// }
+export type Keyboard = KeyboardSection[]

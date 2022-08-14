@@ -10,7 +10,7 @@
   import type KeyboardAnalizerPlugin from 'src/main'
   import type {
     PluginSettings,
-    KeyboardInterface,
+    Keyboard,
     hotkeyDict,
     commandEntry,
     commandsArray,
@@ -25,9 +25,7 @@
 
   // CONSTANTS
   import {
-    kbWinNum,
-    kb_layout_ansi104eng,
-    keyboard_svelte,
+    mainSectionQwerty,
     keyboard_svelte_num,
     keyboard_svelte_other,
     SpecialSymbols,
@@ -81,9 +79,11 @@
   // INITIALIZE KEYBOARD LAYOUT
   let keyboardComponentHTML: HTMLElement
 
-  let keyboardObj_qwerty = keyboard_svelte
-  let keyboardObj_num = keyboard_svelte_num
-  let keyboardObj_other = keyboard_svelte_other
+  let keyboardObj_qwerty = mainSectionQwerty
+  // let keyboardObj_num = keyboard_svelte_num
+  // let keyboardObj_other = keyboard_svelte_other
+
+  let KeyboardObject: Keyboard = [keyboardObj_qwerty] // Keyboard
 
   // COMMANDS LIST
   let commands: hotkeyDict = getHotkeysV2(app)
@@ -383,41 +383,34 @@
   }}
   on:mouseleave={() => {
     app.keymap.popScope(view_scope)
-    // console.log('mouseleave:', app.keymap)
   }}
 >
-  <!-- markdown-preview-view -->
   <div class="" id="keyboard-preview-view">
-    <!-- <KeyboardLayout
-      bind:keyboardObj_qwerty
-      bind:keyboardObj_other
-      bind:keyboardObj_num
-      screenState={viewMode}
-    /> -->
-    <div class="shortcuts-wrapper">
-      <code> {viewMode} :: {viewWidth}</code>
-      <SearchMenu
-        bind:inputHTML={input}
-        bind:search
-        bind:searchCommandsCount
-        bind:searchHotkeysCount
-        bind:activeSearchModifiers
-        bind:activeSearchKey
-        bind:keyboardListenerIsActive
-        bind:FilterSettings={settings.filterSettings}
-        bind:plugin
-        on:featured-first-option-triggered={handleFeaturedFirstOptionClicked}
-        on:refresh-commands={handleRefreshClicked}
-      />
+    <KeyboardLayout bind:KeyboardObject />
+  </div>
+  <div class="shortcuts-wrapper">
+    <code> {viewMode} :: {viewWidth}</code>
+    <SearchMenu
+      bind:inputHTML={input}
+      bind:search
+      bind:searchCommandsCount
+      bind:searchHotkeysCount
+      bind:activeSearchModifiers
+      bind:activeSearchKey
+      bind:keyboardListenerIsActive
+      bind:FilterSettings={settings.filterSettings}
+      bind:plugin
+      on:featured-first-option-triggered={handleFeaturedFirstOptionClicked}
+      on:refresh-commands={handleRefreshClicked}
+    />
 
-      <CommandsList
-        bind:visibleCommands
-        bind:settings
-        on:star-clicked={handleStarIconClicked}
-        on:duplicate-hotkey-clicked={handleDuplicateHotkeyClicked}
-        on:plugin-name-clicked={handlePluginNameClicked}
-      />
-    </div>
+    <CommandsList
+      bind:visibleCommands
+      bind:settings
+      on:star-clicked={handleStarIconClicked}
+      on:duplicate-hotkey-clicked={handleDuplicateHotkeyClicked}
+      on:plugin-name-clicked={handlePluginNameClicked}
+    />
   </div>
 </div>
 

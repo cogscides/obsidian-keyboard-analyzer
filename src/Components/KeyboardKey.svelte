@@ -52,44 +52,17 @@
 
 <style>
   .kb-layout-key {
-    /* flex: 0 0 auto; */
     height: 20px;
-    /* width: 100%; */
     width: 20px;
     white-space: nowrap;
     border-radius: 4px;
-    /* min-width: 1rem !important; */
     color: var(--text-normal);
-    /* background-color: var(--interactive-normal); */
     background-color: var(--background-modifier-border);
     margin-right: 0.3em;
     margin-bottom: 0.3em;
     padding-left: 1%;
     padding-right: 1%;
-    /* margin: 0.4vh;*/
   }
-
-  /* white-space: nowrap !important;
-  text-shadow: 0 0 0.5vh #fff;
-  border-radius: 0.5vh;
-  width: 100%;
-  text-align: center;
-  line-height: 1em;
-  color: #fff;
-  background: radial-gradient(ellipse at center, #333 0%, #222 100%);
-  margin: 0.4vh;
-  padding-left: 1% !important;
-  padding-right: 1% !important;
-  white-space: nowrap !important; */
-
-  /* flex: 0.5 1 20px; */
-  /* height: 3em; */
-  /* text-shadow: 0 0 0.5vh #fff; */
-  /* border-radius: 0.5vh; */
-  /* width: 100%; */
-  /* line-height: 9vh; */
-  /* background: radial-gradient(ellipse at center, #333 0%,#222 100%); */
-  /* padding-right: auto; */
 
   .kb-layout-key:hover {
     /* background-color: var(--interactive-hover); */
