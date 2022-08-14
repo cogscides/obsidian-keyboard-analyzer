@@ -19,6 +19,7 @@
 
   // UTILS
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'
+  import { longpress } from './longpress'
 
   // PLUGIN
   export let plugin: KeyboardAnalizerPlugin
@@ -226,14 +227,23 @@
         bind:this={inputHTML}
       />
       <div class="meta-search-wrapper">
+        <!-- @ts-ignore -->
         <div
           class="keyboard-icon icon {keyboardListenerIsActive ? 'pulse' : ''}"
           aria-label={keyboardListenerIsActive
             ? 'Press Esc to deactivate key listener'
             : `Press ${
                 getConvertedModifiers(['Mod'])[0]
-              }+F to activate key listener`}
+              }+F or long press to activate key listener`}
           on:click={ActivateKeyboardListener}
+          use:longpress={600}
+          on:longpress-start={() => {
+            inputHTML.focus()
+            keyboardListenerIsActive = true
+          }}
+          on:longpress-end={() => {
+            keyboardListenerIsActive = false
+          }}
         >
           <CircleDotIcon size={20} />
         </div>

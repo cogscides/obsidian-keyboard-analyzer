@@ -247,6 +247,11 @@ kbd.modifier:hover {
   opacity: 1;
 }
 
+.keyboard-icon:pressed {
+  border-color: var(--interactive-accent);
+  opacity: 1;
+}
+
 .keyboard-icon.pulse {
   color: var(--text-accent);
 }
