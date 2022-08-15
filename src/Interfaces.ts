@@ -41,6 +41,8 @@ export interface hotkeyDict {
 export interface Key {
   color?: string
   label?: string
+  fontSize?: string
+  caps?: string
   output?: string | null
   // textColor: Array<string | undefined> = [];
   // textSize: Array<number | undefined> = [];
@@ -54,11 +56,7 @@ export interface Key {
   y?: number
 }
 
-export interface Row {
-  count: number
-  keys: Key[]
-  heightRatio?: number
-}
+export type Row = Key[]
 
 export interface KeyboardSection {
   name: string

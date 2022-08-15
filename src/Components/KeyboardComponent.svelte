@@ -26,8 +26,8 @@
   // CONSTANTS
   import {
     mainSectionQwerty,
-    keyboard_svelte_num,
-    keyboard_svelte_other,
+    keyboardOther,
+    keyboardNum,
     SpecialSymbols,
     DEFAULT_FILTER_SETTINGS,
   } from 'src/Constants'
@@ -76,14 +76,11 @@
     }
   })
 
-  // INITIALIZE KEYBOARD LAYOUT
-  let keyboardComponentHTML: HTMLElement
+  let kbLayout_main = mainSectionQwerty
+  let kbLayout_other = keyboardOther
+  let kbLayout_num = keyboardNum
 
-  let keyboardObj_qwerty = mainSectionQwerty
-  // let keyboardObj_num = keyboard_svelte_num
-  // let keyboardObj_other = keyboard_svelte_other
-
-  let KeyboardObject: Keyboard = [keyboardObj_qwerty] // Keyboard
+  let KeyboardObject: Keyboard = [kbLayout_main, kbLayout_other, kbLayout_num] // Keyboard
 
   // COMMANDS LIST
   let commands: hotkeyDict = getHotkeysV2(app)
@@ -376,7 +373,6 @@
   class="{viewMode} {viewMode === 'xs' ? 'is-mobile' : ''}"
   use:watchResize={handleResize}
   bind:offsetWidth={viewWidth}
-  bind:this={keyboardComponentHTML}
   on:mouseenter={() => {
     app.keymap.pushScope(view_scope)
     console.log('mouseenter:', app.keymap)

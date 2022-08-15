@@ -23,394 +23,453 @@ export const mainSectionQwerty: KeyboardSection = {
   name: 'main',
   gridRatio: 3.75,
   rows: [
-    {
-      count: 1,
-      keys: [
-        {
-          label: 'Esc',
-        },
-        {
-          label: 'F1',
-        },
-        {
-          label: 'F2',
-        },
-        {
-          label: 'F3',
-        },
-        {
-          label: 'F4',
-        },
-        {
-          label: 'F5',
-        },
-        {
-          label: 'F6',
-        },
-        {
-          label: 'F7',
-        },
-        {
-          label: 'F8',
-        },
-        {
-          label: 'F9',
-        },
-        {
-          label: 'F10',
-        },
-        {
-          label: 'F11',
-        },
-        {
-          label: 'F12',
-        },
-      ],
-    },
-    {
-      count: 2,
-      keys: [
-        {
-          label: '`',
-        },
-        {
-          label: '1',
-        },
-        {
-          label: '2',
-        },
-        {
-          label: '3',
-        },
-        {
-          label: '4',
-        },
-        {
-          label: '5',
-        },
-        {
-          label: '6',
-        },
-        {
-          label: '7',
-        },
-        {
-          label: '8',
-        },
-        {
-          label: '9',
-        },
-        {
-          label: '0',
-        },
-        {
-          label: '-',
-        },
-        {
-          label: '=',
-        },
-        {
-          label: 'Backspace',
-          width: 1.5,
-        },
-      ],
-    },
-    {
-      count: 3,
-      keys: [
-        {
-          label: 'Tab',
-          width: 1.25,
-        },
-        {
-          label: 'Q',
-        },
-        {
-          label: 'W',
-        },
-        {
-          label: 'E',
-        },
-        {
-          label: 'R',
-        },
-        {
-          label: 'T',
-        },
-        {
-          label: 'Y',
-        },
-        {
-          label: 'U',
-        },
-        {
-          label: 'I',
-        },
-        {
-          label: 'O',
-        },
-        {
-          label: 'P',
-        },
-        {
-          label: '[',
-        },
-        {
-          label: ']',
-        },
-        {
-          label: '\\',
-        },
-      ],
-    },
-    {
-      count: 4,
-      keys: [
-        {
-          label: 'Caps Lock',
-          width: 1.5,
-        },
-        {
-          label: 'A',
-        },
-        {
-          label: 'S',
-        },
-        {
-          label: 'D',
-        },
-        {
-          label: 'F',
-        },
-        {
-          label: 'G',
-        },
-        {
-          label: 'H',
-        },
-        {
-          label: 'J',
-        },
-        {
-          label: 'K',
-        },
-        {
-          label: 'L',
-        },
-        {
-          label: ';',
-        },
-        {
-          label: "'",
-        },
-        {
-          label: 'Enter',
-          width: 1.5,
-        },
-      ],
-    },
-    {
-      count: 5,
-      keys: [
-        {
-          label: 'Shift',
-          width: 2,
-        },
-        {
-          label: 'Z',
-        },
-        {
-          label: 'X',
-        },
-        {
-          label: 'C',
-        },
-        {
-          label: 'V',
-        },
-        {
-          label: 'B',
-        },
-        {
-          label: 'N',
-        },
-        {
-          label: 'M',
-        },
-        {
-          label: ',',
-        },
-        {
-          label: '.',
-        },
-        {
-          label: '/',
-        },
-        {
-          label: 'Shift',
-          width: 2,
-        },
-      ],
-    },
-    {
-      count: 6,
-      keys: [
-        {
-          label: 'Mod',
-          output: 'Mod',
-          width: 1.5,
-        },
-        {
-          label: 'OS',
-          width: 1.5,
-        },
-        {
-          label: 'Alt',
-          width: 1.5,
-        },
-        {
-          label: 'Space',
-          width: 4,
-        },
-        {
-          label: 'Alt',
-          width: 1.5,
-        },
-        {
-          label: 'Win',
-          width: 1.5,
-        },
-        {
-          label: 'Mod',
-          width: 1.5,
-        },
-      ],
-    },
+    [
+      {
+        label: 'Esc',
+      },
+      {
+        label: 'empty',
+        width: 1,
+      },
+      {
+        label: 'F1',
+      },
+      {
+        label: 'F2',
+      },
+      {
+        label: 'F3',
+      },
+      {
+        label: 'F4',
+      },
+      {
+        label: 'empty',
+        width: 0.5,
+      },
+      {
+        label: 'F5',
+      },
+      {
+        label: 'F6',
+      },
+      {
+        label: 'F7',
+      },
+      {
+        label: 'empty',
+        width: 0.5,
+      },
+      {
+        label: 'F8',
+      },
+      {
+        label: 'F9',
+      },
+      {
+        label: 'F10',
+      },
+      {
+        label: 'F11',
+      },
+      {
+        label: 'F12',
+      },
+    ],
+    [
+      {
+        label: '`',
+      },
+      {
+        label: '1',
+      },
+      {
+        label: '2',
+      },
+      {
+        label: '3',
+      },
+      {
+        label: '4',
+      },
+      {
+        label: '5',
+      },
+      {
+        label: '6',
+      },
+      {
+        label: '7',
+      },
+      {
+        label: '8',
+      },
+      {
+        label: '9',
+      },
+      {
+        label: '0',
+      },
+      {
+        label: '-',
+      },
+      {
+        label: '=',
+      },
+      {
+        label: 'Backspace',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 2,
+      },
+    ],
+    [
+      {
+        label: 'Tab',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.5,
+      },
+      {
+        label: 'Q',
+      },
+      {
+        label: 'W',
+      },
+      {
+        label: 'E',
+      },
+      {
+        label: 'R',
+      },
+      {
+        label: 'T',
+      },
+      {
+        label: 'Y',
+      },
+      {
+        label: 'U',
+      },
+      {
+        label: 'I',
+      },
+      {
+        label: 'O',
+      },
+      {
+        label: 'P',
+      },
+      {
+        label: '[',
+      },
+      {
+        label: ']',
+      },
+      {
+        label: '\\',
+        width: 1.5,
+      },
+    ],
+    [
+      {
+        label: 'Caps Lock',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.75,
+      },
+      {
+        label: 'A',
+      },
+      {
+        label: 'S',
+      },
+      {
+        label: 'D',
+      },
+      {
+        label: 'F',
+      },
+      {
+        label: 'G',
+      },
+      {
+        label: 'H',
+      },
+      {
+        label: 'J',
+      },
+      {
+        label: 'K',
+      },
+      {
+        label: 'L',
+      },
+      {
+        label: ';',
+      },
+      {
+        label: "'",
+      },
+      {
+        label: 'Enter',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 2.25,
+      },
+    ],
+    [
+      {
+        label: 'Shift',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 2,
+      },
+      {
+        label: 'Z',
+      },
+      {
+        label: 'X',
+      },
+      {
+        label: 'C',
+      },
+      {
+        label: 'V',
+      },
+      {
+        label: 'B',
+      },
+      {
+        label: 'N',
+      },
+      {
+        label: 'M',
+      },
+      {
+        label: ',',
+      },
+      {
+        label: '.',
+      },
+      {
+        label: '/',
+      },
+      {
+        label: 'Shift',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 3,
+      },
+    ],
+    [
+      {
+        label: 'Mod',
+        output: 'Mod',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.5,
+      },
+      {
+        label: 'OS',
+        fontSize: 'small',
+        width: 1.5,
+      },
+      {
+        label: 'Alt',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.5,
+      },
+      {
+        label: 'Space',
+        width: 6,
+      },
+      {
+        label: 'Alt',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.5,
+      },
+      {
+        label: 'Win',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.5,
+      },
+      {
+        label: 'Mod',
+        fontSize: 'small',
+        caps: 'all-small-caps',
+        width: 1.5,
+      },
+    ],
   ],
 }
 
 // keyboard layout for other keys and cursor keys
-export const keyboard_svelte_other: KeyboardSection = {
-  name: 'main',
-  gridRatio: 3.75,
+export const keyboardOther: KeyboardSection = {
+  name: 'other',
+  gridRatio: 0.75,
   rows: [
-    {
-      count: 1,
-      keys: [
-        {
-          label: 'Esc',
-        },
-        {
-          label: 'F1',
-        },
-        {
-          label: 'F2',
-        },
-        {
-          label: 'F3',
-        },
-        {
-          label: 'F4',
-        },
-        {
-          label: 'F5',
-        },
-        {
-          label: 'F6',
-        },
-        {
-          label: 'F7',
-        },
-        {
-          label: 'F8',
-        },
-        {
-          label: 'F9',
-        },
-        {
-          label: 'F10',
-        },
-        {
-          label: 'F11',
-        },
-        {
-          label: 'F12',
-        },
-      ],
-    },
+    [
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+    ],
+    [
+      {
+        label: 'Insert',
+      },
+      {
+        label: 'Home',
+      },
+      {
+        label: 'Pg<br>Up',
+      },
+    ],
+    [
+      {
+        label: 'Delete',
+      },
+      {
+        label: 'End',
+      },
+      {
+        label: 'Pg<br>Down',
+      },
+    ],
+    [
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+    ],
+    [
+      {
+        label: 'empty',
+      },
+      {
+        label: 'ArrowUp',
+      },
+      {
+        label: 'empty',
+      },
+    ],
+    [
+      {
+        label: 'ArrowLeft',
+      },
+      {
+        label: 'ArrowDown',
+      },
+      {
+        label: 'ArrowRight',
+      },
+    ],
   ],
 }
 
 // keyboard layout in rows for number pad
-export const keyboard_svelte_num = [
-  [
-    {
-      label: 'Num Lock',
-    },
-    {
-      label: '/',
-    },
-    {
-      label: '*',
-    },
-    {
-      label: '-',
-    },
-    {
-      label: '7',
-    },
+export const keyboardNum = {
+  name: 'num',
+  gridRatio: 1,
+  rows: [
+    [
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+      {
+        label: 'empty',
+      },
+    ],
+    [
+      {
+        label: 'Num Lock',
+      },
+      {
+        label: '/',
+      },
+      {
+        label: '*',
+      },
+      {
+        label: '-',
+      },
+      {
+        label: '7',
+      },
+    ],
+    [
+      {
+        label: '8',
+      },
+      {
+        label: '9',
+      },
+      {
+        label: '+',
+      },
+    ],
+    [
+      {
+        label: '4',
+      },
+      {
+        label: '5',
+      },
+      {
+        label: '6',
+      },
+      {
+        label: '+',
+      },
+    ],
+    [
+      {
+        label: '1',
+      },
+      {
+        label: '2',
+      },
+      {
+        label: '3',
+      },
+      {
+        label: 'Enter',
+        height: 2,
+      },
+    ],
+    [
+      {
+        label: '0',
+      },
+      {
+        label: '.',
+      },
+      {
+        label: '=',
+      },
+    ],
   ],
-  [
-    {
-      label: '8',
-    },
-    {
-      label: '9',
-    },
-    {
-      label: '+',
-    },
-  ],
-  [
-    {
-      label: '4',
-    },
-    {
-      label: '5',
-    },
-    {
-      label: '6',
-    },
-    {
-      label: '+',
-    },
-  ],
-  [
-    {
-      label: '1',
-    },
-    {
-      label: '2',
-    },
-    {
-      label: '3',
-    },
-    {
-      label: 'Enter',
-    },
-  ],
-  [
-    {
-      label: '0',
-    },
-    {
-      label: '.',
-    },
-    {
-      label: '=',
-    },
-  ],
-]
+}
 
 // export const kb_layout_ansi104eng = [
 //   [

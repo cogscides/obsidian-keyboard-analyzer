@@ -160,7 +160,7 @@
   width: 100%;
   display: flex;
   flex-wrap: wrap;
-  background: var(--background-modifier-form-field);
+  /* background: var(--background-modifier-form-field); */
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   color: var(--text-normal);
@@ -170,9 +170,9 @@
   margin-top: 20px;
 }
 
-.search-wrapper:focus {
-  background: var(--color-d-blacker);
-  border: 1px solid var(--color-d-gray-50);
+.search-wrapper.is-focused {
+  /* background: var(--color-d-blacker); */
+  border: 1px solid var(--interactive-accent);
   box-shadow: 0px 0px 0px 3px var(--color-d-gray-60);
 }
 
@@ -217,7 +217,7 @@ kbd.modifier:hover {
   margin-bottom: 0px;
   /* padding-bottom: 2px; */
   padding-right: 48px;
-  border: unset;
+  border: none;
   border-radius: unset;
   background: unset;
   color: var(--text-normal);
@@ -456,7 +456,9 @@ button#hotkey-refresh-button:hover {
 }
 
 #keyboard-component .hotkey-list-container .setting-item.is-starred {
-  background-color: var(--background-secondary, --color-d-gray-60);
+  /* background-color: var(--background-secondary, --color-d-gray-60); */
+  border-left: 6px solid var(--interactive-accent);
+  padding-left: 12px;
 }
 
 /* #keyboard-component .hotkey-list-container .setting-item:hover {
@@ -470,6 +472,7 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-component .setting-item-info small {
   color: var(--text-muted);
+  font-size: small;
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
@@ -513,11 +516,12 @@ button#hotkey-refresh-button:hover {
   min-height: 24px;
   align-self: flex-end;
   position: relative;
-  transition: background-color 0.5s ease;
+  transition: background-color, color 0.5s ease;
 }
 
 .kbanalizer-setting-hotkey.is-customized {
   background-color: var(--text-selection);
+  color: var(--text-accent);
 }
 
 .kbanalizer-setting-hotkey.is-duplicate {
@@ -598,7 +602,7 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-layout .main {
   display: grid;
-  grid-template-columns: repeat(30, 1fr);
+  grid-template-columns: repeat(60, 1fr);
   grid-template-rows: 0.75fr 1fr 1fr 1fr 1fr 1fr;
   gap: 4px 4px;
   grid-template-areas:
@@ -614,7 +618,7 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-layout .other {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(12, 1fr);
   grid-template-rows: 0.75fr 1fr 1fr 1fr 1fr 1fr;
   gap: 4px 4px;
   grid-template-areas:
@@ -629,7 +633,7 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-layout .num {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(16, 1fr);
   grid-template-rows: 0.75fr 1fr 1fr 1fr 1fr 1fr;
   gap: 4px 4px;
   grid-template-areas:

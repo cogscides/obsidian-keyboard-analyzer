@@ -31,6 +31,7 @@
   export let activeSearchKey: string = ''
   export let searchCommandsCount: number
   export let searchHotkeysCount: number
+  let inputIsFocused: boolean = false
 
   export let FilterSettings: FilterSettings
 
@@ -185,7 +186,7 @@
 
 <div class="hotkey-settings-container" on:keydown={onModifierKeyDown}>
   <!-- <div class="hotkey-search-menu"> -->
-  <div class="search-wrapper">
+  <div class="search-wrapper" class:is-focused={inputIsFocused}>
     <div class="modifiers-wrapper">
       {#if activeSearchModifiers.length > 0 || activeSearchKey !== null}
         {#each sortModifiers(activeSearchModifiers) as modifier}
@@ -225,6 +226,8 @@
         placeholder="Filter..."
         bind:value={search}
         bind:this={inputHTML}
+        on:focus={() => (inputIsFocused = true)}
+        on:blur={() => (inputIsFocused = false)}
       />
       <div class="meta-search-wrapper">
         <!-- @ts-ignore -->
