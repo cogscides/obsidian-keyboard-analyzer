@@ -81,6 +81,7 @@
   let kbLayout_num = keyboardNum
 
   let KeyboardObject: Keyboard = [kbLayout_main, kbLayout_other, kbLayout_num] // Keyboard
+  let KeyboardStateDict: any
 
   // COMMANDS LIST
   let commands: hotkeyDict = getHotkeysV2(app)
@@ -382,7 +383,11 @@
   }}
 >
   <div class="" id="keyboard-preview-view">
-    <KeyboardLayout bind:KeyboardObject />
+    <KeyboardLayout
+      bind:KeyboardObject
+      bind:activeSearchKey
+      bind:activeSearchModifiers
+    />
   </div>
   <div class="shortcuts-wrapper">
     <code> {viewMode} :: {viewWidth}</code>

@@ -39,8 +39,8 @@ export interface hotkeyDict {
 // }
 
 export interface Key {
+  label: string
   color?: string
-  label?: string
   fontSize?: string
   caps?: string
   output?: string | null

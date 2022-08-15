@@ -515,7 +515,7 @@ button#hotkey-refresh-button:hover {
 }
 
 .kbanalizer-setting-hotkey.is-customized {
-  background-color: var(--text-selection);
+  background-color: var(--background-secondary-alt);
   color: var(--text-accent);
 }
 

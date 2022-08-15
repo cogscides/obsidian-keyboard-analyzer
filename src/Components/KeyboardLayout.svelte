@@ -1,14 +1,48 @@
 <script lang="ts">
   import { watchResize } from 'svelte-watch-resize'
+  import type { Modifier } from 'obsidian'
   import { Coffee as CofeeIcon } from 'lucide-svelte'
-  import type { Keyboard } from 'src/Interfaces'
-  import { Key } from 'lucide-svelte'
+  import { JavaSciptKeyCodes } from 'src'
+  import type { Keyboard, KeyboardSection, Row, Key } from 'src/Interfaces'
+  // import { Key } from 'lucide-svelte'
+
+  export let activeSearchKey: string | null
+  export let activeSearchModifiers: string[]
 
   // @ts-ignore
   export let KeyboardObject: Keyboard
+  export let KeyboardStateDict: {
+    [key: string]: {
+      state: 'active' | 'inactive' | 'posible'
+      weight: number
+    }
+  }
 
-  // special symbols
-  $: specialClasses = { '': 'invisible' }
+  function unpackLayout(
+    KeyboardLayout: Keyboard,
+    activeSearchKey: string | null,
+    activeSearchModifiers: string[]
+  ) {
+    let KeyboardStateDict: any = {}
+
+    for (let section of KeyboardLayout) {
+      for (let row of section.rows) {
+        for (let key of row) {
+          KeyboardStateDict[key.label] = {
+            state: 'inactive',
+            weight: 0,
+          }
+        }
+      }
+    }
+    return KeyboardStateDict
+  }
+
+  $: KeyboardStateDict = unpackLayout(
+    KeyboardObject,
+    activeSearchKey,
+    activeSearchModifiers
+  )
 
   function handleClick(event: MouseEvent) {
     const target = event.target as HTMLElement
@@ -80,10 +114,10 @@
     white-space: nowrap;
     border-radius: 4px;
     color: var(--text-normal);
-    background-color: var(--background-modifier-border);
+    background-color: var(--background-primary);
   }
   .kb-layout-key:hover {
-    background-color: var(--background-modifier-border-hover);
+    background-color: var(--background-primary-alt);
   }
   .kb-layout-key.empty {
     background-color: transparent;
