@@ -80,11 +80,6 @@
   position: relative;
 }
 
-/* #keyboard-preview-view {
-  height: 100%;
-  overflow-x: hidden;
-} */
-
 #keyboard-component .setting-item-name {
   display: flex;
   align-items: center;
@@ -591,13 +586,23 @@ button#hotkey-refresh-button:hover {
 /* KEYBOARD LAYOUT                                                 */
 /* -------------------------------------------------------------- */
 
+#keyboard-preview-view {
+  display: flex;
+  justify-content: center;
+}
+
 #keyboard-layout {
   display: grid;
+  position: relative;
   grid-template-columns: 3.75fr 0.75fr 1fr;
   grid-template-rows: 1fr;
   gap: 0px 10px;
   grid-template-areas: 'main other num';
+  background-color: var(--background-modifier-form-field);
+  border-radius: 14px;
+  max-width: 800px;
   height: 250px;
+  padding: 24px;
 }
 
 #keyboard-layout .main {

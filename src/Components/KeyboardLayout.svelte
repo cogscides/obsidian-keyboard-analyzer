@@ -1,5 +1,6 @@
 <script lang="ts">
   import { watchResize } from 'svelte-watch-resize'
+  import { Coffee as CofeeIcon } from 'lucide-svelte'
   import type { Keyboard } from 'src/Interfaces'
   import { Key } from 'lucide-svelte'
 
@@ -53,6 +54,12 @@
       {/each}
     </div>
   {/each}
+  <div class="donation-badge">
+    <div style="padding-right: 6px;">
+      <CofeeIcon size={16} />
+    </div>
+    Donate
+  </div>
 </div>
 
 <!-- <Keyboard_numpad on:keydown={onKeydown} custom={keyboardObj_num} /> -->
@@ -65,7 +72,8 @@
     --font-scale-3: 20px;
   }
   .kb-layout-key {
-    font-size: var(--font-scale-0-5);
+    font-size: var(--font-scale-0);
+    line-height: initial;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,5 +87,20 @@
   }
   .kb-layout-key.empty {
     background-color: transparent;
+  }
+  .donation-badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    border: 1px dashed var(--text-accent);
+    color: var(--text-accent);
+    font-size: var(--font-scale-0);
+    line-height: initial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    border-radius: 20px;
+    padding: 2px 8px;
   }
 </style>

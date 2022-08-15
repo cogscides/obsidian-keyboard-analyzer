@@ -2,10 +2,6 @@
   import type { Key } from 'src/Interfaces'
   import { createEventDispatcher } from 'svelte'
 
-  // export let stringLabel: string
-  // export let xDivider: number = 0
-  // export let yDivider: number = 0
-
   export let keyObj: Key
 
   // Key Defaults
@@ -21,29 +17,13 @@
     }
   }
 
-  // Divider
-  // if (keyObj.x && keyObj.y) {
-  //   keyObj.color = 'default-color'
-  //   keyObj.width = 1
-  //   keyObj.height = 1
-  // }
-
   const dispatch = createEventDispatcher()
   const handleClick = () => {
     dispatch('keyClick', keyObj)
   }
 </script>
 
-{#if keyObj.label}
-  <div
-    class="kb-layout-key small {keyObj.color ? keyObj.color : ''}"
-    style={keyObj.width ? `flex-basis: calc(${keyObj.width}*5.6%)` : ''}
-    id={keyObj.label}
-    on:click={handleClick}
-  >
-    {@html keyObj.label}
-  </div>
-{:else if keyObj.x || keyObj.y}
+{#if keyObj.label}{:else if keyObj.x || keyObj.y}
   <div
     class="kb-divider"
     style="width: {keyObj.x * 12}px; height: {keyObj.y * 12}px"
