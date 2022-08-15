@@ -212,7 +212,7 @@ kbd.modifier:hover {
   margin-bottom: 0px;
   /* padding-bottom: 2px; */
   padding-right: 48px;
-  border: none;
+  border: none !important;
   border-radius: unset;
   background: unset;
   color: var(--text-normal);
