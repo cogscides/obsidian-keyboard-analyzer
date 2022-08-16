@@ -56,8 +56,6 @@
   // thanks to @Fevol - https://discord.com/channels/686053708261228577/840286264964022302/1005131941240115221
   const view_scope = new Scope(app.scope)
   view_scope.register(['Mod'], 'f', (e) => {
-    console.log('ctrl + f pressed in scope')
-    console.log(document.activeElement)
     if (e.ctrlKey && e.key === 'f') {
       if (
         input === document.activeElement &&
@@ -376,7 +374,6 @@
   bind:offsetWidth={viewWidth}
   on:mouseenter={() => {
     app.keymap.pushScope(view_scope)
-    console.log('mouseenter:', app.keymap)
   }}
   on:mouseleave={() => {
     app.keymap.popScope(view_scope)
@@ -387,6 +384,7 @@
       bind:KeyboardObject
       bind:activeSearchKey
       bind:activeSearchModifiers
+      bind:KeyboardStateDict
     />
   </div>
   <div class="shortcuts-wrapper">

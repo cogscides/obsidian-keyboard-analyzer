@@ -25,7 +25,7 @@ export const mainSectionQwerty: KeyboardSection = {
   rows: [
     [
       {
-        label: 'Esc',
+        label: 'Escape',
       },
       {
         label: 'empty',
@@ -173,7 +173,7 @@ export const mainSectionQwerty: KeyboardSection = {
     ],
     [
       {
-        label: 'Caps Lock',
+        label: 'CapsLock',
         fontSize: 'small',
         caps: 'all-small-caps',
         width: 1.75,
@@ -264,26 +264,29 @@ export const mainSectionQwerty: KeyboardSection = {
     ],
     [
       {
-        label: 'Mod',
-        output: 'Mod',
+        label: 'Control',
         fontSize: 'small',
+        tryUnicode: true,
         caps: 'all-small-caps',
         width: 1.5,
       },
       {
-        label: 'OS',
+        label: 'Meta',
+        tryUnicode: true,
         fontSize: 'small',
         width: 1.5,
       },
       {
         label: 'Alt',
+        tryUnicode: true,
         fontSize: 'small',
         caps: 'all-small-caps',
         width: 1.5,
       },
       {
-        label: 'Space',
+        label: ' ',
         width: 6,
+        tryUnicode: true,
       },
       {
         label: 'Alt',
@@ -292,13 +295,13 @@ export const mainSectionQwerty: KeyboardSection = {
         width: 1.5,
       },
       {
-        label: 'Win',
+        label: 'Meta',
         fontSize: 'small',
         caps: 'all-small-caps',
         width: 1.5,
       },
       {
-        label: 'Mod',
+        label: 'Control',
         fontSize: 'small',
         caps: 'all-small-caps',
         width: 1.5,
@@ -331,7 +334,7 @@ export const keyboardOther: KeyboardSection = {
         label: 'Home',
       },
       {
-        label: 'Pg<br>Up',
+        label: 'PageUp',
       },
     ],
     [
@@ -342,7 +345,7 @@ export const keyboardOther: KeyboardSection = {
         label: 'End',
       },
       {
-        label: 'Pg<br>Down',
+        label: 'PageDown',
       },
     ],
     [
@@ -362,6 +365,7 @@ export const keyboardOther: KeyboardSection = {
       },
       {
         label: 'ArrowUp',
+        tryUnicode: true,
       },
       {
         label: 'empty',
@@ -370,12 +374,15 @@ export const keyboardOther: KeyboardSection = {
     [
       {
         label: 'ArrowLeft',
+        tryUnicode: true,
       },
       {
         label: 'ArrowDown',
+        tryUnicode: true,
       },
       {
         label: 'ArrowRight',
+        tryUnicode: true,
       },
     ],
   ],
@@ -402,7 +409,8 @@ export const keyboardNum = {
     ],
     [
       {
-        label: 'Num Lock',
+        label: 'NumLock',
+        tryUnicode: true,
       },
       {
         label: '/',
@@ -426,6 +434,7 @@ export const keyboardNum = {
       },
       {
         label: '+',
+        height: 2,
       },
     ],
     [
@@ -437,9 +446,6 @@ export const keyboardNum = {
       },
       {
         label: '6',
-      },
-      {
-        label: '+',
       },
     ],
     [
@@ -460,350 +466,14 @@ export const keyboardNum = {
     [
       {
         label: '0',
+        width: 2,
       },
       {
         label: '.',
       },
-      {
-        label: '=',
-      },
     ],
   ],
 }
-
-// export const kb_layout_ansi104eng = [
-//   [
-//     'Esc',
-//     { x: 1 },
-//     'F1',
-//     'F2',
-//     'F3',
-//     'F4',
-//     { x: 0.5 },
-//     'F5',
-//     'F6',
-//     'F7',
-//     'F8',
-//     { x: 0.5 },
-//     'F9',
-//     'F10',
-//     'F11',
-//     'F12',
-//     { x: 0.25 },
-//     'PrtSc',
-//     'Scroll Lock',
-//     'Pause<br>Break',
-//   ],
-//   [
-//     { y: 0.5 },
-//     '~<br>`',
-//     '!<br>1',
-//     '@<br>2',
-//     '#<br>3',
-//     '$<br>4',
-//     '%<br>5',
-//     '^<br>6',
-//     '&<br>7',
-//     '*<br>8',
-//     '(<br>9',
-//     ')<br>0',
-//     '_<br>-',
-//     '+<br>=',
-//     { w: 2 },
-//     'Backspace',
-//     { x: 0.25 },
-//     'Insert',
-//     'Home',
-//     'PgUp',
-//     { x: 0.25 },
-//     'Num Lock',
-//     '/',
-//     '*',
-//     '-',
-//   ],
-//   [
-//     { w: 1.5 },
-//     'Tab',
-//     'Q',
-//     'W',
-//     'E',
-//     'R',
-//     'T',
-//     'Y',
-//     'U',
-//     'I',
-//     'O',
-//     'P',
-//     '{<br>[',
-//     '}<br>]',
-//     { w: 1.5 },
-//     '|<br>\\',
-//     { x: 0.25 },
-//     'Delete',
-//     'End',
-//     'PgDn',
-//     { x: 0.25 },
-//     '7<br>Home',
-//     '8<br>↑',
-//     '9<br>PgUp',
-//     { h: 2 },
-//     '+',
-//   ],
-//   [
-//     { w: 1.75 },
-//     'Caps Lock',
-//     'A',
-//     'S',
-//     'D',
-//     'F',
-//     'G',
-//     'H',
-//     'J',
-//     'K',
-//     'L',
-//     ':<br>;',
-//     '"<br>\'',
-//     { w: 2.25 },
-//     'Enter',
-//     { x: 3.5 },
-//     '4<br>←',
-//     '5',
-//     '6<br>→',
-//   ],
-//   [
-//     { w: 2.25 },
-//     'Shift',
-//     'Z',
-//     'X',
-//     'C',
-//     'V',
-//     'B',
-//     'N',
-//     'M',
-//     '<<br>,',
-//     '><br>.',
-//     '?<br>/',
-//     { w: 2.75 },
-//     'Shift',
-//     { x: 1.25 },
-//     '↑',
-//     { x: 1.25 },
-//     '1<br>End',
-//     '2<br>↓',
-//     '3<br>PgDn',
-//     { h: 2 },
-//     'Enter',
-//   ],
-//   [
-//     { w: 1.25 },
-//     'Ctrl',
-//     { w: 1.25 },
-//     'Win',
-//     { w: 1.25 },
-//     'Alt',
-//     { a: 7, w: 6.25 },
-//     'Space',
-//     { a: 4, w: 1.25 },
-//     'Alt',
-//     { w: 1.25 },
-//     'Win',
-//     { w: 1.25 },
-//     'Menu',
-//     { w: 1.25 },
-//     'Ctrl',
-//     { x: 0.25 },
-//     '←',
-//     '↓',
-//     '→',
-//     { x: 0.25, w: 2 },
-//     '0<br>Ins',
-//     '.<br>Del',
-//   ],
-// ]
-
-// export const kbWinNum: KeyboardInterface = [
-//   [
-//     {
-//       label: 'Esc',
-//     },
-//     { x: 1 },
-//     {
-//       label: 'F1',
-//     },
-//     {
-//       label: 'F2',
-//     },
-//     {
-//       label: 'F3',
-//     },
-//     {
-//       label: 'F4',
-//     },
-//     {
-//       x: 0.5,
-//     },
-//     {
-//       label: 'F5',
-//     },
-//     {
-//       label: 'F6',
-//     },
-//     {
-//       label: 'F7',
-//     },
-//     {
-//       label: 'F8',
-//     },
-//     {
-//       x: 0.5,
-//     },
-//     {
-//       label: 'F9',
-//     },
-//     {
-//       label: 'F10',
-//     },
-//     {
-//       label: 'F11',
-//     },
-//     {
-//       label: 'F12',
-//     },
-//     {
-//       x: 0.5,
-//     },
-//     {
-//       label: 'PrtSc',
-//     },
-//     {
-//       label: 'Scroll<br>Lock',
-//     },
-//     {
-//       label: 'Pause<br>Break',
-//     },
-//   ],
-//   [
-//     {
-//       y: 0.5,
-//     },
-//   ],
-//   [
-//     {
-//       label: '~<br>`',
-//     },
-//     {
-//       label: '!<br>1',
-//     },
-//     {
-//       label: '@<br>2',
-//     },
-//     { label: '#<br>3' },
-//     { label: '$<br>4' },
-//     { label: '%<br>5' },
-//     { label: '^<br>6' },
-//     { label: '&<br>7' },
-//     { label: '*<br>8' },
-//     { label: '(<br>9' },
-//     { label: ')<br>0' },
-//     { label: '_<br>-' },
-//     { label: '+<br>=' },
-//     { x: 2 },
-//     { label: '⌫' },
-//     { x: 0.25 },
-//     { label: 'Insert' },
-//     { label: 'Home' },
-//     { label: 'PgUp' },
-//     { x: 0.25 },
-//     { label: 'Num<br>Lock' },
-//     { label: '/' },
-//     { label: '*' },
-//     { label: '-' },
-//   ],
-//   [
-//     { label: 'Tab', width: 1.5 },
-//     { label: 'Q' },
-//     { label: 'W' },
-//     { label: 'E' },
-//     { label: 'R' },
-//     { label: 'T' },
-//     { label: 'Y' },
-//     { label: 'U' },
-//     { label: 'I' },
-//     { label: 'O' },
-//     { label: 'P' },
-//     { label: '{<br>[' },
-//     { label: '}<br>]' },
-//     { label: '|<br>\\', width: 1.5 },
-//     { x: 0.25 },
-//     { label: 'Delete' },
-//     { label: 'End' },
-//     { label: 'PgDn' },
-//     { x: 0.25 },
-//     { label: '7<br>Home' },
-//     { label: '8<br>↑' },
-//     { label: '9<br>PgUp' },
-//     { label: '+', height: 2 },
-//   ],
-//   [
-//     { label: 'Caps Lock', width: 1.75 },
-//     { label: 'A' },
-//     { label: 'S' },
-//     { label: 'D' },
-//     { label: 'F' },
-//     { label: 'G' },
-//     { label: 'H' },
-//     { label: 'J' },
-//     { label: 'K' },
-//     { label: 'L' },
-//     { label: ':<br>;' },
-//     { label: '"<br>\'' },
-//     { label: 'Enter', width: 2.25 },
-//     { x: 3.5 },
-//     { label: '4<br>←' },
-//     { label: '5' },
-//     { label: '6<br>→' },
-//   ],
-//   [
-//     [
-//       { label: 'Shift', width: 2.25 },
-//       { label: 'Z' },
-//       { label: 'X' },
-//       { label: 'C' },
-//       { label: 'V' },
-//       { label: 'B' },
-//       { label: 'N' },
-//       { label: 'M' },
-//       { label: '<<br>,' },
-//       { label: '><br>.' },
-//       { label: '?<br>/' },
-//       { label: 'Shift', width: 2.75 },
-//       { x: 1.25 },
-//       { label: '↑' },
-//       { x: 1.25 },
-//       { label: '1<br>End' },
-//       { label: '2<br>↓' },
-//       { label: '3<br>PgDn' },
-//     ],
-//     [
-//       { label: 'Ctrl', width: 1.25 },
-//       { label: 'Win', width: 1.25 },
-//       { label: 'Alt', width: 1.25 },
-//       { label: 'Space', width: 6.25 },
-//       { label: 'Alt', width: 1.25 },
-//       { label: 'Win', width: 1.25 },
-//       { label: 'Menu', width: 1.25 },
-//       { label: 'Ctrl', width: 1.25 },
-//       { x: 0.25 },
-//       { label: '←', width: 1.25 },
-//       { label: '↓', width: 1.25 },
-//       { label: '→', width: 1.25 },
-//       { x: 0.25 },
-//       { label: '0<br>Ins', width: 2 },
-//       { label: '.<br>Del' },
-//     ],
-//     [{ label: 'Enter', height: 2 }],
-//   ],
-// ]
 
 export const SpecialSymbols: {
   [key: string]: string
@@ -820,7 +490,7 @@ export const SpecialSymbols: {
 
 // https://www.toptal.com/developers/keycode/table-of-all-keycodes
 export const JavaSciptKeyCodes: {
-  [KeyCode: number]: { Key?: string; Code?: string; Unicode?: string }
+  [KeyCode: number]: { Key: string; Code: string; Unicode?: string }
 } = {
   3: {
     Key: 'Cancel',
@@ -996,10 +666,10 @@ export const JavaSciptKeyCodes: {
     Key: '<',
     Code: 'Backquote',
   },
-  61: {
-    Key: '=',
-    Code: 'Equal',
-  },
+  // 61: {
+  //   Key: '=',
+  //   Code: 'Equal',
+  // }, // firefox
   63: {
     Key: 'ß',
     Code: 'Minus',
@@ -1371,6 +1041,7 @@ export const JavaSciptKeyCodes: {
   },
   174: {
     Key: 'AudioVolumeDown',
+    Code: 'AudioVolumeDown',
   },
   176: {
     Key: 'MediaTractNext',
@@ -1382,9 +1053,11 @@ export const JavaSciptKeyCodes: {
   },
   179: {
     Key: 'MediaPlayPause',
+    Code: 'MediaPlayPause',
   },
   180: {
     Key: 'LaunchMail',
+    Code: 'LaunchMail',
     Unicode: '✉',
   },
   181: {
@@ -1404,7 +1077,7 @@ export const JavaSciptKeyCodes: {
     Code: 'Semicolon',
   },
   187: {
-    Key: '+',
+    Key: '=',
     Code: 'Equal',
   },
   188: {

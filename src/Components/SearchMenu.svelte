@@ -170,6 +170,7 @@
         }
       }
     } else if (keyboardListenerIsActive === true) {
+      // console.log('key: ', e.key, e.keyCode)
       // @ts-ignore
       if (!(e.keyCode in JavaSciptKeyCodes)) {
         activeSearchKey = 'Key' + e.keyCode.toString()

@@ -44,6 +44,7 @@ export interface Key {
   fontSize?: string
   caps?: string
   output?: string | null
+  tryUnicode?: boolean
   // textColor: Array<string | undefined> = [];
   // textSize: Array<number | undefined> = [];
   // default: { textColor: string; textSize: number } = {
@@ -52,8 +53,6 @@ export interface Key {
   // };
   width?: number
   height?: number
-  x?: number
-  y?: number
 }
 
 export type Row = Key[]

@@ -452,7 +452,7 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-component .hotkey-list-container .setting-item.is-starred {
   /* background-color: var(--background-secondary, --color-d-gray-60); */
-  border-left: 6px solid var(--interactive-accent);
+  border-left: 3px solid var(--interactive-accent);
   padding-left: 12px;
 }
 
@@ -506,6 +506,7 @@ button#hotkey-refresh-button:hover {
   position: relative;
   font-size: 14px;
   background-color: var(--background-secondary-alt);
+  border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   padding: 4px 10px;
   min-height: 24px;
@@ -515,8 +516,9 @@ button#hotkey-refresh-button:hover {
 }
 
 .kbanalizer-setting-hotkey.is-customized {
-  background-color: var(--background-secondary-alt);
-  color: var(--text-accent);
+  /* background-color: var(--background-secondary-alt); */
+  /* color: var(--text-accent); */
+  border: 1px solid var(--interactive-accent);
 }
 
 .kbanalizer-setting-hotkey.is-duplicate {
@@ -598,10 +600,10 @@ button#hotkey-refresh-button:hover {
   grid-template-rows: 1fr;
   gap: 0px 10px;
   grid-template-areas: 'main other num';
-  background-color: var(--background-modifier-form-field);
+  background-color: var(--background-secondary);
   border-radius: 14px;
-  max-width: 800px;
-  height: 250px;
+  max-width: 900px;
+  height: 280px;
   padding: 24px;
 }
 

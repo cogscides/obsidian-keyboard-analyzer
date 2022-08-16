@@ -2,61 +2,66 @@
   import type { Key } from 'src/Interfaces'
   import { createEventDispatcher } from 'svelte'
 
-  export let keyObj: Key
-
-  // Key Defaults
-  if (keyObj.label) {
-    if (!keyObj.color) {
-      keyObj.color = 'default-color'
-    }
-    if (!keyObj.width) {
-      keyObj.width = 1
-    }
-    if (!keyObj.height) {
-      keyObj.height = 1
-    }
-  }
+  export let keyLabel: string = ''
+  export let keyCode: number = -1
+  export let keyWeight: number = 0
+  export let width: number = 1
+  export let height: number = 1
+  export let unicode: string = ''
+  export let tryUnicode: boolean = false
+  export let state: 'active' | 'inactive' | 'posible' | 'empty'
 
   const dispatch = createEventDispatcher()
   const handleClick = () => {
-    dispatch('keyClick', keyObj)
+    dispatch('keyClick', keyCode)
   }
 </script>
 
-{#if keyObj.label}{:else if keyObj.x || keyObj.y}
+{#if keyLabel === 'empty'}
   <div
-    class="kb-divider"
-    style="width: {keyObj.x * 12}px; height: {keyObj.y * 12}px"
+    class="kb-layout-key empty"
+    style:grid-column={width ? `span calc(${width}*4)` : 'span 4'}
   />
+{:else}
+  <div
+    class="kb-layout-key small"
+    key-id={keyCode}
+    class:is-active={state === 'active'}
+    style:grid-row={height ? `span calc(${height}*1)` : 'span 1'}
+    style:grid-column={width ? `span calc(${width}*4)` : 'span 4'}
+    on:click={handleClick}
+  >
+    {@html tryUnicode && unicode !== '' ? unicode : keyLabel}
+  </div>
 {/if}
 
 <style>
+  :root {
+    --font-scale-0: 12px;
+    --font-scale-0-5: 14px;
+    --font-scale-1: 16px;
+    --font-scale-2: 18px;
+    --font-scale-3: 20px;
+  }
   .kb-layout-key {
-    height: 20px;
-    width: 20px;
+    font-size: var(--font-scale-0);
+    line-height: initial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     white-space: nowrap;
     border-radius: 4px;
     color: var(--text-normal);
-    background-color: var(--background-modifier-border);
-    margin-right: 0.3em;
-    margin-bottom: 0.3em;
-    padding-left: 1%;
-    padding-right: 1%;
+    background-color: var(--background-primary);
   }
-
+  .kb-layout-key.is-active {
+    color: var(--text-accent);
+    background-color: whitesmoke;
+  }
   .kb-layout-key:hover {
-    /* background-color: var(--interactive-hover); */
-    background-color: var(--interactive-accent);
-    user-select: none;
-    -moz-user-select: none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    -o-user-select: none;
+    background-color: var(--background-primary-alt);
   }
-
-  .small {
-    font-size: 75%;
-    line-height: 1rem;
-    text-align: left;
+  .kb-layout-key.empty {
+    background-color: transparent;
   }
 </style>
