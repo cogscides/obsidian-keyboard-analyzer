@@ -389,7 +389,7 @@ export const keyboardOther: KeyboardSection = {
 }
 
 // keyboard layout in rows for number pad
-export const keyboardNum = {
+export const keyboardNum: KeyboardSection = {
   name: 'num',
   gridRatio: 1,
   rows: [
@@ -422,15 +422,21 @@ export const keyboardNum = {
         label: '-',
       },
       {
-        label: '7',
+        label: 'Numpad7',
+        strictCode: true,
+        tryUnicode: true,
       },
     ],
     [
       {
-        label: '8',
+        label: 'Numpad8',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
-        label: '9',
+        label: 'Numpad9',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
         label: '+',
@@ -439,33 +445,48 @@ export const keyboardNum = {
     ],
     [
       {
-        label: '4',
+        label: 'Numpad4',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
-        label: '5',
+        label: 'Numpad5',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
-        label: '6',
+        label: 'Numpad6',
+        strictCode: true,
+        tryUnicode: true,
       },
     ],
     [
       {
-        label: '1',
+        label: 'Numpad1',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
-        label: '2',
+        label: 'Numpad2',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
-        label: '3',
+        label: 'Numpad3',
+        strictCode: true,
+        tryUnicode: true,
       },
       {
         label: 'Enter',
         height: 2,
+        // tryUnicode: true,
       },
     ],
     [
       {
-        label: '0',
+        label: 'Numpad0',
+        strictCode: true,
+        tryUnicode: true,
         width: 2,
       },
       {
@@ -793,52 +814,52 @@ export const JavaSciptKeyCodes: {
   96: {
     Key: '0',
     Code: 'Numpad0',
-    Unicode: '⓪',
+    Unicode: '0',
   },
   97: {
     Key: '1',
     Code: 'Numpad1',
-    Unicode: '①',
+    Unicode: '1',
   },
   98: {
     Key: '2',
     Code: 'Numpad2',
-    Unicode: '②',
+    Unicode: '2',
   },
   99: {
     Key: '3',
     Code: 'Numpad3',
-    Unicode: '③',
+    Unicode: '3',
   },
   100: {
     Key: '4',
     Code: 'Numpad4',
-    Unicode: '④',
+    Unicode: '4',
   },
   101: {
     Key: '5',
     Code: 'Numpad5',
-    Unicode: '⑤',
+    Unicode: '5',
   },
   102: {
     Key: '6',
     Code: 'Numpad6',
-    Unicode: '⑥',
+    Unicode: '6',
   },
   103: {
     Key: '7',
     Code: 'Numpad7',
-    Unicode: '⑦',
+    Unicode: '8',
   },
   104: {
     Key: '8',
     Code: 'Numpad8',
-    Unicode: '⑧',
+    Unicode: '8',
   },
   105: {
     Key: '9',
     Code: 'Numpad9',
-    Unicode: '⑨',
+    Unicode: '9',
   },
   106: {
     Key: '*',

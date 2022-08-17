@@ -172,14 +172,30 @@
     } else if (keyboardListenerIsActive === true) {
       // console.log('key: ', e.key, e.keyCode)
       // @ts-ignore
-      if (!(e.keyCode in JavaSciptKeyCodes)) {
-        activeSearchKey = 'Key' + e.keyCode.toString()
-      } else if (activeSearchKey !== JavaSciptKeyCodes[e.keyCode].Key) {
+      let clickedKeyJS = JavaSciptKeyCodes[e.keyCode]
+
+      if (clickedKeyJS.Key !== activeSearchKey) {
         e.preventDefault()
-        activeSearchKey = JavaSciptKeyCodes[e.keyCode].Key
-      } else if (activeSearchKey === JavaSciptKeyCodes[e.keyCode].Key) {
+        if (clickedKeyJS.Code === 'Numpad' + clickedKeyJS.Key) {
+          activeSearchKey = clickedKeyJS.Code
+        } else {
+          activeSearchKey = clickedKeyJS.Key
+        }
+      } else if (
+        clickedKeyJS.Key === activeSearchKey ||
+        clickedKeyJS.Code === activeSearchKey
+      ) {
         e.preventDefault()
-        activeSearchKey = ''
+
+        if (activeSearchKey === clickedKeyJS.Code) {
+          activeSearchKey = ''
+        } else if (activeSearchKey === clickedKeyJS.Key) {
+          activeSearchKey = ''
+        }
+      } else {
+        !(e.keyCode in JavaSciptKeyCodes)
+          ? console.log('unknown key: ', JavaSciptKeyCodes[e.keyCode])
+          : console.log('unknown key: ', e.key)
       }
     }
   }

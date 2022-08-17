@@ -43,7 +43,7 @@ export interface Key {
   color?: string
   fontSize?: string
   caps?: string
-  output?: string | null
+  strictCode?: boolean
   tryUnicode?: boolean
   // textColor: Array<string | undefined> = [];
   // textSize: Array<number | undefined> = [];

@@ -12,14 +12,24 @@
   export let KeyboardObject: Keyboard
   export let KeyboardStateDict: any = {}
 
-  function getJSKeyEntry(key: string) {
-    let JSKeyOutput
-    for (let Entry of Object.entries(JavaSciptKeyCodes)) {
-      if (key.toLocaleLowerCase() === Entry[1].Key.toLocaleLowerCase()) {
-        JSKeyOutput = Entry
+  function getJSKeyEntry(keyLabel: string, mode: 'name' | 'code' = 'name') {
+    for (let JSEntry of Object.entries(JavaSciptKeyCodes)) {
+      if (
+        mode === 'name' &&
+        keyLabel.toLocaleLowerCase() === JSEntry[1].Key.toLocaleLowerCase()
+      ) {
+        return JSEntry
+      } else if (
+        mode === 'code' &&
+        keyLabel.toLocaleLowerCase() === JSEntry[1].Code.toLocaleLowerCase() &&
+        keyLabel.toLocaleLowerCase().replace('numpad', '') ===
+          JSEntry[1].Key.toLocaleLowerCase()
+      ) {
+        return JSEntry
+      } else if (keyLabel === 'empty') {
+        return ['empty', { Key: 'empty', Code: 'empty' }]
       }
     }
-    return JSKeyOutput
   }
 
   function unpackLayout(
@@ -30,6 +40,7 @@
     let KeyboardDict: {
       [key: string]: {
         output: string
+        keyLabel: string
         state: 'active' | 'inactive' | 'posible' | 'empty'
         keyCode?: number
         unicode?: string
@@ -37,46 +48,53 @@
       }
     } = {}
 
-    let missingKeys: any[] = []
     for (let section of KeyboardLayout) {
       for (let row of section.rows) {
         for (let key of row) {
-          let JSKeyEntry = getJSKeyEntry(key.label)
-          let keyObj: any
+          let JSkeyEntry: any = key.strictCode
+            ? getJSKeyEntry(key.label, 'code')
+            : getJSKeyEntry(key.label)
+          let keyOutput: string = key.label
+          let outputKeyObj: any
 
-          if (JSKeyEntry === undefined) {
-            keyObj = {
-              keyCode: -1,
-              state: 'inactive',
-            }
-            missingKeys.push({ [key.label]: { output: key.output } })
-          } else if (key.label === 'empty') {
-            keyObj = {
+          if (key.label === 'empty') {
+            outputKeyObj = {
+              output: key.label,
               keyCode: -2,
               state: 'empty',
             }
           } else {
-            keyObj = {
-              output: JSKeyEntry[1].Key,
-              keyCode: JSKeyEntry[0],
-              unicode: JSKeyEntry[1].Unicode,
+            console.log(JSkeyEntry)
+
+            keyOutput = key.strictCode ? JSkeyEntry[1].Code : JSkeyEntry[1].Key
+
+            outputKeyObj = {
+              output: keyOutput,
+              keyLabel: JSkeyEntry[1].Key,
+              keyCode: JSkeyEntry[0],
+              unicode: JSkeyEntry[1].Unicode,
               tryUnicode: key.tryUnicode ? key.tryUnicode : false,
             }
+
             if (activeSearchKey !== null) {
               if (
-                key.label.toLocaleLowerCase() ===
+                keyOutput.toLocaleLowerCase() ===
                 activeSearchKey.toLocaleLowerCase()
               ) {
-                keyObj.state = 'active'
+                outputKeyObj.state = 'active'
+              }
+            }
+            if (activeSearchModifiers.length > 0) {
+              if (activeSearchModifiers.includes(keyOutput)) {
+                outputKeyObj.state = 'active'
               }
             }
           }
 
-          KeyboardDict[key.label] = keyObj
+          KeyboardDict[key.label] = outputKeyObj
         }
       }
     }
-    // console.log(missingKeys)
 
     return KeyboardDict
   }
