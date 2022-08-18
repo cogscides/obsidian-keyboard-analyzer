@@ -3,6 +3,7 @@
   import { JavaSciptKeyCodes } from 'src/Constants'
   import type { Keyboard, commandsArray } from 'src/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
+  import { getConvertedModifiers } from 'src/AppShortcuts'
   // import { Key } from 'lucide-svelte'
 
   export let activeSearchKey: string | null
@@ -137,11 +138,48 @@
     return KeyboardDict
   }
 
-  function calculateWeights(visibleCommands: commandsArray) {
-    // TODO
+  function calculateWeights(
+    visibleCommands: commandsArray,
+    KeyboardDict: {
+      [key: string]: {
+        output: string
+        keyCode?: number
+        unicode?: string
+        state?: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty'
+        weight?: number
+      }
+    }
+  ) {
+    let keyWeigts: any = []
+    for (let key of Object.entries(KeyboardDict)) {
+      KeyboardStateDict[key[0]].weight = 0
+
+      // calculate how many times a key or modifier is used in the hotkeys list
+      let keyWeight = 0
+
+      for (let command of visibleCommands) {
+        for (let hotkey of command.hotkeys) {
+          if (
+            hotkey.key.toLocaleLowerCase() === key[1].output.toLocaleLowerCase()
+          ) {
+            keyWeight++
+          }
+          for (let modifier of hotkey.modifiers) {
+            if (
+              getConvertedModifiers([modifier])[0].toLocaleLowerCase() ===
+              key[1].output.toLocaleLowerCase()
+            ) {
+              keyWeight++
+            }
+          }
+        }
+      }
+      KeyboardStateDict[key[0]].weight = keyWeight
+    }
+    console.log(KeyboardStateDict)
   }
 
-  $: keyWeights = calculateWeights(visibleCommands)
+  $: calculateWeights(visibleCommands, KeyboardStateDict)
 
   $: KeyboardStateDict = unpackLayout(
     KeyboardObject,
@@ -169,6 +207,7 @@
             keyLabel={Key.label}
             keyCode={KeyboardStateDict[Key.label].keyCode}
             unicode={KeyboardStateDict[Key.label].unicode}
+            bind:keyWeight={KeyboardStateDict[Key.label].weight}
             width={Key.width}
             height={Key.height}
             bind:state={KeyboardStateDict[Key.label].state}

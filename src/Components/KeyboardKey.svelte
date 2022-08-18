@@ -11,6 +11,19 @@
   // export let tryUnicode: boolean = false
   export let state: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty'
 
+  // spread weight into n=5 steps
+  // for large key weights (e.g. ctrl when is could be 20+) and small key weights (e.g. "A" when is could be 1)
+  // return a number between 1 and 5
+  function spreadWeights(weight: number) {
+    if (weight >= 5) {
+      return 5
+    } else if (weight < 5 && weight > 0) {
+      return weight
+    } else {
+      return 0
+    }
+  }
+
   const dispatch = createEventDispatcher()
   const handleClick = () => {
     dispatch('keyClick', keyCode)
@@ -25,6 +38,7 @@
 {:else}
   <div
     class="kb-layout-key small"
+    weight={keyWeight ? spreadWeights(keyWeight) : 0}
     key-id={keyCode}
     class:is-active={state === 'active'}
     style:grid-row={height ? `span calc(${height}*1)` : 'span 1'}
@@ -65,5 +79,21 @@
   .kb-layout-key.empty {
     border: none;
     background-color: transparent;
+  }
+  /* key heatmap by weight */
+  .kb-layout-key[weight='1'] {
+    background-color: #f0bca469;
+  }
+  .kb-layout-key[weight='2'] {
+    background-color: #e694846f;
+  }
+  .kb-layout-key[weight='3'] {
+    background-color: #d96f6f84;
+  }
+  .kb-layout-key[weight='4'] {
+    background-color: #c94f4f81;
+  }
+  .kb-layout-key[weight='5'] {
+    background-color: #b932328e;
   }
 </style>

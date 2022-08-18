@@ -16,7 +16,6 @@
   import { Star as StarIcon } from 'lucide-svelte'
 
   export let visibleCommands: commandsArray
-  // console.log(visibleCommands)
 
   export let settings: PluginSettings
 
