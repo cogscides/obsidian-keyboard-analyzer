@@ -545,6 +545,7 @@ export const JavaSciptKeyCodes: {
   17: {
     Key: 'Control',
     Code: 'ControlLeft',
+    Unicode: 'Ctrl',
   },
   18: {
     Key: 'Alt',

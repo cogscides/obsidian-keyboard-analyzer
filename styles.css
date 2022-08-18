@@ -602,6 +602,7 @@ button#hotkey-refresh-button:hover {
   grid-template-areas: 'main other num';
   background-color: var(--background-secondary);
   border-radius: 14px;
+  border: 1px solid var(--indentation-guide);
   max-width: 900px;
   height: 280px;
   padding: 24px;

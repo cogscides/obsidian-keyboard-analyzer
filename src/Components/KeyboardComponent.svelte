@@ -385,6 +385,7 @@
       bind:activeSearchKey
       bind:activeSearchModifiers
       bind:KeyboardStateDict
+      bind:visibleCommands
     />
   </div>
   <div class="shortcuts-wrapper">

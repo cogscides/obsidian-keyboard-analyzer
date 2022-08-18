@@ -1,12 +1,13 @@
 <script lang="ts">
   import { Coffee as CofeeIcon } from 'lucide-svelte'
   import { JavaSciptKeyCodes } from 'src/Constants'
-  import type { Keyboard } from 'src/Interfaces'
+  import type { Keyboard, commandsArray } from 'src/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
   // import { Key } from 'lucide-svelte'
 
   export let activeSearchKey: string | null
   export let activeSearchModifiers: string[]
+  export let visibleCommands: commandsArray
 
   // @ts-ignore
   export let KeyboardObject: Keyboard
@@ -40,10 +41,9 @@
     let KeyboardDict: {
       [key: string]: {
         output: string
-        keyLabel: string
-        state: 'active' | 'inactive' | 'posible' | 'empty'
         keyCode?: number
         unicode?: string
+        state?: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty'
         weight?: number
       }
     } = {}
@@ -64,30 +64,68 @@
               state: 'empty',
             }
           } else {
-            console.log(JSkeyEntry)
-
             keyOutput = key.strictCode ? JSkeyEntry[1].Code : JSkeyEntry[1].Key
-
-            outputKeyObj = {
-              output: keyOutput,
-              keyLabel: JSkeyEntry[1].Key,
-              keyCode: JSkeyEntry[0],
-              unicode: JSkeyEntry[1].Unicode,
-              tryUnicode: key.tryUnicode ? key.tryUnicode : false,
-            }
-
-            if (activeSearchKey !== null) {
-              if (
-                keyOutput.toLocaleLowerCase() ===
-                activeSearchKey.toLocaleLowerCase()
-              ) {
-                outputKeyObj.state = 'active'
+            // fix modifiers names according to OS - hardcoded for now
+            if (keyOutput === 'Control') {
+              keyOutput = 'Ctrl'
+              outputKeyObj = {
+                output: 'Ctrl',
+                keyCode: JSkeyEntry[0], // same for both OSs
+                unicode: 'Ctrl',
+              }
+            } else if (keyOutput === 'Meta') {
+              if (process.platform === 'darwin') {
+                outputKeyObj = {
+                  output: '⌥',
+                  keyCode: 18,
+                  unicode: '⌥',
+                }
+              } else {
+                outputKeyObj = {
+                  output: '⊞',
+                  state: 'disabled',
+                  keyCode: JSkeyEntry[0], // expect 91
+                  unicode: '⊞',
+                }
+              }
+            } else if (keyOutput === 'Alt') {
+              if (process.platform === 'darwin') {
+                outputKeyObj = {
+                  output: '⌘',
+                  keyCode: 91,
+                  unicode: '⌘',
+                }
+              } else {
+                keyOutput = 'Alt'
+                outputKeyObj = {
+                  output: 'Alt',
+                  keyCode: JSkeyEntry[0],
+                }
+              }
+            } else {
+              outputKeyObj = {
+                output: keyOutput,
+                keyCode: JSkeyEntry[0],
+                unicode: key.tryUnicode ? JSkeyEntry[1].Unicode : '',
+                // tryUnicode: key.tryUnicode ? key.tryUnicode : false,
               }
             }
-            if (activeSearchModifiers.length > 0) {
-              if (activeSearchModifiers.includes(keyOutput)) {
-                outputKeyObj.state = 'active'
-              }
+          }
+
+          // check if key is active
+          if (activeSearchKey !== null) {
+            if (
+              outputKeyObj.output.toLocaleLowerCase() ===
+              activeSearchKey.toLocaleLowerCase()
+            ) {
+              outputKeyObj.state = 'active'
+            }
+          }
+
+          // check if modifiers are active
+          if (activeSearchModifiers.length > 0) {
+            if (activeSearchModifiers.includes(outputKeyObj.output)) {
+              outputKeyObj.state = 'active'
             }
           }
 
@@ -98,6 +136,12 @@
 
     return KeyboardDict
   }
+
+  function calculateWeights(visibleCommands: commandsArray) {
+    // TODO
+  }
+
+  $: keyWeights = calculateWeights(visibleCommands)
 
   $: KeyboardStateDict = unpackLayout(
     KeyboardObject,
@@ -127,9 +171,9 @@
             unicode={KeyboardStateDict[Key.label].unicode}
             width={Key.width}
             height={Key.height}
-            tryUnicode={KeyboardStateDict[Key.label].tryUnicode}
             bind:state={KeyboardStateDict[Key.label].state}
           />
+          <!-- tryUnicode={KeyboardStateDict[Key.label].tryUnicode} -->
         {/each}
       {/each}
     </div>

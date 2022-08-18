@@ -8,8 +8,8 @@
   export let width: number = 1
   export let height: number = 1
   export let unicode: string = ''
-  export let tryUnicode: boolean = false
-  export let state: 'active' | 'inactive' | 'posible' | 'empty'
+  // export let tryUnicode: boolean = false
+  export let state: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty'
 
   const dispatch = createEventDispatcher()
   const handleClick = () => {
@@ -31,7 +31,7 @@
     style:grid-column={width ? `span calc(${width}*4)` : 'span 4'}
     on:click={handleClick}
   >
-    {@html tryUnicode && unicode !== '' ? unicode : keyLabel}
+    {@html unicode && unicode !== '' ? unicode : keyLabel}
   </div>
 {/if}
 
@@ -44,6 +44,7 @@
     --font-scale-3: 20px;
   }
   .kb-layout-key {
+    border: 1px solid var(--indentation-guide);
     font-size: var(--font-scale-0);
     line-height: initial;
     display: flex;
@@ -62,6 +63,7 @@
     background-color: var(--background-primary-alt);
   }
   .kb-layout-key.empty {
+    border: none;
     background-color: transparent;
   }
 </style>
