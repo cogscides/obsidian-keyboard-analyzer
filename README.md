@@ -11,7 +11,7 @@ https://user-images.githubusercontent.com/50235526/185812119-392b895c-ebd5-48df-
 
 ## About
 
-This plugin will allow you will be able to:
+With this plugin you will be able to:
 
 - see and analyze all your assigned hotkeys in Obsidian on visual keyboard
   layout
