@@ -6,6 +6,9 @@
 
 ![screenshot](https://github.com/cogscides/obsidian-keyboard-analyzer/blob/main/Screens/Image1.png?raw=true)
 
+https://user-images.githubusercontent.com/50235526/185812119-392b895c-ebd5-48df-accf-98933ef8a234.mp4
+
+
 ## About
 
 This plugin will allow you will be able to:
