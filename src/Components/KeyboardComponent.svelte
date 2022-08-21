@@ -368,7 +368,7 @@
     />
   </div>
   <div class="shortcuts-wrapper">
-    <code> {viewMode} :: {viewWidth}</code>
+    <!-- <code> {viewMode} :: {viewWidth}</code> -->
     <SearchMenu
       bind:inputHTML={input}
       bind:search

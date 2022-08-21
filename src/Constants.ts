@@ -592,7 +592,7 @@ export const JavaSciptKeyCodes: {
   34: {
     Key: 'PageDown',
     Code: 'Numpad3',
-    Unicode: 'Pg<br>Down',
+    Unicode: 'Page<br>Down',
   },
   35: {
     Key: 'End',
