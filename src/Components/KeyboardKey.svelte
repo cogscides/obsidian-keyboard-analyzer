@@ -10,7 +10,6 @@
   export let width: number = 1
   export let height: number = 1
   export let unicode: string = ''
-  // export let tryUnicode: boolean = false
   export let state: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty'
 
   // spread weight into n=5 steps

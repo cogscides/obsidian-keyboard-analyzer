@@ -11,8 +11,6 @@
   // STORE
   import { activeKey, activeModifiers } from './atciveKeysStore'
 
-  // export let activeSearchKey: string | null
-  // export let activeSearchModifiers: string[]
   export let visibleCommands: commandsArray
 
   // @ts-ignore
@@ -138,7 +136,6 @@
                 keyCode: JSkeyEntry[0],
                 smallText: key.smallText ? true : false,
                 unicode: key.tryUnicode ? JSkeyEntry[1].Unicode : '',
-                // tryUnicode: key.tryUnicode ? key.tryUnicode : false,
               }
             }
           }
@@ -207,7 +204,6 @@
       }
       KeyboardStateDict[key[0]].weight = keyWeight
     }
-    // console.log(KeyboardStateDict)
   }
 
   function handleKeyClick(e: CustomEvent) {
@@ -216,12 +212,10 @@
 
     let keyJSName = JavaSciptKeyCodes[keyCode].Key
     let keyJSCode = JavaSciptKeyCodes[keyCode].Code
-    console.log(keyCode, keyOutput, keyJSName, keyJSCode)
 
     // check if key is modifier or key
     if (keyCode === 16 || keyCode === 17 || keyCode === 18 || keyCode === 91) {
       // try to put modifier in the active modifiers list
-      console.log('modifier clicked:', keyOutput)
 
       if ($activeModifiers.includes(keyOutput)) {
         $activeModifiers = $activeModifiers.filter(
@@ -229,8 +223,6 @@
         )
       } else {
         // if not in the list, add it
-        console.log('adding modifier', keyOutput)
-
         $activeModifiers = [...$activeModifiers, keyOutput]
       }
     } else {
@@ -250,16 +242,6 @@
     $activeKey,
     $activeModifiers
   )
-
-  function handleClick(event: MouseEvent) {
-    const target = event.target as HTMLElement
-    const label = target.id
-    console.log(label)
-  }
-
-  const onKeydown = (event: any) => {
-    console.log(event.detail)
-  }
 </script>
 
 <div id="keyboard-layout" style="grid-template-columns: {kbGridColumns}">

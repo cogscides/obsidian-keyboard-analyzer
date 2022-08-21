@@ -34,10 +34,6 @@ export interface hotkeyDict {
   [id: string]: commandEntry
 }
 
-// export interface KeyObj {
-//   key: any
-// }
-
 export interface Key {
   label: string
   color?: string
@@ -46,12 +42,6 @@ export interface Key {
   caps?: string
   strictCode?: boolean
   tryUnicode?: boolean
-  // textColor: Array<string | undefined> = [];
-  // textSize: Array<number | undefined> = [];
-  // default: { textColor: string; textSize: number } = {
-  //   textColor: "#000000",
-  //   textSize: 3
-  // };
   width?: number
   height?: number
 }

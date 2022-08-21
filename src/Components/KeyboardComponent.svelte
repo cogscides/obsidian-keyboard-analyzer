@@ -118,8 +118,6 @@
         }
       })
     }
-
-    // console.log(sortedCmds)
     return sortedCmds
   }
 
@@ -199,9 +197,6 @@
       })
     }
 
-    // filter commands by activeSearchKey
-    // if (activeSearchKey !== '') {
-
     filteredCmds = cmds
       .filter((command) => {
         return (
@@ -214,10 +209,6 @@
       .sort((a: commandEntry, b: commandEntry) => {
         return a.pluginName.localeCompare(b.pluginName)
       })
-
-    // console.log(filteredCmds)
-    // sortCommandsArrayByName(filteredCmds)
-
     if (settings.filterSettings.FeaturedFirst) {
       filteredCmds = sortByFeaturedFirst(
         filteredCmds,
@@ -256,7 +247,6 @@
     settings.filterSettings.FeaturedFirst =
       !settings.filterSettings.FeaturedFirst
     plugin.saveSettings()
-    // settings.filterSettings.FeaturedFirst is triggered
     triggerRenderCommands()
   }
 
@@ -302,14 +292,10 @@
 
   // 2. if refresh button is clicked
   function handleRefreshClicked() {
-    // console.log('RefreshCommands received')
-
     refreshCommandsList()
   }
 
   // COUNTERS
-  // let allCommandsCount: number
-  // let allHotkeysCount: number
   $: searchCommandsCount = updateCommandsCount(visibleCommands)
   $: searchHotkeysCount = countHotkeys(visibleCommands)
 
@@ -345,13 +331,6 @@
     }
   }
 
-  // search
-  // https://svelte.dev/repl/0429bd69748e44cdaeb8074c982f967d?version=3.41.0
-
-  // const handlePickKey = (value: any) => {
-  //   console.log(value)
-  // }
-
   onMount(() => {
     input.focus()
   })
@@ -381,7 +360,6 @@
     app.keymap.popScope(view_scope)
   }}
 >
-  <!-- TODO: to pass active search store to all components  -->
   <div class="" id="keyboard-preview-view">
     <KeyboardLayout
       bind:KeyboardObject

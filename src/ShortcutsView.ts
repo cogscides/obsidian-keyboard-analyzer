@@ -1,7 +1,5 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian'
 import type KeyboardAnalizerPlugin from 'src/main'
-// import KeyboardAnalizerSettings from 'src/main'
-// import { openOrSwitch } from 'obsidian-community-lib'
 // @ts-ignore
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from 'src/Constants'
 import KeyboardComponent from './Components/KeyboardComponent.svelte'
@@ -45,13 +43,7 @@ export default class ShortcutsView extends ItemView {
 
     contentEl.empty()
     contentEl.setAttribute(`id`, `KB-view`)
-    // contentEl.setAttribute(`style', 'padding: 0;')
     contentEl.style.padding = '0'
-    // contentEl.addClass('markdown-preview-view')
-    // contentEl.addClass('is-readable-line-width')
-
-    // this.component?.$destroy()
-
     this.component = new KeyboardComponent({
       target: contentEl,
       props: {

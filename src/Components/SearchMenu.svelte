@@ -56,11 +56,6 @@
     inputHTML.focus()
   }
 
-  // *****************************************************************************
-  // Debugger
-  // *****************************************************************************
-  $: console.log($activeKey, $activeModifiers)
-
   // EVENT DISPATHCHERs
   const dispatch = createEventDispatcher()
 
@@ -72,7 +67,6 @@
       refreshIsActive = false
     }, 1000)
     dispatch('refresh-commands')
-    console.log('RefreshCommands sent to dispatcher')
   }
 
   function dispatchFeaturedFirstOptionTriggered(e: any) {
@@ -136,7 +130,6 @@
           // TODO: triggers if two modifiers are pressed at the same time
           console.log('unknown modifier: ', e.key)
           console.log('please report this to the developer')
-
           break
       }
       // return to stop event propagation
@@ -159,12 +152,10 @@
         e.preventDefault()
         $activeKey = ''
       } else if (keyboardListenerIsActive === false) {
-        // TODO fix clearence of activeSearchKey
         if (search === '' || inputHTML.selectionStart === 0) {
           if ($activeKey !== '') {
             $activeKey = ''
           } else if ($activeKey === '' && $activeModifiers.length > 0) {
-            // pop last modifier from array using spread operator
             $activeModifiers = [
               ...$activeModifiers.slice(0, $activeModifiers.length - 1),
             ]
@@ -174,7 +165,6 @@
     } else if (e.key === 'Meta') {
       e.preventDefault()
     } else if (keyboardListenerIsActive === true) {
-      // console.log('key: ', e.key, e.keyCode)
       // @ts-ignore
       let clickedKeyJS = JavaSciptKeyCodes[e.keyCode]
 

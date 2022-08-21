@@ -16,7 +16,6 @@ export function getHotkeysV2(app: App) {
     let cmdName: string = isBuiltInCommand
       ? command.name
       : // split by ":" remove the first element (plugin name) and join with ":"
-
         command.name.split(':').slice(1).join(':')
     let hotkeys: Hotkey[] = (hkm.getHotkeys(command.id) ||
       hkm.getDefaultHotkeys(command.id) ||
@@ -52,8 +51,6 @@ export function getHotkeysV2(app: App) {
       }
     })
   })
-
-  // console.log(hotKeyDict)
   return hotKeyDict
 }
 
@@ -74,12 +71,7 @@ export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
   let customKeys = app.hotkeyManager.customKeys[id]
   let defaultKeys = app.hotkeyManager.getDefaultHotkeys(id)
 
-  // if (id === 'editor:save-file') {
-  //   console.log(id, defaultKeys)
-  // }
   if (customKeys) {
-    // if command found in customKeys, check if hotkey is customized
-    // for each hotkey in customKeys, check if it is customized
     for (let customHotkey of customKeys) {
       // compare arrays of modifiers, all modifiers must be the same
       if (
@@ -121,8 +113,6 @@ export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
 export function isHotkeyDuplicate(commandID: string, hotkey: Hotkey) {
   let isDuplicate = false
   let commands = getHotkeysV2(app)
-  // console.log('---')
-
   for (let command of Object.entries(commands)) {
     let currentCommandID = command[0]
     let currentHotkeys = command[1].hotkeys
@@ -136,9 +126,6 @@ export function isHotkeyDuplicate(commandID: string, hotkey: Hotkey) {
             return modifier === hotkey.modifiers[index]
           })
         ) {
-          // console.log(currentCommandID, commandID)
-          // console.log(currentHotkey, hotkey)
-
           isDuplicate = true
         }
       }
@@ -148,18 +135,7 @@ export function isHotkeyDuplicate(commandID: string, hotkey: Hotkey) {
   return isDuplicate
 }
 
-// ^^^^^^
-// MODIFIERS
-// ^^^^^^
-
-// convert modifier to OS specific modifier, check which OS is running
-// e.g. 'Mod' -> 'Ctrl' on Windows, 'Cmd' on Mac
-// Mod = Cmd on MacOS and Ctrl on other OS
-// Ctrl = Ctrl key for every OS
-// Meta = Cmd on MacOS and Win key on other OS
 export function getConvertedModifiers(modifiers: Modifier[]) {
-  // console.log(modifiers)
-
   let convertedModifiers = modifiers.map((modifier: Modifier) => {
     if (modifier === 'Mod') {
       // check macos
