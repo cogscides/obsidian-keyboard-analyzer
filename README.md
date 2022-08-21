@@ -27,7 +27,7 @@ With this plugin you will be able to:
 2. To open plugin run command `Keyboard Analyzer: Open Shortcuts View`
 
 The plugin is poorly tested on operating systems other than Windows, I would be
-grateful for any help with this plugin.
+grateful for any help with testing support.
 
 ## Installation
 
