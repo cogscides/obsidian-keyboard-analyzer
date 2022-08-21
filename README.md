@@ -7,7 +7,9 @@
 ![screenshot](https://github.com/cogscides/obsidian-keyboard-analyzer/blob/main/Screens/Image1.png?raw=true)
 
 ## About
+
 This plugin will allow you will be able to:
+
 - see and analyze all your assigned hotkeys in Obsidian on visual keyboard
   layout
 - search by key combination
@@ -15,8 +17,10 @@ This plugin will allow you will be able to:
 - see duplicate hotkeys
 - highlight featured hotkeys
 
-# How to use
-1. To open plugin you can click on keyboard icon in status bar (to open in a new pane use `Ctrl + Click`)
+## How to use
+
+1. To open plugin you can click on keyboard icon in status bar (to open in a new
+   pane use `Ctrl + Click`)
 2. To open plugin run command `Keyboard Analyzer: Open Shortcuts View`
 
 The plugin is poorly tested on operating systems other than Windows, I would be
