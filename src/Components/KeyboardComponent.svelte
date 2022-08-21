@@ -23,6 +23,9 @@
     sortModifiers,
   } from 'src/AppShortcuts'
 
+  // STORE
+  import { activeKey, activeModifiers } from './atciveKeysStore'
+
   // CONSTANTS
   import {
     mainSectionQwerty,
@@ -49,8 +52,6 @@
   let search: string = ''
   let input: HTMLInputElement
   let keyboardListenerIsActive: boolean = false
-  let activeSearchModifiers: string[] = []
-  let activeSearchKey: string = ''
 
   // Implements Cmd+F functionality for focus on input field
   // thanks to @Fevol - https://discord.com/channels/686053708261228577/840286264964022302/1005131941240115221
@@ -78,7 +79,7 @@
   let kbLayout_other = keyboardOther
   let kbLayout_num = keyboardNum
 
-  let KeyboardObject: Keyboard = [kbLayout_main, kbLayout_other, kbLayout_num] // Keyboard
+  let KeyboardObject: Keyboard = [kbLayout_main, kbLayout_other, kbLayout_num] // kbLayout_num //Keyboard
   let KeyboardStateDict: any
 
   // COMMANDS LIST
@@ -99,7 +100,7 @@
     visibleCommands = visibleCommands
   }
 
-  // 2. sort commands array
+  // 2. sort commands array - DEPRECATED
   function sortCommandsArrayByName(
     cmds: commandsArray,
     type: string = 'name',
@@ -151,7 +152,7 @@
 
     // function to filter commands by search string
     function filterByName(command: commandEntry) {
-      let fullName =
+      let CommandName =
         command.pluginName.toLocaleLowerCase() +
         ' ' +
         command.cmdName.toLowerCase()
@@ -165,7 +166,7 @@
       // return true if all search word are in fullName, hotkeys or key
       return searchWords.every((word) => {
         return (
-          fullName.includes(word) ||
+          CommandName.includes(word) ||
           command.hotkeys.some((hotkey) => {
             return (
               hotkey.key.toLocaleLowerCase().includes(word) ||
@@ -180,9 +181,12 @@
 
     // filter commands by activeSearchModifiers
     // if no activeSearchModifiers, filter by all commands
-    function filterByModifiers(command: commandEntry) {
+    function filterByModifiers(
+      command: commandEntry,
+      activeModifiers: string[]
+    ) {
       return command.hotkeys.some((hotkey) => {
-        return activeSearchModifiers.every((modifier) => {
+        return activeModifiers.every((modifier) => {
           return getConvertedModifiers(hotkey.modifiers).includes(modifier)
         })
       })
@@ -191,9 +195,7 @@
     // filter commands by activeSearchModifiers
     function filterByKey(command: commandEntry) {
       return command.hotkeys.some((hotkey) => {
-        return (
-          hotkey.key.toLocaleLowerCase() === activeSearchKey.toLocaleLowerCase()
-        )
+        return hotkey.key.toLocaleLowerCase() === $activeKey.toLocaleLowerCase()
       })
     }
 
@@ -204,7 +206,8 @@
       .filter((command) => {
         return (
           filterByName(command) &&
-          (activeSearchModifiers.length === 0 || filterByModifiers(command)) &&
+          (activeSearchModifiers.length === 0 ||
+            filterByModifiers(command, activeSearchModifiers)) &&
           (activeSearchKey === '' || filterByKey(command))
         )
       })
@@ -229,8 +232,8 @@
   $: visibleCommands = filterCommandsArray(
     commandsArray,
     search,
-    activeSearchModifiers,
-    activeSearchKey
+    $activeModifiers,
+    $activeKey
   )
 
   // HANDLE COMPONENT EVENTS
@@ -258,25 +261,24 @@
   }
 
   function handleDuplicateHotkeyClicked(event: CustomEvent) {
-    let listedHotkey: Hotkey = event.detail
-    let listedModifiers: string[] = getConvertedModifiers(
-      listedHotkey.modifiers
+    let duplicativeHotkey: Hotkey = event.detail
+    let duplicativeModifiers: string[] = getConvertedModifiers(
+      duplicativeHotkey.modifiers
     )
+    let duplicativeKey: string = duplicativeHotkey.key
 
-    // check if modifiers and ket already active search then remove them
+    // check if modifiers and key already active search then remove them
     if (
-      activeSearchModifiers.every((modifier: string) => {
-        return listedModifiers.includes(modifier)
+      $activeModifiers.every((modifier: string) => {
+        return duplicativeModifiers.includes(modifier)
       }) &&
-      activeSearchKey.toLocaleLowerCase() ===
-        listedHotkey.key.toLocaleLowerCase()
+      $activeKey.toLocaleLowerCase() === duplicativeKey.toLocaleLowerCase()
     ) {
-      activeSearchModifiers = []
-      activeSearchKey = ''
+      $activeModifiers = []
+      $activeKey = ''
     } else {
-      // add modifiers and key to active search
-      activeSearchModifiers = listedModifiers
-      activeSearchKey = listedHotkey.key
+      $activeModifiers = duplicativeModifiers
+      $activeKey = duplicativeKey
       search = ''
     }
   }
@@ -379,11 +381,10 @@
     app.keymap.popScope(view_scope)
   }}
 >
+  <!-- TODO: to pass active search store to all components  -->
   <div class="" id="keyboard-preview-view">
     <KeyboardLayout
       bind:KeyboardObject
-      bind:activeSearchKey
-      bind:activeSearchModifiers
       bind:KeyboardStateDict
       bind:visibleCommands
     />
@@ -395,8 +396,6 @@
       bind:search
       bind:searchCommandsCount
       bind:searchHotkeysCount
-      bind:activeSearchModifiers
-      bind:activeSearchKey
       bind:keyboardListenerIsActive
       bind:FilterSettings={settings.filterSettings}
       bind:plugin

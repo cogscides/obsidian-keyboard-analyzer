@@ -17,6 +17,9 @@
   import { clickOutside } from 'svelte-use-click-outside'
   import { JavaSciptKeyCodes, SpecialSymbols } from 'src/Constants'
 
+  // STORE
+  import { activeKey, activeModifiers } from './atciveKeysStore'
+
   // UTILS
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'
   import { longpress } from './longpress'
@@ -27,8 +30,6 @@
   // COMPONENT VARIABLES
   export let inputHTML: HTMLInputElement
   export let search: string = ''
-  export let activeSearchModifiers: string[] = []
-  export let activeSearchKey: string = ''
   export let searchCommandsCount: number
   export let searchHotkeysCount: number
   let inputIsFocused: boolean = false
@@ -41,8 +42,8 @@
 
   const ClearSearch = () => {
     if (search === '') {
-      activeSearchModifiers = []
-      activeSearchKey = ''
+      $activeModifiers = []
+      $activeKey = ''
       inputHTML.focus()
     } else {
       search = ''
@@ -54,6 +55,11 @@
     keyboardListenerIsActive = !keyboardListenerIsActive
     inputHTML.focus()
   }
+
+  // *****************************************************************************
+  // Debugger
+  // *****************************************************************************
+  $: console.log($activeKey, $activeModifiers)
 
   // EVENT DISPATHCHERs
   const dispatch = createEventDispatcher()
@@ -77,19 +83,19 @@
   // if modifier is already in array remove it
   // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
   const onModifierKeyDown = (e: KeyboardEvent) => {
+    // edit modifiers
     function pushModifier(modifier: string) {
-      if (!activeSearchModifiers.includes(modifier)) {
-        activeSearchModifiers.push(modifier)
-        activeSearchModifiers = activeSearchModifiers
+      if (!$activeModifiers.includes(modifier)) {
+        $activeModifiers = [...$activeModifiers, modifier]
       }
     }
 
     function spliceModifier(modifier: Modifier) {
       // splice modifier from activeSearchModifiers array
-      activeSearchModifiers.splice(activeSearchModifiers.indexOf(modifier), 1)
-      activeSearchModifiers = activeSearchModifiers
+      $activeModifiers = $activeModifiers.filter(
+        (activeModifier) => activeModifier !== modifier
+      )
     }
-
     if (
       keyboardListenerIsActive &&
       (e.getModifierState('Shift') ||
@@ -98,14 +104,14 @@
     ) {
       switch (e.key) {
         case 'Shift':
-          if (activeSearchModifiers.includes('Shift')) {
+          if ($activeModifiers.includes('Shift')) {
             spliceModifier('Shift')
           } else {
             pushModifier('Shift')
           }
           break
         case 'Alt':
-          if (activeSearchModifiers.includes('Alt')) {
+          if ($activeModifiers.includes('Alt')) {
             spliceModifier('Alt')
           } else {
             pushModifier('Alt')
@@ -113,14 +119,14 @@
           break
         case 'Meta':
           // OSX ONLY
-          if (activeSearchModifiers.includes('Meta')) {
+          if ($activeModifiers.includes('Meta')) {
             spliceModifier('Meta')
           } else {
             pushModifier('Meta')
           }
           break
         case 'Control':
-          if (activeSearchModifiers.includes('Ctrl')) {
+          if ($activeModifiers.includes('Ctrl')) {
             spliceModifier('Ctrl')
           } else {
             pushModifier('Ctrl')
@@ -143,54 +149,53 @@
       }
     } else if (e.key === 'Backspace') {
       // TODO clear activeSearchKey
-      if (
-        keyboardListenerIsActive === true &&
-        activeSearchKey !== 'Backspace'
-      ) {
+      if (keyboardListenerIsActive === true && $activeKey !== 'Backspace') {
         e.preventDefault()
-        activeSearchKey = 'Backspace'
+        $activeKey = 'Backspace'
       } else if (
         keyboardListenerIsActive === true &&
-        activeSearchKey === 'Backspace'
+        $activeKey === 'Backspace'
       ) {
         e.preventDefault()
-        activeSearchKey = ''
+        $activeKey = ''
       } else if (keyboardListenerIsActive === false) {
         // TODO fix clearence of activeSearchKey
         if (search === '' || inputHTML.selectionStart === 0) {
-          if (activeSearchKey !== '') {
-            activeSearchKey = ''
-          } else if (
-            activeSearchKey === '' &&
-            activeSearchModifiers.length > 0
-          ) {
-            activeSearchModifiers.pop()
-            activeSearchModifiers = activeSearchModifiers
+          if ($activeKey !== '') {
+            $activeKey = ''
+          } else if ($activeKey === '' && $activeModifiers.length > 0) {
+            // pop last modifier from array using spread operator
+            $activeModifiers = [
+              ...$activeModifiers.slice(0, $activeModifiers.length - 1),
+            ]
           }
         }
       }
+    } else if (e.key === 'Meta') {
+      e.preventDefault()
     } else if (keyboardListenerIsActive === true) {
       // console.log('key: ', e.key, e.keyCode)
       // @ts-ignore
       let clickedKeyJS = JavaSciptKeyCodes[e.keyCode]
 
-      if (clickedKeyJS.Key !== activeSearchKey) {
+      if (clickedKeyJS.Key !== $activeKey) {
         e.preventDefault()
+
         if (clickedKeyJS.Code === 'Numpad' + clickedKeyJS.Key) {
-          activeSearchKey = clickedKeyJS.Code
+          $activeKey = clickedKeyJS.Code
         } else {
-          activeSearchKey = clickedKeyJS.Key
+          $activeKey = clickedKeyJS.Key
         }
       } else if (
-        clickedKeyJS.Key === activeSearchKey ||
-        clickedKeyJS.Code === activeSearchKey
+        clickedKeyJS.Key === $activeKey ||
+        clickedKeyJS.Code === $activeKey
       ) {
         e.preventDefault()
 
-        if (activeSearchKey === clickedKeyJS.Code) {
-          activeSearchKey = ''
-        } else if (activeSearchKey === clickedKeyJS.Key) {
-          activeSearchKey = ''
+        if ($activeKey === clickedKeyJS.Code) {
+          $activeKey = ''
+        } else if ($activeKey === clickedKeyJS.Key) {
+          $activeKey = ''
         }
       } else {
         !(e.keyCode in JavaSciptKeyCodes)
@@ -205,34 +210,32 @@
   <!-- <div class="hotkey-search-menu"> -->
   <div class="search-wrapper" class:is-focused={inputIsFocused}>
     <div class="modifiers-wrapper">
-      {#if activeSearchModifiers.length > 0 || activeSearchKey !== null}
-        {#each sortModifiers(activeSearchModifiers) as modifier}
+      {#if $activeModifiers.length > 0 || $activeKey !== null}
+        {#each sortModifiers($activeModifiers) as modifier}
           <kbd
             class="modifier"
             in:slide={{ duration: 100 }}
             out:fade={{ duration: 50 }}
             on:click={() => {
-              activeSearchModifiers.splice(
-                activeSearchModifiers.indexOf(modifier),
-                1
+              $activeModifiers = $activeModifiers.filter(
+                (activeModifier) => activeModifier !== modifier
               )
-              activeSearchModifiers = activeSearchModifiers
               inputHTML.focus()
             }}>{modifier}</kbd
           >
         {/each}
-        {#if activeSearchKey !== ''}
+        {#if $activeKey !== ''}
           <kbd
             in:slide={{ duration: 100 }}
             out:fade={{ duration: 50 }}
             class="modifier"
             style="padding-left: 8px; padding-right: 8px;"
-            on:click={() => (activeSearchKey = '')}
-            >{activeSearchKey in SpecialSymbols
-              ? SpecialSymbols[activeSearchKey]
-              : activeSearchKey.length === 1
-              ? activeSearchKey.toUpperCase()
-              : activeSearchKey}
+            on:click={() => ($activeKey = '')}
+            >{$activeKey in SpecialSymbols
+              ? SpecialSymbols[$activeKey]
+              : $activeKey.length === 1
+              ? $activeKey.toUpperCase()
+              : $activeKey}
           </kbd>
         {/if}
       {/if}

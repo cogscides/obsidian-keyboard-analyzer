@@ -42,6 +42,7 @@ export interface Key {
   label: string
   color?: string
   fontSize?: string
+  smallText?: boolean
   caps?: string
   strictCode?: boolean
   tryUnicode?: boolean

@@ -26,6 +26,7 @@ export const mainSectionQwerty: KeyboardSection = {
     [
       {
         label: 'Escape',
+        tryUnicode: true,
       },
       {
         label: 'empty',
@@ -176,6 +177,7 @@ export const mainSectionQwerty: KeyboardSection = {
         label: 'CapsLock',
         fontSize: 'small',
         caps: 'all-small-caps',
+        tryUnicode: true,
         width: 1.75,
       },
       {
@@ -223,6 +225,7 @@ export const mainSectionQwerty: KeyboardSection = {
         label: 'Shift',
         fontSize: 'small',
         caps: 'all-small-caps',
+        tryUnicode: true,
         width: 2,
       },
       {
@@ -260,6 +263,7 @@ export const mainSectionQwerty: KeyboardSection = {
         fontSize: 'small',
         caps: 'all-small-caps',
         width: 3,
+        tryUnicode: true,
       },
     ],
     [
@@ -329,23 +333,33 @@ export const keyboardOther: KeyboardSection = {
     [
       {
         label: 'Insert',
+        smallText: true,
+        tryUnicode: true,
       },
       {
         label: 'Home',
+        smallText: true,
       },
       {
         label: 'PageUp',
+        smallText: true,
+        tryUnicode: true,
       },
     ],
     [
       {
         label: 'Delete',
+        tryUnicode: true,
+        smallText: true,
       },
       {
         label: 'End',
+        smallText: true,
       },
       {
         label: 'PageDown',
+        tryUnicode: true,
+        smallText: true,
       },
     ],
     [
@@ -563,7 +577,7 @@ export const JavaSciptKeyCodes: {
   27: {
     Key: 'Escape',
     Code: 'Escape',
-    Unicode: '⎋',
+    Unicode: 'Esc',
   },
   32: {
     Key: ' ',
@@ -573,12 +587,12 @@ export const JavaSciptKeyCodes: {
   33: {
     Key: 'PageUp',
     Code: 'Numpad9',
-    Unicode: '⇞',
+    Unicode: 'Page<br>Up',
   },
   34: {
     Key: 'PageDown',
     Code: 'Numpad3',
-    Unicode: '⇟',
+    Unicode: 'Pg<br>Down',
   },
   35: {
     Key: 'End',
@@ -618,12 +632,12 @@ export const JavaSciptKeyCodes: {
   45: {
     Key: 'Insert',
     Code: 'Numpad0',
-    Unicode: 'x',
+    Unicode: 'Ins',
   },
   46: {
     Key: 'Delete',
     Code: 'NumpadDecimal',
-    Unicode: '⌦',
+    Unicode: 'Del',
   },
   48: {
     Key: '0',
