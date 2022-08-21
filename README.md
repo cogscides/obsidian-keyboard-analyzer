@@ -28,10 +28,14 @@ obsidian.
 
 ## Great thanks to the obsidian community:
 
-- @SkepticMystic and @HEmilewith for their awesome contribution to Svelte
-  codebase of ![Graph Analysis](https://github.com/SkepticMystic/graph-analysis)
+- [@SkepticMystic](https://github.com/SkepticMystic) and
+  [@HEmile](https://github.com/HEmile) for their awesome contribution to Svelte
+  codebase of [Graph Analysis](https://github.com/SkepticMystic/graph-analysis)
   plugin which help me a lot in implementing typescript and code structure in my
   plugin
-- @pjeby for code inspiration dealing with obsidian hotkeys
-- @Fevol for help with implementing hotkey scoping and friendly support
-- davfive#5786 guy from discord for directing help dealing with obsidian hotkeys
+- [@pjeby](https://github.com/pjeby) for code inspiration dealing with obsidian
+  hotkeys
+- [@Fevol](https://github.com/Fevol) for help with implementing hotkey scoping
+  and friendly support
+- davfive#5786 guy from discord for directing me on the way how to deal with
+  obsidian hotkeys
