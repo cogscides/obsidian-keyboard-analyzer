@@ -28,7 +28,7 @@ grateful for any help with this plugin.
 
 ## Installation
 
-As plugin is not yet published, you will need to install it manually or with
+As plugin is not yet published in community plugins library, you will need to install it manually or with
 help of [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin for beta
 testing.
 
