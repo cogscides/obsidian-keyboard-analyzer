@@ -18,6 +18,27 @@ This plugin will allow you will be able to:
 The plugin is poorly tested on operating systems other than Windows, I would be
 grateful for any help with this plugin.
 
+## Installation
+
+As plugin is not yet published, you will need to install it manually or with
+help of [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin for beta
+testing.
+
+#### Manual Installation
+
+Download release files `main.js`, `styles.css` and `manifest.json` from the
+[releases](https://github.com/cogscides/obsidian-keyboard-analyzer/releases) and
+place this files inside
+`[YOUR_OBSIDIAN_FOLDER]/.obsidian/.plugins/obsidian-keyboard-analyzer/`.
+
+#### Beta Testing - BRAT
+
+1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin
+2. Run command in obsidian:
+   `Obsidian42 - BRATPlugins: add a beta plugin for testing`
+3. Paste this repository URL:
+   `https://github.com/cogscides/obsidian-keyboard-analyzer`
+
 ---
 
 P.S. This is my first public code in my life - would be happy to get feedback or
