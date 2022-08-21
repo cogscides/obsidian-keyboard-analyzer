@@ -28,9 +28,10 @@ obsidian.
 
 ## Great thanks to the obsidian community:
 
-- @SkepticMystic with his awesome Svelte codebase of
-  ![Graph Analysis](https://github.com/SkepticMystic/graph-analysis) plugin
-  which help me a lot in implementing typescript and structure in my plugin
+- @SkepticMystic and @HEmilewith for their awesome contribution to Svelte
+  codebase of ![Graph Analysis](https://github.com/SkepticMystic/graph-analysis)
+  plugin which help me a lot in implementing typescript and code structure in my
+  plugin
 - @pjeby for code inspiration dealing with obsidian hotkeys
 - @Fevol for help with implementing hotkey scoping and friendly support
 - davfive#5786 guy from discord for directing help dealing with obsidian hotkeys
