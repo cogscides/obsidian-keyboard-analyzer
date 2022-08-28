@@ -249,7 +249,7 @@ kbd.modifier:hover {
 }
 
 .keyboard-icon.pulse {
-  color: var(--text-accent);
+  color: var(--text-error);
 }
 
 /* .meta-search-indicator .inner-circle {
