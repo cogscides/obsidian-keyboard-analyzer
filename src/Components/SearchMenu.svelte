@@ -60,7 +60,7 @@
   const dispatch = createEventDispatcher()
 
   // 1. refresh commands
-  function sendRefreshCommands(e: any) {
+  function sendRefreshCommands() {
     refreshIsActive = true
     // set animation timeout
     setTimeout(() => {
@@ -69,7 +69,7 @@
     dispatch('refresh-commands')
   }
 
-  function dispatchFeaturedFirstOptionTriggered(e: any) {
+  function dispatchFeaturedFirstOptionTriggered() {
     dispatch('featured-first-option-triggered')
   }
 
@@ -309,6 +309,24 @@
           <div class="setting-item-name popup-filter-title">
             Display featured first
           </div>
+        </div>
+        <div class="setting-item mod-toggle popup-filter-menu">
+          <div
+            class="checkbox-container"
+            class:is-enabled={FilterSettings.StrictSearch}
+            on:click={() => {
+              FilterSettings.StrictSearch = !FilterSettings.StrictSearch
+              plugin.saveSettings()
+              sendRefreshCommands()
+            }}
+          >
+            <input
+              type="checkbox"
+              tabindex="0"
+              bind:checked={FilterSettings.StrictSearch}
+            />
+          </div>
+          <div class="setting-item-name popup-filter-title">Strict Search</div>
         </div>
         <div class="setting-item mod-toggle popup-filter-menu">
           <div

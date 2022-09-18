@@ -7,6 +7,7 @@ export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
 
 export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   FeaturedFirst: false,
+  StrictSearch: false,
   HighlightCustom: false,
   HighlightDuplicates: false,
   DisplayWOhotkeys: false,

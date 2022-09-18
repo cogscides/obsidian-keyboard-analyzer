@@ -4,6 +4,7 @@
   import { Scope } from 'obsidian'
   import { watchResize } from 'svelte-watch-resize'
   import { onMount, onDestroy } from 'svelte'
+  import { get } from 'svelte/store'
 
   // TYPES
   import type ShortcutsView from 'src/ShortcutsView'
@@ -14,6 +15,7 @@
     hotkeyDict,
     commandEntry,
     commandsArray,
+    hotkeyEntry,
   } from 'src/Interfaces'
 
   // UTILS
@@ -32,7 +34,6 @@
     keyboardOther,
     keyboardNum,
     SpecialSymbols,
-    DEFAULT_FILTER_SETTINGS,
   } from 'src/Constants'
 
   // LAYOUT
@@ -146,6 +147,7 @@
     activeSearchModifiers: string[],
     activeSearchKey: string
   ) {
+    refreshCommandsList()
     let filteredCmds: commandsArray = []
 
     // function to filter commands by search string
@@ -181,13 +183,33 @@
     // if no activeSearchModifiers, filter by all commands
     function filterByModifiers(
       command: commandEntry,
-      activeModifiers: string[]
+      activeModifiers: string[],
+      strictHotkeyChecker: boolean
     ) {
-      return command.hotkeys.some((hotkey) => {
-        return activeModifiers.every((modifier) => {
-          return getConvertedModifiers(hotkey.modifiers).includes(modifier)
+      if (strictHotkeyChecker === false) {
+        return command.hotkeys.some((hotkey) => {
+          return activeModifiers.every((modifier) => {
+            return getConvertedModifiers(hotkey.modifiers).includes(modifier)
+          })
         })
-      })
+      } else if (strictHotkeyChecker === true) {
+        command.hotkeys = command.hotkeys.filter((hotkey) => {
+          if (
+            hotkey.modifiers.length === activeModifiers.length &&
+            activeModifiers.every((modifier) => {
+              return getConvertedModifiers(hotkey.modifiers).includes(modifier)
+            })
+          ) {
+            return true
+          }
+        })
+
+        return command.hotkeys.every((hotkey) => {
+          return activeModifiers.every((modifier) => {
+            return getConvertedModifiers(hotkey.modifiers).includes(modifier)
+          })
+        })
+      }
     }
 
     // filter commands by activeSearchModifiers
@@ -197,18 +219,38 @@
       })
     }
 
+    function strictHotkeyChecker(
+      hotkey: hotkeyEntry,
+      activeModifiers: string[]
+    ) {
+      if (
+        hotkey.modifiers.length === activeModifiers.length &&
+        activeModifiers.every((modifier) => {
+          return getConvertedModifiers(hotkey.modifiers).includes(modifier)
+        })
+      ) {
+        return hotkey
+      }
+    }
+
     filteredCmds = cmds
       .filter((command) => {
         return (
           filterByName(command) &&
           (activeSearchModifiers.length === 0 ||
-            filterByModifiers(command, activeSearchModifiers)) &&
+            filterByModifiers(
+              command,
+              activeSearchModifiers,
+              settings.filterSettings.StrictSearch
+            )) &&
           (activeSearchKey === '' || filterByKey(command))
         )
       })
       .sort((a: commandEntry, b: commandEntry) => {
         return a.pluginName.localeCompare(b.pluginName)
       })
+      .filter((command) => command.hotkeys.length > 0)
+
     if (settings.filterSettings.FeaturedFirst) {
       filteredCmds = sortByFeaturedFirst(
         filteredCmds,

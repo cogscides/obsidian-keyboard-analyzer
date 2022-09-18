@@ -2,6 +2,7 @@ import type { Hotkey, Modifier } from 'obsidian'
 
 export interface FilterSettings {
   FeaturedFirst: boolean
+  StrictSearch: boolean
   HighlightCustom: boolean
   HighlightDuplicates: boolean
   DisplayWOhotkeys: boolean

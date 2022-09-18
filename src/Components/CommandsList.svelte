@@ -59,10 +59,9 @@
       <div
         class="kbanalizer-setting-item setting-item"
         class:is-starred={settings.featuredCommandIDs.includes(cmdEntry.id)}
-        animate:flip={{ duration: 200 }}
-        transition:fade={{ duration: 200 }}
       >
-        <!-- out:fade={{ duration: 100 }} -->
+        <!-- animate:flip={{ duration: 200 }} -->
+        <!-- transition:fade={{ duration: 200 }} -->
         <div class="setting-item-info">
           <div class="setting-item-name">
             <span class="suggestion-prefix" on:click={sendPluginName}>
@@ -79,7 +78,7 @@
             </div>
           </div>
           {#if settings.filterSettings.DisplayIDs}
-            <small in:fade={{ duration: 150 }}>
+            <small>
               {cmdEntry.id}
             </small>
           {/if}
