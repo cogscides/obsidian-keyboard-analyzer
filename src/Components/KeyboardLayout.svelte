@@ -101,7 +101,7 @@
             } else if (keyOutput === 'Meta') {
               if (Platform.isMacOS === true) {
                 outputKeyObj = {
-                  output: '⌥',
+                  output: 'Alt',
                   keyCode: 18,
                   smallText: key.smallText ? true : false,
                   unicode: '⌥',
@@ -118,7 +118,7 @@
             } else if (keyOutput === 'Alt') {
               if (Platform.isMacOS === true) {
                 outputKeyObj = {
-                  output: '⌘',
+                  output: 'Cmd',
                   smallText: key.smallText ? true : false,
                   keyCode: 91,
                   unicode: '⌘',
