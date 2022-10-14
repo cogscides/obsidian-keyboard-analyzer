@@ -1,15 +1,16 @@
 <script lang="ts">
+  import type { Modifier } from 'obsidian'
+  import { Platform } from 'obsidian'
   import { Coffee as CofeeIcon } from 'lucide-svelte'
   import { JavaSciptKeyCodes } from 'src/Constants'
   import { getConvertedModifiers } from 'src/AppShortcuts'
-  import type { Modifier } from 'obsidian'
   import KeyboardKey from './KeyboardKey.svelte'
 
   // TYPES
   import type { Keyboard, commandsArray } from 'src/Interfaces'
 
   // STORE
-  import { activeKey, activeModifiers } from './atciveKeysStore'
+  import { activeKey, activeModifiers } from './activeKeysStore'
 
   export let visibleCommands: commandsArray
 
@@ -98,7 +99,7 @@
                 unicode: 'Ctrl',
               }
             } else if (keyOutput === 'Meta') {
-              if (process.platform === 'darwin') {
+              if (Platform.isMacOS === true) {
                 outputKeyObj = {
                   output: '⌥',
                   keyCode: 18,
@@ -115,7 +116,7 @@
                 }
               }
             } else if (keyOutput === 'Alt') {
-              if (process.platform === 'darwin') {
+              if (Platform.isMacOS === true) {
                 outputKeyObj = {
                   output: '⌘',
                   smallText: key.smallText ? true : false,

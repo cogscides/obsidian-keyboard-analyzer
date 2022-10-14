@@ -26,7 +26,7 @@
   } from 'src/AppShortcuts'
 
   // STORE
-  import { activeKey, activeModifiers } from './atciveKeysStore'
+  import { activeKey, activeModifiers } from './activeKeysStore'
 
   // CONSTANTS
   import {

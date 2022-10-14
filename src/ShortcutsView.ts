@@ -27,8 +27,6 @@ export default class ShortcutsView extends ItemView {
     return 'Keyboard Shortcuts'
   }
 
-  icon = 'keyboard-glyph'
-
   async onOpen(): Promise<void> {
     await this.draw()
   }

@@ -45,7 +45,7 @@ export default class KeyboardAnalizerPlugin extends Plugin {
     )
 
     // This adds a settings tab so the user can configure various aspects of the plugin
-    this.addSettingTab(new KeyboardAnalyzerSettingTab(this.app, this))
+    // this.addSettingTab(new KeyboardAnalyzerSettingTab(this.app, this))
   }
 
   async onunload() {
@@ -83,36 +83,34 @@ export default class KeyboardAnalizerPlugin extends Plugin {
 
   async onStatusBarClick(evt: MouseEvent) {
     if (evt.ctrlKey == true) {
-      let checkResult =
-        this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
-          .length === 0
-
-      if (checkResult) {
-        this.app.workspace
-          .getLeaf(true)
-          .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
-      }
+      this.addShortcutsView(true)
     } else {
       this.addShortcutsView()
     }
   }
 
-  async addShortcutsView(startup: boolean = false) {
+  async addShortcutsView(newLeaf: boolean = false) {
     let checkResult =
       this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
         .length === 0
 
     if (checkResult) {
-      this.app.workspace
-        .getLeaf()
-        .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+      if (newLeaf) {
+        this.app.workspace
+          .getLeaf(true)
+          .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+      } else {
+        this.app.workspace
+          .getLeaf()
+          .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+      }
     }
   }
 
   registerPluginHotkeys() {
     this.addCommand({
       id: 'show-shortcuts-analyzer-view',
-      name: 'Open Shorcuts View',
+      name: 'Open keyboard shortcuts view',
       checkCallback: (checking: boolean) => {
         let checkResult =
           this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
@@ -132,32 +130,32 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   // END OF PLUGIN DECLARATION
 }
 
-class KeyboardAnalyzerSettingTab extends PluginSettingTab {
-  plugin: KeyboardAnalizerPlugin
+// class KeyboardAnalyzerSettingTab extends PluginSettingTab {
+//   plugin: KeyboardAnalizerPlugin
 
-  constructor(app: App, plugin: KeyboardAnalizerPlugin) {
-    super(app, plugin)
-    this.plugin = plugin
-  }
+//   constructor(app: App, plugin: KeyboardAnalizerPlugin) {
+//     super(app, plugin)
+//     this.plugin = plugin
+//   }
 
-  display(): void {
-    const { containerEl } = this
+//   display(): void {
+//     const { containerEl } = this
 
-    containerEl.empty()
+//     containerEl.empty()
 
-    containerEl.createEl('h2', { text: 'Settings for my awesome plugin.' })
+//     containerEl.createEl('h2', { text: 'Settings for my awesome plugin.' })
 
-    // checkbox for showing status bar item
-    new Setting(containerEl)
-      .setName('Show Status Bar Item')
-      .setDesc('Show the status bar item')
-      .addToggle((checkbox: any) =>
-        checkbox
-          .setChecked(this.plugin.settings.showStatusBarItem)
-          .onChange(async (value: boolean) => {
-            this.plugin.settings.showStatusBarItem = value
-            await this.plugin.saveSettings()
-          })
-      )
-  }
-}
+//     // checkbox for showing status bar item
+//     new Setting(containerEl)
+//       .setName('Show Status Bar Item')
+//       .setDesc('Show the status bar item')
+//       .addToggle((checkbox: any) =>
+//         checkbox
+//           .setChecked(this.plugin.settings.showStatusBarItem)
+//           .onChange(async (value: boolean) => {
+//             this.plugin.settings.showStatusBarItem = value
+//             await this.plugin.saveSettings()
+//           })
+//       )
+//   }
+// }

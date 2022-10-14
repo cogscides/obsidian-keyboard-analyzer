@@ -18,7 +18,7 @@
   import { JavaSciptKeyCodes, SpecialSymbols } from 'src/Constants'
 
   // STORE
-  import { activeKey, activeModifiers } from './atciveKeysStore'
+  import { activeKey, activeModifiers } from './activeKeysStore'
 
   // UTILS
   import { getConvertedModifiers, sortModifiers } from 'src/AppShortcuts'

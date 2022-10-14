@@ -1,4 +1,5 @@
 import type { Command, Hotkey, Modifier, App } from 'obsidian'
+import { Platform } from 'obsidian'
 import type { EntryType } from 'perf_hooks'
 import type { hotkeyDict, hotkeyEntry } from 'src/Interfaces'
 
@@ -139,7 +140,7 @@ export function getConvertedModifiers(modifiers: Modifier[]) {
   let convertedModifiers = modifiers.map((modifier: Modifier) => {
     if (modifier === 'Mod') {
       // check macos
-      if (process.platform === 'darwin') {
+      if (Platform.isMacOS === true) {
         return 'Cmd'
       } else {
         return 'Ctrl'
@@ -147,7 +148,7 @@ export function getConvertedModifiers(modifiers: Modifier[]) {
     }
     if (modifier === 'Meta') {
       // check macos
-      if (process.platform === 'darwin') {
+      if (Platform.isMacOS === true) {
         return 'Cmd'
       } else {
         return 'Win'
@@ -168,13 +169,13 @@ export function getUnconvertedModifiers(modifiers: Modifier[]) {
     if (modifier === 'Ctrl') {
       return 'Ctrl'
     }
-    if (modifier === 'Cmd' && process.platform === 'darwin') {
+    if (modifier === 'Cmd' && Platform.isMacOS === true) {
       return 'Mod'
     }
     if (modifier === 'Win') {
       return 'Meta'
     }
-    if (modifier === 'Cmd' && process.platform === 'darwin') {
+    if (modifier === 'Cmd' && Platform.isMacOS === true) {
       return 'Meta'
     }
   })
