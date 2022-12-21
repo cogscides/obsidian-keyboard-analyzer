@@ -6,7 +6,11 @@
 
 ---
 
-https://user-images.githubusercontent.com/50235526/185812119-392b895c-ebd5-48df-accf-98933ef8a234.mp4
+![image](https://user-images.githubusercontent.com/50235526/208871771-f1feb390-1d4e-4ea4-b2c9-7696b18a2f8f.png)
+
+<details><summary>Features Walktrough</summary>
+<video src="https://user-images.githubusercontent.com/50235526/185812119-392b895c-ebd5-48df-accf-98933ef8a234.mp4" controls></video>
+</details>
 
 
 ## About
