@@ -3,7 +3,7 @@
   import { Platform } from 'obsidian'
   import { Coffee as CoffeeIcon } from 'lucide-svelte'
   import { JavaSciptKeyCodes } from '../Constants'
-  import { getConvertedModifiers } from '../utils/_AppShortcuts.old'
+  import { getConvertedModifiers } from '../utils/modifierUtils'
   import KeyboardKey from './KeyboardKey.svelte'
 
   import type { Keyboard, commandsArray, Key } from '../interfaces/Interfaces'

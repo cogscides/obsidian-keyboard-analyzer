@@ -1,7 +1,7 @@
 import { ItemView } from 'obsidian'
 import { mount, unmount } from 'svelte'
 
-import Component from '../components/Example.svelte'
+import Component from '../components/______Example.svelte'
 
 export const VIEW_TYPE_EXAMPLE = 'example-view'
 

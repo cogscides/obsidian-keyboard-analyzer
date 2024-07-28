@@ -13,10 +13,7 @@
   import { SpecialSymbols, JavaSciptKeyCodes } from '../Constants'
   import settingsManager from '../managers/settingsManager.svelte'
   import PressedKeysStore from '../stores/activeKeysStore.svelte'
-  import {
-    getConvertedModifiers,
-    sortModifiers,
-  } from '../utils/_AppShortcuts.old'
+  import { getConvertedModifiers, sortModifiers } from '../utils/modifierUtils'
 
   // COMPONENT PROPS
   interface Props {
