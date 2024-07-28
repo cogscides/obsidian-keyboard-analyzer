@@ -1,16 +1,32 @@
 <script lang="ts">
-  import type { Key } from 'src/Interfaces'
-  import { createEventDispatcher } from 'svelte'
+  import type { MouseEventHandler } from 'svelte/elements'
+  import type { Key } from '../interfaces/Interfaces'
 
-  export let keyLabel: string = ''
-  export let keyOutput: string = ''
-  export let keyCode: number = -1
-  export let keyWeight: number = 0
-  export let smallText: boolean = false
-  export let width: number = 1
-  export let height: number = 1
-  export let unicode: string = ''
-  export let state: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty'
+  interface Props {
+    keyLabel: string
+    keyOutput: string
+    keyCode: number
+    keyWeight: number
+    smallText: boolean
+    width: number | undefined
+    height: number | undefined
+    unicode: string
+    state: 'active' | 'inactive' | 'posible' | 'disabled' | 'empty' | 'possible'
+    onKeyClick: MouseEventHandler<HTMLDivElement>
+  }
+
+  let {
+    keyLabel = '',
+    keyOutput = '',
+    keyCode = -1,
+    keyWeight = 0,
+    smallText = false,
+    width = 1,
+    height = 1,
+    unicode = '',
+    state = 'active',
+    onKeyClick,
+  }: Props = $props()
 
   // spread weight into n=5 steps
   // for large key weights (e.g. ctrl when is could be 20+) and small key weights (e.g. "A" when is could be 1)
@@ -18,27 +34,23 @@
   function spreadWeights(weight: number) {
     if (weight >= 5) {
       return 5
-    } else if (weight < 5 && weight > 0) {
+    }
+    if (weight < 5 && weight > 0) {
       return weight
-    } else {
-      return 0
     }
-  }
-
-  const dispatch = createEventDispatcher()
-  const handleClick = () => {
-    if (state !== 'disabled') {
-      dispatch('kb-key-click', [keyCode, keyOutput])
-    }
+    return 0
   }
 </script>
 
 {#if keyLabel === 'empty'}
+  <!-- svelte-ignore element_invalid_self_closing_tag -->
   <div
     class="kb-layout-key empty"
     style:grid-column={width ? `span calc(${width}*4)` : 'span 4'}
   />
 {:else}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="kb-layout-key"
     data-weight={keyWeight ? spreadWeights(keyWeight) : 0}
@@ -47,7 +59,7 @@
     class:small-text={smallText}
     style:grid-row={height !== 1 ? `span calc(${height}*1)` : 'span 1'}
     style:grid-column={width !== 1 ? `span calc(${width}*4)` : 'span 4'}
-    on:click={handleClick}
+    onclick={onKeyClick}
   >
     {@html unicode && unicode !== '' ? unicode : keyLabel}
   </div>

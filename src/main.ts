@@ -1,43 +1,43 @@
 import {
-  App,
-  Editor,
-  MarkdownView,
-  Modal,
-  Notice,
   Plugin,
-  Hotkey,
-  PluginSettingTab,
   setIcon,
-  Setting,
-  WorkspaceLeaf,
+  type WorkspaceLeaf,
+  type App,
+  type PluginManifest,
 } from 'obsidian'
-import { openView, wait } from 'obsidian-community-lib'
-import ShortcutsView from 'src/ShortcutsView'
-// @ts-ignore
-import {
-  VIEW_TYPE_SHORTCUTS_ANALYZER,
-  DEFAULT_FILTER_SETTINGS,
-  DEFAULT_PLUGIN_SETTINGS,
-} from 'src/Constants'
-import type { PluginSettings } from 'src/Interfaces'
+import SettingsManager from './managers/settingsManager.svelte'
+import ShortcutsView from './views/ShortcutsView'
+import { VIEW_TYPE_SHORTCUTS_ANALYZER } from './Constants'
+import type { PluginSettings } from './interfaces/Interfaces'
+import HotkeyManager from './managers/hotkeyManager.svelte'
 
-export default class KeyboardAnalizerPlugin extends Plugin {
-  settings: PluginSettings
+import 'virtual:uno.css'
+import './styles.css'
+
+export default class KeyboardAnalyzerPlugin extends Plugin {
+  settingsManager: SettingsManager
+  hotkeyManager: HotkeyManager
+
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest)
+    this.settingsManager = SettingsManager.getInstance(this)
+    this.hotkeyManager = new HotkeyManager(this.app)
+  }
 
   get full() {
     const leaves = this.app.workspace.getLeavesOfType(
       VIEW_TYPE_SHORTCUTS_ANALYZER
     )
+
     const leaf = leaves.length ? leaves[0] : null
-    if (leaf && leaf.view && leaf.view instanceof ShortcutsView)
-      return leaf.view
+    return leaf?.view instanceof ShortcutsView ? leaf.view : null
   }
 
   async onload() {
-    await this.loadSettings()
+    await this.settingsManager.loadSettings()
 
     this.registerPluginHotkeys()
-    this.addStatusBarIndicator.apply(this)
+    this.addStatusBarIndicator()
 
     this.registerView(
       VIEW_TYPE_SHORTCUTS_ANALYZER,
@@ -50,18 +50,6 @@ export default class KeyboardAnalizerPlugin extends Plugin {
 
   async onunload() {
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
-  }
-
-  async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_PLUGIN_SETTINGS,
-      await this.loadData()
-    )
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings)
   }
 
   addStatusBarIndicator() {
@@ -82,15 +70,15 @@ export default class KeyboardAnalizerPlugin extends Plugin {
   }
 
   async onStatusBarClick(evt: MouseEvent) {
-    if (evt.ctrlKey == true) {
+    if (evt.ctrlKey === true) {
       this.addShortcutsView(true)
     } else {
       this.addShortcutsView()
     }
   }
 
-  async addShortcutsView(newLeaf: boolean = false) {
-    let checkResult =
+  async addShortcutsView(newLeaf = false) {
+    const checkResult =
       this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
         .length === 0
 
@@ -112,7 +100,7 @@ export default class KeyboardAnalizerPlugin extends Plugin {
       id: 'show-shortcuts-analyzer-view',
       name: 'Open keyboard shortcuts view',
       checkCallback: (checking: boolean) => {
-        let checkResult =
+        const checkResult =
           this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
             .length === 0
 
@@ -127,35 +115,28 @@ export default class KeyboardAnalizerPlugin extends Plugin {
       },
     })
   }
+
+  // Helper methods to access settings
+  async getSetting<K extends keyof PluginSettings>(
+    key: K
+  ): Promise<PluginSettings[K]> {
+    return this.settingsManager.getSetting(key)
+  }
+
+  async setSetting<K extends keyof PluginSettings>(
+    key: K,
+    value: PluginSettings[K]
+  ): Promise<void> {
+    await this.settingsManager.setSetting(key, value)
+  }
+
+  async updateSettings(newSettings: Partial<PluginSettings>): Promise<void> {
+    await this.settingsManager.updateSettings(newSettings)
+  }
+
+  getSettings(): Readonly<PluginSettings> {
+    return this.settingsManager.getSettings()
+  }
+
   // END OF PLUGIN DECLARATION
 }
-
-// class KeyboardAnalyzerSettingTab extends PluginSettingTab {
-//   plugin: KeyboardAnalizerPlugin
-
-//   constructor(app: App, plugin: KeyboardAnalizerPlugin) {
-//     super(app, plugin)
-//     this.plugin = plugin
-//   }
-
-//   display(): void {
-//     const { containerEl } = this
-
-//     containerEl.empty()
-
-//     containerEl.createEl('h2', { text: 'Settings for my awesome plugin.' })
-
-//     // checkbox for showing status bar item
-//     new Setting(containerEl)
-//       .setName('Show Status Bar Item')
-//       .setDesc('Show the status bar item')
-//       .addToggle((checkbox: any) =>
-//         checkbox
-//           .setChecked(this.plugin.settings.showStatusBarItem)
-//           .onChange(async (value: boolean) => {
-//             this.plugin.settings.showStatusBarItem = value
-//             await this.plugin.saveSettings()
-//           })
-//       )
-//   }
-// }

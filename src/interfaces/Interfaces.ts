@@ -1,5 +1,6 @@
 import type { Hotkey, Modifier } from 'obsidian'
 
+// Plugin Settings
 export interface FilterSettings {
   FeaturedFirst: boolean
   StrictSearch: boolean
@@ -15,25 +16,25 @@ export interface PluginSettings {
   featuredCommandIDs?: string[]
 }
 
-export interface hotkeyEntry {
+// Plugin Data
+export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
   modifiers: Modifier[]
-  key: string
   backedModifiers?: string
-  isCustom?: boolean
+  isCustom: boolean
 }
 
 export interface commandEntry {
   id: string
   pluginName: string
   cmdName: string
-  hotkeys: hotkeyEntry[]
+  hotkeys: hotkeyEntry[] | []
 }
-
-export interface commandsArray extends Array<commandEntry> {}
 
 export interface hotkeyDict {
   [id: string]: commandEntry
 }
+
+export type commandsArray = commandEntry[]
 
 export interface Key {
   label: string

@@ -2,7 +2,7 @@ import type {
   PluginSettings,
   FilterSettings,
   KeyboardSection,
-} from 'src/Interfaces'
+} from './interfaces/Interfaces'
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
 
 export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
@@ -524,7 +524,7 @@ export const SpecialSymbols: {
   ' ': '⎵',
 }
 
-// https://www.toptal.com/developers/keycode/table-of-all-keycodes
+// https://www.toptal.com/developers/keycode/table
 export const JavaSciptKeyCodes: {
   [KeyCode: number]: { Key: string; Code: string; Unicode?: string }
 } = {
@@ -1049,7 +1049,7 @@ export const JavaSciptKeyCodes: {
     Code: 'BracketRight',
   },
   163: {
-    Key: `\\`,
+    Key: '\\',
     Code: 'Backquote',
   },
   164: {

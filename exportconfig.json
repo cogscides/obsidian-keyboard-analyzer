@@ -1,0 +1,9 @@
+{
+  "output": "export.md",
+  "description": "This is the Obsidian plugin for visual Keyboard hotkeys representation. It helps you to see and analyze your keyboard hotkeys and shortcuts, view them in a comfort way with different search and filter options.",
+  "ignoreFile": ".export-ignore",
+  "includeFile": ".export-whitelist",
+  "maxFileSize": 1048576,
+  "removeComments": false,
+  "includeProjectStructure": true
+}
