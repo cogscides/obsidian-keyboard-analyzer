@@ -1,110 +1,78 @@
-# Obsidian Plugin Template with Svelte and Tailwind CSS (UnoCSS)
+# Keyboard Analyzer
 
-This is a template repository for creating an Obsidian plugin using Svelte and
-Tailwind CSS (UnoCSS). It provides a basic setup and structure to kickstart your
-development process.
+## ![](https://img.shields.io/badge/Windows-Ok-brightgreen) ![](https://img.shields.io/badge/Android-Ok-brightgreen) ![](https://img.shields.io/badge/MacOS-Bugs-red)
 
-Obsidian is a powerful note-taking and knowledge management application. With
-the help of this template, you can create a plugin that extends Obsidian's
-functionality using Svelte, a popular JavaScript framework for building user
-interfaces, along with Tailwind CSS (UnoCSS), a utility-first CSS framework.
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S5E6K74)
 
-## Features
+---
 
-- **Svelte integration**: Leverage the power of Svelte to build interactive and
-  reactive user interfaces.
-- **Tailwind CSS (UnoCSS)**: Utilize the comprehensive utility classes provided by
-  Tailwind CSS (UnoCSS) to style your plugin.
-- **Easy setup**: Get started quickly with a pre-configured project structure
-  and build setup.
-- **Hot-reloading**: Enjoy fast development cycles with automatic reloading
-  during development.
-- **Example plugin**: Includes a basic example plugin to help you understand the
-  structure and usage.
+![image](https://user-images.githubusercontent.com/50235526/208871771-f1feb390-1d4e-4ea4-b2c9-7696b18a2f8f.png)
 
-## Prerequisites
+<details><summary>📽️ Features walktrough video</summary>
+<br>
+<video src="https://user-images.githubusercontent.com/50235526/185812119-392b895c-ebd5-48df-accf-98933ef8a234.mp4" controls></video>
+</details>
 
-Before you get started, ensure that you have the following software installed:
+## About
 
-- [node.js](https://nodejs.org) (v14 or above)
-- [bun.sh](https://bun.sh/) (way better than any other node package managers)
+With this plugin you will be able to:
 
-## Getting Started
+- see and analyze all your assigned hotkeys in Obsidian on visual keyboard
+  layout
+- search by key combination
+- see custom hotkeys
+- see duplicate hotkeys
+- highlight featured hotkeys
 
-To create a new plugin using this template, follow these steps:
+## How to use
 
-1. Click on the **"Use this template"** button at the top of the repository to
-   create a new repository based on this template.
-2. Clone the newly created repository to your local machine.
-3. Open a terminal and navigate to the cloned repository.
-4. Install the project dependencies by running the following command:
+1. To open plugin you can click on keyboard icon in status bar (to open in a new
+   pane use `Ctrl + Click`)
+2. To open plugin run command `Keyboard Analyzer: Open Shortcuts View`
 
-```bash
-bun install
-```
+The plugin is poorly tested on operating systems other than Windows, I would be
+grateful for any help with testing support.
 
-5. Start the development server with hot-reloading using the following command:
+## Installation
 
-```bash
-bun dev
-```
+As plugin is not yet published in community plugins library, you will need to install it manually or with
+help of [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin for beta
+testing.
 
-6. In **Obsidian**, open **Settings**.
-7. In the side menu, select **Community plugins**.
-8. Select **Turn on community plugins**.
-9. Under **Installed plugins**, enable the **Obsidian Svelte Plugin** by
-   selecting the toggle button next to it.
-10. Start **building** your plugin by modifying the example plugin located in
-    the src directory. You can also create new components and files as needed.
-11. Once you're ready to bundle your plugin for **production**, run the
-    following command:
+#### Manual Installation
 
-```bash
-bun run build
-```
+Download release files `main.js`, `styles.css` and `manifest.json` from the
+[releases](https://github.com/cogscides/obsidian-keyboard-analyzer/releases) and
+place this files inside
+`[YOUR_OBSIDIAN_FOLDER]/.obsidian/.plugins/obsidian-keyboard-analyzer/`.
 
-11. The bundled plugin file will be generated in the `build` directory.
+#### Beta Testing - BRAT
 
-## Project Structure
+1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin
+2. Run command in obsidian:
+   `Obsidian42 - BRATPlugins: add a beta plugin for testing`
+3. Paste this repository URL:
+   `https://github.com/cogscides/obsidian-keyboard-analyzer`
+4. Enable `Keyboard Analyzer` plugin in plugins list
 
-The project structure follows a typical Svelte application structure with a few
-additional files specific to Obsidian plugin development. Here's an overview:
+---
 
-- `src/` - Contains the **source code** for your plugin.
-  - **main.ts** - The **entry point** for your plugin, initializes the plugin in
-    Obsidian.
-  - **styles.css** - The global css **styles** for your plugin.
-  - `components/` - Contains **Svelte Components**.
-    - **Example.svelte** - An example **Svelte Component** for the example
-      Obsidian View.
-  - `views/` - Contains **Obsidian Views**.
-    - **ExampleView.ts** - An example **Obsidian View** with Svelte.
-- `build/` - The bundled output directory for the plugin generated by the build
-  command.
-- **manifest.json** - The plugin manifest file that describes your plugin's
-  metadata.
+P.S. This is my first public code in my life - would be happy to get feedback or
+a donation which will help me to continue creating this and other plugins for
+obsidian.
 
-## Source mapping
-To get the source map to load in Obsidian, and thus allowing you to see your Typescript code when debugging, you might need to set the 
-**sourcemapBaseUrl** parameter in **vite.config.ts**. To actual path can be found by adding the folder (test-vault) containing your .map file to the "Filesystem" 
-tab in the debugger. Right-click the map file and select "Copy link address". Set **sourcemapBaseUrl** to the base address.
+---
 
-## Resources
+## Great thanks to the obsidian community:
 
-Here are some resources to help you get started with building plugins for
-Obsidian, Svelte, and Tailwind CSS (UnoCSS):
-
-- [Obsidian Plugin API Documentation](https://github.com/obsidianmd/obsidian-api)
-- [Svelte Documentation](https://svelte.dev/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [UnoCSS Documentation](https://unocss.dev/)
-
-## Contributing
-
-If you encounter any issues or have suggestions for improvements, feel free to
-open an issue or submit a pull request. Contributions are welcome!
-
-## License
-
-This template is available under the [MIT License](LICENSE). Feel free to modify
-and use it to create your own Obsidian plugins.
+- [@SkepticMystic](https://github.com/SkepticMystic) and
+  [@HEmile](https://github.com/HEmile) for their awesome contribution to Svelte
+  codebase of [Graph Analysis](https://github.com/SkepticMystic/graph-analysis)
+  plugin which help me a lot in implementing typescript and code structure in my
+  plugin
+- [@pjeby](https://github.com/pjeby) for code inspiration dealing with obsidian
+  hotkeys
+- [@Fevol](https://github.com/Fevol) for help with implementing hotkey scoping
+  and friendly support
+- davfive#5786 guy from discord for directing me on the way how to deal with
+  obsidian hotkeys
