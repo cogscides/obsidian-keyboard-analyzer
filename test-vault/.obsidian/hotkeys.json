@@ -81,5 +81,46 @@
       ],
       "key": "."
     }
+  ],
+  "obsidian-better-command-palette:open-better-commmand-palette-tag-search": [
+    {
+      "modifiers": [
+        "Mod"
+      ],
+      "key": " "
+    }
+  ],
+  "backlink:open": [
+    {
+      "modifiers": [
+        "Alt"
+      ],
+      "key": "End"
+    }
+  ],
+  "backlink:toggle-backlinks-in-document": [
+    {
+      "modifiers": [
+        "Alt"
+      ],
+      "key": "ArrowDown"
+    }
+  ],
+  "obsidian-better-command-palette:open-better-commmand-palette-file-search": [],
+  "obsidian42-brat:BRAT-allCommands": [
+    {
+      "modifiers": [
+        "Alt"
+      ],
+      "key": "PageDown"
+    }
+  ],
+  "bookmarks:open": [
+    {
+      "modifiers": [
+        "Alt"
+      ],
+      "key": "Numpad3"
+    }
   ]
 }

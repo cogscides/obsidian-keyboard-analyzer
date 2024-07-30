@@ -38,7 +38,7 @@
     let specialKeys = visualKeyboardManager.layout.specialKeys
     let key =
       hotkey.key in specialKeys
-        ? specialKeys[hotkey.key]
+        ? specialKeys[hotkey.key].unicode
         : hotkey.key.length === 1
           ? hotkey.key.toUpperCase()
           : hotkey.key
