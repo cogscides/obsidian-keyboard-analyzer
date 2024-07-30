@@ -1,30 +1,33 @@
 <script lang="ts">
-  import type { Hotkey } from 'obsidian'
-  import type { commandsArray, PluginSettings } from '../interfaces/Interfaces'
+  import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
-  import { flip } from 'svelte/animate'
-  import { fly, fade, slide, blur } from 'svelte/transition'
-
-  import { SpecialSymbols } from '../Constants'
+  import type { Hotkey } from 'obsidian'
+  import type {
+    commandsArray,
+    PluginSettings,
+    UnsafeAppInterface,
+  } from '../interfaces/Interfaces'
+  // import { SpecialSymbols } from '../Constants'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
   import {
     prepareModifiersString,
     getConvertedModifiers,
     sortModifiers,
   } from '../utils/modifierUtils'
-  import { isHotkeyDuplicate } from '../utils/hotkeyUtils'
   import { Star as StarIcon } from 'lucide-svelte'
 
   interface Props {
-    plugin?: KeyboardAnalyzerPlugin
-    settings?: PluginSettings
     visibleCommands: commandsArray
   }
 
-  let {
-    plugin = $bindable({}) as KeyboardAnalyzerPlugin,
-    settings = $bindable({}) as PluginSettings,
-    visibleCommands = $bindable([]),
-  }: Props = $props()
+  let { visibleCommands = $bindable([]) }: Props = $props()
+
+  const plugin = getContext<KeyboardAnalyzerPlugin>('keyboard-analyzer-plugin')
+  const visualKeyboardManager = getContext<VisualKeyboardManager>(
+    'visualKeyboardManager'
+  )
+  const hotkeyManager = plugin.hotkeyManager
+  const settings = plugin.settingsManager.settings
 
   function renderHotkey(hotkey: Hotkey) {
     let modifiersString =
@@ -32,9 +35,10 @@
         ? `${getConvertedModifiers(sortModifiers(hotkey.modifiers)).join(' + ')} + `
         : ''
 
+    let specialKeys = visualKeyboardManager.layout.specialKeys
     let key =
-      hotkey.key in SpecialSymbols
-        ? SpecialSymbols[hotkey.key]
+      hotkey.key in specialKeys
+        ? specialKeys[hotkey.key]
         : hotkey.key.length === 1
           ? hotkey.key.toUpperCase()
           : hotkey.key
@@ -93,7 +97,7 @@
         <div class="kbanalizer-setting-item-control setting-item-control">
           <div class="setting-command-hotkeys">
             {#each cmdEntry.hotkeys as hotkey}
-              {#if isHotkeyDuplicate(cmdEntry.id, { ...hotkey, modifiers: hotkey.modifiers ?? [] }, plugin.app)}
+              {#if hotkeyManager.isHotkeyDuplicate( cmdEntry.id, { ...hotkey, modifiers: hotkey.modifiers ?? [] } )}
                 <button
                   class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
                   class:is-duplicate={settings.filterSettings

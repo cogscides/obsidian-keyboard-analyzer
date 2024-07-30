@@ -1,4 +1,15 @@
-import type { Hotkey, Modifier } from 'obsidian'
+// src/interfaces/Interfaces.ts
+
+import type {
+  Command,
+  Hotkey,
+  Modifier,
+  App,
+  SuggestModal,
+  HotkeyManager as ObsidianHotkeyManager,
+  InternalPlugins,
+  KeymapInfo,
+} from 'obsidian'
 
 // Plugin Settings
 export interface FilterSettings {
@@ -25,9 +36,10 @@ export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
 
 export interface commandEntry {
   id: string
+  name: string
+  hotkeys: hotkeyEntry[]
   pluginName: string
   cmdName: string
-  hotkeys: hotkeyEntry[] | []
 }
 
 export interface hotkeyDict {
@@ -38,22 +50,70 @@ export type commandsArray = commandEntry[]
 
 export interface Key {
   label: string
-  color?: string
-  fontSize?: string
-  smallText?: boolean
-  caps?: string
-  strictCode?: boolean
-  tryUnicode?: boolean
+  code?: string
+  unicode?: string
   width?: number
   height?: number
+  smallText?: boolean
 }
-
-export type Row = Key[]
 
 export interface KeyboardSection {
   name: string
-  rows: Row[]
   gridRatio: number
+  rows: Key[][]
 }
 
-export type Keyboard = KeyboardSection[]
+export interface KeyboardLayout {
+  sections: KeyboardSection[]
+  specialKeys: Record<string, Key>
+}
+
+export interface KeyboardKeyState {
+  output: string
+  keyCode: string
+  state: 'active' | 'inactive' | 'possible' | 'disabled' | 'empty'
+  smallText?: boolean
+  unicode?: string
+  weight?: number
+}
+
+export interface UnsafeHotkeyManager extends ObsidianHotkeyManager {
+  getHotkeys(id: string): KeymapInfo[]
+  getDefaultHotkeys(id: string): KeymapInfo[]
+  customKeys: Record<string, KeymapInfo[]>
+}
+
+// Unsafe Interfaces
+export interface UnsafeCommands {
+  app: App
+  commands: Record<string, Command>
+  editorCommands: Record<string, Command>
+  addCommand(command: Command): void
+  executeCommand(command: Command): boolean
+  listCommands(): Command[]
+  findCommand(id: string): Command
+  removeCommand(id: string): void
+  executeCommandById(id: string): boolean
+}
+
+export interface UnsafeAppInterface extends App {
+  commands: UnsafeCommands
+  HotKeyManager: UnsafeHotkeyManager
+  internalPlugins: InternalPlugins & {
+    getPluginById(id: string): { instance: { options: { pinned: [] } } }
+  }
+}
+
+// Helper type to convert KeymapInfo to Hotkey
+export type KeymapInfoToHotkey = KeymapInfo & {
+  modifiers: Modifier[] | string
+  key: string
+}
+
+// Helper function to convert KeymapInfo to Hotkey
+export function convertKeymapInfoToHotkey(keymapInfo: KeymapInfo): Hotkey {
+  return {
+    modifiers: (keymapInfo.modifiers || '').split(',') as Modifier[],
+    key: keymapInfo.key !== null ? keymapInfo.key : '',
+  }
+}

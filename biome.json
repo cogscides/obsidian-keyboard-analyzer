@@ -10,6 +10,14 @@
       "style": {
         "useConst": {
           "level": "off"
+        },
+        "noUselessElse": {
+          "level": "off"
+        }
+      },
+      "complexity": {
+        "noForEach": {
+          "level": "off"
         }
       }
     }

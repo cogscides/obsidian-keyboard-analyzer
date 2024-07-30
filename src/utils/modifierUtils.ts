@@ -3,13 +3,20 @@
 import { Platform } from 'obsidian'
 import type { Modifier } from 'obsidian'
 
-export function getConvertedModifiers(modifiers: Modifier[]): string[] {
-  return modifiers.map((modifier: Modifier) => {
+export function getRecognizedModifiers(): Set<string> {
+  const commonModifiers = new Set(['Shift', 'Alt', 'Ctrl'])
+  if (Platform.isMacOS) {
+    commonModifiers.add('Cmd')
+  } else {
+    commonModifiers.add('Win')
+  }
+  return commonModifiers
+}
+
+export function getConvertedModifiers(modifiers: Modifier[]): Modifier[] {
+  return modifiers.map((modifier: Modifier): Modifier => {
     if (modifier === 'Mod') {
-      return Platform.isMacOS ? 'Cmd' : 'Ctrl'
-    }
-    if (modifier === 'Meta') {
-      return Platform.isMacOS ? 'Cmd' : 'Win'
+      return Platform.isMacOS ? 'Meta' : 'Ctrl'
     }
     return modifier
   })
@@ -26,6 +33,19 @@ export function getUnconvertedModifiers(modifiers: string[]): Modifier[] {
       return undefined
     })
     .filter((modifier): modifier is Modifier => modifier !== undefined)
+}
+
+export function convertKeyToOS(key: string): string {
+  switch (key) {
+    case 'Control':
+      return 'Ctrl'
+    case 'Meta':
+      return Platform.isMacOS ? 'Cmd' : 'Win'
+    case 'Mod':
+      return Platform.isMacOS ? 'Cmd' : 'Ctrl'
+    default:
+      return key
+  }
 }
 
 export function sortModifiers(modifiers: Modifier[] | string[]): Modifier[] {

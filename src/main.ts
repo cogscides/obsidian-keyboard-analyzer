@@ -1,8 +1,8 @@
 import {
-  Plugin,
   setIcon,
-  type WorkspaceLeaf,
+  Plugin,
   type App,
+  type WorkspaceLeaf,
   type PluginManifest,
 } from 'obsidian'
 import SettingsManager from './managers/settingsManager.svelte'
@@ -10,6 +10,8 @@ import ShortcutsView from './views/ShortcutsView'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from './Constants'
 import type { PluginSettings } from './interfaces/Interfaces'
 import HotkeyManager from './managers/hotkeyManager.svelte'
+import { ActiveKeysStore } from './stores/activeKeysStore.svelte'
+import { VisualKeyboardManager } from './managers/visualKeyboardManager.svelte'
 
 import 'virtual:uno.css'
 import './styles.css'
@@ -17,11 +19,13 @@ import './styles.css'
 export default class KeyboardAnalyzerPlugin extends Plugin {
   settingsManager: SettingsManager
   hotkeyManager: HotkeyManager
+  visualKeyboardManager: VisualKeyboardManager
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
     this.settingsManager = SettingsManager.getInstance(this)
-    this.hotkeyManager = new HotkeyManager(this.app)
+    this.hotkeyManager = HotkeyManager.getInstance(this.app)
+    this.visualKeyboardManager = new VisualKeyboardManager()
   }
 
   get full() {
@@ -33,8 +37,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     return leaf?.view instanceof ShortcutsView ? leaf.view : null
   }
 
+  async focusView(type: string) {
+    const leafView = this.full
+    if (leafView) {
+      this.app.workspace.revealLeaf(leafView.leaf)
+    }
+  }
+  // openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
+
   async onload() {
     await this.settingsManager.loadSettings()
+    await this.hotkeyManager.initialize()
 
     this.registerPluginHotkeys()
     this.addStatusBarIndicator()
@@ -65,8 +78,6 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     // register click handler
     setIcon(icon, 'keyboard-glyph') // inject svg icon
     icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
-    // TODO update view on click
-    // TODO update view when commands added or hotkeys changed
   }
 
   async onStatusBarClick(evt: MouseEvent) {
@@ -78,26 +89,37 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   }
 
   async addShortcutsView(newLeaf = false) {
-    const checkResult =
+    const isNotAlreadyOpen =
       this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
         .length === 0
 
-    if (checkResult) {
+    if (isNotAlreadyOpen) {
       if (newLeaf) {
         this.app.workspace
           .getLeaf(true)
           .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+          .then(() => {
+            this.focusView(VIEW_TYPE_SHORTCUTS_ANALYZER)
+          })
       } else {
         this.app.workspace
           .getLeaf()
           .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
+      }
+    } else {
+      if (newLeaf) {
+        this.app.workspace.getLeaf(true).setViewState({
+          type: VIEW_TYPE_SHORTCUTS_ANALYZER,
+        })
+      } else {
+        this.focusView(VIEW_TYPE_SHORTCUTS_ANALYZER)
       }
     }
   }
 
   registerPluginHotkeys() {
     this.addCommand({
-      id: 'show-shortcuts-analyzer-view',
+      id: 'open-shortcuts-analyzer-view',
       name: 'Open keyboard shortcuts view',
       checkCallback: (checking: boolean) => {
         const checkResult =
@@ -112,6 +134,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
           }
           return true
         }
+      },
+    })
+
+    this.addCommand({
+      id: 'focus-shortcuts-analyzer-view',
+      name: 'Focus keyboard shortcuts view',
+      checkCallback: (checking: boolean) => {
+        if (!checking) {
+          this.focusView(VIEW_TYPE_SHORTCUTS_ANALYZER)
+        }
+        return true
       },
     })
   }

@@ -1,31 +1,38 @@
+<!-- src/components/KeyboardComponent.svelte -->
+
 <script lang="ts">
-  import type { App, Hotkey, Command, Modifier } from 'obsidian'
-  import { Scope } from 'obsidian'
+  import { setContext } from 'svelte'
+  import type { Hotkey, Modifier } from 'obsidian'
+  import { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
-  import type {
-    Keyboard,
-    hotkeyDict,
-    commandEntry,
-    commandsArray,
-  } from '../interfaces/Interfaces'
-  import { getHotkeysV2 } from '../utils/hotkeyUtils'
-  import { getConvertedModifiers } from '../utils/modifierUtils'
-  import { mainSectionQwerty, keyboardOther, keyboardNum } from '../Constants'
-  import settingsManager from '../managers/settingsManager.svelte'
-  import activeKeysStore from '../stores/activeKeysStore.svelte'
 
-  import KeyboardLayout from './KeyboardLayout.svelte'
+  import type { KeyboardLayout, commandEntry } from '../interfaces/Interfaces'
+  import { getConvertedModifiers } from '../utils/modifierUtils'
+
+  import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
+
+  import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
 
   interface Props {
-    app: App
     plugin: KeyboardAnalyzerPlugin
     view: ShortcutsView
+    activeKeysStore: ActiveKeysStore
   }
 
-  let { app, plugin, view }: Props = $props()
+  let { plugin, view, activeKeysStore }: Props = $props()
+
+  setContext('keyboard-analyzer-plugin', plugin)
+
+  const visualKeyboardManager = new VisualKeyboardManager()
+  setContext('visualKeyboardManager', visualKeyboardManager)
+  setContext('activeKeysStore', activeKeysStore)
+
+  const hotkeyManager = plugin.hotkeyManager
 
   let filterSettings = $derived(plugin.settingsManager.settings.filterSettings)
   let featuredCommandIDs = $derived(
@@ -37,129 +44,33 @@
   let search = $state('')
   let input: HTMLInputElement | undefined = $state()
 
-  const kbLayout_main = mainSectionQwerty
-  const kbLayout_other = keyboardOther
-  const kbLayout_num = keyboardNum
+  let KeyboardObject: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
 
-  let KeyboardObject: Keyboard = $state([
-    kbLayout_main,
-    kbLayout_other,
-    kbLayout_num,
-  ])
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  let KeyboardStateDict: Record<string, any> = $state({})
   let keyboardListenerIsActive = $state(false)
-
-  const view_scope = new Scope(app?.scope)
-
-  view_scope.register(['Mod'], 'f', (e: KeyboardEvent) => {
-    if (e.ctrlKey && e.key === 'f') {
-      if (input === document.activeElement && !keyboardListenerIsActive) {
-        keyboardListenerIsActive = true
-      } else if (input === document.activeElement && keyboardListenerIsActive) {
-        keyboardListenerIsActive = false
-      } else {
-        input?.focus()
-      }
-      return false
-    }
-  })
-
-  let commands = $derived(getHotkeysV2(app))
-  let cmdsArray: commandsArray = $derived(Object.values(commands))
 
   let searchCommandsCount = $state(0)
   let searchHotkeysCount = $state(0)
 
-  function sortByFeaturedFirst(cmds: commandsArray, featured: string[]) {
+  function sortByFeaturedFirst(cmds: commandEntry[], featured: string[]) {
     const featuredCmds = cmds.filter((cmd) => featured.includes(cmd.id))
     const otherCmds = cmds.filter((cmd) => !featured.includes(cmd.id))
     return [...featuredCmds, ...otherCmds]
   }
 
-  function filterCommandsArray(
-    cmds: commandsArray,
-    search: string,
-    activeSearchModifiers: string[],
-    activeSearchKey: string
-  ) {
-    const filterByName = (command: commandEntry) => {
-      const CommandName = `${command.pluginName.toLowerCase()} ${command.cmdName.toLowerCase()}`
-      const searchWords = search.toLowerCase().split(' ').filter(Boolean)
+  let visibleCommands: commandEntry[] = $state([])
 
-      return searchWords.every(
-        (word) =>
-          CommandName.includes(word) ||
-          command.hotkeys.some(
-            (hotkey) =>
-              hotkey.key.toLowerCase().includes(word) ||
-              getConvertedModifiers(hotkey.modifiers || []).some((modifier) =>
-                modifier.toLowerCase().includes(word)
-              )
-          )
-      )
-    }
+  $effect(() => {
+    const filteredCmds = hotkeyManager.getFilteredCommands()
+    visibleCommands = filterSettings.FeaturedFirst
+      ? sortByFeaturedFirst(filteredCmds, featuredCommandIDs ?? [])
+      : filteredCmds
 
-    const filterByModifiers = (
-      command: commandEntry,
-      activeModifiers: string[],
-      strictHotkeyChecker: boolean
-    ) => {
-      if (!strictHotkeyChecker) {
-        return command.hotkeys.some((hotkey) =>
-          activeModifiers.every((modifier) =>
-            getConvertedModifiers(hotkey.modifiers || []).includes(modifier)
-          )
-        )
-      }
-
-      command.hotkeys = command.hotkeys.filter(
-        (hotkey) =>
-          hotkey.modifiers?.length === activeModifiers.length &&
-          activeModifiers.every((modifier) =>
-            getConvertedModifiers(hotkey.modifiers || []).includes(modifier)
-          )
-      )
-
-      return command.hotkeys.length > 0
-    }
-
-    const filterByKey = (command: commandEntry) =>
-      command.hotkeys.some(
-        (hotkey) =>
-          hotkey.key.toLowerCase() === activeKeysStore.activeKey.toLowerCase()
-      )
-
-    let filteredCmds = cmdsArray
-      .filter(
-        (command) =>
-          filterByName(command) &&
-          (activeSearchModifiers.length === 0 ||
-            filterByModifiers(
-              command,
-              activeSearchModifiers,
-              filterSettings.StrictSearch ?? false
-            )) &&
-          (activeSearchKey === '' || filterByKey(command))
-      )
-      .sort((a, b) => a.pluginName.localeCompare(b.pluginName))
-      .filter((command) => command.hotkeys.length > 0)
-
-    if (filterSettings.FeaturedFirst) {
-      filteredCmds = sortByFeaturedFirst(filteredCmds, featuredCommandIDs ?? [])
-    }
-
-    return filteredCmds
-  }
-
-  let visibleCommands = $derived(
-    filterCommandsArray(
-      cmdsArray,
-      search,
-      activeKeysStore.activeModifiers,
-      activeKeysStore.activeKey
+    searchCommandsCount = visibleCommands.length
+    searchHotkeysCount = visibleCommands.reduce(
+      (count, command) => count + command.hotkeys.length,
+      0
     )
-  )
+  })
 
   function handlePluginNameClicked(event: CustomEvent<string>) {
     const pluginName = event.detail
@@ -171,6 +82,11 @@
     } else {
       search = pluginName + search
     }
+    hotkeyManager.filterCommands(
+      search,
+      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveKey
+    )
   }
 
   function handleDuplicateHotkeyClicked(event: CustomEvent<Hotkey>) {
@@ -181,44 +97,39 @@
     const duplicativeKey = duplicativeHotkey.key
 
     if (
-      activeKeysStore.activeModifiers.every((modifier) =>
-        duplicativeModifiers.includes(modifier)
+      activeKeysStore.ActiveModifiers.every((modifier) =>
+        duplicativeModifiers.includes(modifier as Modifier)
       ) &&
-      activeKeysStore.activeKey.toLowerCase() === duplicativeKey.toLowerCase()
+      activeKeysStore.ActiveKey.toLowerCase() === duplicativeKey.toLowerCase()
     ) {
       activeKeysStore.reset()
     } else {
-      activeKeysStore.activeModifiers = duplicativeModifiers
-      activeKeysStore.activeKey = duplicativeKey
+      activeKeysStore.ActiveModifiers = duplicativeModifiers
+      activeKeysStore.ActiveKey = duplicativeKey
       search = ''
     }
+    hotkeyManager.filterCommands(
+      search,
+      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveKey
+    )
   }
 
   function handleStarIconClicked(event: CustomEvent<string>) {
-    const pluginName = event.detail
+    const commandId = event.detail
     const featuredCommandIDs =
       plugin.settingsManager.settings.featuredCommandIDs || []
 
-    if (featuredCommandIDs.includes(pluginName)) {
+    if (featuredCommandIDs.includes(commandId)) {
       plugin.settingsManager.updateSettings({
-        featuredCommandIDs: featuredCommandIDs.filter(
-          (id) => id !== pluginName
-        ),
+        featuredCommandIDs: featuredCommandIDs.filter((id) => id !== commandId),
       })
     } else {
       plugin.settingsManager.updateSettings({
-        featuredCommandIDs: [...featuredCommandIDs, pluginName],
+        featuredCommandIDs: [...featuredCommandIDs, commandId],
       })
     }
   }
-
-  $effect(() => {
-    searchCommandsCount = visibleCommands.length
-    searchHotkeysCount = visibleCommands.reduce(
-      (count, command) => count + command.hotkeys.length,
-      0
-    )
-  })
 
   function handleResize(viewWidth: number) {
     if (viewWidth >= 1400) viewMode = 'xxl'
@@ -231,10 +142,6 @@
 
   $effect(() => {
     input?.focus()
-
-    return () => {
-      app?.keymap.popScope(view_scope)
-    }
   })
 
   $effect(() => {
@@ -242,36 +149,28 @@
   })
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   id="keyboard-component"
   class="{viewMode} {viewMode === 'xs' ? 'is-mobile' : ''}"
   bind:offsetWidth={viewWidth}
-  onmouseenter={() => app?.keymap.pushScope(view_scope)}
-  onmouseleave={() => app?.keymap.popScope(view_scope)}
 >
   <div id="keyboard-preview-view">
-    <KeyboardLayout {KeyboardObject} {KeyboardStateDict} {visibleCommands} />
+    <KeyboardLayoutComponent {KeyboardObject} {visibleCommands} />
   </div>
   <div class="shortcuts-wrapper">
     <SearchMenu
       bind:inputHTML={input}
       bind:search
-      bind:searchCommandsCount={visibleCommands.length}
+      bind:searchCommandsCount
       bind:searchHotkeysCount
       bind:keyboardListenerIsActive
-      bind:plugin
-    />
-    <!-- on:featured-first-option-triggered={handleFeaturedFirstOptionClicked}
-      on:refresh-commands={handleRefreshClicked} -->
-
-    <CommandsList
-      {visibleCommands}
       {plugin}
-      on:star-clicked={handleStarIconClicked}
-      on:duplicate-hotkey-clicked={handleDuplicateHotkeyClicked}
-      on:plugin-name-clicked={handlePluginNameClicked}
     />
+
+    <CommandsList {visibleCommands} />
+    <!-- onStarClick={handleStarIconClicked}
+      onDuplicateHotkeyClick={handleDuplicateHotkeyClicked}
+      onPluginNameClick={handlePluginNameClicked} -->
   </div>
 </div>
 

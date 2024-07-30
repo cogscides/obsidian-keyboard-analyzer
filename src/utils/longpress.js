@@ -20,7 +20,7 @@ export function longpress(node, duration) {
 
   return {
     update(newDuration) {
-      duration = newDuration
+      localDuration = newDuration
     },
     destroy() {
       node.removeEventListener('mousedown', handleMousedown)

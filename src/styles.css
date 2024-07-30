@@ -617,7 +617,7 @@ button#hotkey-refresh-button:hover {
   margin-top: 0px;
 }
 
-#keyboard-layout .main {
+/* #keyboard-layout .main {
   display: grid;
   grid-template-columns: repeat(60, 1fr);
   grid-template-rows: 0.75fr 1fr 1fr 1fr 1fr 1fr;
@@ -661,7 +661,7 @@ button#hotkey-refresh-button:hover {
     '. . . .'
     '. . . .';
   grid-area: num;
-}
+} */
 
 :root {
   --font-scale-0: 12px;

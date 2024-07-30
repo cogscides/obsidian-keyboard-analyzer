@@ -1,9 +1,24 @@
+import type { Modifier, App } from 'obsidian'
+import { convertKeyToOS, getRecognizedModifiers } from '../utils/modifierUtils'
 import { sortModifiers } from '../utils/modifierUtils'
-import { JavaSciptKeyCodes, SpecialSymbols } from '../Constants'
+import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+import HotkeyManager from '../managers/hotkeyManager.svelte'
 
-class ActiveKeysStore {
+export class ActiveKeysStore {
+  private app: App
+  private hotkeyManager: HotkeyManager
+  private visualKeyboardManager: VisualKeyboardManager
+  private recognizedModifiers: Set<string>
+
   activeKey = $state('')
-  activeModifiers: string[] = $state([])
+  activeModifiers: Modifier[] = $state([])
+
+  constructor(app: App, visualKeyboardManager: VisualKeyboardManager) {
+    this.app = app
+    this.hotkeyManager = HotkeyManager.getInstance(app)
+    this.visualKeyboardManager = visualKeyboardManager
+    this.recognizedModifiers = getRecognizedModifiers()
+  }
 
   get ActiveKey() {
     return this.activeKey
@@ -17,7 +32,7 @@ class ActiveKeysStore {
     return this.activeModifiers
   }
 
-  set ActiveModifiers(modifiers: string[]) {
+  set ActiveModifiers(modifiers: Modifier[]) {
     this.activeModifiers = modifiers
   }
 
@@ -28,7 +43,7 @@ class ActiveKeysStore {
     }
   }
 
-  set state(newState: { activeKey: string; activeModifiers: string[] }) {
+  set state(newState: { activeKey: string; activeModifiers: Modifier[] }) {
     this.activeKey = newState.activeKey
     this.activeModifiers = newState.activeModifiers
   }
@@ -38,21 +53,18 @@ class ActiveKeysStore {
     this.activeModifiers = []
   }
 
-  public handleModifierKeyDown(e: KeyboardEvent) {
-    const handleModifier = (modifierKey: string) => {
-      if (this.activeModifiers.includes(modifierKey)) {
-        this.activeModifiers = this.activeModifiers.filter(
-          (mod) => mod !== modifierKey
-        )
-      } else {
-        this.activeModifiers = [...this.activeModifiers, modifierKey]
-      }
-    }
+  public handleKeyClick(keyCode: string) {
+    const specialKey = this.visualKeyboardManager.layout.specialKeys[keyCode]
+    let keyLabel = specialKey ? specialKey.label : keyCode
 
-    if (e.getModifierState('Shift')) handleModifier('Shift')
-    if (e.getModifierState('Alt')) handleModifier('Alt')
-    if (e.getModifierState('Control')) handleModifier('Ctrl')
-    if (e.getModifierState('Meta')) handleModifier('Meta')
+    // Convert to OS-specific key
+    keyLabel = convertKeyToOS(keyLabel)
+
+    if (this.recognizedModifiers.has(keyLabel)) {
+      this.toggleModifier(keyLabel as Modifier)
+    } else {
+      this.activeKey = this.activeKey === keyCode ? '' : keyCode
+    }
   }
 
   public handleKeyDown(e: KeyboardEvent) {
@@ -65,20 +77,35 @@ class ActiveKeysStore {
       return
     }
 
-    const clickedKeyJS = JavaSciptKeyCodes[e.keyCode]
-    if (clickedKeyJS) {
-      e.preventDefault()
-      this.activeKey =
-        clickedKeyJS.Code === `Numpad${clickedKeyJS.Key}`
-          ? clickedKeyJS.Code
-          : clickedKeyJS.Key
+    const keyCode = e.code
+    this.handleKeyClick(keyCode)
+  }
+
+  private toggleModifier(modifier: Modifier) {
+    if (this.activeModifiers.includes(modifier)) {
+      this.activeModifiers = this.activeModifiers.filter(
+        (mod) => mod !== modifier
+      )
+    } else {
+      this.activeModifiers = [...this.activeModifiers, modifier]
+    }
+  }
+
+  public handlePhysicalKeyDown(e: KeyboardEvent) {
+    let keyLabel = convertKeyToOS(e.key)
+
+    if (this.recognizedModifiers.has(keyLabel)) {
+      this.toggleModifier(keyLabel as Modifier)
     }
   }
 
   public getDisplayKey() {
-    return this.activeKey in SpecialSymbols
-      ? SpecialSymbols[this.activeKey]
-      : this.activeKey.length === 1
+    const specialKey =
+      this.visualKeyboardManager.layout.specialKeys[this.activeKey]
+    if (specialKey) {
+      return specialKey.unicode || specialKey.label
+    }
+    return this.activeKey.length === 1
       ? this.activeKey.toUpperCase()
       : this.activeKey
   }
@@ -86,5 +113,9 @@ class ActiveKeysStore {
   sortedModifiers = $derived(sortModifiers(this.activeModifiers))
 }
 
-const activeKeysStore = new ActiveKeysStore()
-export default activeKeysStore
+export default function createActiveKeysStore(
+  app: App,
+  visualKeyboardManager: VisualKeyboardManager
+): ActiveKeysStore {
+  return new ActiveKeysStore(app, visualKeyboardManager)
+}

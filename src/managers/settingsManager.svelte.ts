@@ -5,8 +5,8 @@ import type KeyboardAnalyzerPlugin from '../main'
 
 class SettingsManager {
   private static instance: SettingsManager | null = null
-  settings: PluginSettings = $state(DEFAULT_PLUGIN_SETTINGS)
   private plugin: KeyboardAnalyzerPlugin
+  public settings: PluginSettings = $state(DEFAULT_PLUGIN_SETTINGS)
 
   private constructor(plugin: KeyboardAnalyzerPlugin) {
     this.plugin = plugin
