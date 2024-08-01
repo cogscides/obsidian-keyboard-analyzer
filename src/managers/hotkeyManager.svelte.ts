@@ -91,8 +91,16 @@ export default class HotkeyManager {
   public getHotkeysForCommand(id: string): hotkeyEntry[] {
     const hotkeys = this.getHotkeys(id)
     const defaultHotkeys = this.getDefaultHotkeys(id)
+    const customHotkeys = this.getCustomHotkeys(id)
 
-    return [...hotkeys, ...defaultHotkeys].map((hotkey) => ({
+    // Create a Set to remove duplicates
+    const uniqueHotkeys = new Set([
+      ...hotkeys,
+      ...defaultHotkeys,
+      ...customHotkeys,
+    ])
+
+    return Array.from(uniqueHotkeys).map((hotkey) => ({
       ...this.convertKeymapInfoToHotkey(hotkey),
       isCustom: !this.isDefaultHotkey(hotkey, defaultHotkeys),
     }))
@@ -107,6 +115,11 @@ export default class HotkeyManager {
   private getDefaultHotkeys(id: string): KeymapInfo[] {
     const unsafeApp = this.app as UnsafeAppInterface
     return unsafeApp.hotkeyManager.getDefaultHotkeys(id) || []
+  }
+
+  private getCustomHotkeys(id: string): KeymapInfo[] {
+    const unsafeApp = this.app as UnsafeAppInterface
+    return unsafeApp.hotkeyManager.customKeys[id] || []
   }
 
   private convertKeymapInfoToHotkey(keymapInfo: KeymapInfo): hotkeyEntry {
