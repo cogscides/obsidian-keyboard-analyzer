@@ -4,26 +4,13 @@ import type {
   KeyboardLayout,
   KeyboardSection,
   Key,
-  PluginSettings,
-  FilterSettings,
 } from './interfaces/Interfaces'
+import type {
+  FilterSettings,
+  PluginSettings,
+} from './managers/settingsManager.svelte'
 
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
-
-export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
-  FeaturedFirst: false,
-  StrictSearch: false,
-  HighlightCustom: false,
-  HighlightDuplicates: false,
-  DisplayWOhotkeys: false,
-  DisplayIDs: false,
-}
-
-export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
-  showStatusBarItem: true,
-  filterSettings: DEFAULT_FILTER_SETTINGS,
-  featuredCommandIDs: [],
-}
 
 // Unified Keyboard Layout Object
 export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {

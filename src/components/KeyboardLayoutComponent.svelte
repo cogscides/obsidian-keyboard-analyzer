@@ -9,7 +9,7 @@
     KeyboardSection,
   } from '../interfaces/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
-  import { Coffee as CoffeeIcon } from 'lucide-svelte'
+  import { Coffee as CoffeeIcon, CrossIcon } from 'lucide-svelte'
 
   interface Props {
     KeyboardObject: KeyboardLayout
@@ -21,7 +21,11 @@
   const plugin = getContext<KeyboardAnalyzerPlugin>('keyboard-analyzer-plugin')
   const activeKeysStore = getContext<ActiveKeysStore>('activeKeysStore')
 
+  // DEBUGGER
+  let keyClicked = $state('')
+
   function handleKeyClick(keyLabel: string) {
+    keyClicked = keyLabel
     activeKeysStore.handleKeyClick(keyLabel)
   }
 
@@ -67,7 +71,7 @@
     </div>
   {/each}
   <button
-    class="donation-badge"
+    class="donation-badge absolute top-2 right-2"
     onclick={() => window.open('https://ko-fi.com/S6S5E6K74', '_blank')}
     aria-label="Donate"
   >
@@ -76,6 +80,37 @@
     </div>
     Donate
   </button>
+
+  {#if keyClicked !== ''}
+    <div class="logger p-4 rounded-lg bg-base-100 border border-base-300">
+      <div class="logger-header flex flex-row">
+        <div class="logger-title">
+          <!-- Display visual keyboard clicks data -->
+          <div class="logger-data">
+            KeyLabel:
+            <code>{keyClicked}</code>
+          </div>
+          <div class="logger-data">
+            ActiveKeysStore:
+            {activeKeysStore.ActiveModifiers}
+            {activeKeysStore.ActiveKey}
+          </div>
+        </div>
+        <div class="logger-close absolute right-0">
+          <button
+            class="logger-close-button"
+            aria-label="Close logger"
+            onclick={() => {
+              console.log('Closing logger')
+              keyClicked = ''
+            }}
+          >
+            <CrossIcon size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>

@@ -1,5 +1,5 @@
 import type { Modifier, App } from 'obsidian'
-import { convertKeyToOS, getRecognizedModifiers } from '../utils/modifierUtils'
+import { convertKeyToOS, getModifierInfo } from '../utils/modifierUtils'
 import { sortModifiers } from '../utils/modifierUtils'
 import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
 import HotkeyManager from '../managers/hotkeyManager.svelte'
@@ -17,7 +17,7 @@ export class ActiveKeysStore {
     this.app = app
     this.hotkeyManager = HotkeyManager.getInstance(app)
     this.visualKeyboardManager = visualKeyboardManager
-    this.recognizedModifiers = getRecognizedModifiers()
+    this.recognizedModifiers = getModifierInfo().recognized
   }
 
   get ActiveKey() {

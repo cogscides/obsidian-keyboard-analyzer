@@ -8,9 +8,9 @@ import {
 import SettingsManager from './managers/settingsManager.svelte'
 import ShortcutsView from './views/ShortcutsView'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from './Constants'
-import type { PluginSettings } from './interfaces/Interfaces'
+import type { PluginSettings } from './managers/settingsManager.svelte'
 import HotkeyManager from './managers/hotkeyManager.svelte'
-import { ActiveKeysStore } from './stores/activeKeysStore.svelte'
+import { CommandsManager } from './managers/commandsManager.svelte'
 import { VisualKeyboardManager } from './managers/visualKeyboardManager.svelte'
 
 import 'virtual:uno.css'
@@ -19,12 +19,14 @@ import './styles.css'
 export default class KeyboardAnalyzerPlugin extends Plugin {
   settingsManager: SettingsManager
   hotkeyManager: HotkeyManager
+  commandsManager: CommandsManager
   visualKeyboardManager: VisualKeyboardManager
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
     this.settingsManager = SettingsManager.getInstance(this)
     this.hotkeyManager = HotkeyManager.getInstance(this.app)
+    this.commandsManager = CommandsManager.getInstance(this.app)
     this.visualKeyboardManager = new VisualKeyboardManager()
   }
 

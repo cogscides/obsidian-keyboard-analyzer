@@ -2,37 +2,39 @@
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { Hotkey } from 'obsidian'
-  import type {
-    commandsArray,
-    PluginSettings,
-    UnsafeAppInterface,
-  } from '../interfaces/Interfaces'
-  // import { SpecialSymbols } from '../Constants'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import type { commandEntry } from '../interfaces/Interfaces'
   import {
     prepareModifiersString,
-    getConvertedModifiers,
+    convertModifiers,
     sortModifiers,
   } from '../utils/modifierUtils'
   import { Star as StarIcon } from 'lucide-svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import type HotkeyManager from '../managers/hotkeyManager.svelte'
 
   interface Props {
-    visibleCommands: commandsArray
+    visibleCommands: commandEntry[]
+    selectedGroup?: string
   }
 
-  let { visibleCommands = $bindable([]) }: Props = $props()
+  let {
+    visibleCommands = $bindable([]),
+    selectedGroup = $bindable(''),
+  }: Props = $props()
 
   const plugin = getContext<KeyboardAnalyzerPlugin>('keyboard-analyzer-plugin')
-  const visualKeyboardManager = getContext<VisualKeyboardManager>(
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
     'visualKeyboardManager'
   )
-  const hotkeyManager = plugin.hotkeyManager
-  const settings = plugin.settingsManager.settings
+  const commandsManager = plugin.commandsManager
+  const settingsManager = plugin.settingsManager
+  const hotkeyManager: HotkeyManager = plugin.hotkeyManager
+  const settings = $derived(settingsManager.getSettings())
 
   function renderHotkey(hotkey: Hotkey) {
     let modifiersString =
       hotkey.modifiers.length !== 0
-        ? `${getConvertedModifiers(sortModifiers(hotkey.modifiers)).join(' + ')} + `
+        ? `${convertModifiers(sortModifiers(hotkey.modifiers)).join(' + ')} + `
         : ''
 
     let specialKeys = visualKeyboardManager.layout.specialKeys
@@ -45,17 +47,20 @@
     return modifiersString + key
   }
 
-  // const dispatch = createEventDispatcher()
-  // function sendPluginName(e: any) {
-  //   const clicked = e.target.innerHTML
-  //   dispatch('plugin-name-clicked', clicked)
-  // }
+  function handleStarClick(commandId: string) {
+    commandsManager.toggleFeaturedCommand(commandId)
+  }
 
-  // $: props = {
-  //   settings,
-  // }
+  function handlePluginNameClick(pluginName: string) {
+    // Implement the logic for plugin name click
+  }
+
+  function handleDuplicateHotkeyClick(hotkey: Hotkey) {
+    // Implement the logic for duplicate hotkey click
+  }
 </script>
 
+<span> Selected Group: {selectedGroup} </span>
 <div
   id="hotkeys-wrapper"
   class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"

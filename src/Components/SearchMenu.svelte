@@ -11,30 +11,38 @@
     RefreshCw,
   } from 'lucide-svelte'
   import getActiveKeysStore from '../stores/activeKeysStore.svelte'
-  import { getConvertedModifiers, sortModifiers } from '../utils/modifierUtils'
+  import { convertModifiers, sortModifiers } from '../utils/modifierUtils'
   import { slide, fade } from 'svelte/transition'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
     inputHTML?: HTMLInputElement
-    search?: string
     searchCommandsCount?: number
     searchHotkeysCount?: number
     keyboardListenerIsActive?: boolean
+    selectedGroup?: string
+    onSearch?: (
+      search: string,
+      activeModifiers: Modifier[],
+      activeKey: string,
+      selectedGroup?: string
+    ) => void
   }
 
   let {
     plugin = $bindable(),
     inputHTML = $bindable(),
-    search = $bindable(''),
     searchCommandsCount = $bindable(0),
     searchHotkeysCount = $bindable(0),
     keyboardListenerIsActive = $bindable(false),
+    selectedGroup = $bindable(''),
+    onSearch = $bindable(() => {}),
   }: Props = $props()
 
-  const filterSettings = $derived(
-    plugin.settingsManager.settings.filterSettings
-  )
+  let search = $state('')
+  const settingsManager = plugin.settingsManager
+  const commandsManager = plugin.commandsManager
+  const filterSettings = $derived(settingsManager.getSetting('filterSettings'))
 
   const activeKeysStore = getContext<ActiveKeysStore>('activeKeysStore')
 
@@ -52,6 +60,11 @@
     inputHTML?.focus()
   }
 
+  function handleGroupSelection(group: string) {
+    selectedGroup = group
+    handleSearchInput()
+  }
+
   function ActivateKeyboardListener() {
     keyboardListenerIsActive = !keyboardListenerIsActive
     inputHTML?.focus()
@@ -59,7 +72,7 @@
 
   function RefreshCommands() {
     refreshIsActive = true
-    plugin.hotkeyManager.refreshCommands()
+    commandsManager.updateVisibleCommands()
     setTimeout(() => {
       refreshIsActive = false
     }, 1000)
@@ -73,23 +86,44 @@
   }
 
   function handleSearchInput() {
-    plugin.hotkeyManager.filterCommands(
+    onSearch(
       search,
       PressedKeysStore.activeModifiers,
-      PressedKeysStore.activeKey
+      PressedKeysStore.activeKey,
+      selectedGroup
     )
   }
 
   $effect(() => {
     handleSearchInput()
   })
+
+  function toggleFilterSetting(setting: keyof typeof filterSettings) {
+    settingsManager.updateFilterSettings({
+      [setting]: !filterSettings[setting],
+    })
+    RefreshCommands()
+  }
 </script>
+
+<select
+  bind:value={selectedGroup}
+  onchange={() => handleGroupSelection(selectedGroup)}
+>
+  <option value="">All Commands</option>
+  <option value="featured">Featured</option>
+  <option value="recent">Recent</option>
+  {#each Array.from(commandsManager.getCommandGroups().keys()) as group}
+    <option value={group}>{group}</option>
+  {/each}
+</select>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="hotkey-settings-container" onkeydown={handleKeyDown}>
   <div class="search-wrapper" class:is-focused={inputIsFocused}>
     <div class="modifiers-wrapper">
       {#each PressedKeysStore.sortedModifiers as modifier}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <kbd
           class="modifier"
           onclick={() => PressedKeysStore.handleKeyClick(modifier)}
@@ -98,6 +132,7 @@
         </kbd>
       {/each}
       {#if PressedKeysStore.activeKey}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <kbd
           class="modifier"
           onclick={() =>
@@ -118,15 +153,17 @@
         oninput={handleSearchInput}
       />
       <div class="meta-search-wrapper">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div
           class="keyboard-icon icon {keyboardListenerIsActive ? 'pulse' : ''}"
           aria-label={keyboardListenerIsActive
             ? 'Press Esc to deactivate key listener'
-            : `Press ${getConvertedModifiers(['Mod'])[0]}+F or long press to activate key listener`}
+            : `Press ${convertModifiers(['Mod'])[0]}+F or long press to activate key listener`}
           onclick={ActivateKeyboardListener}
         >
           <CircleDotIcon size={20} />
         </div>
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div class="clear-icon icon" onclick={ClearSearch}>
           <CrossIcon size={20} />
         </div>
@@ -171,6 +208,7 @@
           </div>
         </div>
         <div class="setting-item mod-toggle popup-filter-menu">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.StrictSearch}
@@ -193,6 +231,7 @@
           <div class="setting-item-name popup-filter-title">Strict Search</div>
         </div>
         <div class="setting-item mod-toggle popup-filter-menu">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.HighlightCustom}
@@ -217,6 +256,7 @@
           </div>
         </div>
         <div class="setting-item mod-toggle popup-filter-menu">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.HighlightDuplicates}
@@ -241,6 +281,7 @@
           </div>
         </div>
         <div class="setting-item mod-toggle popup-filter-menu">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.DisplayIDs}

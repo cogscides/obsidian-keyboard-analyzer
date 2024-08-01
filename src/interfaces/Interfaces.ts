@@ -11,22 +11,6 @@ import type {
   KeymapInfo,
 } from 'obsidian'
 
-// Plugin Settings
-export interface FilterSettings {
-  FeaturedFirst: boolean
-  StrictSearch: boolean
-  HighlightCustom: boolean
-  HighlightDuplicates: boolean
-  DisplayWOhotkeys: boolean
-  DisplayIDs: boolean
-}
-
-export interface PluginSettings {
-  showStatusBarItem: boolean
-  filterSettings: FilterSettings
-  featuredCommandIDs?: string[]
-}
-
 // Plugin Data
 export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
   modifiers: Modifier[]

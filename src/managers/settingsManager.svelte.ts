@@ -1,7 +1,42 @@
 // settingsManager.ts
-import type { PluginSettings, FilterSettings } from '../interfaces/Interfaces'
-import { DEFAULT_PLUGIN_SETTINGS } from '../Constants'
 import type KeyboardAnalyzerPlugin from '../main'
+
+export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
+  FeaturedFirst: false,
+  StrictSearch: false,
+  HighlightCustom: false,
+  HighlightDuplicates: false,
+  DisplayWOhotkeys: false,
+  DisplayIDs: false,
+}
+
+export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
+  showStatusBarItem: true,
+  filterSettings: DEFAULT_FILTER_SETTINGS,
+  featuredCommandIDs: [],
+  commandGroups: [],
+}
+
+export interface CommandGroup {
+  name: string
+  commandIds: string[]
+}
+
+export interface PluginSettings {
+  showStatusBarItem: boolean
+  filterSettings: FilterSettings
+  featuredCommandIDs: string[]
+  commandGroups: CommandGroup[]
+}
+
+export interface FilterSettings {
+  FeaturedFirst: boolean
+  StrictSearch: boolean
+  HighlightCustom: boolean
+  HighlightDuplicates: boolean
+  DisplayWOhotkeys: boolean
+  DisplayIDs: boolean
+}
 
 class SettingsManager {
   private static instance: SettingsManager | null = null

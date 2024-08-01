@@ -1,90 +1,139 @@
-// src/utils/modifierUtils.ts
-
 import { Platform } from 'obsidian'
 import type { Modifier } from 'obsidian'
 
-export function getRecognizedModifiers(): Set<string> {
-  const commonModifiers = new Set(['Shift', 'Alt', 'Ctrl'])
-  if (Platform.isMacOS) {
-    commonModifiers.add('Cmd')
-  } else {
-    commonModifiers.add('Win')
-  }
-  return commonModifiers
+/** Mapping of modifier keys to their standardized Obsidian representation */
+export type ModifierMap = { [key: string]: Modifier }
+
+/**
+ * Mapping of modifier keys to their standardized Obsidian representation,
+ * taking into account the current platform (macOS or other).
+ * Exported for use in other modules.
+ * { [key: string]: Modifier }
+ * Example:
+ * { Ctrl: 'Ctrl', Shift: 'Shift', Alt: 'Alt', Cmd: 'Mod', Win: 'Meta', Mod: 'Ctrl' }
+ */
+export const modifierMap: ModifierMap = {
+  Control: 'Ctrl',
+  Shift: 'Shift',
+  Alt: 'Alt',
+  Cmd: Platform.isMacOS ? 'Mod' : 'Meta',
+  Win: 'Meta',
+  Mod: Platform.isMacOS ? 'Meta' : 'Ctrl',
 }
 
-export function getConvertedModifiers(modifiers: Modifier[]): Modifier[] {
-  return modifiers.map((modifier: Modifier): Modifier => {
-    if (modifier === 'Mod') {
-      return Platform.isMacOS ? 'Meta' : 'Ctrl'
-    }
-    return modifier
-  })
+/**
+ * Returns information about recognized and converted modifiers.
+ * @returns An object containing a Set of recognized modifiers and a ModifierMap of converted modifiers.
+ */
+export function getModifierInfo(): {
+  recognized: Set<string>
+  converted: ModifierMap
+} {
+  const recognized = new Set([
+    'Shift',
+    'Alt',
+    'Ctrl',
+    ...(Platform.isMacOS ? ['Cmd'] : ['Win']),
+  ])
+  return { recognized, converted: modifierMap }
 }
 
-export function getUnconvertedModifiers(modifiers: string[]): Modifier[] {
+/**
+ * Converts an array of modifiers to their standardized Obsidian representation.
+ * @param modifiers - An array of Modifier keys to convert.
+ * @returns An array of converted Modifier keys.
+ */
+export function convertModifiers(modifiers: Modifier[]): Modifier[] {
+  return modifiers.map((modifier) => modifierMap[modifier] || modifier)
+}
+
+/**
+ * Converts an array of modifier strings back to their original representation.
+ * @param modifiers - An array of modifier strings to unconvert.
+ * @returns An array of unconverted Modifier keys.
+ */
+export function unconvertModifiers(modifiers: string[]): Modifier[] {
   return modifiers
-    .map((modifier: string): Modifier | undefined => {
-      if (modifier === 'Ctrl') return 'Ctrl'
-      if (modifier === 'Cmd' && Platform.isMacOS) return 'Mod'
-      if (modifier === 'Win') return 'Meta'
-      if (modifier === 'Cmd' && Platform.isMacOS) return 'Meta'
-      if (modifier === 'Shift' || modifier === 'Alt') return modifier
-      return undefined
-    })
+    .map(
+      (modifier) =>
+        Object.entries(modifierMap).find(
+          ([_, value]) => value === modifier
+        )?.[0] as Modifier | undefined
+    )
     .filter((modifier): modifier is Modifier => modifier !== undefined)
 }
 
+/**
+ * Converts a key to its OS-specific representation.
+ * @param key - The key to convert.
+ * @returns The OS-specific representation of the key.
+ */
 export function convertKeyToOS(key: string): string {
-  switch (key) {
-    case 'Control':
-      return 'Ctrl'
-    case 'Meta':
-      return Platform.isMacOS ? 'Cmd' : 'Win'
-    case 'Mod':
-      return Platform.isMacOS ? 'Cmd' : 'Ctrl'
-    default:
-      return key
-  }
+  return modifierMap[key] || key
 }
 
-export function sortModifiers(modifiers: Modifier[] | string[]): Modifier[] {
-  return modifiers.sort((a: string, b: string) => {
-    if (a === 'Mod') return -1
-    if (b === 'Mod') return 1
-    if (a === 'Meta') return -1
-    if (b === 'Meta') return 1
-    return a.localeCompare(b)
-  }) as Modifier[]
+/**
+ * Sorts an array of modifiers based on a predefined order.
+ * @param modifiers - An array of Modifier keys to sort.
+ * @returns A sorted array of Modifier keys.
+ */
+export function sortModifiers(modifiers: Modifier[]): Modifier[] {
+  const order = Platform.isMacOS
+    ? ['Ctrl', 'Alt', 'Shift', 'Cmd']
+    : ['Ctrl', 'Alt', 'Shift', 'Win']
+
+  return modifiers.sort((a, b) => {
+    const indexA = order.indexOf(a)
+    const indexB = order.indexOf(b)
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b)
+    if (indexA === -1) return 1
+    if (indexB === -1) return -1
+    return indexA - indexB
+  })
 }
 
-export function bakeModifierToString(modifiers: string[], sort = true): string {
-  let sortedModifiers = modifiers
-  if (sort) {
-    sortedModifiers = sortModifiers(sortedModifiers)
-  }
-  return sortedModifiers
-    .map((modifier: string) => getConvertedModifiers([modifier as Modifier])[0])
-    .join(' + ')
+/**
+ * Converts an array of modifiers to a string representation.
+ * @param modifiers - An array of Modifier keys to convert.
+ * @param sort - Whether to sort the modifiers before converting (default: true).
+ * @returns A string representation of the modifiers.
+ */
+export function modifiersToString(modifiers: Modifier[], sort = true): string {
+  const mods = sort ? sortModifiers(modifiers) : modifiers
+  return mods.map(convertKeyToOS).join(' + ')
 }
 
-export function unbakeModifiersToArray(
+/**
+ * Converts a string of modifiers to an array of Modifier keys.
+ * @param modifiers - A string of modifiers to convert.
+ * @param delimiter - The delimiter used to separate modifiers in the string (default: ',').
+ * @returns An array of Modifier keys.
+ */
+export function stringToModifiers(
   modifiers: string,
   delimiter = ','
 ): Modifier[] {
   return modifiers.split(delimiter) as Modifier[]
 }
 
-export function prepareModifiersString(modifiers: string[]): string {
-  if (modifiers.length === 0) {
-    return ''
-  }
-  return `${getConvertedModifiers(sortModifiers(modifiers)).join(' + ')} + `
+/**
+ * Prepares a string representation of modifiers for display.
+ * @param modifiers - An array of Modifier keys to prepare.
+ * @returns A string representation of the modifiers, followed by ' + ' if not empty.
+ */
+export function prepareModifiersString(modifiers: Modifier[]): string {
+  return modifiers.length ? `${modifiersToString(modifiers)} + ` : ''
 }
 
+/**
+ * Compares two arrays of modifiers for equality.
+ * @param modifiers1 - The first array of Modifier keys to compare.
+ * @param modifiers2 - The second array of Modifier keys to compare.
+ * @returns True if the arrays are equal, false otherwise.
+ */
 export function areModifiersEqual(
-  modifiers1: Modifier[] | undefined,
-  modifiers2: Modifier[] | undefined
+  modifiers1?: Modifier[],
+  modifiers2?: Modifier[]
 ): boolean {
   if (!modifiers1 || !modifiers2) return modifiers1 === modifiers2
   return (

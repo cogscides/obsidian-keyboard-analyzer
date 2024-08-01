@@ -1,30 +1,17 @@
 // src/managers/hotkeyManager.svelte.ts
-import type {
-  App,
-  HotkeyManager as ObsidianHotkeyManager,
-  KeymapInfo,
-  Hotkey,
-  Command,
-  Modifier,
-} from 'obsidian'
+import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
+import type { InternalPluginInstance } from 'obsidian'
 import type {
   UnsafeAppInterface,
-  hotkeyDict,
   hotkeyEntry,
   commandEntry,
 } from '../interfaces/Interfaces'
-import {
-  getConvertedModifiers,
-  getUnconvertedModifiers,
-  sortModifiers,
-} from '../utils/modifierUtils'
+import { unconvertModifiers, sortModifiers } from '../utils/modifierUtils'
 
 export default class HotkeyManager {
   private static instance: HotkeyManager | null = null
   private app: App
   private commands: Record<string, commandEntry> = {}
-  private isInitialized = false
-  private filteredCommands: commandEntry[] = $state([])
 
   private constructor(app: App) {
     this.app = app
@@ -37,37 +24,13 @@ export default class HotkeyManager {
     return HotkeyManager.instance
   }
 
-  private getHotkeys(id: string): KeymapInfo[] {
-    // console.log(`Getting hotkeys for id: ${id}`)
-    const unsafeApp = this.app as UnsafeAppInterface
-    const hotkeys = unsafeApp.hotkeyManager.getHotkeys(id)
-    // console.log(`Hotkeys for ${id}:`, hotkeys)
-    return Array.isArray(hotkeys) ? hotkeys : []
-  }
-
-  async initialize() {
-    if (!this.isInitialized) {
-      this.commands = await this.getAllHotkeys()
-      // console.log('Initialized commands:', this.commands)
-      if (Object.keys(this.commands).length === 0) {
-        console.warn(
-          'No commands were loaded. This might indicate an issue with the plugin or Obsidian API.'
-        )
-      }
-      this.isInitialized = true
-    }
+  public async initialize() {
+    this.commands = await this.getAllHotkeys()
   }
 
   private async getAllHotkeys(): Promise<Record<string, commandEntry>> {
-    try {
-      // console.log('Getting all hotkeys')
-      const commands = this.getCommands()
-      // console.log('Commands:', commands)
-      return this.processCommands(commands)
-    } catch (error) {
-      console.error('Error getting all hotkeys:', error)
-      return {}
-    }
+    const commands = this.getCommands()
+    return this.processCommands(commands)
   }
 
   private getCommands(): Command[] {
@@ -76,81 +39,19 @@ export default class HotkeyManager {
     return Object.values(commands)
   }
 
-  getDefaultHotkeys(id: string): KeymapInfo[] {
-    const unsafeApp = this.app as UnsafeAppInterface
-    return unsafeApp.hotkeyManager.getDefaultHotkeys(id) || []
-  }
-
-  private getHotkeysForCommand(id: string): hotkeyEntry[] {
-    // console.log(`Getting hotkeys for command: ${id}`)
-    try {
-      const hotkeys = this.getHotkeys(id)
-      // console.log('Hotkeys:', hotkeys)
-      const defaultHotkeys = this.getDefaultHotkeys(id)
-      // console.log('Default hotkeys:', defaultHotkeys)
-
-      if (!Array.isArray(hotkeys)) {
-        console.warn(`Hotkeys for ${id} is not an array:`, hotkeys)
-        return []
-      }
-
-      return [...hotkeys, ...defaultHotkeys].map((hotkey) => {
-        // console.log('Processing hotkey:', hotkey)
-        return {
-          ...this.convertKeymapInfoToHotkey(hotkey),
-          isCustom: !this.isDefaultHotkey(hotkey, defaultHotkeys),
-        }
-      })
-    } catch (error) {
-      console.error(`Error in getHotkeysForCommand for ${id}:`, error)
-      return []
-    }
-  }
-
   private processCommands(commands: Command[]): Record<string, commandEntry> {
-    // console.log('Processing commands:', commands)
     return commands.reduce((acc, command) => {
-      // console.log('Processing command:', command)
-      try {
-        const hotkeys = this.getHotkeysForCommand(command.id)
-        const pluginId = command.id.split(':')[0]
-        acc[command.id] = {
-          id: command.id,
-          name: command.name,
-          hotkeys: hotkeys,
-          pluginName: this.getPluginName(pluginId),
-          cmdName: command.name,
-        }
-      } catch (error) {
-        console.error(`Error processing command ${command.id}:`, error)
+      const hotkeys = this.getHotkeysForCommand(command.id)
+      const pluginId = command.id.split(':')[0]
+      acc[command.id] = {
+        id: command.id,
+        name: command.name,
+        hotkeys: hotkeys,
+        pluginName: this.getPluginName(pluginId),
+        cmdName: command.name,
       }
       return acc
     }, {} as Record<string, commandEntry>)
-  }
-
-  private convertKeymapInfoToHotkey(keymapInfo: KeymapInfo): hotkeyEntry {
-    return {
-      modifiers: Array.isArray(keymapInfo.modifiers)
-        ? keymapInfo.modifiers
-        : typeof keymapInfo.modifiers === 'string'
-        ? getUnconvertedModifiers(keymapInfo.modifiers.split(','))
-        : [],
-      key: keymapInfo.key || '',
-      isCustom: false,
-    }
-  }
-
-  private isDefaultHotkey(
-    hotkey: KeymapInfo,
-    defaultHotkeys: KeymapInfo[]
-  ): boolean {
-    return defaultHotkeys.some((defaultHotkey) =>
-      this.areKeymapInfoEqual(hotkey, defaultHotkey)
-    )
-  }
-
-  private areKeymapInfoEqual(a: KeymapInfo, b: KeymapInfo): boolean {
-    return a.key === b.key && a.modifiers === b.modifiers
   }
 
   private getPluginName(pluginId: string): string {
@@ -173,16 +74,64 @@ export default class HotkeyManager {
     return pluginId
   }
 
-  public getSortedCommands(): commandEntry[] {
-    return Object.values(this.commands)
-      .filter((command) => command.pluginName && command.cmdName)
-      .sort((a, b) => {
-        const pluginNameComparison = (a.pluginName || '').localeCompare(
-          b.pluginName || ''
-        )
-        if (pluginNameComparison !== 0) return pluginNameComparison
-        return (a.cmdName || '').localeCompare(b.cmdName || '')
-      })
+  public getCommand(id: string): commandEntry | null {
+    const command = this.app.commands.commands[id]
+    if (command) {
+      return {
+        id: command.id,
+        name: command.name,
+        hotkeys: this.getHotkeysForCommand(command.id),
+        pluginName: this.getPluginName(command.id.split(':')[0]),
+        cmdName: command.name,
+      }
+    }
+    return null
+  }
+
+  public getHotkeysForCommand(id: string): hotkeyEntry[] {
+    const hotkeys = this.getHotkeys(id)
+    const defaultHotkeys = this.getDefaultHotkeys(id)
+
+    return [...hotkeys, ...defaultHotkeys].map((hotkey) => ({
+      ...this.convertKeymapInfoToHotkey(hotkey),
+      isCustom: !this.isDefaultHotkey(hotkey, defaultHotkeys),
+    }))
+  }
+
+  private getHotkeys(id: string): KeymapInfo[] {
+    const unsafeApp = this.app as UnsafeAppInterface
+    const hotkeys = unsafeApp.hotkeyManager.getHotkeys(id)
+    return Array.isArray(hotkeys) ? hotkeys : []
+  }
+
+  private getDefaultHotkeys(id: string): KeymapInfo[] {
+    const unsafeApp = this.app as UnsafeAppInterface
+    return unsafeApp.hotkeyManager.getDefaultHotkeys(id) || []
+  }
+
+  private convertKeymapInfoToHotkey(keymapInfo: KeymapInfo): hotkeyEntry {
+    return {
+      modifiers: Array.isArray(keymapInfo.modifiers)
+        ? keymapInfo.modifiers
+        : typeof keymapInfo.modifiers === 'string'
+        ? unconvertModifiers(keymapInfo.modifiers.split(','))
+        : [],
+      key: keymapInfo.key || '',
+      isCustom: false,
+    }
+  }
+
+  private isDefaultHotkey(
+    hotkey: KeymapInfo,
+    defaultHotkeys: KeymapInfo[]
+  ): boolean {
+    return defaultHotkeys.some((defaultHotkey) =>
+      this.areKeymapInfoEqual(hotkey, defaultHotkey)
+    )
+  }
+
+  private areKeymapInfoEqual(a: KeymapInfo, b: KeymapInfo): boolean {
+    return a.key === b.key && a.modifiers === b.modifiers
   }
 
   public isHotkeyDuplicate(id: string, hotkey: Hotkey): boolean {
@@ -197,37 +146,20 @@ export default class HotkeyManager {
     )
   }
 
-  public filterCommands(
-    search: string,
+  public commandMatchesHotkey(
+    id: string,
     activeModifiers: Modifier[],
     activeKey: string
-  ) {
-    this.filteredCommands = Object.values(this.commands).filter((command) => {
-      const nameMatch = `${command.pluginName} ${command.cmdName}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-      const modifierMatch =
-        activeModifiers.length === 0 ||
-        command.hotkeys.some((hotkey) =>
-          this.areModifiersEqual(activeModifiers, hotkey.modifiers)
-        )
-      const keyMatch =
-        !activeKey ||
-        command.hotkeys.some(
-          (hotkey) => hotkey.key.toLowerCase() === activeKey.toLowerCase()
-        )
-
-      return nameMatch && modifierMatch && keyMatch
-    })
-  }
-
-  public getFilteredCommands(): commandEntry[] {
-    return this.filteredCommands
-  }
-
-  public refreshCommands() {
-    this.isInitialized = false
-    this.initialize()
+  ): boolean {
+    const hotkeys = this.getHotkeysForCommand(id)
+    return (
+      (activeModifiers.length === 0 && !activeKey) ||
+      hotkeys.some(
+        (hotkey) =>
+          this.areModifiersEqual(activeModifiers, hotkey.modifiers) &&
+          (!activeKey || hotkey.key.toLowerCase() === activeKey.toLowerCase())
+      )
+    )
   }
 
   private areModifiersEqual(
