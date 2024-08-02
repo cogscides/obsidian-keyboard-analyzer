@@ -71,6 +71,7 @@ export class ActiveKeysStore {
     if (this.recognizedModifiers.has(keyLabel)) {
       this.toggleModifier(keyLabel as Modifier)
     } else {
+      // Store the key code instead of the label
       this.activeKey = this.activeKey === keyCode ? '' : keyCode
     }
   }

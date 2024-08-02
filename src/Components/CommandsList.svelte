@@ -11,6 +11,8 @@
   import { Star as StarIcon } from 'lucide-svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
   import type HotkeyManager from '../managers/hotkeyManager.svelte'
+  import type { CommandsManager } from '../managers/commandsManager.svelte'
+  import type SettingsManager from '../managers/settingsManager.svelte'
 
   interface Props {
     visibleCommands: commandEntry[]
@@ -22,12 +24,12 @@
     selectedGroup = $bindable(''),
   }: Props = $props()
 
-  const plugin = getContext<KeyboardAnalyzerPlugin>('keyboard-analyzer-plugin')
+  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
   const visualKeyboardManager: VisualKeyboardManager = getContext(
     'visualKeyboardManager'
   )
-  const commandsManager = plugin.commandsManager
-  const settingsManager = plugin.settingsManager
+  const commandsManager: CommandsManager = plugin.commandsManager
+  const settingsManager: SettingsManager = plugin.settingsManager
   const hotkeyManager: HotkeyManager = plugin.hotkeyManager
   const settings = $derived(settingsManager.getSettings())
 

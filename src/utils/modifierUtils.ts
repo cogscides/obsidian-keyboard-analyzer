@@ -91,7 +91,24 @@ export function areModifiersEqual(
 }
 
 export function normalizeKey(key: string): string {
-  return key.toLowerCase()
+  // Handle both key codes and key labels
+  let n_key = key.toLowerCase()
+  // Map common key codes to their corresponding key labels
+  const keyMap: { [n_key: string]: string } = {
+    space: ' ',
+    minus: '-',
+    equal: '=',
+    bracket: '[',
+    bracketright: ']',
+    semicolon: ';',
+    quote: "'",
+    backquote: '`',
+    comma: ',',
+    period: '.',
+    slash: '/',
+    backslash: '\\',
+  }
+  return keyMap[n_key] || n_key.replace('key', '').replace('digit', '')
 }
 
 export function isKeyMatch(activeKey: string, hotkeyKey: string): boolean {

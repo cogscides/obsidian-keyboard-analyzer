@@ -20,6 +20,12 @@ interface CommandGroup {
   commandIds: string[]
 }
 
+/**
+ * The CommandsManager class is responsible for managing and processing commands.
+ * It provides methods for loading, filtering, and managing command groups.
+ *
+ * @class CommandsManager
+ */
 export class CommandsManager {
   private static instance: CommandsManager | null = null
   private app: App
@@ -46,16 +52,35 @@ export class CommandsManager {
     return CommandsManager.instance
   }
 
+  /**
+   * Loads all commands from the app and processes them into a more usable format
+   *
+   * @private
+   * @returns void
+   */
   private loadCommands() {
     const allCommands = this.getCommands()
     this.commands = this.processCommands(allCommands)
   }
 
+  /**
+   * Returns all commands from the app
+   *
+   * @private
+   * @returns Command[]
+   */
   private getCommands(): Command[] {
     const unsafeApp = this.app as UnsafeAppInterface
     return Object.values(unsafeApp.commands.commands)
   }
 
+  /**
+   * Processes the commands into a more usable format
+   *
+   * @private
+   * @param commands - The commands to process
+   * @returns Record<string, commandEntry>
+   */
   private processCommands(commands: Command[]): Record<string, commandEntry> {
     return commands.reduce((acc, command) => {
       const [pluginId, cmdName] = command.id.split(':')
@@ -73,6 +98,13 @@ export class CommandsManager {
     }, {} as Record<string, commandEntry>)
   }
 
+  /**
+   * Returns the name of the plugin for a given plugin ID
+   *
+   * @private
+   * @param pluginId - The ID of the plugin to get the name of
+   * @returns string - The name of the plugin
+   */
   private getPluginName(pluginId: string): string {
     const plugin = (this.app as UnsafeAppInterface).plugins.plugins[pluginId]
     if (plugin) return plugin.manifest.name
@@ -93,6 +125,14 @@ export class CommandsManager {
     return pluginId
   }
 
+  // Groups  ------------------------ //
+
+  /**
+   * Loads the command groups from the settings
+   *
+   * @private
+   * @returns void
+   */
   private loadCommandGroups() {
     const savedGroups = this.settingsManager.getSetting('commandGroups') || []
     savedGroups.forEach((group) => {
@@ -100,17 +140,35 @@ export class CommandsManager {
     })
   }
 
+  /**
+   * Saves the command groups to the settings
+   *
+   * @private
+   * @returns void
+   */
   private saveCommandGroups() {
     const groupsArray = Array.from(this.commandGroups.values())
     this.settingsManager.updateSettings({ commandGroups: groupsArray })
   }
 
+  /**
+   * Loads the featured commands from the settings
+   *
+   * @private
+   * @returns void
+   */
   private loadFeaturedCommands() {
     const featuredCommands =
       this.settingsManager.getSetting('featuredCommandIDs') || []
     this.featuredCommandIds = new Set(featuredCommands)
   }
 
+  /**
+   * Creates a new command group
+   *
+   * @param groupName - The name of the group to create
+   * @returns void
+   */
   public createGroup(groupName: string) {
     if (!this.commandGroups.has(groupName)) {
       this.commandGroups.set(groupName, { name: groupName, commandIds: [] })
@@ -118,6 +176,13 @@ export class CommandsManager {
     }
   }
 
+  /**
+   * Adds a command to a group
+   *
+   * @param groupName - The name of the group to add the command to
+   * @param commandId - The ID of the command to add
+   * @returns void
+   */
   public addCommandToGroup(groupName: string, commandId: string) {
     if (!this.commandGroups.has(groupName)) {
       this.createGroup(groupName)
@@ -129,6 +194,13 @@ export class CommandsManager {
     }
   }
 
+  /**
+   * Removes a command from a group
+   *
+   * @param groupName - The name of the group to remove the command from
+   * @param commandId - The ID of the command to remove
+   * @returns void
+   */
   public removeCommandFromGroup(groupName: string, commandId: string) {
     const group = this.commandGroups.get(groupName)
     if (group) {
@@ -137,6 +209,12 @@ export class CommandsManager {
     }
   }
 
+  /**
+   * Returns the commands in a group
+   *
+   * @param groupName - The name of the group to get the commands from
+   * @returns commandEntry[]
+   */
   public getGroup(groupName: string): commandEntry[] {
     if (groupName === 'Featured') {
       return Array.from(this.featuredCommandIds)
@@ -153,10 +231,21 @@ export class CommandsManager {
     return group.commandIds.map((id) => this.commands[id]).filter(Boolean)
   }
 
+  /**
+   * Returns the names of the command groups
+   *
+   * @returns string[]
+   */
   public getCommandGroups(): string[] {
     return ['Featured', 'Recent', ...Array.from(this.commandGroups.keys())]
   }
 
+  /**
+   * Toggles a command as featured
+   *
+   * @param commandId - The ID of the command to toggle
+   * @returns void
+   */
   public toggleFeaturedCommand(commandId: string) {
     if (this.featuredCommandIds.has(commandId)) {
       this.featuredCommandIds.delete(commandId)
@@ -168,6 +257,12 @@ export class CommandsManager {
     })
   }
 
+  /**
+   * Adds a command to the recent commands list
+   *
+   * @param commandId - The ID of the command to add
+   * @returns void
+   */
   public addRecentCommand(commandId: string) {
     this.recentCommandIds = [
       commandId,
@@ -175,12 +270,30 @@ export class CommandsManager {
     ].slice(0, 10)
   }
 
+  // Filtering  ------------------------ //
+  /**
+   * Filters the commands based on the given search, active modifiers, active key, and selected group
+   *
+   * @param search - The search string
+   * @param activeModifiers - The active modifiers
+   * @param activeKey - The active key
+   * @param selectedGroup - The selected group
+   * @returns commandEntry[]
+   */
   public filterCommands(
     search: string,
     activeModifiers: string[],
     activeKey: string,
     selectedGroup?: string
   ): commandEntry[] {
+    console.log(
+      'filterCommands:',
+      search,
+      activeModifiers,
+      activeKey,
+      selectedGroup
+    )
+
     const filterSettings = this.settingsManager.getSetting('filterSettings')
     const searchLower = search.toLowerCase()
 
@@ -192,12 +305,14 @@ export class CommandsManager {
         (filterSettings.DisplayIDs &&
           command.id.toLowerCase().includes(searchLower))
 
-      const hotkeyMatch =
-        activeModifiers.length === 0 && !activeKey
-          ? true
-          : command.hotkeys.some((hotkey) =>
-              this.hotkeyMatches(hotkey, activeModifiers, activeKey)
-            )
+      const hotkeyMatch = command.hotkeys.some((hotkey) =>
+        this.hotkeyMatches(
+          hotkey,
+          activeModifiers,
+          activeKey,
+          filterSettings.StrictModifierMatch
+        )
+      )
 
       const groupMatch = this.matchesGroup(command, selectedGroup)
 
@@ -211,33 +326,82 @@ export class CommandsManager {
     return filteredCommands
   }
 
+  // Helper functions  ------------------------ //
+
+  /**
+   * Checks if a command matches a hotkey
+   *
+   * @private
+   * @param id - The ID of the command to check
+   * @param activeModifiers - The active modifiers
+   * @param activeKey - The active key
+   * @returns boolean
+   */
   private commandMatchesHotkey(
     id: string,
     activeModifiers: string[],
-    activeKey: string
+    activeKey: string,
+    strictModifierMatch: boolean
   ): boolean {
     const { all: hotkeys } = this.hotkeyManager.getHotkeysForCommand(id)
     return hotkeys.some((hotkey) =>
-      this.hotkeyMatches(hotkey, activeModifiers, activeKey)
+      this.hotkeyMatches(
+        hotkey,
+        activeModifiers,
+        activeKey,
+        strictModifierMatch
+      )
     )
   }
 
+  /**
+   * Checks if a hotkey matches the active modifiers and key
+   *
+   * @private
+   * @param hotkey - The hotkey to check
+   * @param activeModifiers - The active modifiers
+   * @param activeKey - The active key
+   * @returns boolean
+   */
   private hotkeyMatches(
     hotkey: hotkeyEntry,
     activeModifiers: string[],
-    activeKey: string
+    activeKey: string,
+    strictModifierMatch: boolean
   ): boolean {
     const convertedActiveModifiers = convertModifiers(activeModifiers)
     const convertedHotkeyModifiers = convertModifiers(hotkey.modifiers)
 
-    const modifiersMatch = areModifiersEqual(
-      convertedActiveModifiers,
-      convertedHotkeyModifiers
-    )
+    let modifiersMatch: boolean
+    if (strictModifierMatch) {
+      modifiersMatch = areModifiersEqual(
+        convertedActiveModifiers,
+        convertedHotkeyModifiers
+      )
+    } else {
+      modifiersMatch = convertedActiveModifiers.every((mod) =>
+        convertedHotkeyModifiers.includes(mod)
+      )
+    }
+
     const keyMatch = !activeKey || isKeyMatch(activeKey, hotkey.key)
+
+    // Allow matching when there's only an active key and no modifiers
+    if (activeKey && activeModifiers.length === 0) {
+      return keyMatch
+    }
+
     return modifiersMatch && keyMatch
   }
 
+  /**
+   * Checks if a command matches a group
+   *
+   * @private
+   * @param command - The command to check
+   * @param selectedGroup - The selected group
+   * @returns boolean
+   */
   private matchesGroup(command: commandEntry, selectedGroup?: string): boolean {
     if (!selectedGroup) return true
     if (selectedGroup === 'Featured') {
@@ -250,6 +414,13 @@ export class CommandsManager {
     return group ? group.commandIds.includes(command.id) : true
   }
 
+  /**
+   * Sorts the commands by featured first
+   *
+   * @private
+   * @param commands - The commands to sort
+   * @returns commandEntry[]
+   */
   private sortByFeaturedFirst(commands: commandEntry[]): commandEntry[] {
     return commands.sort((a, b) => {
       const aFeatured = this.featuredCommandIds.has(a.id)
@@ -260,6 +431,13 @@ export class CommandsManager {
     })
   }
 
+  // Refreshing  ------------------------ //
+
+  /**
+   * Refreshes the commands
+   *
+   * @returns void
+   */
   public refreshCommands() {
     this.loadCommands()
   }

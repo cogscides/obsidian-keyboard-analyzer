@@ -24,11 +24,6 @@
   // DEBUGGER
   let keyClicked = $state('')
 
-  function handleKeyClick(keyLabel: string) {
-    keyClicked = keyLabel
-    activeKeysStore.handleKeyClick(keyLabel)
-  }
-
   function calculateSectionColumns(section: KeyboardSection) {
     return (
       section.rows.reduce((maxWidth, row) => {
@@ -65,7 +60,7 @@
     >
       {#each section.rows as row}
         {#each row as key}
-          <KeyboardKey {key} keyLabel={key.label} onClick={handleKeyClick} />
+          <KeyboardKey {key} keyLabel={key.label} />
         {/each}
       {/each}
     </div>

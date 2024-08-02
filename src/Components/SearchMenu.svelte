@@ -223,12 +223,12 @@
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
-            class:is-enabled={filterSettings.StrictSearch}
+            class:is-enabled={filterSettings.StrictModifierMatch}
             onclick={() => {
               plugin.settingsManager.updateSettings({
                 filterSettings: {
                   ...filterSettings,
-                  StrictSearch: !filterSettings.StrictSearch,
+                  StrictModifierMatch: !filterSettings.StrictModifierMatch,
                 },
               })
               RefreshCommands()
@@ -237,7 +237,7 @@
             <input
               type="checkbox"
               tabindex="0"
-              bind:checked={filterSettings.StrictSearch}
+              bind:checked={filterSettings.StrictModifierMatch}
             />
           </div>
           <div class="setting-item-name popup-filter-title">Strict Search</div>

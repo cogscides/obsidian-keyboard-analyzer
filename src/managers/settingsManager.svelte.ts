@@ -3,7 +3,7 @@ import type KeyboardAnalyzerPlugin from '../main'
 
 export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   FeaturedFirst: false,
-  StrictSearch: false,
+  StrictModifierMatch: true,
   HighlightCustom: false,
   HighlightDuplicates: false,
   DisplayWOhotkeys: false,
@@ -31,7 +31,7 @@ export interface PluginSettings {
 
 export interface FilterSettings {
   FeaturedFirst: boolean
-  StrictSearch: boolean
+  StrictModifierMatch: boolean
   HighlightCustom: boolean
   HighlightDuplicates: boolean
   DisplayWOhotkeys: boolean
@@ -45,6 +45,7 @@ class SettingsManager {
 
   private constructor(plugin: KeyboardAnalyzerPlugin) {
     this.plugin = plugin
+    this.loadSettings()
   }
 
   static getInstance(plugin?: KeyboardAnalyzerPlugin): SettingsManager {

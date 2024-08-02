@@ -3,11 +3,11 @@
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
 
   interface Props {
     key: Key
     keyLabel: string
-    onClick?: (keyLabel: string) => void
   }
 
   let {
@@ -18,12 +18,12 @@
       height: 1,
     },
     keyLabel,
-    onClick = () => {},
   }: Props = $props()
 
-  const visualKeyboardManager = getContext<VisualKeyboardManager>(
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
     'visualKeyboardManager'
   )
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
   let keyState = $derived(visualKeyboardManager.getKeyState(key))
 
@@ -47,17 +47,9 @@
     return Math.min(Math.max(weight, 0), 5)
   }
 
-  function handleClick(e: Event) {
-    console.log('------------')
-    console.log(
-      `Key clicked: ${keyLabel} which is ${key.code || 'UNDEFINED'}`,
-      `Sending key: ${key.code || keyLabel}`,
-      'Key state:',
-      keyState.weight
-    )
-    console.log()
-
-    onClick(key.code || keyLabel)
+  function handleClick(key: Key) {
+    // Pass the key's code instead of its label
+    activeKeysStore.handleKeyClick(key.code || key.label)
   }
 </script>
 
@@ -70,14 +62,14 @@
 {:else}
   <button
     class="kb-layout-key"
-    data-key-id={key.code}
+    data-key-id={key.code || keyLabel}
     data-weight={keyState.weight ? spreadWeights(keyState.weight) : 0}
     class:is-active={keyState.state === 'active'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
     style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)};`}
-    onclick={(e) => {
-      handleClick(e)
+    onclick={() => {
+      handleClick(key)
     }}
   >
     {displayLabel}
