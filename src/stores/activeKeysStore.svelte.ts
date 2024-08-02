@@ -1,8 +1,17 @@
 import type { Modifier, App } from 'obsidian'
-import { convertKeyToOS, getModifierInfo } from '../utils/modifierUtils'
-import { sortModifiers } from '../utils/modifierUtils'
+import {
+  convertModifiers,
+  unconvertModifiers,
+  getModifierInfo,
+  sortModifiers,
+  areModifiersEqual,
+  isKeyMatch,
+  modifiersToString,
+  convertModifier,
+} from '../utils/modifierUtils'
 import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
 import HotkeyManager from '../managers/hotkeyManager.svelte'
+import type { commandEntry } from '../interfaces/Interfaces'
 
 export class ActiveKeysStore {
   private app: App
@@ -57,8 +66,7 @@ export class ActiveKeysStore {
     const specialKey = this.visualKeyboardManager.layout.specialKeys[keyCode]
     let keyLabel = specialKey ? specialKey.label : keyCode
 
-    // Convert to OS-specific key
-    keyLabel = convertKeyToOS(keyLabel)
+    keyLabel = convertModifiers([keyLabel])[0]
 
     if (this.recognizedModifiers.has(keyLabel)) {
       this.toggleModifier(keyLabel as Modifier)
@@ -81,21 +89,24 @@ export class ActiveKeysStore {
     this.handleKeyClick(keyCode)
   }
 
-  private toggleModifier(modifier: Modifier) {
-    if (this.activeModifiers.includes(modifier)) {
+  private toggleModifier(modifier: string) {
+    if (this.activeModifiers.includes(convertModifier(modifier))) {
       this.activeModifiers = this.activeModifiers.filter(
         (mod) => mod !== modifier
       )
     } else {
-      this.activeModifiers = [...this.activeModifiers, modifier]
+      this.activeModifiers = convertModifiers([
+        ...this.activeModifiers,
+        modifier,
+      ])
     }
   }
 
   public handlePhysicalKeyDown(e: KeyboardEvent) {
-    let keyLabel = convertKeyToOS(e.key)
+    let keyLabel = convertModifiers([e.key])[0]
 
     if (this.recognizedModifiers.has(keyLabel)) {
-      this.toggleModifier(keyLabel as Modifier)
+      this.toggleModifier(keyLabel)
     }
   }
 
@@ -108,6 +119,14 @@ export class ActiveKeysStore {
     return this.activeKey.length === 1
       ? this.activeKey.toUpperCase()
       : this.activeKey
+  }
+
+  public filterCommands(search: string): commandEntry[] {
+    return this.hotkeyManager.searchHotkeys(
+      search,
+      this.activeModifiers,
+      this.activeKey
+    )
   }
 
   sortedModifiers = $derived(sortModifiers(this.activeModifiers))

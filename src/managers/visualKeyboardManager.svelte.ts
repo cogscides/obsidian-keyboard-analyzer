@@ -7,7 +7,7 @@ import type {
 } from '../interfaces/Interfaces'
 
 export class VisualKeyboardManager {
-  public layout: KeyboardLayout = UNIFIED_KEYBOARD_LAYOUT
+  public layout: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
   public keyStates: Record<string, KeyboardKeyState> = {}
 
   constructor() {

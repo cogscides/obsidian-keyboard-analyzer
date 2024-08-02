@@ -35,14 +35,6 @@
   let width = $derived(key.width || 1)
   let height = $derived(key.height || 1)
 
-  $effect(() => {
-    console.log('Setting styles for key:', keyLabel)
-    console.log('Width:', key.width, 'Height:', key.height)
-    console.log(
-      `Grid Row Style: ${height || 1}, Grid Column Style: ${width || 1}`
-    )
-  })
-
   function getColumnSpan(w: number) {
     return `span ${Math.max(1, Math.round(w * 4))}`
   }

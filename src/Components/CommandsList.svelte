@@ -2,7 +2,7 @@
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { Hotkey } from 'obsidian'
-  import type { commandEntry } from '../interfaces/Interfaces'
+  import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import {
     prepareModifiersString,
     convertModifiers,
@@ -31,20 +31,8 @@
   const hotkeyManager: HotkeyManager = plugin.hotkeyManager
   const settings = $derived(settingsManager.getSettings())
 
-  function renderHotkey(hotkey: Hotkey) {
-    let modifiersString =
-      hotkey.modifiers.length !== 0
-        ? `${convertModifiers(sortModifiers(hotkey.modifiers)).join(' + ')} + `
-        : ''
-
-    let specialKeys = visualKeyboardManager.layout.specialKeys
-    let key =
-      hotkey.key in specialKeys
-        ? specialKeys[hotkey.key].unicode
-        : hotkey.key.length === 1
-          ? hotkey.key.toUpperCase()
-          : hotkey.key
-    return modifiersString + key
+  function renderHotkey(hotkey: hotkeyEntry) {
+    return hotkeyManager.renderHotkey(hotkey)
   }
 
   function handleStarClick(commandId: string) {
@@ -107,16 +95,24 @@
                   class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
                   class:is-duplicate={settings.filterSettings
                     .HighlightDuplicates}
-                  onclick={() =>
-                    console.log('duplicate-hotkey-clicked', hotkey)}
+                  onclick={() => {
+                    console.log('duplicate-hotkey-clicked')
+                    console.log(JSON.stringify(hotkey, null, 2))
+                  }}
                 >
                   {renderHotkey(hotkey)}
                 </button>
               {:else}
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <span
                   class="kbanalizer-setting-hotkey setting-hotkey"
                   class:is-customized={hotkey.isCustom &&
                     settings.filterSettings.HighlightCustom}
+                  onclick={() => {
+                    console.log('hotkey-clicked')
+                    console.log(JSON.stringify(hotkey, null, 2))
+                  }}
                 >
                   {renderHotkey(hotkey)}
                 </span>

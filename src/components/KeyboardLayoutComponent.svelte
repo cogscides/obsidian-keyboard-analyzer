@@ -80,37 +80,6 @@
     </div>
     Donate
   </button>
-
-  {#if keyClicked !== ''}
-    <div class="logger p-4 rounded-lg bg-base-100 border border-base-300">
-      <div class="logger-header flex flex-row">
-        <div class="logger-title">
-          <!-- Display visual keyboard clicks data -->
-          <div class="logger-data">
-            KeyLabel:
-            <code>{keyClicked}</code>
-          </div>
-          <div class="logger-data">
-            ActiveKeysStore:
-            {activeKeysStore.ActiveModifiers}
-            {activeKeysStore.ActiveKey}
-          </div>
-        </div>
-        <div class="logger-close absolute right-0">
-          <button
-            class="logger-close-button"
-            aria-label="Close logger"
-            onclick={() => {
-              console.log('Closing logger')
-              keyClicked = ''
-            }}
-          >
-            <CrossIcon size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
-  {/if}
 </div>
 
 <style>

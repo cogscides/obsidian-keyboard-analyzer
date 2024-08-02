@@ -1,8 +1,19 @@
-// src/managers/commandsManager.ts
-import type { App, Command, Modifier } from 'obsidian'
+import type { App, Modifier } from 'obsidian'
+import type { Commands, Command } from 'obsidian-typings'
+import type {
+  hotkeyEntry,
+  UnsafeInternalPlugin,
+  UnsafeInternalPluginInstance,
+} from '../interfaces/Interfaces'
 import type { commandEntry, UnsafeAppInterface } from '../interfaces/Interfaces'
 import HotkeyManager from './hotkeyManager.svelte'
 import SettingsManager from './settingsManager.svelte'
+import {
+  convertModifiers,
+  unconvertModifiers,
+  areModifiersEqual,
+  isKeyMatch,
+} from '../utils/modifierUtils'
 
 interface CommandGroup {
   name: string
@@ -15,8 +26,9 @@ export class CommandsManager {
   private hotkeyManager: HotkeyManager
   private settingsManager: SettingsManager
   private commands: Record<string, commandEntry> = {}
-  public visibleCommands: commandEntry[] = []
   private commandGroups: Map<string, CommandGroup> = new Map()
+  private featuredCommandIds: Set<string> = new Set()
+  private recentCommandIds: string[] = []
 
   private constructor(app: App) {
     this.app = app
@@ -24,6 +36,7 @@ export class CommandsManager {
     this.settingsManager = SettingsManager.getInstance()
     this.loadCommands()
     this.loadCommandGroups()
+    this.loadFeaturedCommands()
   }
 
   static getInstance(app: App): CommandsManager {
@@ -36,52 +49,48 @@ export class CommandsManager {
   private loadCommands() {
     const allCommands = this.getCommands()
     this.commands = this.processCommands(allCommands)
-    this.updateVisibleCommands()
   }
 
   private getCommands(): Command[] {
-    return Object.values(this.app.commands.commands)
+    const unsafeApp = this.app as UnsafeAppInterface
+    return Object.values(unsafeApp.commands.commands)
   }
 
   private processCommands(commands: Command[]): Record<string, commandEntry> {
     return commands.reduce((acc, command) => {
-      const pluginId = command.id.split(':')[0]
+      const [pluginId, cmdName] = command.id.split(':')
+      const hotkeys = this.hotkeyManager.getHotkeysForCommand(command.id)
       acc[command.id] = {
         id: command.id,
         name: command.name,
-        hotkeys: this.hotkeyManager.getHotkeysForCommand(command.id),
+        hotkeys: hotkeys.all,
+        defaultHotkeys: hotkeys.default,
+        customHotkeys: hotkeys.custom,
         pluginName: this.getPluginName(pluginId),
-        cmdName: command.name,
+        cmdName: cmdName || command.name,
       }
       return acc
     }, {} as Record<string, commandEntry>)
   }
 
   private getPluginName(pluginId: string): string {
-    if (pluginId === 'editor') return 'Editor'
-    if (pluginId === 'workspace') return 'Workspace'
-
     const plugin = (this.app as UnsafeAppInterface).plugins.plugins[pluginId]
-    if (plugin) {
-      return plugin.manifest.name
-    }
+    if (plugin) return plugin.manifest.name
 
-    const internalPlugin = (
+    const internalPlugins = (
       this.app as UnsafeAppInterface
-    ).internalPlugins.getPluginById(pluginId)
+    ).internalPlugins.getEnabledPlugins()
+
+    const internalPlugin = internalPlugins.find(
+      (plugin) =>
+        (plugin.instance as UnsafeInternalPluginInstance).id === pluginId
+    ) as UnsafeInternalPlugin | undefined
+
     if (internalPlugin?.instance) {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      return (internalPlugin.instance as any).name || pluginId
+      return internalPlugin.instance.name || pluginId
     }
 
     return pluginId
-  }
-
-  public updateVisibleCommands() {
-    this.visibleCommands = Object.values(this.commands)
-    if (this.settingsManager.getSetting('filterSettings').FeaturedFirst) {
-      this.sortByFeaturedFirst()
-    }
   }
 
   private loadCommandGroups() {
@@ -96,14 +105,20 @@ export class CommandsManager {
     this.settingsManager.updateSettings({ commandGroups: groupsArray })
   }
 
-  createGroup(groupName: string) {
+  private loadFeaturedCommands() {
+    const featuredCommands =
+      this.settingsManager.getSetting('featuredCommandIDs') || []
+    this.featuredCommandIds = new Set(featuredCommands)
+  }
+
+  public createGroup(groupName: string) {
     if (!this.commandGroups.has(groupName)) {
       this.commandGroups.set(groupName, { name: groupName, commandIds: [] })
       this.saveCommandGroups()
     }
   }
 
-  addCommandToGroup(groupName: string, commandId: string) {
+  public addCommandToGroup(groupName: string, commandId: string) {
     if (!this.commandGroups.has(groupName)) {
       this.createGroup(groupName)
     }
@@ -114,7 +129,7 @@ export class CommandsManager {
     }
   }
 
-  removeCommandFromGroup(groupName: string, commandId: string) {
+  public removeCommandFromGroup(groupName: string, commandId: string) {
     const group = this.commandGroups.get(groupName)
     if (group) {
       group.commandIds = group.commandIds.filter((id) => id !== commandId)
@@ -122,59 +137,123 @@ export class CommandsManager {
     }
   }
 
-  getGroup(groupName: string): commandEntry[] {
+  public getGroup(groupName: string): commandEntry[] {
+    if (groupName === 'Featured') {
+      return Array.from(this.featuredCommandIds)
+        .map((id) => this.commands[id])
+        .filter(Boolean)
+    }
+    if (groupName === 'Recent') {
+      return this.recentCommandIds
+        .map((id) => this.commands[id])
+        .filter(Boolean)
+    }
     const group = this.commandGroups.get(groupName)
     if (!group) return []
-    return group.commandIds
-      .map((id) => this.hotkeyManager.getCommand(id))
-      .filter((command): command is commandEntry => command !== null)
+    return group.commandIds.map((id) => this.commands[id]).filter(Boolean)
   }
 
-  public getCommandGroups(): Map<string, CommandGroup> {
-    return new Map(this.commandGroups)
+  public getCommandGroups(): string[] {
+    return ['Featured', 'Recent', ...Array.from(this.commandGroups.keys())]
+  }
+
+  public toggleFeaturedCommand(commandId: string) {
+    if (this.featuredCommandIds.has(commandId)) {
+      this.featuredCommandIds.delete(commandId)
+    } else {
+      this.featuredCommandIds.add(commandId)
+    }
+    this.settingsManager.updateSettings({
+      featuredCommandIDs: Array.from(this.featuredCommandIds),
+    })
+  }
+
+  public addRecentCommand(commandId: string) {
+    this.recentCommandIds = [
+      commandId,
+      ...this.recentCommandIds.filter((id) => id !== commandId),
+    ].slice(0, 10)
   }
 
   public filterCommands(
     search: string,
-    activeModifiers: Modifier[],
+    activeModifiers: string[],
     activeKey: string,
     selectedGroup?: string
-  ) {
-    this.visibleCommands = Object.values(this.commands).filter((command) => {
-      const nameMatch = `${command.pluginName} ${command.cmdName}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-      const hotkeyMatch = this.hotkeyManager.commandMatchesHotkey(
-        command.id,
-        activeModifiers,
-        activeKey
-      )
-      const groupMatch = selectedGroup
-        ? this.commandGroups.get(selectedGroup)?.commandIds.includes(command.id)
-        : true
+  ): commandEntry[] {
+    const filterSettings = this.settingsManager.getSetting('filterSettings')
+    const searchLower = search.toLowerCase()
+
+    const filteredCommands = Object.values(this.commands).filter((command) => {
+      const nameMatch =
+        `${command.pluginName} ${command.cmdName}`
+          .toLowerCase()
+          .includes(searchLower) ||
+        (filterSettings.DisplayIDs &&
+          command.id.toLowerCase().includes(searchLower))
+
+      const hotkeyMatch =
+        activeModifiers.length === 0 && !activeKey
+          ? true
+          : command.hotkeys.some((hotkey) =>
+              this.hotkeyMatches(hotkey, activeModifiers, activeKey)
+            )
+
+      const groupMatch = this.matchesGroup(command, selectedGroup)
+
       return nameMatch && hotkeyMatch && groupMatch
     })
-  }
 
-  public toggleFeaturedCommand(commandId: string) {
-    const featuredCommandIDs =
-      this.settingsManager.getSetting('featuredCommandIDs')
-    const index = featuredCommandIDs.indexOf(commandId)
-    if (index > -1) {
-      featuredCommandIDs.splice(index, 1)
-    } else {
-      featuredCommandIDs.push(commandId)
+    if (filterSettings.FeaturedFirst) {
+      return this.sortByFeaturedFirst(filteredCommands)
     }
-    this.settingsManager.updateSettings({ featuredCommandIDs })
-    this.updateVisibleCommands()
+
+    return filteredCommands
   }
 
-  public sortByFeaturedFirst() {
-    const featuredCommandIDs =
-      this.settingsManager.getSetting('featuredCommandIDs')
-    this.visibleCommands.sort((a, b) => {
-      const aFeatured = featuredCommandIDs.includes(a.id)
-      const bFeatured = featuredCommandIDs.includes(b.id)
+  private commandMatchesHotkey(
+    id: string,
+    activeModifiers: string[],
+    activeKey: string
+  ): boolean {
+    const { all: hotkeys } = this.hotkeyManager.getHotkeysForCommand(id)
+    return hotkeys.some((hotkey) =>
+      this.hotkeyMatches(hotkey, activeModifiers, activeKey)
+    )
+  }
+
+  private hotkeyMatches(
+    hotkey: hotkeyEntry,
+    activeModifiers: string[],
+    activeKey: string
+  ): boolean {
+    const convertedActiveModifiers = convertModifiers(activeModifiers)
+    const convertedHotkeyModifiers = convertModifiers(hotkey.modifiers)
+
+    const modifiersMatch = areModifiersEqual(
+      convertedActiveModifiers,
+      convertedHotkeyModifiers
+    )
+    const keyMatch = !activeKey || isKeyMatch(activeKey, hotkey.key)
+    return modifiersMatch && keyMatch
+  }
+
+  private matchesGroup(command: commandEntry, selectedGroup?: string): boolean {
+    if (!selectedGroup) return true
+    if (selectedGroup === 'Featured') {
+      return this.featuredCommandIds.has(command.id)
+    }
+    if (selectedGroup === 'Recent') {
+      return this.recentCommandIds.includes(command.id)
+    }
+    const group = this.commandGroups.get(selectedGroup)
+    return group ? group.commandIds.includes(command.id) : true
+  }
+
+  private sortByFeaturedFirst(commands: commandEntry[]): commandEntry[] {
+    return commands.sort((a, b) => {
+      const aFeatured = this.featuredCommandIds.has(a.id)
+      const bFeatured = this.featuredCommandIds.has(b.id)
       if (aFeatured && !bFeatured) return -1
       if (!aFeatured && bFeatured) return 1
       return 0
@@ -184,6 +263,4 @@ export class CommandsManager {
   public refreshCommands() {
     this.loadCommands()
   }
-
-  // Add more methods as needed for advanced filtering, sorting, etc.
 }

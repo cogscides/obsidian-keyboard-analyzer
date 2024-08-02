@@ -1,5 +1,4 @@
 // src/interfaces/Interfaces.ts
-
 import type {
   Command,
   Hotkey,
@@ -9,6 +8,8 @@ import type {
   HotkeyManager as ObsidianHotkeyManager,
   InternalPlugins,
   KeymapInfo,
+  InternalPlugin,
+  InternalPluginInstance,
 } from 'obsidian'
 
 // Plugin Data
@@ -22,6 +23,8 @@ export interface commandEntry {
   id: string
   name: string
   hotkeys: hotkeyEntry[]
+  defaultHotkeys: hotkeyEntry[]
+  customHotkeys: hotkeyEntry[]
   pluginName: string
   cmdName: string
 }
@@ -85,7 +88,20 @@ export interface UnsafeAppInterface extends App {
   HotKeyManager: UnsafeHotkeyManager
   internalPlugins: InternalPlugins & {
     getPluginById(id: string): { instance: { options: { pinned: [] } } }
+  } & { getEnabledPlugins(): UnsafeInternalPlugin[] }
+}
+
+export interface UnsafeInternalPlugin extends InternalPlugin {
+  instance: InternalPluginInstance & {
+    id: string
+    name: string
   }
+}
+
+export interface UnsafeInternalPluginInstance extends InternalPluginInstance {
+  id: string
+  name: string
+  commands?: Record<string, Command>
 }
 
 // Helper type to convert KeymapInfo to Hotkey

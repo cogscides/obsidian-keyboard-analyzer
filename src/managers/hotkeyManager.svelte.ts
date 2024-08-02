@@ -1,12 +1,18 @@
-// src/managers/hotkeyManager.svelte.ts
 import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
-import type { InternalPluginInstance } from 'obsidian'
 import type {
   UnsafeAppInterface,
   hotkeyEntry,
   commandEntry,
+  UnsafeInternalPlugin,
+  UnsafeInternalPluginInstance,
 } from '../interfaces/Interfaces'
-import { unconvertModifiers, sortModifiers } from '../utils/modifierUtils'
+import {
+  convertModifiers,
+  sortModifiers,
+  modifiersToString,
+  areModifiersEqual,
+  isKeyMatch,
+} from '../utils/modifierUtils'
 
 export default class HotkeyManager {
   private static instance: HotkeyManager | null = null
@@ -42,109 +48,102 @@ export default class HotkeyManager {
   private processCommands(commands: Command[]): Record<string, commandEntry> {
     return commands.reduce((acc, command) => {
       const hotkeys = this.getHotkeysForCommand(command.id)
-      const pluginId = command.id.split(':')[0]
+      const [pluginId, cmdName] = command.id.split(':')
       acc[command.id] = {
         id: command.id,
         name: command.name,
-        hotkeys: hotkeys,
+        hotkeys: hotkeys.all,
+        defaultHotkeys: hotkeys.default,
+        customHotkeys: hotkeys.custom,
         pluginName: this.getPluginName(pluginId),
-        cmdName: command.name,
+        cmdName: cmdName || command.name,
       }
       return acc
     }, {} as Record<string, commandEntry>)
   }
 
   private getPluginName(pluginId: string): string {
-    if (pluginId === 'editor') return 'Editor'
-    if (pluginId === 'workspace') return 'Workspace'
-
     const plugin = (this.app as UnsafeAppInterface).plugins.plugins[pluginId]
-    if (plugin) {
-      return plugin.manifest.name
-    }
+    if (plugin) return plugin.manifest.name
 
-    const internalPlugin = (
+    const internalPlugins = (
       this.app as UnsafeAppInterface
-    ).internalPlugins.getPluginById(pluginId)
+    ).internalPlugins.getEnabledPlugins()
+
+    const internalPlugin = internalPlugins.find(
+      (plugin) =>
+        (plugin.instance as UnsafeInternalPluginInstance).id === pluginId
+    ) as UnsafeInternalPlugin | undefined
+
     if (internalPlugin?.instance) {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      return (internalPlugin.instance as any).name || pluginId
+      return internalPlugin.instance.name || pluginId
     }
 
     return pluginId
   }
 
-  public getCommand(id: string): commandEntry | null {
-    const command = this.app.commands.commands[id]
-    if (command) {
-      return {
-        id: command.id,
-        name: command.name,
-        hotkeys: this.getHotkeysForCommand(command.id),
-        pluginName: this.getPluginName(command.id.split(':')[0]),
-        cmdName: command.name,
-      }
+  public getHotkeysForCommand(id: string): {
+    all: hotkeyEntry[]
+    default: hotkeyEntry[]
+    custom: hotkeyEntry[]
+  } {
+    const unsafeApp = this.app as UnsafeAppInterface
+    const defaultHotkeys = unsafeApp.hotkeyManager.getDefaultHotkeys(id) || []
+    const customHotkeys = unsafeApp.hotkeyManager.customKeys[id] || []
+
+    const processHotkeys = (
+      hotkeys: KeymapInfo[],
+      isCustom: boolean
+    ): hotkeyEntry[] => {
+      return hotkeys.map(
+        (hotkey): hotkeyEntry => ({
+          modifiers: Array.isArray(hotkey.modifiers)
+            ? hotkey.modifiers
+            : typeof hotkey.modifiers === 'string'
+            ? (hotkey.modifiers.split(',') as Modifier[])
+            : [],
+          key: hotkey.key || '',
+          isCustom: isCustom,
+        })
+      )
     }
-    return null
-  }
 
-  public getHotkeysForCommand(id: string): hotkeyEntry[] {
-    const hotkeys = this.getHotkeys(id)
-    const defaultHotkeys = this.getDefaultHotkeys(id)
-    const customHotkeys = this.getCustomHotkeys(id)
+    const defaultEntries = processHotkeys(defaultHotkeys, false)
+    const customEntries = processHotkeys(customHotkeys, true)
 
-    // Create a Set to remove duplicates
-    const uniqueHotkeys = new Set([
-      ...hotkeys,
-      ...defaultHotkeys,
-      ...customHotkeys,
-    ])
+    // Create a map to store unique hotkeys
+    const hotkeyMap = new Map<string, hotkeyEntry>()
 
-    return Array.from(uniqueHotkeys).map((hotkey) => ({
-      ...this.convertKeymapInfoToHotkey(hotkey),
-      isCustom: !this.isDefaultHotkey(hotkey, defaultHotkeys),
-    }))
-  }
+    // Add default hotkeys to the map
+    defaultEntries.forEach((entry) => {
+      const key = this.hotkeyToUniqueKey(entry)
+      hotkeyMap.set(key, entry)
+    })
 
-  private getHotkeys(id: string): KeymapInfo[] {
-    const unsafeApp = this.app as UnsafeAppInterface
-    const hotkeys = unsafeApp.hotkeyManager.getHotkeys(id)
-    return Array.isArray(hotkeys) ? hotkeys : []
-  }
+    // Add or override with custom hotkeys
+    customEntries.forEach((entry) => {
+      const key = this.hotkeyToUniqueKey(entry)
+      hotkeyMap.set(key, entry)
+    })
 
-  private getDefaultHotkeys(id: string): KeymapInfo[] {
-    const unsafeApp = this.app as UnsafeAppInterface
-    return unsafeApp.hotkeyManager.getDefaultHotkeys(id) || []
-  }
+    // Convert the map back to an array
+    const allHotkeys = Array.from(hotkeyMap.values())
 
-  private getCustomHotkeys(id: string): KeymapInfo[] {
-    const unsafeApp = this.app as UnsafeAppInterface
-    return unsafeApp.hotkeyManager.customKeys[id] || []
-  }
-
-  private convertKeymapInfoToHotkey(keymapInfo: KeymapInfo): hotkeyEntry {
     return {
-      modifiers: Array.isArray(keymapInfo.modifiers)
-        ? keymapInfo.modifiers
-        : typeof keymapInfo.modifiers === 'string'
-        ? unconvertModifiers(keymapInfo.modifiers.split(','))
-        : [],
-      key: keymapInfo.key || '',
-      isCustom: false,
+      all: allHotkeys,
+      default: defaultEntries,
+      custom: customEntries,
     }
   }
 
-  private isDefaultHotkey(
-    hotkey: KeymapInfo,
-    defaultHotkeys: KeymapInfo[]
-  ): boolean {
-    return defaultHotkeys.some((defaultHotkey) =>
-      this.areKeymapInfoEqual(hotkey, defaultHotkey)
-    )
+  private hotkeyToUniqueKey(hotkey: hotkeyEntry): string {
+    const sortedModifiers = [...hotkey.modifiers].sort().join(',')
+    return `${sortedModifiers}|${hotkey.key}`
   }
 
-  private areKeymapInfoEqual(a: KeymapInfo, b: KeymapInfo): boolean {
-    return a.key === b.key && a.modifiers === b.modifiers
+  public getAllHotkeysForCommand(id: string): hotkeyEntry[] {
+    const { all } = this.getHotkeysForCommand(id)
+    return all
   }
 
   public isHotkeyDuplicate(id: string, hotkey: Hotkey): boolean {
@@ -153,7 +152,7 @@ export default class HotkeyManager {
         command.id !== id &&
         command.hotkeys.some(
           (existingHotkey) =>
-            existingHotkey.modifiers.join(',') === hotkey.modifiers.join(',') &&
+            areModifiersEqual(existingHotkey.modifiers, hotkey.modifiers) &&
             existingHotkey.key === hotkey.key
         )
     )
@@ -164,22 +163,45 @@ export default class HotkeyManager {
     activeModifiers: Modifier[],
     activeKey: string
   ): boolean {
-    const hotkeys = this.getHotkeysForCommand(id)
-    return (
-      (activeModifiers.length === 0 && !activeKey) ||
-      hotkeys.some(
-        (hotkey) =>
-          this.areModifiersEqual(activeModifiers, hotkey.modifiers) &&
-          (!activeKey || hotkey.key.toLowerCase() === activeKey.toLowerCase())
-      )
+    const { all: hotkeys } = this.getHotkeysForCommand(id)
+    return hotkeys.some((hotkey) =>
+      this.hotkeyMatches(hotkey, activeModifiers, activeKey)
     )
   }
 
-  private areModifiersEqual(
-    modifiers1: Modifier[],
-    modifiers2: Modifier[]
+  private hotkeyMatches(
+    hotkey: hotkeyEntry,
+    activeModifiers: Modifier[],
+    activeKey: string
   ): boolean {
-    if (modifiers1.length !== modifiers2.length) return false
-    return modifiers1.every((mod) => modifiers2.includes(mod))
+    const modifiersMatch = areModifiersEqual(
+      sortModifiers(activeModifiers),
+      sortModifiers(hotkey.modifiers)
+    )
+    const keyMatch = !activeKey || isKeyMatch(activeKey, hotkey.key)
+    return modifiersMatch && keyMatch
+  }
+
+  public renderHotkey(hotkey: hotkeyEntry): string {
+    const bakedModifiers = convertModifiers(hotkey.modifiers)
+    return [...bakedModifiers, hotkey.key].join(' + ')
+  }
+
+  public searchHotkeys(
+    search: string,
+    activeModifiers: Modifier[],
+    activeKey: string
+  ): commandEntry[] {
+    return Object.values(this.commands).filter((command) => {
+      const hotkeyMatch = this.commandMatchesHotkey(
+        command.id,
+        activeModifiers,
+        activeKey
+      )
+      const searchMatch =
+        command.name.toLowerCase().includes(search.toLowerCase()) ||
+        command.id.toLowerCase().includes(search.toLowerCase())
+      return hotkeyMatch && searchMatch
+    })
   }
 }

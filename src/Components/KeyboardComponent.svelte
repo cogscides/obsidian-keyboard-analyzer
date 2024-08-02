@@ -42,14 +42,25 @@
   let input: HTMLInputElement | undefined = $state()
   let KeyboardObject: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
   let keyboardListenerIsActive = $state(false)
-  let searchCommandsCount = $state(0)
-  let searchHotkeysCount = $state(0)
   let selectedGroup = $state('')
 
   let visibleCommands = $state<commandEntry[]>([])
+  let searchCommandsCount = $derived(visibleCommands.length)
+  let searchHotkeysCount = $derived(
+    visibleCommands.reduce(
+      (count, command) => count + command.hotkeys.length,
+      0
+    )
+  )
+
   $effect(() => {
-    visibleCommands = commandsManager.visibleCommands
-    updateSearchCounts()
+    visibleCommands = commandsManager.filterCommands(
+      search,
+      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveKey,
+      selectedGroup
+    )
+    return
   })
 
   $effect(() => {
@@ -60,14 +71,6 @@
     handleResize(viewWidth)
   })
 
-  $effect(() => {
-    commandsManager.updateVisibleCommands()
-    if (filterSettings.FeaturedFirst) {
-      commandsManager.sortByFeaturedFirst()
-    }
-    updateSearchCounts()
-  })
-
   // function handleGroupSelection(event: CustomEvent<string>) {
   //   selectedGroup = event.detail
   //   handleSearch()
@@ -76,13 +79,13 @@
   // Effect to trigger search on group change (effects are triggered each time the values of the variables form inside the effect change)
 
   // Helper functions
-  function updateSearchCounts() {
-    searchCommandsCount = commandsManager.visibleCommands.length
-    searchHotkeysCount = commandsManager.visibleCommands.reduce(
-      (count, command) => count + command.hotkeys.length,
-      0
-    )
-  }
+  // function updateSearchCounts() {
+  //   searchCommandsCount = visibleCommands.length
+  //   searchHotkeysCount = visibleCommands.reduce(
+  //     (count, command) => count + command.hotkeys.length,
+  //     0
+  //   )
+  // }
 
   function handleResize(width: number) {
     if (width >= 1400) viewMode = 'xxl'
@@ -92,21 +95,20 @@
     else if (width >= 576) viewMode = 'sm'
     else viewMode = 'xs'
   }
+
   // Event handlers
   function handleSearch(
     search: string,
-    activeModifiers: Modifier[],
+    activeModifiers: string[],
     activeKey: string,
     selectedGroup?: string
   ) {
-    commandsManager.filterCommands(
+    visibleCommands = commandsManager.filterCommands(
       search,
       activeModifiers,
       activeKey,
       selectedGroup
     )
-    visibleCommands = commandsManager.visibleCommands
-    updateSearchCounts()
   }
 
   function handlePluginNameClicked(event: CustomEvent<string>) {
@@ -119,7 +121,6 @@
     } else {
       search = pluginName + search
     }
-    updateSearchCounts()
   }
 
   function handleDuplicateHotkeyClicked(event: CustomEvent<Hotkey>) {
@@ -138,15 +139,11 @@
       activeKeysStore.ActiveKey = key
       search = ''
     }
-    updateSearchCounts()
   }
 
   function handleStarIconClicked(event: CustomEvent<string>) {
     const commandId = event.detail
     commandsManager.toggleFeaturedCommand(commandId)
-    if (filterSettings.FeaturedFirst) {
-      commandsManager.sortByFeaturedFirst()
-    }
   }
 </script>
 
@@ -155,14 +152,14 @@
   class="{viewMode} {viewMode === 'xs' ? 'is-mobile' : ''}"
   bind:offsetWidth={viewWidth}
 >
-  <div id="keyboard-preview-view relative">
+  <div id="keyboard-preview-view">
     <KeyboardLayoutComponent {KeyboardObject} {visibleCommands} />
   </div>
   <div class="shortcuts-wrapper">
     <SearchMenu
       bind:inputHTML={input}
-      bind:searchCommandsCount
-      bind:searchHotkeysCount
+      {searchCommandsCount}
+      {searchHotkeysCount}
       bind:keyboardListenerIsActive
       bind:selectedGroup
       {plugin}

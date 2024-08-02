@@ -23,7 +23,7 @@
     selectedGroup?: string
     onSearch?: (
       search: string,
-      activeModifiers: Modifier[],
+      activeModifiers: string[],
       activeKey: string,
       selectedGroup?: string
     ) => void
@@ -72,7 +72,7 @@
 
   function RefreshCommands() {
     refreshIsActive = true
-    commandsManager.updateVisibleCommands()
+    commandsManager.refreshCommands()
     setTimeout(() => {
       refreshIsActive = false
     }, 1000)
@@ -88,7 +88,7 @@
   function handleSearchInput() {
     onSearch(
       search,
-      PressedKeysStore.activeModifiers,
+      convertModifiers(PressedKeysStore.activeModifiers),
       PressedKeysStore.activeKey,
       selectedGroup
     )
@@ -107,6 +107,7 @@
 </script>
 
 <select
+  class="dropdown mt-4"
   bind:value={selectedGroup}
   onchange={() => handleGroupSelection(selectedGroup)}
 >
@@ -117,6 +118,17 @@
     <option value={group}>{group}</option>
   {/each}
 </select>
+
+<div class="logger py-4 rounded-lg bg-base-100 border border-base-300">
+  <div class="logger-header flex flex-col">
+    <div class="logger-title">ActiveKeysStore:</div>
+    <div class="logger-data">
+      {activeKeysStore.ActiveModifiers}
+      {activeKeysStore.ActiveKey}
+    </div>
+    <div class="logger-close absolute right-0"></div>
+  </div>
+</div>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="hotkey-settings-container" onkeydown={handleKeyDown}>
