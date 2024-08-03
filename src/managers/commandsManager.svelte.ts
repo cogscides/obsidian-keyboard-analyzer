@@ -1,5 +1,14 @@
-import type { App, Modifier } from 'obsidian'
-import type { InternalPluginName, Commands, Command } from 'obsidian-typings'
+import type { Modifier } from 'obsidian'
+import type {
+  App,
+  InternalPlugin,
+  InternalPluginName,
+  InternalPluginInstance,
+  Commands,
+  Command,
+  Plugin,
+  PluginManifest,
+} from 'obsidian-typings'
 import type {
   hotkeyEntry,
   UnsafeInternalPlugin,
@@ -27,8 +36,8 @@ export class CommandsManager {
   private hotkeyManager: HotkeyManager
   private settingsManager: SettingsManager
   private commands: Record<string, commandEntry> = {}
-  private commandGroups: Map<string, CommandGroup> = new Map()
-  private featuredCommandIds: Set<string> = new Set()
+  private commandGroups: Map<string, CommandGroup> = $state(new Map())
+  private featuredCommandIds: Set<string> = $state(new Set())
   private recentCommandIds: string[] = []
 
   private constructor(app: App) {
@@ -158,7 +167,7 @@ export class CommandsManager {
 		| "workspaces"
 		| "zk-prefixer";
    */
-  private isInternalModule(commandId: string): boolean {
+  public isInternalModule(commandId: string): boolean {
     const internalModules = [
       'audio-recorder',
       'backlink',
@@ -339,6 +348,35 @@ export class CommandsManager {
     })
   }
 
+  public getExcludedModulesForGroup(group: string): string[] {
+    const allGroups = this.settingsManager.getSetting('commandGroups')
+    const groupSettings = allGroups.find((g) => g.name === group)
+    return groupSettings?.excludedModules || []
+  }
+
+  public toggleExcludedModuleForGroup(group: string, moduleID: string) {
+    const allGroups = this.settingsManager.getSetting('commandGroups')
+    const groupSettings = allGroups.find((g) => g.name === group)
+
+    if (groupSettings) {
+      const excludedModules = groupSettings.excludedModules || []
+      if (excludedModules.includes(moduleID)) {
+        excludedModules.splice(excludedModules.indexOf(moduleID), 1)
+      } else {
+        excludedModules.push(moduleID)
+      }
+
+      this.settingsManager.updateSettings({
+        commandGroups: allGroups.map((g) => {
+          if (g.name === group) {
+            return { ...g, excludedModules }
+          }
+          return g
+        }),
+      })
+    }
+  }
+
   /**
    * Adds a command to the recent commands list
    *
@@ -410,7 +448,7 @@ export class CommandsManager {
         )
       )
 
-      const hasHotkeysMatch = filterSettings.DisplayWOhotkeys
+      const hasHotkeysMatch = filterSettings.ViewWOhotkeys
         ? true
         : command.hotkeys.length > 0
 
@@ -429,6 +467,36 @@ export class CommandsManager {
   }
 
   // Helper functions  ------------------------ //
+
+  /**
+   * Get all enabled plugins including internal plugins
+   *
+   * @private
+   * @returns {Plugin[]}
+   */
+  public getInstalledPluginIDs(): string[] {
+    const internalPlugins = (
+      this.app as UnsafeAppInterface
+    ).internalPlugins.getEnabledPlugins() as InternalPlugin[]
+
+    console.log('internalPlugins', internalPlugins)
+
+    const internalPluginIDs = internalPlugins.map(
+      (plugin) => plugin.manifest?.id || ''
+    )
+
+    const installedPlugins = Object.values(this.app.plugins.plugins)
+
+    console.log('installedPlugins', installedPlugins)
+
+    const installedPluginIDs = installedPlugins.map((plugin) => {
+      return (plugin as Plugin).manifest?.id || ''
+    })
+
+    return [...internalPluginIDs, ...installedPluginIDs].filter(
+      (id) => id !== ''
+    )
+  }
 
   /**
    * Checks if a command matches a hotkey

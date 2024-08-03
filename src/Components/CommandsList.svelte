@@ -16,12 +16,12 @@
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
 
   interface Props {
-    visibleCommands: commandEntry[]
+    filteredCommands: commandEntry[]
     selectedGroup?: string
   }
 
   let {
-    visibleCommands = $bindable([]),
+    filteredCommands = $bindable([]),
     selectedGroup = $bindable(''),
   }: Props = $props()
 
@@ -58,7 +58,7 @@
   class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"
 >
   <div class="hotkey-list-container">
-    {#each visibleCommands as cmdEntry (cmdEntry.id)}
+    {#each filteredCommands as cmdEntry (cmdEntry.id)}
       <div
         class="kbanalizer-setting-item setting-item"
         class:is-starred={settings && settings.featuredCommandIDs

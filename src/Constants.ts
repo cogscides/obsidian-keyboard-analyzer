@@ -70,7 +70,7 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
           { label: '\\', code: 'Backslash', width: 1.5 },
         ],
         [
-          { label: 'CapsLock', width: 1.75 },
+          { label: 'Caps', code: 'CapsLock', width: 1.75, unicode: '⇪' },
           { label: 'A' },
           { label: 'S' },
           { label: 'D' },
@@ -85,7 +85,7 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
           { label: 'Enter', width: 2.25 },
         ],
         [
-          { label: 'Shift', width: 2.25 },
+          { label: 'Shift', code: 'Shift', width: 2.25, unicode: '⇧' },
           { label: 'Z' },
           { label: 'X' },
           { label: 'C' },
@@ -153,12 +153,17 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
         [
           { label: 'Insert', smallText: true },
           { label: 'Home', smallText: true },
-          { label: 'PageUp', smallText: true },
+          { label: 'PaUp', code: 'PageUp', smallText: true },
         ],
         [
           { label: 'Delete', smallText: true },
           { label: 'End', smallText: true },
-          { label: 'PageDown', smallText: true },
+          {
+            label: 'PageDown',
+            code: 'PageDown',
+            unicode: 'page\ndown',
+            smallText: true,
+          },
         ],
         [{ label: 'empty' }, { label: 'empty' }, { label: 'empty' }],
         [

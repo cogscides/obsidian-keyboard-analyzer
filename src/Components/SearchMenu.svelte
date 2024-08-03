@@ -1,6 +1,6 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <script lang="ts">
-  import type { Modifier } from 'obsidian'
+  import type { getIconIds, Modifier } from 'obsidian'
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
@@ -57,6 +57,11 @@
   let refreshIsActive = $state(false)
   let PressedKeysStore = $derived(activeKeysStore)
 
+  // Groups
+  let allEnabledModules = $derived(commandsManager.getInstalledPlugins().map((p) => p.manifest.name))
+  let excludedModules = $derived(commandsManager.getExcludedModulesForGroup(selectedGroup))
+  $inspect(excludedModules)
+
   function ClearSearch() {
     if (search === '') {
       PressedKeysStore.reset()
@@ -78,7 +83,6 @@
     settingsManager.updateFilterSettings({
       [setting]: !filterSettings[setting],
     })
-    RefreshCommands()
   }
 
   function handleGroupSelection(group: string) {
@@ -245,7 +249,6 @@
                   StrictModifierMatch: !filterSettings.StrictModifierMatch,
                 },
               })
-              RefreshCommands()
             }}
           >
             <input
@@ -268,7 +271,6 @@
                   HighlightCustom: !filterSettings.HighlightCustom,
                 },
               })
-              RefreshCommands()
             }}
           >
             <input
@@ -293,7 +295,6 @@
                   HighlightDuplicates: !filterSettings.HighlightDuplicates,
                 },
               })
-              RefreshCommands()
             }}
           >
             <input
@@ -318,7 +319,6 @@
                   DisplayIDs: !filterSettings.DisplayIDs,
                 },
               })
-              RefreshCommands()
             }}
           >
             <input
@@ -397,9 +397,34 @@
         </div>
         <div class="setting-item-name">Display Internal Modules</div>
       </div>
+      <div class="installed-plugins-container">
+        {#each commandsManager.getInstalledPluginIDs() as pluginID}
+      
+          {#if commandsManager.isInternalModule(pluginID)}
+          <div class="setting-item mod-toggle">
+            <div class="installed-plugin-name">{plugin.manifest.id}</div>
+            <div class="installed-plugin-icon">
+              <div class="checkbox-container">
+                <input
+                  type="checkbox"
+                  tabindex="0"
+                  checked={!excludedModules.includes(plugin.manifest.id)}
+                  onchange={() => {
+                    commandsManager.toggleExcludedModuleForGroup(selectedGroup, plugin.manifest.id)
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          {/if}
+        {/each}
+
+      </div>
       <!-- Add a list of modules with checkboxes here -->
     </div>
   </div>
+
+
 {/if}
   <div class="community-plugin-search-summary u-muted">
     {#if searchCommandsCount !== 0}

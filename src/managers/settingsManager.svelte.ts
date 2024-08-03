@@ -6,7 +6,7 @@ export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   StrictModifierMatch: true,
   HighlightCustom: false,
   HighlightDuplicates: false,
-  DisplayWOhotkeys: true,
+  ViewWOhotkeys: true,
   DisplayIDs: false,
   GroupByPlugin: false,
   DisplayGroupAssignment: false,
@@ -34,13 +34,15 @@ export interface PluginSettings {
 }
 
 export interface FilterSettings {
+  // Filtering
   FeaturedFirst: boolean
   StrictModifierMatch: boolean
+  GroupByPlugin: boolean
+  ViewWOhotkeys: boolean
+  // Display
   HighlightCustom: boolean
   HighlightDuplicates: boolean
-  DisplayWOhotkeys: boolean
   DisplayIDs: boolean
-  GroupByPlugin: boolean
   DisplayGroupAssignment: boolean
   DisplayInternalModules: boolean
 }

@@ -166,7 +166,7 @@
     />
 
     <CommandsList
-      bind:visibleCommands
+      bind:filteredCommands={visibleCommands}
       bind:selectedGroup
       on:starClick={handleStarIconClicked}
       on:duplicateHotkeyClick={handleDuplicateHotkeyClicked}

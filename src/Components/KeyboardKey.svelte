@@ -126,6 +126,11 @@
     border-color: var(--interactive-accent);
   }
 
+  .kb-layout-key.empty {
+    border: none;
+    background-color: transparent;
+  }
+
   .kb-layout-key.small-text {
     font-size: 10px;
   }
