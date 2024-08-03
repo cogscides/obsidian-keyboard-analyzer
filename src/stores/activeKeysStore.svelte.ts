@@ -63,9 +63,9 @@ export class ActiveKeysStore {
   }
 
   public handleKeyClick(keyCode: string) {
-    const specialKey = this.visualKeyboardManager.layout.specialKeys[keyCode]
-    let keyLabel = specialKey ? specialKey.label : keyCode
+    let keyLabel = keyCode
 
+    // Convert the key label to a modifier if applicable
     keyLabel = convertModifiers([keyLabel])[0]
 
     if (this.recognizedModifiers.has(keyLabel)) {
@@ -112,10 +112,10 @@ export class ActiveKeysStore {
   }
 
   public getDisplayKey() {
-    const specialKey =
-      this.visualKeyboardManager.layout.specialKeys[this.activeKey]
-    if (specialKey) {
-      return specialKey.unicode || specialKey.label
+    const keyState =
+      this.visualKeyboardManager.keyStates[this.activeKey.toLowerCase()]
+    if (keyState) {
+      return keyState.displayValue
     }
     return this.activeKey.length === 1
       ? this.activeKey.toUpperCase()

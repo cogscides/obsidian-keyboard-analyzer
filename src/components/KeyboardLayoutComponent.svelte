@@ -10,16 +10,20 @@
   } from '../interfaces/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
   import { Coffee as CoffeeIcon, CrossIcon } from 'lucide-svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
 
   interface Props {
-    KeyboardObject: KeyboardLayout
     visibleCommands: commandEntry[]
   }
 
-  let { KeyboardObject, visibleCommands = [] }: Props = $props()
+  let { visibleCommands = [] }: Props = $props()
 
-  const plugin = getContext<KeyboardAnalyzerPlugin>('keyboard-analyzer-plugin')
-  const activeKeysStore = getContext<ActiveKeysStore>('activeKeysStore')
+  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
+    'visualKeyboardManager'
+  )
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
 
   // DEBUGGER
   let keyClicked = $state('')
@@ -32,6 +36,10 @@
       }, 0) * 4
     ) // Multiply by 4 to match the original scale
   }
+
+  $effect(() => {
+    visualKeyboardManager.calculateAndAssignWeights(visibleCommands)
+  })
 
   let gridTemplateColumns = KeyboardObject.sections
     .map((section) => `${section.gridRatio}fr`)
@@ -60,7 +68,7 @@
     >
       {#each section.rows as row}
         {#each row as key}
-          <KeyboardKey {key} keyLabel={key.label} />
+          <KeyboardKey {key} />
         {/each}
       {/each}
     </div>

@@ -40,7 +40,6 @@
   let viewMode = $state('desktop')
   let search = $state('')
   let input: HTMLInputElement | undefined = $state()
-  let KeyboardObject: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
   let keyboardListenerIsActive = $state(false)
   let selectedGroup = $state('')
 
@@ -153,7 +152,7 @@
   bind:offsetWidth={viewWidth}
 >
   <div id="keyboard-preview-view">
-    <KeyboardLayoutComponent {KeyboardObject} {visibleCommands} />
+    <KeyboardLayoutComponent {visibleCommands} />
   </div>
   <div class="shortcuts-wrapper">
     <SearchMenu

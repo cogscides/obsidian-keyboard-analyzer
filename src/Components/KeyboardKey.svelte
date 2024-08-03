@@ -7,7 +7,7 @@
 
   interface Props {
     key: Key
-    keyLabel: string
+    maxWeightSteps?: number
   }
 
   let {
@@ -17,7 +17,7 @@
       width: 1,
       height: 1,
     },
-    keyLabel,
+    maxWeightSteps = 5,
   }: Props = $props()
 
   const visualKeyboardManager: VisualKeyboardManager = getContext(
@@ -26,9 +26,9 @@
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
   let keyState = $derived(visualKeyboardManager.getKeyState(key))
+  let displayLabel = $derived(keyState.displayValue)
 
-  let displayLabel = $derived(keyState.output || keyLabel || key.label)
-  let keyOutput = $derived(key.unicode || key.label)
+  // let keyOutput = $derived(key.unicode || key.label)
   let smallText = $derived(key.smallText || false)
   let unicode = $derived(key.unicode || '')
 
@@ -44,7 +44,13 @@
   }
 
   function spreadWeights(weight: number) {
-    return Math.min(Math.max(weight, 0), 5)
+    const maxWeight = Math.max(
+      ...Object.values(visualKeyboardManager.keyStates).map(
+        (state) => state.weight || 0
+      )
+    )
+    const step = maxWeight / maxWeightSteps
+    return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
   }
 
   function handleClick(key: Key) {
@@ -53,22 +59,35 @@
   }
 </script>
 
-{#if keyLabel === 'empty'}
+{#if displayLabel === 'empty'}
   <!-- svelte-ignore element_invalid_self_closing_tag -->
   <button
-    class="kb-layout-key empty"
-    style:grid-column={getColumnSpan(width)}
+    class="kb-layout-key"
+    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)};`}
+    class:empty={keyState.state === 'empty'}
   />
 {:else}
   <button
     class="kb-layout-key"
-    data-key-id={key.code || keyLabel}
-    data-weight={keyState.weight ? spreadWeights(keyState.weight) : 0}
+    data-key-id={key.code || displayLabel}
+    data-weight={keyState.weight && spreadWeights(keyState.weight)
+      ? spreadWeights(keyState.weight)
+      : 0}
     class:is-active={keyState.state === 'active'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
     style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)};`}
     onclick={() => {
+      console.log('keyState', keyState.state)
+      console.log(
+        'weight',
+        keyState.weight,
+        ' spreadWeights: ',
+        keyState.weight && spreadWeights(keyState.weight)
+          ? spreadWeights(keyState.weight)
+          : 0
+      )
+
       handleClick(key)
     }}
   >
@@ -108,18 +127,18 @@
   }
 
   .kb-layout-key[data-weight='1'] {
-    background-color: rgba(var(--interactive-accent-rgb), 0.2);
+    background-color: hsl(var(--interactive-accent-hsl), 0.2);
   }
   .kb-layout-key[data-weight='2'] {
-    background-color: rgba(var(--interactive-accent-rgb), 0.4);
+    background-color: hsl(var(--interactive-accent-hsl), 0.4);
   }
   .kb-layout-key[data-weight='3'] {
-    background-color: rgba(var(--interactive-accent-rgb), 0.6);
+    background-color: hsl(var(--interactive-accent-hsl), 0.6);
   }
   .kb-layout-key[data-weight='4'] {
-    background-color: rgba(var(--interactive-accent-rgb), 0.8);
+    background-color: hsl(var(--interactive-accent-hsl), 0.8);
   }
   .kb-layout-key[data-weight='5'] {
-    background-color: rgba(var(--interactive-accent-rgb), 1);
+    background-color: hsl(var(--interactive-accent-hsl), 1);
   }
 </style>

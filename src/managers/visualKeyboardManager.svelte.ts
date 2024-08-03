@@ -1,14 +1,16 @@
+import { Platform } from 'obsidian'
 import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
 import type {
   KeyboardLayout,
   Key,
   KeyboardKeyState,
   KeyboardSection,
+  commandEntry,
 } from '../interfaces/Interfaces'
 
 export class VisualKeyboardManager {
   public layout: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
-  public keyStates: Record<string, KeyboardKeyState> = {}
+  public keyStates: Record<string, KeyboardKeyState> = $state({})
 
   constructor() {
     this.initializeKeyStates()
@@ -18,34 +20,64 @@ export class VisualKeyboardManager {
     this.layout.sections.forEach((section) => {
       section.rows.forEach((row) => {
         row.forEach((key) => {
-          if (key.label !== 'empty') {
-            const stateKey = key.code?.toLowerCase() || key.label.toLowerCase()
-            const keyState: KeyboardKeyState = {
-              output: key.unicode ?? key.label,
-              keyCode: key.code || '',
-              state: 'inactive',
-              smallText: key.smallText,
-              unicode: key.unicode,
-              weight: 0,
+          if (key?.label && key.label !== 'empty') {
+            const stateKey = (key.code || key.label || '').toLowerCase()
+            if (stateKey) {
+              const keyState: KeyboardKeyState = {
+                displayValue: this.getUnicodeForKey(key),
+                code: key.code || key.label,
+                state: 'inactive',
+                smallText: key.smallText,
+                weight: 0,
+              }
+              this.keyStates[stateKey] = keyState
+            } else {
+              console.warn('Invalid key found:', key)
             }
-            this.keyStates[stateKey] = keyState
           }
         })
       })
     })
+  }
 
-    // Initialize special keys
-    Object.entries(this.layout.specialKeys).forEach(([code, key]) => {
-      const stateKey = code.toLowerCase()
-      const keyState: KeyboardKeyState = {
-        output: key.unicode ?? key.label,
-        keyCode: key.code || '',
-        state: 'inactive',
-        unicode: key.unicode,
-        weight: 0,
+  private getUnicodeForKey(key: Key): string {
+    if (!key) return ''
+    if (Platform.isMacOS && key.mac_unicode) {
+      return key.mac_unicode
+    } else if (!Platform.isMacOS && key.win_unicode) {
+      return key.win_unicode
+    }
+    return key.unicode || key.label || ''
+  }
+
+  public calculateAndAssignWeights(visibleCommands: commandEntry[]) {
+    const keyWeights: Record<string, number> = {}
+
+    // Initialize weights to 0
+    for (const key in this.keyStates) {
+      keyWeights[key] = 0
+    }
+
+    // Calculate weights
+    for (const command of visibleCommands) {
+      for (const hotkey of command.hotkeys) {
+        const key = hotkey.key.toLowerCase()
+        if (key in keyWeights) {
+          keyWeights[key]++
+        }
+        for (const modifier of hotkey.modifiers) {
+          const modKey = modifier.toLowerCase()
+          if (modKey in keyWeights) {
+            keyWeights[modKey]++
+          }
+        }
       }
-      this.keyStates[stateKey] = keyState
-    })
+    }
+
+    // Assign weights to keyStates
+    for (const key in this.keyStates) {
+      this.keyStates[key].weight = keyWeights[key] || 0
+    }
   }
 
   public getKeyState(key: Key): KeyboardKeyState {
@@ -53,14 +85,22 @@ export class VisualKeyboardManager {
     if (this.keyStates[stateKey]) {
       return this.keyStates[stateKey]
     }
+
+    if (key.label === 'empty') {
+      return {
+        displayValue: key.label,
+        code: '',
+        state: 'empty',
+      }
+    }
+
     console.warn(
       `Key state for ${stateKey} is undefined. Check initialization.`
     )
     return {
-      output: key.label,
-      keyCode: '',
+      displayValue: key.label,
+      code: '',
       state: 'inactive',
-      weight: 0,
     }
   }
 

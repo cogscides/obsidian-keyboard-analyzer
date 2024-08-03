@@ -40,6 +40,8 @@ export interface Key {
   label: string
   code?: string
   unicode?: string
+  win_unicode?: string
+  mac_unicode?: string
   width?: number
   height?: number
   smallText?: boolean
@@ -53,16 +55,14 @@ export interface KeyboardSection {
 
 export interface KeyboardLayout {
   sections: KeyboardSection[]
-  specialKeys: Record<string, Key>
 }
 
 export interface KeyboardKeyState {
-  output: string
-  keyCode: string
+  displayValue: string // This replaces 'output'
+  code: string // This replaces 'keyCode'
   state: 'active' | 'inactive' | 'possible' | 'disabled' | 'empty'
-  smallText?: boolean
-  unicode?: string
   weight?: number
+  smallText?: boolean
 }
 
 export interface UnsafeHotkeyManager extends ObsidianHotkeyManager {
