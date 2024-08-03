@@ -90,11 +90,11 @@
     class:is-active={keyState.state === 'active'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
-    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.weight ? `background-color: rgb(from var(--chart-color-2) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}`}
+    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : keyState.weight ? `background-color: rgb(from var(--chart-color-2) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}}`}
     onclick={() => handleClick(key)}
   >
     {getDisplayModifier(displayLabel)}
-    <span class="debug-weight">({keyState.weight})</span>
+    <!-- <span class="debug-weight font-300 text-[10px]">{keyState.weight}</span> --var(--interactive-accent); -->
   </button>
 {/if}
 
@@ -118,7 +118,7 @@
 
   .kb-layout-key.is-active {
     color: var(--text-on-accent);
-    background-color: var(--interactive-accent) !important;
+    background-color: var(--interactive-accent);
     box-shadow: var(--button-shadow-active);
   }
 
