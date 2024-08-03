@@ -25,6 +25,7 @@ export interface commandEntry {
   hotkeys: hotkeyEntry[]
   defaultHotkeys: hotkeyEntry[]
   customHotkeys: hotkeyEntry[]
+  isInternalModule: boolean
   pluginName: string
   cmdName: string
 }
@@ -95,6 +96,7 @@ export interface UnsafeInternalPlugin extends InternalPlugin {
   instance: InternalPluginInstance & {
     id: string
     name: string
+    commands?: Record<string, Command>
   }
 }
 

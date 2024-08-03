@@ -1,5 +1,5 @@
 import type { App, Modifier } from 'obsidian'
-import type { Commands, Command } from 'obsidian-typings'
+import type { InternalPluginName, Commands, Command } from 'obsidian-typings'
 import type {
   hotkeyEntry,
   UnsafeInternalPlugin,
@@ -7,18 +7,13 @@ import type {
 } from '../interfaces/Interfaces'
 import type { commandEntry, UnsafeAppInterface } from '../interfaces/Interfaces'
 import HotkeyManager from './hotkeyManager.svelte'
-import SettingsManager from './settingsManager.svelte'
+import SettingsManager, { type CommandGroup } from './settingsManager.svelte'
 import {
   convertModifiers,
   unconvertModifiers,
   areModifiersEqual,
   isKeyMatch,
 } from '../utils/modifierUtils'
-
-interface CommandGroup {
-  name: string
-  commandIds: string[]
-}
 
 /**
  * The CommandsManager class is responsible for managing and processing commands.
@@ -91,6 +86,7 @@ export class CommandsManager {
         hotkeys: hotkeys.all,
         defaultHotkeys: hotkeys.default,
         customHotkeys: hotkeys.custom,
+        isInternalModule: this.isInternalModule(command.id),
         pluginName: this.getPluginName(pluginId),
         cmdName: cmdName || command.name,
       }
@@ -125,6 +121,79 @@ export class CommandsManager {
     return pluginId
   }
 
+  /**
+   * Returns a boolean value indicating if a command is an internal module
+   *
+   * @param commandId - The ID of the command to check
+   * @returns boolean
+  * @types of InternalPluginName from obsidian-typings
+  type InternalPluginName =
+		| "audio-recorder"
+		| "backlink"
+		| "bookmarks"
+		| "canvas"
+		| "command-palette"
+		| "daily-notes"
+		| "editor-status"
+		| "file-explorer"
+		| "file-recovery"
+		| "global-search"
+		| "graph"
+		| "markdown-importer"
+		| "note-composer"
+		| "outgoing-link"
+		| "outline"
+		| "page-preview"
+		| "properties"
+		| "publish"
+		| "random-note"
+		| "slash-command"
+		| "slides"
+		| "starred"
+		| "switcher"
+		| "sync"
+		| "tag-pane"
+		| "templates"
+		| "word-count"
+		| "workspaces"
+		| "zk-prefixer";
+   */
+  private isInternalModule(commandId: string): boolean {
+    const internalModules = [
+      'audio-recorder',
+      'backlink',
+      'bookmarks',
+      'canvas',
+      'command-palette',
+      'daily-notes',
+      'editor-status',
+      'file-explorer',
+      'file-recovery',
+      'global-search',
+      'graph',
+      'markdown-importer',
+      'note-composer',
+      'outgoing-link',
+      'outline',
+      'page-preview',
+      'properties',
+      'publish',
+      'random-note',
+      'slash-command',
+      'slides',
+      'starred',
+      'switcher',
+      'sync',
+      'tag-pane',
+      'templates',
+      'word-count',
+      'workspaces',
+      'zk-prefixer',
+    ] as InternalPluginName[]
+
+    return internalModules.some((module) => commandId.startsWith(module))
+  }
+
   // Groups  ------------------------ //
 
   /**
@@ -147,7 +216,12 @@ export class CommandsManager {
    * @returns void
    */
   private saveCommandGroups() {
-    const groupsArray = Array.from(this.commandGroups.values())
+    const groupsArray = Array.from(this.commandGroups.values()).map(
+      (group) => ({
+        ...group,
+        excludedModules: group.excludedModules || [],
+      })
+    )
     this.settingsManager.updateSettings({ commandGroups: groupsArray })
   }
 
@@ -171,7 +245,11 @@ export class CommandsManager {
    */
   public createGroup(groupName: string) {
     if (!this.commandGroups.has(groupName)) {
-      this.commandGroups.set(groupName, { name: groupName, commandIds: [] })
+      this.commandGroups.set(groupName, {
+        name: groupName,
+        commandIds: [],
+        excludedModules: [],
+      })
       this.saveCommandGroups()
     }
   }
@@ -204,7 +282,9 @@ export class CommandsManager {
   public removeCommandFromGroup(groupName: string, commandId: string) {
     const group = this.commandGroups.get(groupName)
     if (group) {
-      group.commandIds = group.commandIds.filter((id) => id !== commandId)
+      group.commandIds = group.commandIds.filter(
+        (id: string) => id !== commandId
+      )
       this.saveCommandGroups()
     }
   }
@@ -228,7 +308,9 @@ export class CommandsManager {
     }
     const group = this.commandGroups.get(groupName)
     if (!group) return []
-    return group.commandIds.map((id) => this.commands[id]).filter(Boolean)
+    return group.commandIds
+      .map((id: string) => this.commands[id])
+      .filter(Boolean)
   }
 
   /**
@@ -295,15 +377,29 @@ export class CommandsManager {
     )
 
     const filterSettings = this.settingsManager.getSetting('filterSettings')
+
+    // Start with all commands for the selected group
+    let commandsToFilter = this.getCommandsForGroup(selectedGroup)
+
+    // If no search and no active hotkeys, return all commands for the selected group
+    if (!search && activeModifiers.length === 0 && !activeKey) {
+      return commandsToFilter
+    }
+
     const searchLower = search.toLowerCase()
 
-    const filteredCommands = Object.values(this.commands).filter((command) => {
+    const filteredCommands = commandsToFilter.filter((command) => {
       const nameMatch =
         `${command.pluginName} ${command.cmdName}`
           .toLowerCase()
           .includes(searchLower) ||
         (filterSettings.DisplayIDs &&
           command.id.toLowerCase().includes(searchLower))
+
+      // If there's a search, only filter by the search term
+      if (search) {
+        return nameMatch
+      }
 
       const hotkeyMatch = command.hotkeys.some((hotkey) =>
         this.hotkeyMatches(
@@ -314,9 +410,15 @@ export class CommandsManager {
         )
       )
 
-      const groupMatch = this.matchesGroup(command, selectedGroup)
+      const hasHotkeysMatch = filterSettings.DisplayWOhotkeys
+        ? true
+        : command.hotkeys.length > 0
 
-      return nameMatch && hotkeyMatch && groupMatch
+      const internalModuleMatch = filterSettings.DisplayInternalModules
+        ? true
+        : !command.isInternalModule
+
+      return nameMatch && hotkeyMatch && hasHotkeysMatch && internalModuleMatch
     })
 
     if (filterSettings.FeaturedFirst) {
@@ -392,6 +494,17 @@ export class CommandsManager {
     }
 
     return modifiersMatch && keyMatch
+  }
+
+  /**
+   * Checks if a command matches a group
+   * @param selectedGroup - The selected group
+   * @returns commandEntry[]
+   */
+  private getCommandsForGroup(selectedGroup?: string): commandEntry[] {
+    if (!selectedGroup || selectedGroup === '')
+      return Object.values(this.commands)
+    return this.getGroup(selectedGroup)
   }
 
   /**

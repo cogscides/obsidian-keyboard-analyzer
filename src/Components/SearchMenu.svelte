@@ -9,10 +9,12 @@
     FilterIcon,
     CrossIcon,
     RefreshCw,
+    ChevronDown,
   } from 'lucide-svelte'
   import getActiveKeysStore from '../stores/activeKeysStore.svelte'
   import { convertModifiers, sortModifiers } from '../utils/modifierUtils'
   import { slide, fade } from 'svelte/transition'
+  import type { FilterSettings } from '../managers/settingsManager.svelte'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -42,10 +44,14 @@
   let search = $state('')
   const settingsManager = plugin.settingsManager
   const commandsManager = plugin.commandsManager
-  const filterSettings = $derived(settingsManager.getSetting('filterSettings'))
+  const filterSettings: FilterSettings = $derived(
+    settingsManager.getSetting('filterSettings')
+  )
 
   const activeKeysStore = getContext<ActiveKeysStore>('activeKeysStore')
 
+  let viewDropdownOpen = $state(false)
+  let modulesDropdownOpen = $state(false)
   let inputIsFocused = $state(false)
   let filterIsOpen = $state(false)
   let refreshIsActive = $state(false)
@@ -58,6 +64,21 @@
       search = ''
     }
     inputHTML?.focus()
+  }
+
+  function ToggleViewDropdown() {
+    viewDropdownOpen = !viewDropdownOpen
+  }
+
+  function ToggleModulesDropdown() {
+    modulesDropdownOpen = !modulesDropdownOpen
+  }
+
+  function toggleFilterSetting(setting: keyof typeof filterSettings) {
+    settingsManager.updateFilterSettings({
+      [setting]: !filterSettings[setting],
+    })
+    RefreshCommands()
   }
 
   function handleGroupSelection(group: string) {
@@ -94,16 +115,9 @@
     )
   }
 
-  $effect(() => {
-    handleSearchInput()
-  })
-
-  function toggleFilterSetting(setting: keyof typeof filterSettings) {
-    settingsManager.updateFilterSettings({
-      [setting]: !filterSettings[setting],
-    })
-    RefreshCommands()
-  }
+  // $effect(() => {
+  //   handleSearchInput()
+  // })
 </script>
 
 <select
@@ -323,9 +337,70 @@
       <div class="popup-filter-menu-background" />
     </div>
   {/if}
-  <!-- filter menu here -->
-  <!-- </div> -->
-  <!-- <div class="search-results"> -->
+  <button
+    id="hotkey-view-button"
+    aria-label="View Options"
+    class={viewDropdownOpen ? 'is-active' : ''}
+    onclick={ToggleViewDropdown}
+    >View <ChevronDown size={16} />
+  </button>
+  {#if viewDropdownOpen}
+    <div class="popup-filter-menu-container is-open">
+      <div class="popup-filter-menu">
+        <!-- Move FeaturedFirst, HighlightCustom, HighlightDuplicates here -->
+        <!-- Add GroupByPlugin, DisplayGroupAssignment options -->
+        {#each ['FeaturedFirst', 'HighlightCustom', 'HighlightDuplicates', 'GroupByPlugin', 'DisplayGroupAssignment'] as setting}
+        <div class="setting-item mod-toggle">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              aria-label="Toggle {setting}"
+              class="checkbox-container"
+              class:is-enabled={filterSettings[setting as keyof FilterSettings]}
+              onclick={() => toggleFilterSetting(setting as keyof FilterSettings)}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                bind:checked={filterSettings[setting as keyof FilterSettings]}
+              />
+            </div>
+            <div class="setting-item-name">{setting}</div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+  <button
+  id="hotkey-modules-button"
+  class={modulesDropdownOpen ? 'is-active' : ''}
+  aria-label="Modules Options"
+  onclick={ToggleModulesDropdown}
+>
+  Modules <ChevronDown size={16} />
+</button>
+
+{#if modulesDropdownOpen}
+  <div class="popup-filter-menu-container is-open">
+    <div class="popup-filter-menu">
+      <div class="setting-item mod-toggle">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div
+          class="checkbox-container"
+          class:is-enabled={filterSettings.DisplayInternalModules}
+          onclick={() => toggleFilterSetting('DisplayInternalModules' as keyof FilterSettings)}
+        >
+          <input
+            type="checkbox"
+            tabindex="0"
+            bind:checked={filterSettings.DisplayInternalModules}
+          />
+        </div>
+        <div class="setting-item-name">Display Internal Modules</div>
+      </div>
+      <!-- Add a list of modules with checkboxes here -->
+    </div>
+  </div>
+{/if}
   <div class="community-plugin-search-summary u-muted">
     {#if searchCommandsCount !== 0}
       <span>

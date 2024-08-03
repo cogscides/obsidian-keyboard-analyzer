@@ -6,8 +6,11 @@ export const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   StrictModifierMatch: true,
   HighlightCustom: false,
   HighlightDuplicates: false,
-  DisplayWOhotkeys: false,
+  DisplayWOhotkeys: true,
   DisplayIDs: false,
+  GroupByPlugin: false,
+  DisplayGroupAssignment: false,
+  DisplayInternalModules: false,
 }
 
 export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
@@ -20,6 +23,7 @@ export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
 export interface CommandGroup {
   name: string
   commandIds: string[]
+  excludedModules: string[]
 }
 
 export interface PluginSettings {
@@ -36,6 +40,9 @@ export interface FilterSettings {
   HighlightDuplicates: boolean
   DisplayWOhotkeys: boolean
   DisplayIDs: boolean
+  GroupByPlugin: boolean
+  DisplayGroupAssignment: boolean
+  DisplayInternalModules: boolean
 }
 
 class SettingsManager {

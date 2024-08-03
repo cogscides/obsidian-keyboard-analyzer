@@ -13,6 +13,7 @@
   import type HotkeyManager from '../managers/hotkeyManager.svelte'
   import type { CommandsManager } from '../managers/commandsManager.svelte'
   import type SettingsManager from '../managers/settingsManager.svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
 
   interface Props {
     visibleCommands: commandEntry[]
@@ -42,11 +43,12 @@
   }
 
   function handlePluginNameClick(pluginName: string) {
-    // Implement the logic for plugin name click
+    // TODO to implement this logic we could move the search to the activeKeysStore (potential renaming to searchStore)
+    console.log('pluginNameClick', pluginName)
   }
 
   function handleDuplicateHotkeyClick(hotkey: Hotkey) {
-    // Implement the logic for duplicate hotkey click
+    console.log('duplicateHotkeyClick', hotkey)
   }
 </script>
 
@@ -69,19 +71,19 @@
           <div class="setting-item-name">
             <button
               class="suggestion-prefix"
-              onclick={() => console.log('sendPluginName()')}
+              onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
             >
               {cmdEntry.pluginName}
             </button>
             <span class="command-name">{cmdEntry.cmdName}</span>
-            <button
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
               class="star-icon icon"
-              onclick={() => {
-                console.log('star-clicked', cmdEntry.id)
-              }}
+              onclick={() => handleStarClick(cmdEntry.id)}
             >
               <StarIcon size={16} />
-            </button>
+            </div>
           </div>
           {#if settings.filterSettings?.DisplayIDs}
             <small>
@@ -97,10 +99,7 @@
                   class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
                   class:is-duplicate={settings.filterSettings
                     .HighlightDuplicates}
-                  onclick={() => {
-                    console.log('duplicate-hotkey-clicked')
-                    console.log(JSON.stringify(hotkey, null, 2))
-                  }}
+                  onclick={() => handleDuplicateHotkeyClick(hotkey)}
                 >
                   {renderHotkey(hotkey)}
                 </button>
