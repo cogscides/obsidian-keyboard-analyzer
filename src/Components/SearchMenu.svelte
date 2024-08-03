@@ -58,7 +58,6 @@
   let PressedKeysStore = $derived(activeKeysStore)
 
   // Groups
-  let allEnabledModules = $derived(commandsManager.getInstalledPlugins().map((p) => p.manifest.name))
   let excludedModules = $derived(commandsManager.getExcludedModulesForGroup(selectedGroup))
   $inspect(excludedModules)
 
@@ -345,7 +344,7 @@
     >View <ChevronDown size={16} />
   </button>
   {#if viewDropdownOpen}
-    <div class="popup-filter-menu-container is-open">
+    <div class="popup-filter-menu-container is-open" transition:slide>
       <div class="popup-filter-menu">
         <!-- Move FeaturedFirst, HighlightCustom, HighlightDuplicates here -->
         <!-- Add GroupByPlugin, DisplayGroupAssignment options -->
@@ -370,6 +369,8 @@
       </div>
     </div>
   {/if}
+
+
   <button
   id="hotkey-modules-button"
   class={modulesDropdownOpen ? 'is-active' : ''}
@@ -380,7 +381,7 @@
 </button>
 
 {#if modulesDropdownOpen}
-  <div class="popup-filter-menu-container is-open">
+  <div class="popup-filter-menu-container is-open" transition:slide>
     <div class="popup-filter-menu">
       <div class="setting-item mod-toggle">
         <!-- svelte-ignore a11y_click_events_have_key_events -->
