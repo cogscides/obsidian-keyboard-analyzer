@@ -4,6 +4,7 @@
   import { getContext } from 'svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import { getDisplayModifier } from '../utils/modifierUtils'
 
   interface Props {
     key: Key
@@ -30,7 +31,6 @@
 
   // let keyOutput = $derived(key.unicode || key.label)
   let smallText = $derived(key.smallText || false)
-  let unicode = $derived(key.unicode || '')
 
   let width = $derived(key.width || 1)
   let height = $derived(key.height || 1)
@@ -53,9 +53,23 @@
     return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
   }
 
+  function calculateOpacity(weight: number): number {
+    if (!weight) return 0
+    const opacityStep = 100 / maxWeightSteps
+    return Math.min(Math.round(weight * opacityStep), 100)
+  }
+
   function handleClick(key: Key) {
-    // Pass the key's code instead of its label
-    activeKeysStore.handleKeyClick(key.code || key.label)
+    const keyIdentifier = key.code || key.label
+    console.log('Clicked key:', keyIdentifier)
+
+    activeKeysStore.handleKeyClick(keyIdentifier)
+
+    // Update visual state based on new active keys
+    visualKeyboardManager.updateVisualState(
+      activeKeysStore.activeKey,
+      activeKeysStore.activeModifiers
+    )
   }
 </script>
 
@@ -76,22 +90,11 @@
     class:is-active={keyState.state === 'active'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
-    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)};`}
-    onclick={() => {
-      console.log('keyState', keyState.state)
-      console.log(
-        'weight',
-        keyState.weight,
-        ' spreadWeights: ',
-        keyState.weight && spreadWeights(keyState.weight)
-          ? spreadWeights(keyState.weight)
-          : 0
-      )
-
-      handleClick(key)
-    }}
+    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.weight ? `background-color: rgb(from var(--chart-color-2) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}`}
+    onclick={() => handleClick(key)}
   >
-    {displayLabel}
+    {getDisplayModifier(displayLabel)}
+    <span class="debug-weight">({keyState.weight})</span>
   </button>
 {/if}
 
@@ -114,8 +117,9 @@
   }
 
   .kb-layout-key.is-active {
-    background-color: var(--interactive-accent);
     color: var(--text-on-accent);
+    background-color: var(--interactive-accent) !important;
+    box-shadow: var(--button-shadow-active);
   }
 
   .kb-layout-key.has-hotkey {
@@ -126,7 +130,7 @@
     font-size: 10px;
   }
 
-  .kb-layout-key[data-weight='1'] {
+  /* .kb-layout-key[data-weight='1'] {
     background-color: hsl(var(--interactive-accent-hsl), 0.2);
   }
   .kb-layout-key[data-weight='2'] {
@@ -140,5 +144,5 @@
   }
   .kb-layout-key[data-weight='5'] {
     background-color: hsl(var(--interactive-accent-hsl), 1);
-  }
+  } */
 </style>

@@ -5,45 +5,62 @@ import type { Modifier } from 'obsidian'
 
 export type ModifierMap = { [key: string]: Modifier }
 
-export const modifierMap: ModifierMap = {
+export type ModifierKey = 'Control' | 'Shift' | 'Alt' | 'Meta' | 'Mod'
+
+export const modifierMap: Record<ModifierKey, Modifier> = {
   Control: 'Ctrl',
   Shift: 'Shift',
   Alt: 'Alt',
-  Cmd: Platform.isMacOS ? 'Mod' : 'Meta',
-  Win: 'Meta',
+  Meta: 'Meta',
   Mod: Platform.isMacOS ? 'Meta' : 'Ctrl',
 }
 
-export function getModifierInfo(): {
-  recognized: Set<string>
-  converted: ModifierMap
-} {
-  const recognized = new Set([
-    'Shift',
-    'Alt',
-    'Ctrl',
-    ...(Platform.isMacOS ? ['Cmd'] : ['Win']),
-  ])
-  return { recognized, converted: modifierMap }
+export const displayModifierMap: Record<ModifierKey, string> = {
+  Control: Platform.isMacOS ? 'Ctrl' : 'Control',
+  Shift: 'Shift',
+  Alt: Platform.isMacOS ? 'Option' : 'Alt',
+  Meta: Platform.isMacOS ? 'Cmd' : 'Meta',
+  Mod: Platform.isMacOS ? 'Cmd' : 'Ctrl',
 }
 
+// export function getModifierInfo(): {
+//   recognized: Set<string>
+//   converted: ModifierMap
+// } {
+//   const recognized = new Set([
+//     'Shift',
+//     'Alt',
+//     'Ctrl',
+//     ...(Platform.isMacOS ? ['Cmd'] : ['Win']),
+//   ])
+//   return { recognized, converted: modifierMap }
+// }
+
 export function convertModifier(modifier: string): Modifier {
-  return modifierMap[modifier] || (modifier as Modifier)
+  return (modifierMap[modifier as ModifierKey] || modifier) as Modifier
+}
+
+export function getDisplayModifier(modifier: string): string {
+  return displayModifierMap[modifier as ModifierKey] || modifier
+}
+
+export function unconvertModifier(modifier: Modifier): string {
+  const entry = Object.entries(modifierMap).find(
+    ([_, value]) => value === modifier
+  )
+  return entry ? entry[0] : modifier
 }
 
 export function convertModifiers(modifiers: string[]): Modifier[] {
   return modifiers.map(convertModifier)
 }
 
-export function unconvertModifier(modifier: string): string {
-  return (
-    Object.entries(modifierMap).find(([_, value]) => value === modifier)?.[0] ||
-    modifier
-  )
+export function unconvertModifiers(modifiers: Modifier[]): string[] {
+  return modifiers.map(unconvertModifier)
 }
 
-export function unconvertModifiers(modifiers: string[]): string[] {
-  return modifiers.map(unconvertModifier)
+export function getDisplayModifiers(modifiers: string[]): string[] {
+  return modifiers.map(getDisplayModifier)
 }
 
 export function sortModifiers(modifiers: string[]): string[] {

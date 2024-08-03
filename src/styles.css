@@ -671,6 +671,7 @@ button#hotkey-refresh-button:hover {
   --font-scale-3: 20px;
 }
 
+/* 
 .kb-layout-key {
   border: 1px solid var(--indentation-guide);
   font-size: var(--font-scale-0);
@@ -688,7 +689,6 @@ button#hotkey-refresh-button:hover {
   font-size: 10px;
 }
 
-/* key heatmap by weight */
 .kb-layout-key[data-weight='1'] {
   background-color: #f0bca469;
 }
@@ -723,3 +723,4 @@ button#hotkey-refresh-button:hover {
   border: none;
   background-color: transparent;
 }
+*/

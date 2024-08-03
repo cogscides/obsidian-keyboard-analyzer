@@ -1,13 +1,10 @@
 import type { Modifier, App } from 'obsidian'
 import {
-  convertModifiers,
-  unconvertModifiers,
-  getModifierInfo,
-  sortModifiers,
-  areModifiersEqual,
-  isKeyMatch,
-  modifiersToString,
   convertModifier,
+  getDisplayModifier,
+  modifierMap,
+  type ModifierKey,
+  sortModifiers,
 } from '../utils/modifierUtils'
 import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
 import HotkeyManager from '../managers/hotkeyManager.svelte'
@@ -17,7 +14,13 @@ export class ActiveKeysStore {
   private app: App
   private hotkeyManager: HotkeyManager
   private visualKeyboardManager: VisualKeyboardManager
-  private recognizedModifiers: Set<string>
+  private recognizedModifiers: Set<ModifierKey> = new Set([
+    'Control',
+    'Shift',
+    'Alt',
+    'Meta',
+    'Mod',
+  ])
 
   activeKey = $state('')
   activeModifiers: Modifier[] = $state([])
@@ -26,7 +29,14 @@ export class ActiveKeysStore {
     this.app = app
     this.hotkeyManager = HotkeyManager.getInstance(app)
     this.visualKeyboardManager = visualKeyboardManager
-    this.recognizedModifiers = getModifierInfo().recognized
+  }
+
+  setActiveKey(key: string) {
+    this.activeKey = key
+  }
+
+  clearActiveKey() {
+    this.activeKey = ''
   }
 
   get ActiveKey() {
@@ -62,18 +72,21 @@ export class ActiveKeysStore {
     this.activeModifiers = []
   }
 
-  public handleKeyClick(keyCode: string) {
-    let keyLabel = keyCode
+  public handleKeyClick(keyIdentifier: string) {
+    console.log('==== Clicked key identifier:', keyIdentifier)
 
-    // Convert the key label to a modifier if applicable
-    keyLabel = convertModifiers([keyLabel])[0]
+    const normalizedKey = this.normalizeKeyIdentifier(keyIdentifier)
 
-    if (this.recognizedModifiers.has(keyLabel)) {
-      this.toggleModifier(keyLabel as Modifier)
+    console.log('Normalized key:', normalizedKey)
+
+    if (this.recognizedModifiers.has(normalizedKey as ModifierKey)) {
+      this.toggleModifier(normalizedKey)
     } else {
-      // Store the key code instead of the label
-      this.activeKey = this.activeKey === keyCode ? '' : keyCode
+      this.activeKey = this.activeKey === normalizedKey ? '' : normalizedKey
     }
+
+    console.log('Active modifiers:', this.activeModifiers)
+    console.log('Active key:', this.activeKey)
   }
 
   public handleKeyDown(e: KeyboardEvent) {
@@ -91,24 +104,38 @@ export class ActiveKeysStore {
   }
 
   private toggleModifier(modifier: string) {
-    if (this.activeModifiers.includes(convertModifier(modifier))) {
+    const obsidianModifier = convertModifier(modifier)
+    const index = this.activeModifiers.indexOf(obsidianModifier)
+
+    if (index !== -1) {
       this.activeModifiers = this.activeModifiers.filter(
-        (mod) => mod !== modifier
+        (mod) => mod !== obsidianModifier
       )
     } else {
-      this.activeModifiers = convertModifiers([
-        ...this.activeModifiers,
-        modifier,
-      ])
+      this.activeModifiers = [...this.activeModifiers, obsidianModifier]
     }
   }
 
-  public handlePhysicalKeyDown(e: KeyboardEvent) {
-    let keyLabel = convertModifiers([e.key])[0]
-
-    if (this.recognizedModifiers.has(keyLabel)) {
-      this.toggleModifier(keyLabel)
+  private normalizeKeyIdentifier(keyIdentifier: string): string {
+    const keyMap: { [key: string]: string } = {
+      ControlLeft: 'Control',
+      ControlRight: 'Control',
+      Control: 'Control',
+      Ctrl: 'Control',
+      // Add more mappings as needed
     }
+
+    return keyMap[keyIdentifier] || keyIdentifier
+  }
+
+  public handlePhysicalKeyDown(e: KeyboardEvent) {
+    // const keyLabel = this.normalizeKeyIdentifier(e.key)
+    // if (this.recognizedModifiers.has(keyLabel)) {
+    //   const modifierKey = convertModifier(keyLabel as ModifierKey)
+    //   if (modifierKey) {
+    //     this.toggleModifier(modifierKey)
+    //   }
+    // }
   }
 
   public getDisplayKey() {

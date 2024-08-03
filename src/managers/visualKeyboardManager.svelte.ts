@@ -1,4 +1,4 @@
-import { Platform } from 'obsidian'
+import { Platform, type Modifier } from 'obsidian'
 import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
 import type {
   KeyboardLayout,
@@ -7,6 +7,7 @@ import type {
   KeyboardSection,
   commandEntry,
 } from '../interfaces/Interfaces'
+import { convertModifier, getDisplayModifier } from '../utils/modifierUtils'
 
 export class VisualKeyboardManager {
   public layout: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
@@ -55,7 +56,7 @@ export class VisualKeyboardManager {
 
     // Initialize weights to 0
     for (const key in this.keyStates) {
-      keyWeights[key] = 0
+      keyWeights[key.toLowerCase()] = 0
     }
 
     // Calculate weights
@@ -67,8 +68,12 @@ export class VisualKeyboardManager {
         }
         for (const modifier of hotkey.modifiers) {
           const modKey = modifier.toLowerCase()
-          if (modKey in keyWeights) {
-            keyWeights[modKey]++
+          // Handle Control key variations
+          if (modKey === 'ctrl' || modKey === 'mod' || modKey === 'control') {
+            // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+            keyWeights['control'] = (keyWeights['control'] || 0) + 1
+          } else {
+            keyWeights[modKey] = (keyWeights[modKey] || 0) + 1
           }
         }
       }
@@ -76,8 +81,18 @@ export class VisualKeyboardManager {
 
     // Assign weights to keyStates
     for (const key in this.keyStates) {
-      this.keyStates[key].weight = keyWeights[key] || 0
+      const lowerKey = key.toLowerCase()
+      if (lowerKey === 'control' || lowerKey === 'ctrl') {
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+        this.keyStates[key].weight = keyWeights['control'] || 0
+      } else {
+        this.keyStates[key].weight = keyWeights[lowerKey] || 0
+      }
     }
+
+    // Debug log
+    console.log('Key Weights:', keyWeights)
+    console.log('Key States:', this.keyStates)
   }
 
   public getKeyState(key: Key): KeyboardKeyState {
@@ -104,6 +119,20 @@ export class VisualKeyboardManager {
     }
   }
 
+  public toggleKeyActive(keyIdentifier: string) {
+    const stateKey = keyIdentifier.toLowerCase()
+    if (this.keyStates[stateKey]) {
+      this.keyStates[stateKey].state =
+        this.keyStates[stateKey].state === 'active' ? 'inactive' : 'active'
+      return this.keyStates[stateKey].state === 'active'
+    } else {
+      console.warn(
+        `Key state for ${stateKey} is undefined. Check initialization.`
+      )
+      return false
+    }
+  }
+
   public updateKeyState(
     keyLabel: string,
     isActive: boolean,
@@ -122,6 +151,51 @@ export class VisualKeyboardManager {
       console.warn(
         `Key state for ${stateKey} is undefined. Check initialization.`
       )
+    }
+  }
+
+  public updateVisualState(activeKey: string, activeModifiers: Modifier[]) {
+    // Reset all keys to inactive
+    for (const key in this.keyStates) {
+      this.keyStates[key].state = 'inactive'
+    }
+
+    // Set active key
+    if (activeKey) {
+      const stateKey = activeKey.toLowerCase()
+      if (this.keyStates[stateKey]) {
+        this.keyStates[stateKey].state = 'active'
+      }
+    }
+
+    // Set active modifiers
+    activeModifiers.forEach((modifier) => {
+      const modKey = modifier.toLowerCase()
+      // Handle Control key variations
+      if (modKey === 'ctrl' || modKey === 'mod' || modKey === 'control') {
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+        if (this.keyStates['control']) {
+          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+          this.keyStates['control'].state = 'active'
+        }
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+        if (this.keyStates['ctrl']) {
+          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+          this.keyStates['ctrl'].state = 'active'
+        }
+      } else {
+        if (this.keyStates[modKey]) {
+          this.keyStates[modKey].state = 'active'
+        }
+      }
+    })
+  }
+
+  public clearActiveKeys() {
+    for (const key in this.keyStates) {
+      if (this.keyStates[key].state === 'active') {
+        this.keyStates[key].state = 'inactive'
+      }
     }
   }
 

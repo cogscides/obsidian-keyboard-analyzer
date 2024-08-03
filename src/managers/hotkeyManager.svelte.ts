@@ -55,11 +55,47 @@ export default class HotkeyManager {
         hotkeys: hotkeys.all,
         defaultHotkeys: hotkeys.default,
         customHotkeys: hotkeys.custom,
+        isInternalModule: this.isInternalModule(command.id), // Add this line
         pluginName: this.getPluginName(pluginId),
         cmdName: cmdName || command.name,
       }
       return acc
     }, {} as Record<string, commandEntry>)
+  }
+
+  private isInternalModule(commandId: string): boolean {
+    const internalModules = [
+      'audio-recorder',
+      'backlink',
+      'bookmarks',
+      'canvas',
+      'command-palette',
+      'daily-notes',
+      'editor-status',
+      'file-explorer',
+      'file-recovery',
+      'global-search',
+      'graph',
+      'markdown-importer',
+      'note-composer',
+      'outgoing-link',
+      'outline',
+      'page-preview',
+      'properties',
+      'publish',
+      'random-note',
+      'slash-command',
+      'slides',
+      'starred',
+      'switcher',
+      'sync',
+      'tag-pane',
+      'templates',
+      'word-count',
+      'workspaces',
+      'zk-prefixer',
+    ]
+    return internalModules.some((module) => commandId.startsWith(module))
   }
 
   private getPluginName(pluginId: string): string {
