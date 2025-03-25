@@ -5,20 +5,23 @@ import type KeyboardAnalyzerPlugin from '../main'
 import KeyboardComponent from '../components/KeyboardComponent.svelte'
 import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from '../Constants'
+import { VisualKeyboardManager } from '../managers'
 
 export default class ShortcutsView extends ItemView {
   plugin: KeyboardAnalyzerPlugin
   component: ReturnType<typeof mount> | null = null
   activeKeysStore: ActiveKeysStore
+  visualKeyboardManager: VisualKeyboardManager
 
   navigation = true
 
   constructor(leaf: WorkspaceLeaf, plugin: KeyboardAnalyzerPlugin) {
     super(leaf)
     this.plugin = plugin
+    this.visualKeyboardManager = new VisualKeyboardManager()
     this.activeKeysStore = new ActiveKeysStore(
       this.app,
-      this.plugin.visualKeyboardManager
+      this.visualKeyboardManager
     )
   }
 

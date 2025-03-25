@@ -1,38 +1,28 @@
 <script lang="ts">
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
-  import type { Hotkey } from 'obsidian'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
-  import {
-    prepareModifiersString,
-    convertModifiers,
-    sortModifiers,
-  } from '../utils/modifierUtils'
   import { Star as StarIcon } from 'lucide-svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
-  import type HotkeyManager from '../managers/hotkeyManager.svelte'
-  import type { CommandsManager } from '../managers/commandsManager.svelte'
-  import type SettingsManager from '../managers/settingsManager.svelte'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type SettingsManager from '../managers/settingsManager'
+  import type GroupManager from '../managers/groupManager'
 
   interface Props {
     filteredCommands: commandEntry[]
-    selectedGroup?: string
+    selectedGroup: string
   }
 
   let {
     filteredCommands = $bindable([]),
-    selectedGroup = $bindable(''),
+    selectedGroup = $bindable('all'),
   }: Props = $props()
 
   const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
-  const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager'
-  )
-  const commandsManager: CommandsManager = plugin.commandsManager
   const settingsManager: SettingsManager = plugin.settingsManager
-  const hotkeyManager: HotkeyManager = plugin.hotkeyManager
-  const settings = $derived(settingsManager.getSettings())
+  const groupManager: GroupManager = plugin.groupManager
+  const commandsManager = plugin.commandsManager
+  const hotkeyManager = plugin.hotkeyManager
+
+  let groupSettings = $derived(groupManager.getGroupSettings(selectedGroup))
 
   function renderHotkey(hotkey: hotkeyEntry) {
     return hotkeyManager.renderHotkey(hotkey)
@@ -43,16 +33,17 @@
   }
 
   function handlePluginNameClick(pluginName: string) {
-    // TODO to implement this logic we could move the search to the activeKeysStore (potential renaming to searchStore)
     console.log('pluginNameClick', pluginName)
+    // Implement search logic here
   }
 
-  function handleDuplicateHotkeyClick(hotkey: Hotkey) {
+  function handleDuplicateHotkeyClick(hotkey: hotkeyEntry) {
     console.log('duplicateHotkeyClick', hotkey)
+    // Implement duplicate hotkey handling here
   }
 </script>
 
-<span> Selected Group: {selectedGroup} </span>
+<span>Selected Group: {selectedGroup}</span>
 <div
   id="hotkeys-wrapper"
   class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"
@@ -61,12 +52,8 @@
     {#each filteredCommands as cmdEntry (cmdEntry.id)}
       <div
         class="kbanalizer-setting-item setting-item"
-        class:is-starred={settings && settings.featuredCommandIDs
-          ? settings.featuredCommandIDs.includes(cmdEntry.id)
-          : false}
+        class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
       >
-        <!-- animate:flip={{ duration: 200 }} -->
-        <!-- transition:fade={{ duration: 200 }} -->
         <div class="setting-item-info">
           <div class="setting-item-name">
             <button
@@ -85,39 +72,27 @@
               <StarIcon size={16} />
             </div>
           </div>
-          {#if settings.filterSettings?.DisplayIDs}
-            <small>
-              {cmdEntry.id}
-            </small>
+          {#if groupSettings?.DisplayIDs}
+            <small>{cmdEntry.id}</small>
           {/if}
         </div>
         <div class="kbanalizer-setting-item-control setting-item-control">
           <div class="setting-command-hotkeys">
             {#each cmdEntry.hotkeys as hotkey}
-              {#if hotkeyManager.isHotkeyDuplicate( cmdEntry.id, { ...hotkey, modifiers: hotkey.modifiers ?? [] } )}
-                <button
-                  class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
-                  class:is-duplicate={settings.filterSettings
-                    .HighlightDuplicates}
-                  onclick={() => handleDuplicateHotkeyClick(hotkey)}
-                >
-                  {renderHotkey(hotkey)}
-                </button>
-              {:else}
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <span
-                  class="kbanalizer-setting-hotkey setting-hotkey"
-                  class:is-customized={hotkey.isCustom &&
-                    settings.filterSettings.HighlightCustom}
-                  onclick={() => {
-                    console.log('hotkey-clicked')
-                    console.log(JSON.stringify(hotkey, null, 2))
-                  }}
-                >
-                  {renderHotkey(hotkey)}
-                </span>
-              {/if}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <span
+                class="kbanalizer-setting-hotkey setting-hotkey"
+                class:is-duplicate={hotkeyManager.isHotkeyDuplicate(
+                  cmdEntry.id,
+                  hotkey
+                ) && groupSettings?.HighlightDuplicates}
+                class:is-customized={hotkey.isCustom &&
+                  groupSettings?.HighlightCustom}
+                onclick={() => handleDuplicateHotkeyClick(hotkey)}
+              >
+                {renderHotkey(hotkey)}
+              </span>
             {/each}
           </div>
         </div>

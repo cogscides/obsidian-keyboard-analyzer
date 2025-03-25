@@ -6,8 +6,8 @@ import {
   type ModifierKey,
   sortModifiers,
 } from '../utils/modifierUtils'
-import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
-import HotkeyManager from '../managers/hotkeyManager.svelte'
+import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
+import HotkeyManager from '../managers/hotkeyManager/hotkeyManager.svelte'
 import type { commandEntry } from '../interfaces/Interfaces'
 
 export class ActiveKeysStore {

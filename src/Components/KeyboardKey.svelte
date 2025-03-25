@@ -2,7 +2,7 @@
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
   import { getDisplayModifier } from '../utils/modifierUtils'
 
@@ -90,7 +90,7 @@
     class:is-active={keyState.state === 'active'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
-    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : keyState.weight ? `background-color: rgb(from var(--chart-color-2) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}}`}
+    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}}`}
     onclick={() => handleClick(key)}
   >
     {getDisplayModifier(displayLabel)}

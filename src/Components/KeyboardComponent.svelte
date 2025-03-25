@@ -1,47 +1,50 @@
 <!-- src/components/KeyboardComponent.svelte -->
 
 <script lang="ts">
-  import { setContext, onMount } from 'svelte'
+  import { setContext } from 'svelte'
   import type { Hotkey, Modifier } from 'obsidian'
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
   import type { commandEntry, KeyboardLayout } from '../interfaces/Interfaces'
-  import { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import { convertModifiers } from '../utils/modifierUtils'
   import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
+
+  import type CommandsManager from '../managers/commandsManager'
+  import type SettingsManager from '../managers/settingsManager'
+
   import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
-  import type { CommandsManager } from '../managers/commandsManager.svelte'
-  import type SettingsManager from '../managers/settingsManager.svelte'
+  import { DEFAULT_GROUP_NAMES } from '../managers/groupManager/groupManager.svelte'
+  import { GroupType } from '../managers/settingsManager'
 
   // Props and Context
   interface Props {
     plugin: KeyboardAnalyzerPlugin
     view: ShortcutsView
-    activeKeysStore: ActiveKeysStore
   }
 
-  let { plugin, view, activeKeysStore }: Props = $props()
+  let { plugin, view }: Props = $props()
 
   // Managers and stores
-  const visualKeyboardManager = new VisualKeyboardManager()
   const commandsManager: CommandsManager = plugin.commandsManager
-  const settingsManager: SettingsManager = plugin.settingsManager
+  const visualKeyboardManager = new VisualKeyboardManager()
+  const activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager)
 
   setContext('keyboard-analyzer-plugin', plugin)
   setContext('activeKeysStore', activeKeysStore)
   setContext('visualKeyboardManager', visualKeyboardManager)
 
   // Reactive variables
-  let filterSettings = $derived(settingsManager.settings.filterSettings)
   let viewWidth = $state(0)
   let viewMode = $state('desktop')
   let search = $state('')
   let input: HTMLInputElement | undefined = $state()
   let keyboardListenerIsActive = $state(false)
-  let selectedGroup = $state('')
+
+  let selectedGroupID = $state(GroupType.All)
 
   let visibleCommands = $state<commandEntry[]>([])
   let searchCommandsCount = $derived(visibleCommands.length)
@@ -57,7 +60,7 @@
       search,
       activeKeysStore.ActiveModifiers,
       activeKeysStore.ActiveKey,
-      selectedGroup
+      selectedGroupID
     )
     return
   })
@@ -160,14 +163,14 @@
       {searchCommandsCount}
       {searchHotkeysCount}
       bind:keyboardListenerIsActive
-      bind:selectedGroup
+      bind:selectedGroup={selectedGroupID}
       {plugin}
       onSearch={handleSearch}
     />
 
     <CommandsList
       bind:filteredCommands={visibleCommands}
-      bind:selectedGroup
+      bind:selectedGroup={selectedGroupID}
       on:starClick={handleStarIconClicked}
       on:duplicateHotkeyClick={handleDuplicateHotkeyClicked}
       on:pluginNameClick={handlePluginNameClicked}

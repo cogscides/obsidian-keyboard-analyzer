@@ -1,14 +1,25 @@
 import { Platform, type Modifier } from 'obsidian'
-import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
+import { UNIFIED_KEYBOARD_LAYOUT } from '../../Constants'
 import type {
   KeyboardLayout,
   Key,
   KeyboardKeyState,
   KeyboardSection,
   commandEntry,
-} from '../interfaces/Interfaces'
-import { convertModifier, getDisplayModifier } from '../utils/modifierUtils'
+} from '../../interfaces/Interfaces'
+import { convertModifier, getDisplayModifier } from '../../utils/modifierUtils'
 
+/**
+ * The VisualKeyboardManager class is responsible for managing and processing the visual keyboard layout.
+ * It provides methods for initializing the keyboard layout, calculating weights, and managing key states.
+ *
+ * @example
+ * ```typescript
+ * const visualKeyboardManager = new VisualKeyboardManager()
+ * ```
+ *
+ * @class VisualKeyboardManager
+ */
 export class VisualKeyboardManager {
   public layout: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
   public keyStates: Record<string, KeyboardKeyState> = $state({})

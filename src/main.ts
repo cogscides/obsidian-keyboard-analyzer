@@ -5,29 +5,32 @@ import {
   type WorkspaceLeaf,
   type PluginManifest,
 } from 'obsidian'
-import SettingsManager from './managers/settingsManager.svelte'
+
 import ShortcutsView from './views/ShortcutsView'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from './Constants'
-import type { PluginSettings } from './managers/settingsManager.svelte'
-import HotkeyManager from './managers/hotkeyManager.svelte'
-import { CommandsManager } from './managers/commandsManager.svelte'
-import { VisualKeyboardManager } from './managers/visualKeyboardManager.svelte'
+
+import CommandsManager from './managers/commandsManager'
+import HotkeyManager from './managers/hotkeyManager'
+import SettingsManager from './managers/settingsManager'
+import GroupManager from './managers/groupManager'
+
+import type { PluginSettings } from './managers/settingsManager'
 
 import 'virtual:uno.css'
 import './styles.css'
 
 export default class KeyboardAnalyzerPlugin extends Plugin {
-  settingsManager: SettingsManager
-  hotkeyManager: HotkeyManager
   commandsManager: CommandsManager
-  visualKeyboardManager: VisualKeyboardManager
+  hotkeyManager: HotkeyManager
+  settingsManager: SettingsManager
+  groupManager: GroupManager
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
     this.settingsManager = SettingsManager.getInstance(this)
+    this.groupManager = GroupManager.getInstance(this.settingsManager)
+    this.commandsManager = CommandsManager.getInstance(this.app, this)
     this.hotkeyManager = HotkeyManager.getInstance(this.app)
-    this.commandsManager = CommandsManager.getInstance(this.app)
-    this.visualKeyboardManager = new VisualKeyboardManager()
   }
 
   get full() {
@@ -151,27 +154,27 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     })
   }
 
-  // Helper methods to access settings
-  async getSetting<K extends keyof PluginSettings>(
-    key: K
-  ): Promise<PluginSettings[K]> {
-    return this.settingsManager.getSetting(key)
-  }
+  // // Helper methods to access settings
+  // async getSetting<K extends keyof PluginSettings>(
+  //   key: K
+  // ): Promise<PluginSettings[K]> {
+  //   return this.settingsManager.getSetting(key)
+  // }
 
-  async setSetting<K extends keyof PluginSettings>(
-    key: K,
-    value: PluginSettings[K]
-  ): Promise<void> {
-    await this.settingsManager.setSetting(key, value)
-  }
+  // async setSetting<K extends keyof PluginSettings>(
+  //   key: K,
+  //   value: PluginSettings[K]
+  // ): Promise<void> {
+  //   await this.settingsManager.setSetting(key, value)
+  // }
 
-  async updateSettings(newSettings: Partial<PluginSettings>): Promise<void> {
-    await this.settingsManager.updateSettings(newSettings)
-  }
+  // async updateSettings(newSettings: Partial<PluginSettings>): Promise<void> {
+  //   await this.settingsManager.updateSettings(newSettings)
+  // }
 
-  getSettings(): Readonly<PluginSettings> {
-    return this.settingsManager.getSettings()
-  }
+  // getSettings(): Readonly<PluginSettings> {
+  //   return this.settingsManager.getSettings()
+  // }
 
   // END OF PLUGIN DECLARATION
 }

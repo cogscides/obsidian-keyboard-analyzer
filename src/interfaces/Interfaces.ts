@@ -10,14 +10,7 @@ import type {
   KeymapInfo,
   InternalPlugin,
   InternalPluginInstance,
-} from 'obsidian'
-
-// Plugin Data
-export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
-  modifiers: Modifier[]
-  backedModifiers?: string
-  isCustom: boolean
-}
+} from 'obsidian-typings'
 
 export interface commandEntry {
   id: string
@@ -30,11 +23,18 @@ export interface commandEntry {
   cmdName: string
 }
 
+export type commandsArray = commandEntry[]
+
+// Plugin Data
+export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
+  modifiers: Modifier[]
+  backedModifiers?: string
+  isCustom: boolean
+}
+
 export interface hotkeyDict {
   [id: string]: commandEntry
 }
-
-export type commandsArray = commandEntry[]
 
 export interface Key {
   label: string
@@ -72,6 +72,10 @@ export interface UnsafeHotkeyManager extends ObsidianHotkeyManager {
 }
 
 // Unsafe Interfaces
+
+/*
+ * Commands Interface to be used in the commandsManager
+ */
 export interface UnsafeCommands {
   app: App
   commands: Record<string, Command>

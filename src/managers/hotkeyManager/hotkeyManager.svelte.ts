@@ -5,14 +5,14 @@ import type {
   commandEntry,
   UnsafeInternalPlugin,
   UnsafeInternalPluginInstance,
-} from '../interfaces/Interfaces'
+} from '../../interfaces/Interfaces'
 import {
   convertModifiers,
   sortModifiers,
   modifiersToString,
   areModifiersEqual,
   isKeyMatch,
-} from '../utils/modifierUtils'
+} from '../../utils/modifierUtils'
 
 export default class HotkeyManager {
   private static instance: HotkeyManager | null = null

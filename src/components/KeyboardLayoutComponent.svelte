@@ -10,7 +10,7 @@
   } from '../interfaces/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
   import { Coffee as CoffeeIcon, CrossIcon } from 'lucide-svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardManager.svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
 
   interface Props {
     visibleCommands: commandEntry[]

@@ -1,33 +1,26 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <script lang="ts">
-  import type { getIconIds, Modifier } from 'obsidian'
-  import { getContext } from 'svelte'
-  import type KeyboardAnalyzerPlugin from '../main'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
-  import {
-    CircleDotIcon,
-    FilterIcon,
-    CrossIcon,
-    RefreshCw,
-    ChevronDown,
-  } from 'lucide-svelte'
-  import getActiveKeysStore from '../stores/activeKeysStore.svelte'
-  import { convertModifiers, sortModifiers } from '../utils/modifierUtils'
-  import { slide, fade } from 'svelte/transition'
-  import type { FilterSettings } from '../managers/settingsManager.svelte'
+  import { getContext } from 'svelte';
+  import type KeyboardAnalyzerPlugin from '../main';
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte';
+  import { CircleDotIcon, FilterIcon, CrossIcon, RefreshCw, ChevronDown } from 'lucide-svelte';
+  import { slide, fade } from 'svelte/transition';
+  import { FilterSettingsKeys, type CGroup, type CGroupFilterSettings, type CGroupSettingTitles } from '../managers/settingsManager';
+  import type { FilterSettings } from '../managers/settingsManager';
+  import { convertModifiers } from '../utils/modifierUtils'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
-    inputHTML?: HTMLInputElement
+    inputHTML?: HTMLInputElement | undefined
     searchCommandsCount?: number
     searchHotkeysCount?: number
     keyboardListenerIsActive?: boolean
-    selectedGroup?: string
+    selectedGroup: string
     onSearch?: (
       search: string,
       activeModifiers: string[],
       activeKey: string,
-      selectedGroup?: string
+      selectedGroup: string
     ) => void
   }
 
@@ -37,18 +30,23 @@
     searchCommandsCount = $bindable(0),
     searchHotkeysCount = $bindable(0),
     keyboardListenerIsActive = $bindable(false),
-    selectedGroup = $bindable(''),
+    selectedGroup = $bindable(""),
     onSearch = $bindable(() => {}),
   }: Props = $props()
 
   let search = $state('')
+  
   const settingsManager = plugin.settingsManager
   const commandsManager = plugin.commandsManager
-  const filterSettings: FilterSettings = $derived(
-    settingsManager.getSetting('filterSettings')
-  )
+  const groupManager = plugin.groupManager
 
-  const activeKeysStore = getContext<ActiveKeysStore>('activeKeysStore')
+  const filterSettings: CGroupFilterSettings = $derived(
+    groupManager.getGroupSettings(selectedGroup))
+
+  $inspect(plugin.settingsManager)
+  console.log('GroupManager try to find', selectedGroup,  groupManager.getGroup(selectedGroup))
+
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
   let viewDropdownOpen = $state(false)
   let modulesDropdownOpen = $state(false)
@@ -58,8 +56,7 @@
   let PressedKeysStore = $derived(activeKeysStore)
 
   // Groups
-  let excludedModules = $derived(commandsManager.getExcludedModulesForGroup(selectedGroup))
-  $inspect(excludedModules)
+  let excludedModules = $derived(groupManager.getExcludedModulesForGroup(selectedGroup))
 
   function ClearSearch() {
     if (search === '') {
@@ -78,15 +75,11 @@
     modulesDropdownOpen = !modulesDropdownOpen
   }
 
+  // TODO Unify this with the settingsManager
   function toggleFilterSetting(setting: keyof typeof filterSettings) {
-    settingsManager.updateFilterSettings({
+    groupManager.updateGroupFilterSettings(selectedGroup, {
       [setting]: !filterSettings[setting],
     })
-  }
-
-  function handleGroupSelection(group: string) {
-    selectedGroup = group
-    handleSearchInput()
   }
 
   function ActivateKeyboardListener() {
@@ -126,13 +119,9 @@
 <select
   class="dropdown mt-4"
   bind:value={selectedGroup}
-  onchange={() => handleGroupSelection(selectedGroup)}
 >
-  <option value="">All Commands</option>
-  <option value="featured">Featured</option>
-  <option value="recent">Recent</option>
-  {#each Array.from(commandsManager.getCommandGroups().keys()) as group}
-    <option value={group}>{group}</option>
+  {#each groupManager.getGroups() as group}
+    <option value={group.id}>{group.name}</option>
   {/each}
 </select>
 
@@ -149,6 +138,9 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="hotkey-settings-container" onkeydown={handleKeyDown}>
+
+  <!-- COMPONENT: Search Input -->
+
   <div class="search-wrapper" class:is-focused={inputIsFocused}>
     <div class="modifiers-wrapper">
       {#each PressedKeysStore.sortedModifiers as modifier}
@@ -207,6 +199,9 @@
   >
     <FilterIcon size={16} />
   </button>
+
+  <!-- COMPONENT: Popup Filter Menu -->
+
   {#if filterIsOpen}
     <!-- use:clickOutside={() =>
         // await timeout 40ms
@@ -220,34 +215,14 @@
       class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
     >
       <div transition:fade>
-        <div class="setting-item mod-toggle popup-filter-menu">
-          <div
-            class="checkbox-container"
-            class:is-enabled={filterSettings?.FeaturedFirst}
-          >
-            <!-- onclick={onFeaturedFirstOptionTriggered} -->
-            <input
-              type="checkbox"
-              tabindex="0"
-              bind:checked={filterSettings.FeaturedFirst}
-            />
-          </div>
-          <div class="setting-item-name popup-filter-title">
-            Display featured first
-          </div>
-        </div>
+        <!-- OPTION: Featured First -->
         <div class="setting-item mod-toggle popup-filter-menu">
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.StrictModifierMatch}
             onclick={() => {
-              plugin.settingsManager.updateSettings({
-                filterSettings: {
-                  ...filterSettings,
-                  StrictModifierMatch: !filterSettings.StrictModifierMatch,
-                },
-              })
+              toggleFilterSetting(FilterSettingsKeys.StrictModifierMatch);
             }}
           >
             <input
@@ -258,42 +233,34 @@
           </div>
           <div class="setting-item-name popup-filter-title">Strict Search</div>
         </div>
+        <!-- OPTION: Highlight Custom -->
         <div class="setting-item mod-toggle popup-filter-menu">
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
-            class:is-enabled={filterSettings.HighlightCustom}
+            class:is-enabled={filterSettings.ViewWOhotkeys}
             onclick={() => {
-              plugin.settingsManager.updateSettings({
-                filterSettings: {
-                  ...filterSettings,
-                  HighlightCustom: !filterSettings.HighlightCustom,
-                },
-              })
+              toggleFilterSetting(FilterSettingsKeys.ViewWOhotkeys);
             }}
           >
             <input
               type="checkbox"
               tabindex="0"
-              bind:checked={filterSettings.HighlightCustom}
+              bind:checked={filterSettings.ViewWOhotkeys}
             />
           </div>
           <div class="setting-item-name popup-filter-title">
-            Highlight custom hotkeys
+            Only with hotkeys
           </div>
         </div>
+        <!-- OPTION: Highlight Duplicates -->
         <div class="setting-item mod-toggle popup-filter-menu">
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.HighlightDuplicates}
             onclick={() => {
-              plugin.settingsManager.updateSettings({
-                filterSettings: {
-                  ...filterSettings,
-                  HighlightDuplicates: !filterSettings.HighlightDuplicates,
-                },
-              })
+              toggleFilterSetting(FilterSettingsKeys.HighlightDuplicates);
             }}
           >
             <input
@@ -306,18 +273,14 @@
             Highlight hotkey duplicates
           </div>
         </div>
+        <!-- OPTION: Display Command IDs -->
         <div class="setting-item mod-toggle popup-filter-menu">
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings.DisplayIDs}
             onclick={() => {
-              plugin.settingsManager.updateSettings({
-                filterSettings: {
-                  ...filterSettings,
-                  DisplayIDs: !filterSettings.DisplayIDs,
-                },
-              })
+              toggleFilterSetting(FilterSettingsKeys.DisplayIDs)
             }}
           >
             <input
@@ -336,6 +299,9 @@
       <div class="popup-filter-menu-background" />
     </div>
   {/if}
+
+  <!-- COMPONENT: View Dropdown -->
+
   <button
     id="hotkey-view-button"
     aria-label="View Options"
@@ -348,7 +314,7 @@
       <div class="popup-filter-menu">
         <!-- Move FeaturedFirst, HighlightCustom, HighlightDuplicates here -->
         <!-- Add GroupByPlugin, DisplayGroupAssignment options -->
-        {#each ['FeaturedFirst', 'HighlightCustom', 'HighlightDuplicates', 'GroupByPlugin', 'DisplayGroupAssignment'] as setting}
+        {#each Object.values(FilterSettingsKeys) as setting}
         <div class="setting-item mod-toggle">
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
@@ -370,6 +336,7 @@
     </div>
   {/if}
 
+    <!-- COMPONENT: Modules Dropdown -->
 
   <button
   id="hotkey-modules-button"
@@ -380,53 +347,58 @@
   Modules <ChevronDown size={16} />
 </button>
 
-{#if modulesDropdownOpen}
-  <div class="popup-filter-menu-container is-open" transition:slide>
-    <div class="popup-filter-menu">
-      <div class="setting-item mod-toggle">
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <div
-          class="checkbox-container"
-          class:is-enabled={filterSettings.DisplayInternalModules}
-          onclick={() => toggleFilterSetting('DisplayInternalModules' as keyof FilterSettings)}
-        >
-          <input
-            type="checkbox"
-            tabindex="0"
-            bind:checked={filterSettings.DisplayInternalModules}
-          />
+  <!-- COMPONENT: Popup Filter Menu -->
+
+  {#if modulesDropdownOpen}
+    <div class="popup-filter-menu-container is-open" transition:slide>
+      <div class="popup-filter-menu">
+        <div class="setting-item mod-toggle">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <div
+            class="checkbox-container"
+            class:is-enabled={filterSettings.DisplayInternalModules}
+            onclick={() => toggleFilterSetting('DisplayInternalModules' as keyof FilterSettings)}
+          >
+            <input
+              type="checkbox"
+              tabindex="0"
+              bind:checked={filterSettings.DisplayInternalModules}
+            />
+          </div>
+          <div class="setting-item-name">Display Internal Modules</div>
         </div>
-        <div class="setting-item-name">Display Internal Modules</div>
-      </div>
-      <div class="installed-plugins-container">
-        {#each commandsManager.getInstalledPluginIDs() as pluginID}
-      
-          {#if commandsManager.isInternalModule(pluginID)}
-          <div class="setting-item mod-toggle">
-            <div class="installed-plugin-name">{plugin.manifest.id}</div>
-            <div class="installed-plugin-icon">
-              <div class="checkbox-container">
-                <input
-                  type="checkbox"
-                  tabindex="0"
-                  checked={!excludedModules.includes(plugin.manifest.id)}
-                  onchange={() => {
-                    commandsManager.toggleExcludedModuleForGroup(selectedGroup, plugin.manifest.id)
-                  }}
-                />
+        <div class="installed-plugins-container">
+          {#each commandsManager.getInstalledPluginIDs() as pluginID}
+        
+            {#if commandsManager.isInternalModule(pluginID)}
+            <div class="setting-item mod-toggle">
+              <div class="installed-plugin-name">{plugin.manifest.id}</div>
+              <div class="installed-plugin-icon">
+                <div class="checkbox-container">
+                  <input
+                    type="checkbox"
+                    tabindex="0"
+                    checked={!excludedModules.includes(plugin.manifest.id)}
+                    onchange={() => {
+                      groupManager.toggleExcludedModuleForGroup(selectedGroup, plugin.manifest.id)
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          {/if}
-        {/each}
+            {/if}
+          {/each}
 
+        </div>
+        <!-- Add a list of modules with checkboxes here -->
       </div>
-      <!-- Add a list of modules with checkboxes here -->
     </div>
-  </div>
 
 
-{/if}
+  {/if}
+
+  <!-- COMPONENT: Community Plugin Search Summary -->
+
   <div class="community-plugin-search-summary u-muted">
     {#if searchCommandsCount !== 0}
       <span>
@@ -436,6 +408,9 @@
       <span>Hotkeys not found</span>
     {/if}
   </div>
+
+  <!-- COMPONENT: Refresh Button -->
+
   <button
     id="hotkey-refresh-button"
     aria-label="Refresh Commands"

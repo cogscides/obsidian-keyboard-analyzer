@@ -1,28 +1,29 @@
-import type { Modifier } from 'obsidian'
 import type {
   App,
   InternalPlugin,
   InternalPluginName,
-  InternalPluginInstance,
-  Commands,
   Command,
   Plugin,
-  PluginManifest,
 } from 'obsidian-typings'
 import type {
   hotkeyEntry,
   UnsafeInternalPlugin,
   UnsafeInternalPluginInstance,
-} from '../interfaces/Interfaces'
-import type { commandEntry, UnsafeAppInterface } from '../interfaces/Interfaces'
-import HotkeyManager from './hotkeyManager.svelte'
-import SettingsManager, { type CommandGroup } from './settingsManager.svelte'
+  commandEntry,
+} from '../../interfaces/Interfaces'
+import type { UnsafeAppInterface } from '../../interfaces/Interfaces'
+import HotkeyManager from '../hotkeyManager/hotkeyManager.svelte'
+import SettingsManager, { GroupType, type CGroup } from '../settingsManager'
 import {
   convertModifiers,
-  unconvertModifiers,
   areModifiersEqual,
   isKeyMatch,
-} from '../utils/modifierUtils'
+} from '../../utils/modifierUtils'
+import type groupManager from '../groupManager'
+import GroupManager, {
+  DEFAULT_GROUP_NAMES,
+} from '../groupManager/groupManager.svelte'
+import type KeyboardAnalyzerPlugin from '../../main'
 
 /**
  * The CommandsManager class is responsible for managing and processing commands.
@@ -30,28 +31,34 @@ import {
  *
  * @class CommandsManager
  */
-export class CommandsManager {
+export default class CommandsManager {
   private static instance: CommandsManager | null = null
   private app: App
+  private plugin: KeyboardAnalyzerPlugin
   private hotkeyManager: HotkeyManager
-  private settingsManager: SettingsManager
   private commands: Record<string, commandEntry> = {}
-  private commandGroups: Map<string, CommandGroup> = $state(new Map())
-  private featuredCommandIds: Set<string> = $state(new Set())
-  private recentCommandIds: string[] = []
+  // private commandGroups: Map<string, CommandGroup> = $state(new Map())
+  private settingsManager: SettingsManager
+  private groupManager: GroupManager
+  public featuredCommandIds: Set<string> = $state(new Set())
+  public recentCommandIds: string[] = []
 
-  private constructor(app: App) {
+  private constructor(app: App, plugin: KeyboardAnalyzerPlugin) {
     this.app = app
+    this.plugin = plugin
     this.hotkeyManager = HotkeyManager.getInstance(app)
-    this.settingsManager = SettingsManager.getInstance()
+    this.settingsManager = SettingsManager.getInstance(plugin)
+    this.groupManager = GroupManager.getInstance(this.settingsManager)
     this.loadCommands()
-    this.loadCommandGroups()
     this.loadFeaturedCommands()
   }
 
-  static getInstance(app: App): CommandsManager {
+  static getInstance(
+    app: App,
+    plugin: KeyboardAnalyzerPlugin
+  ): CommandsManager {
     if (!CommandsManager.instance) {
-      CommandsManager.instance = new CommandsManager(app)
+      CommandsManager.instance = new CommandsManager(app, plugin)
     }
     return CommandsManager.instance
   }
@@ -63,8 +70,11 @@ export class CommandsManager {
    * @returns void
    */
   private loadCommands() {
+    console.log('Loading commands...')
     const allCommands = this.getCommands()
+    console.log('Retrieved commands:', allCommands.length)
     this.commands = this.processCommands(allCommands)
+    console.log('Processed commands:', Object.keys(this.commands).length)
   }
 
   /**
@@ -131,10 +141,10 @@ export class CommandsManager {
   }
 
   /**
-   * Returns a boolean value indicating if a command is an internal module
-   *
-   * @param commandId - The ID of the command to check
-   * @returns boolean
+  * Returns a boolean value indicating if a command is an internal module
+  *
+  * @param commandId - The ID of the command to check
+  * @returns boolean
   * @types of InternalPluginName from obsidian-typings
   type InternalPluginName =
 		| "audio-recorder"
@@ -203,37 +213,6 @@ export class CommandsManager {
     return internalModules.some((module) => commandId.startsWith(module))
   }
 
-  // Groups  ------------------------ //
-
-  /**
-   * Loads the command groups from the settings
-   *
-   * @private
-   * @returns void
-   */
-  private loadCommandGroups() {
-    const savedGroups = this.settingsManager.getSetting('commandGroups') || []
-    savedGroups.forEach((group) => {
-      this.commandGroups.set(group.name, group)
-    })
-  }
-
-  /**
-   * Saves the command groups to the settings
-   *
-   * @private
-   * @returns void
-   */
-  private saveCommandGroups() {
-    const groupsArray = Array.from(this.commandGroups.values()).map(
-      (group) => ({
-        ...group,
-        excludedModules: group.excludedModules || [],
-      })
-    )
-    this.settingsManager.updateSettings({ commandGroups: groupsArray })
-  }
-
   /**
    * Loads the featured commands from the settings
    *
@@ -241,61 +220,9 @@ export class CommandsManager {
    * @returns void
    */
   private loadFeaturedCommands() {
-    const featuredCommands =
+    this.featuredCommandIds = new Set(
       this.settingsManager.getSetting('featuredCommandIDs') || []
-    this.featuredCommandIds = new Set(featuredCommands)
-  }
-
-  /**
-   * Creates a new command group
-   *
-   * @param groupName - The name of the group to create
-   * @returns void
-   */
-  public createGroup(groupName: string) {
-    if (!this.commandGroups.has(groupName)) {
-      this.commandGroups.set(groupName, {
-        name: groupName,
-        commandIds: [],
-        excludedModules: [],
-      })
-      this.saveCommandGroups()
-    }
-  }
-
-  /**
-   * Adds a command to a group
-   *
-   * @param groupName - The name of the group to add the command to
-   * @param commandId - The ID of the command to add
-   * @returns void
-   */
-  public addCommandToGroup(groupName: string, commandId: string) {
-    if (!this.commandGroups.has(groupName)) {
-      this.createGroup(groupName)
-    }
-    const group = this.commandGroups.get(groupName)
-    if (group && !group.commandIds.includes(commandId)) {
-      group.commandIds.push(commandId)
-      this.saveCommandGroups()
-    }
-  }
-
-  /**
-   * Removes a command from a group
-   *
-   * @param groupName - The name of the group to remove the command from
-   * @param commandId - The ID of the command to remove
-   * @returns void
-   */
-  public removeCommandFromGroup(groupName: string, commandId: string) {
-    const group = this.commandGroups.get(groupName)
-    if (group) {
-      group.commandIds = group.commandIds.filter(
-        (id: string) => id !== commandId
-      )
-      this.saveCommandGroups()
-    }
+    )
   }
 
   /**
@@ -304,31 +231,24 @@ export class CommandsManager {
    * @param groupName - The name of the group to get the commands from
    * @returns commandEntry[]
    */
-  public getGroup(groupName: string): commandEntry[] {
-    if (groupName === 'Featured') {
+  public getGroupCommands(groupID: string): commandEntry[] {
+    if (groupID === GroupType.All) {
       return Array.from(this.featuredCommandIds)
         .map((id) => this.commands[id])
         .filter(Boolean)
     }
-    if (groupName === 'Recent') {
+    if (groupID === GroupType.Recent) {
       return this.recentCommandIds
         .map((id) => this.commands[id])
         .filter(Boolean)
     }
-    const group = this.commandGroups.get(groupName)
+
+    const group = this.groupManager.getGroup(groupID)
+
     if (!group) return []
     return group.commandIds
       .map((id: string) => this.commands[id])
       .filter(Boolean)
-  }
-
-  /**
-   * Returns the names of the command groups
-   *
-   * @returns string[]
-   */
-  public getCommandGroups(): string[] {
-    return ['Featured', 'Recent', ...Array.from(this.commandGroups.keys())]
   }
 
   /**
@@ -346,35 +266,6 @@ export class CommandsManager {
     this.settingsManager.updateSettings({
       featuredCommandIDs: Array.from(this.featuredCommandIds),
     })
-  }
-
-  public getExcludedModulesForGroup(group: string): string[] {
-    const allGroups = this.settingsManager.getSetting('commandGroups')
-    const groupSettings = allGroups.find((g) => g.name === group)
-    return groupSettings?.excludedModules || []
-  }
-
-  public toggleExcludedModuleForGroup(group: string, moduleID: string) {
-    const allGroups = this.settingsManager.getSetting('commandGroups')
-    const groupSettings = allGroups.find((g) => g.name === group)
-
-    if (groupSettings) {
-      const excludedModules = groupSettings.excludedModules || []
-      if (excludedModules.includes(moduleID)) {
-        excludedModules.splice(excludedModules.indexOf(moduleID), 1)
-      } else {
-        excludedModules.push(moduleID)
-      }
-
-      this.settingsManager.updateSettings({
-        commandGroups: allGroups.map((g) => {
-          if (g.name === group) {
-            return { ...g, excludedModules }
-          }
-          return g
-        }),
-      })
-    }
   }
 
   /**
@@ -404,20 +295,32 @@ export class CommandsManager {
     search: string,
     activeModifiers: string[],
     activeKey: string,
-    selectedGroup?: string
+    selectedGroupID?: string
   ): commandEntry[] {
     console.log(
       'filterCommands:',
       search,
       activeModifiers,
       activeKey,
-      selectedGroup
+      selectedGroupID
     )
 
-    const filterSettings = this.settingsManager.getSetting('filterSettings')
+    // Get the filter settings for the selected group
+    let filterSettings = this.groupManager.getGroupSettings(
+      selectedGroupID || GroupType.All
+    )
+
+    if (selectedGroupID) {
+      console.log('selectedGroupID', selectedGroupID)
+      const selectedCommandGroup = this.groupManager.getGroup(selectedGroupID)
+      console.log('selectedCommandGroup', selectedCommandGroup)
+
+      filterSettings = selectedCommandGroup?.filterSettings || filterSettings
+    }
 
     // Start with all commands for the selected group
-    let commandsToFilter = this.getCommandsForGroup(selectedGroup)
+    let commandsToFilter = this.getCommandsForGroup(selectedGroupID)
+    console.log('commandsToFilter', commandsToFilter)
 
     // If no search and no active hotkeys, return all commands for the selected group
     if (!search && activeModifiers.length === 0 && !activeKey) {
@@ -431,7 +334,7 @@ export class CommandsManager {
         `${command.pluginName} ${command.cmdName}`
           .toLowerCase()
           .includes(searchLower) ||
-        (filterSettings.DisplayIDs &&
+        (filterSettings?.DisplayIDs &&
           command.id.toLowerCase().includes(searchLower))
 
       // If there's a search, only filter by the search term
@@ -444,22 +347,22 @@ export class CommandsManager {
           hotkey,
           activeModifiers,
           activeKey,
-          filterSettings.StrictModifierMatch
+          filterSettings?.StrictModifierMatch || false
         )
       )
 
-      const hasHotkeysMatch = filterSettings.ViewWOhotkeys
+      const hasHotkeysMatch = filterSettings?.ViewWOhotkeys
         ? true
         : command.hotkeys.length > 0
 
-      const internalModuleMatch = filterSettings.DisplayInternalModules
+      const internalModuleMatch = filterSettings?.DisplayInternalModules
         ? true
         : !command.isInternalModule
 
       return nameMatch && hotkeyMatch && hasHotkeysMatch && internalModuleMatch
     })
 
-    if (filterSettings.FeaturedFirst) {
+    if (filterSettings?.FeaturedFirst) {
       return this.sortByFeaturedFirst(filteredCommands)
     }
 
@@ -480,13 +383,11 @@ export class CommandsManager {
     ).internalPlugins.getEnabledPlugins() as InternalPlugin[]
 
     console.log('internalPlugins', internalPlugins)
-
     const internalPluginIDs = internalPlugins.map(
       (plugin) => plugin.manifest?.id || ''
     )
 
     const installedPlugins = Object.values(this.app.plugins.plugins)
-
     console.log('installedPlugins', installedPlugins)
 
     const installedPluginIDs = installedPlugins.map((plugin) => {
@@ -569,10 +470,28 @@ export class CommandsManager {
    * @param selectedGroup - The selected group
    * @returns commandEntry[]
    */
-  private getCommandsForGroup(selectedGroup?: string): commandEntry[] {
-    if (!selectedGroup || selectedGroup === '')
+  public getCommandsForGroup(selectedGroupID?: string): commandEntry[] {
+    console.log('Getting commands for group:', selectedGroupID)
+    console.log('All commands:', Object.keys(this.commands).length)
+
+    if (!selectedGroupID || selectedGroupID === GroupType.All) {
+      console.log('Returning all commands:', Object.keys(this.commands).length)
       return Object.values(this.commands)
-    return this.getGroup(selectedGroup)
+    }
+
+    let group = this.groupManager.getGroup(selectedGroupID)
+    console.log('Found group:', group)
+
+    if (!group) {
+      console.log('No group found, returning empty array')
+      return []
+    }
+
+    const groupCommands = group.commandIds
+      .map((id) => this.commands[id])
+      .filter(Boolean)
+    console.log('Group commands:', groupCommands.length)
+    return groupCommands
   }
 
   /**
@@ -580,18 +499,22 @@ export class CommandsManager {
    *
    * @private
    * @param command - The command to check
-   * @param selectedGroup - The selected group
+   * @param selectedGroupID - The selected group
    * @returns boolean
    */
-  private matchesGroup(command: commandEntry, selectedGroup?: string): boolean {
-    if (!selectedGroup) return true
-    if (selectedGroup === 'Featured') {
+  private matchesGroup(
+    command: commandEntry,
+    selectedGroupID?: string
+  ): boolean {
+    if (!selectedGroupID) return true
+    if (selectedGroupID === GroupType.Featured) {
       return this.featuredCommandIds.has(command.id)
     }
-    if (selectedGroup === 'Recent') {
+    if (selectedGroupID === GroupType.Recent) {
       return this.recentCommandIds.includes(command.id)
     }
-    const group = this.commandGroups.get(selectedGroup)
+
+    const group = this.groupManager.getGroup(selectedGroupID)
     return group ? group.commandIds.includes(command.id) : true
   }
 

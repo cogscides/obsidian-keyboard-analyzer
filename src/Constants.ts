@@ -5,10 +5,6 @@ import type {
   KeyboardSection,
   Key,
 } from './interfaces/Interfaces'
-import type {
-  FilterSettings,
-  PluginSettings,
-} from './managers/settingsManager.svelte'
 
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
 
@@ -153,15 +149,14 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
         [
           { label: 'Insert', smallText: true },
           { label: 'Home', smallText: true },
-          { label: 'PaUp', code: 'PageUp', smallText: true },
+          { label: 'PgUp', code: 'PageUp', smallText: true },
         ],
         [
           { label: 'Delete', smallText: true },
           { label: 'End', smallText: true },
           {
-            label: 'PageDown',
+            label: 'PgUp',
             code: 'PageDown',
-            unicode: 'page\ndown',
             smallText: true,
           },
         ],
