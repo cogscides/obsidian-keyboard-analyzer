@@ -1,6 +1,6 @@
 # Keyboard Analyzer
 
-## ![](https://img.shields.io/badge/Windows-Ok-brightgreen) ![](https://img.shields.io/badge/Android-Ok-brightgreen) ![](https://img.shields.io/badge/MacOS-Bugs-red)
+![](https://img.shields.io/badge/Windows-Ok-brightgreen) ![](https://img.shields.io/badge/Android-Ok-brightgreen) ![](https://img.shields.io/badge/MacOS-Bugs-red)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S5E6K74)
 
