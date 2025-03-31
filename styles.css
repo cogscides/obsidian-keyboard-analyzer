@@ -351,9 +351,12 @@ kbd.modifier:hover {
   padding-top: 24px;
   padding-right: 32px;
   padding-bottom: 16px;
-  box-shadow: 0px 45px 18px rgba(5, 5, 5, 0.01),
-    0px 25px 15px rgba(5, 5, 5, 0.03), 0px 11px 11px rgba(5, 5, 5, 0.04),
-    0px 3px 6px rgba(5, 5, 5, 0.05), 0px 0px 0px rgba(5, 5, 5, 0.05);
+  box-shadow:
+    0px 45px 18px rgba(5, 5, 5, 0.01),
+    0px 25px 15px rgba(5, 5, 5, 0.03),
+    0px 11px 11px rgba(5, 5, 5, 0.04),
+    0px 3px 6px rgba(5, 5, 5, 0.05),
+    0px 0px 0px rgba(5, 5, 5, 0.05);
 }
 
 /* .is-mobile .popup-filter-menu-container { */
@@ -513,7 +516,9 @@ button#hotkey-refresh-button:hover {
   min-height: 24px;
   align-self: flex-end;
   position: relative;
-  transition: background-color, color 0.5s ease;
+  transition:
+    background-color,
+    color 0.5s ease;
 }
 
 .kbanalizer-setting-hotkey.is-customized {

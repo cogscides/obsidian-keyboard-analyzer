@@ -111,7 +111,7 @@ export function isCustomizedHotkey(id: string, hotkey: Hotkey, app: App) {
 }
 
 // return true if hotkey duplicated with other hotkey
-export function isHotkeyDuplicate(commandID: string, hotkey: Hotkey) {
+export function isHotkeyDuplicate(commandID: string, hotkey: Hotkey, app: App) {
   let isDuplicate = false
   let commands = getHotkeysV2(app)
   for (let command of Object.entries(commands)) {

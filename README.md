@@ -1,6 +1,6 @@
 # Keyboard Analyzer
-![](https://img.shields.io/badge/Windows-Ok-brightgreen) ![](https://img.shields.io/badge/Android-Ok-brightgreen) ![](https://img.shields.io/badge/MacOS-Bugs-red)
----
+
+## ![](https://img.shields.io/badge/Windows-Ok-brightgreen) ![](https://img.shields.io/badge/Android-Ok-brightgreen) ![](https://img.shields.io/badge/MacOS-Bugs-red)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S5E6K74)
 
@@ -12,7 +12,6 @@
 <br>
 <video src="https://user-images.githubusercontent.com/50235526/185812119-392b895c-ebd5-48df-accf-98933ef8a234.mp4" controls></video>
 </details>
-
 
 ## About
 
@@ -36,9 +35,9 @@ grateful for any help with testing support.
 
 ## Installation
 
-As plugin is not yet published in community plugins library, you will need to install it manually or with
-help of [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin for beta
-testing.
+As plugin is not yet published in community plugins library, you will need to
+install it manually or with help of
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin for beta testing.
 
 #### Manual Installation
 
