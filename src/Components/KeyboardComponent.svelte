@@ -426,6 +426,7 @@
     <CommandsList
       bind:visibleCommands
       bind:settings
+      {app}
       on:star-clicked={handleStarIconClicked}
       on:duplicate-hotkey-clicked={handleDuplicateHotkeyClicked}
       on:plugin-name-clicked={handlePluginNameClicked}

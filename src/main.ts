@@ -5,12 +5,12 @@ import {
   Modal,
   Notice,
   Plugin,
-  Hotkey,
   PluginSettingTab,
   setIcon,
   Setting,
   WorkspaceLeaf,
 } from 'obsidian'
+import type { Hotkey } from 'obsidian'
 import { openView, wait } from 'obsidian-community-lib'
 import ShortcutsView from 'src/ShortcutsView'
 // @ts-ignore

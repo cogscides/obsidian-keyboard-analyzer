@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Hotkey } from 'obsidian'
+  import type { App, Hotkey } from 'obsidian'
   import type { commandsArray, PluginSettings } from 'src/Interfaces'
   // @ts-ignore
   import { flip } from 'svelte/animate'
@@ -16,8 +16,8 @@
   import { Star as StarIcon } from 'lucide-svelte'
 
   export let visibleCommands: commandsArray
-
   export let settings: PluginSettings
+  export let app: App
 
   function renderHotkey(hotkey: Hotkey) {
     let modifiersString =
@@ -86,7 +86,7 @@
         <div class="kbanalizer-setting-item-control setting-item-control">
           <div class="setting-command-hotkeys">
             {#each cmdEntry.hotkeys as hotkey}
-              {#if isHotkeyDuplicate(cmdEntry.id, hotkey)}
+              {#if isHotkeyDuplicate(cmdEntry.id, hotkey, app)}
                 <span
                   class="kbanalizer-setting-hotkey setting-hotkey is-duplicate"
                   class:is-duplicate={settings.filterSettings

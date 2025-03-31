@@ -2,7 +2,7 @@
   "id": "keyboard-analyzer",
   "name": "Keyboard Analyzer",
   "version": "0.1.3",
-  "minAppVersion": "0.12.10",
+  "minAppVersion": "1.0.0",
   "description": "See and analyse your keyboard hotkeys and shortcuts",
   "author": "cogscides",
   "authorUrl": "https://github.com/cogscides",
