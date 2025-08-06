@@ -1,15 +1,14 @@
 import { pathToFileURL } from 'node:url'
 import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte'
-import builtins from 'builtin-modules'
 import UnoCSS from 'unocss/vite'
 import { type PluginOption, defineConfig } from 'vite'
 
 const setOutDir = (mode: string) => {
   switch (mode) {
     case 'development':
-      return './test-vault/.obsidian/plugins/obsidian-svelte-plugin'
+      return '../obsidian-keyboard-analyzer-dev'
     case 'production':
-      return 'build'
+      return '../obsidian-keyboard-analyzer-dev'
   }
 }
 
@@ -31,7 +30,7 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'main.js',
           assetFileNames: 'styles.css',
           sourcemapBaseUrl: pathToFileURL(
-            `${__dirname}/test-vault/.obsidian/plugins/obsidian-svelte-plugin/`
+            `${__dirname}/../obsidian-keyboard-analyzer-dev/`
           ).toString(),
         },
         external: [
@@ -48,7 +47,6 @@ export default defineConfig(({ mode }) => {
           '@lezer/common',
           '@lezer/highlight',
           '@lezer/lr',
-          ...builtins,
         ],
       },
       outDir: setOutDir(mode),
