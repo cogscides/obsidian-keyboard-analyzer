@@ -18,30 +18,28 @@
     "./package.json": "./package.json"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^18.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
-    "@rollup/plugin-typescript": "^8.3.1",
-    "@types/node": "^14.18.12",
-    "obsidian": "^0.15.9",
-    "rollup": "^2.70.1",
-    "rollup-plugin-ignore": "^1.0.10",
-    "rollup-plugin-svelte": "^7.1.0",
-    "sanitize-html": "^2.7.0",
-    "source-map-js": "^0.6.2",
-    "svelte": "^3.44.2",
-    "svelte-check": "^1.6.0",
-    "svelte-preprocess": "^4.10.4",
-    "tslib": "^2.3.1",
-    "typescript": "^4.6.3"
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@types/node": "^24.2.0",
+    "@unocss/extractor-svelte": "^66.4.1",
+    "@unocss/vite": "^66.4.1",
+    "obsidian": "^1.8.7",
+    "sanitize-html": "^2.17.0",
+    "source-map-js": "^1.2.1",
+    "svelte": "^5.37.3",
+    "svelte-check": "^4.3.1",
+    "svelte-preprocess": "^6.0.3",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2",
+    "unocss": "^66.4.1",
+    "vite": "^6.3.5"
   },
   "dependencies": {
-    "@tsconfig/svelte": "^2.0.1",
-    "lucide-svelte": "^0.84.0",
+    "@tsconfig/svelte": "^5.0.4",
+    "lucide-svelte": "^0.536.0",
     "obsidian-community-lib": "^2.0.2",
-    "standard-version": "^9.3.2",
+    "standard-version": "^9.5.0",
     "svelte-icons": "^2.1.0",
-    "svelte-use-click-outside": "^1.0.0",
+    "svelte-use-click-outside": "^1.1.0",
     "svelte-watch-resize": "^1.0.3"
   }
 }
