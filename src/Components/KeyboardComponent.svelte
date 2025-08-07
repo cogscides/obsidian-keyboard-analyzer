@@ -1,4 +1,4 @@
-<!-- src/components/KeyboardComponent.svelte -->
+<!-- src/Components/KeyboardComponent.svelte -->
 
 <script lang="ts">
   import { setContext } from 'svelte'
@@ -6,7 +6,11 @@
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
-  import type { commandEntry, KeyboardLayout } from '../interfaces/Interfaces'
+  import type {
+    commandEntry,
+    KeyboardLayout,
+    hotkeyEntry,
+  } from '../interfaces/Interfaces'
   import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import { convertModifiers } from '../utils/modifierUtils'
   import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
@@ -14,9 +18,9 @@
   import type CommandsManager from '../managers/commandsManager'
   import type SettingsManager from '../managers/settingsManager'
 
-  import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
-  import SearchMenu from './SearchMenu.svelte'
-  import CommandsList from './CommandsList.svelte'
+  import KeyboardLayoutComponent from '../Components/KeyboardLayoutComponent.svelte'
+  import SearchMenu from '../Components/SearchMenu.svelte'
+  import CommandsList from '../Components/CommandsList.svelte'
   import { DEFAULT_GROUP_NAMES } from '../managers/groupManager/groupManager.svelte'
   import { GroupType } from '../managers/settingsManager'
 
@@ -51,8 +55,8 @@
   let searchHotkeysCount = $derived(
     visibleCommands.reduce(
       (count, command) => count + command.hotkeys.length,
-      0
-    )
+      0,
+    ),
   )
 
   $effect(() => {
@@ -60,7 +64,7 @@
       search,
       activeKeysStore.ActiveModifiers,
       activeKeysStore.ActiveKey,
-      selectedGroupID
+      selectedGroupID,
     )
     return
   })
@@ -103,18 +107,17 @@
     search: string,
     activeModifiers: string[],
     activeKey: string,
-    selectedGroup?: string
+    selectedGroup?: string,
   ) {
     visibleCommands = commandsManager.filterCommands(
       search,
       activeModifiers,
       activeKey,
-      selectedGroup
+      selectedGroup,
     )
   }
 
-  function handlePluginNameClicked(event: CustomEvent<string>) {
-    const pluginName = event.detail
+  function handlePluginNameClicked(pluginName: string) {
     if (!search) {
       input?.focus()
       search = pluginName
@@ -125,13 +128,13 @@
     }
   }
 
-  function handleDuplicateHotkeyClicked(event: CustomEvent<Hotkey>) {
-    const { modifiers, key } = event.detail
+  function handleDuplicateHotkeyClicked(hotkey: hotkeyEntry) {
+    const { modifiers, key } = hotkey
     const duplicativeModifiers = convertModifiers(modifiers)
 
     if (
       activeKeysStore.ActiveModifiers.every((modifier) =>
-        duplicativeModifiers.includes(modifier as Modifier)
+        duplicativeModifiers.includes(modifier as Modifier),
       ) &&
       activeKeysStore.ActiveKey.toLowerCase() === key.toLowerCase()
     ) {
@@ -143,8 +146,7 @@
     }
   }
 
-  function handleStarIconClicked(event: CustomEvent<string>) {
-    const commandId = event.detail
+  function handleStarIconClicked(commandId: string) {
     commandsManager.toggleFeaturedCommand(commandId)
   }
 </script>
@@ -171,9 +173,9 @@
     <CommandsList
       bind:filteredCommands={visibleCommands}
       bind:selectedGroup={selectedGroupID}
-      on:starClick={handleStarIconClicked}
-      on:duplicateHotkeyClick={handleDuplicateHotkeyClicked}
-      on:pluginNameClick={handlePluginNameClicked}
+      onStarClick={handleStarIconClicked}
+      onDuplicateHotkeyClick={handleDuplicateHotkeyClicked}
+      onPluginNameClick={handlePluginNameClicked}
     />
   </div>
 </div>

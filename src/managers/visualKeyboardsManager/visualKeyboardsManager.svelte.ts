@@ -7,7 +7,11 @@ import type {
   KeyboardSection,
   commandEntry,
 } from '../../interfaces/Interfaces'
-import { convertModifier, getDisplayModifier } from '../../utils/modifierUtils'
+import {
+  convertModifier,
+  getDisplayModifier,
+  unconvertModifiers,
+} from '../../utils/modifierUtils'
 
 /**
  * The VisualKeyboardManager class is responsible for managing and processing the visual keyboard layout.
@@ -179,27 +183,28 @@ export class VisualKeyboardManager {
       }
     }
 
-    // Set active modifiers
-    activeModifiers.forEach((modifier) => {
-      const modKey = modifier.toLowerCase()
-      // Handle Control key variations
-      if (modKey === 'ctrl' || modKey === 'mod' || modKey === 'control') {
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-        if (this.keyStates['control']) {
-          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-          this.keyStates['control'].state = 'active'
-        }
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-        if (this.keyStates['ctrl']) {
-          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-          this.keyStates['ctrl'].state = 'active'
-        }
-      } else {
-        if (this.keyStates[modKey]) {
-          this.keyStates[modKey].state = 'active'
-        }
+    // Get abstract names of active modifiers ('Control', 'Alt', etc.)
+    const abstractActiveModifiers = new Set(unconvertModifiers(activeModifiers))
+
+    // Set active state for modifier keys on the visual keyboard
+    for (const key in this.keyStates) {
+      const keyLabel = this.keyStates[key].code // e.g. 'ControlLeft'
+      const abstractModifier = this.normalizeModifier(keyLabel) // returns 'Control'
+      if (abstractModifier && abstractActiveModifiers.has(abstractModifier)) {
+        this.keyStates[key].state = 'active'
       }
-    })
+    }
+  }
+
+  // Helper function to be added to VisualKeyboardManager
+  private normalizeModifier(keyIdentifier: string): string | null {
+    if (!keyIdentifier) return null
+    const lower = keyIdentifier.toLowerCase()
+    if (lower.startsWith('control')) return 'Control'
+    if (lower.startsWith('alt')) return 'Alt'
+    if (lower.startsWith('shift')) return 'Shift'
+    if (lower.startsWith('meta')) return 'Meta'
+    return null
   }
 
   public clearActiveKeys() {

@@ -1,10 +1,9 @@
-<!-- src/components/KeyboardKey.svelte -->
+<!-- src/Components/KeyboardKey.svelte -->
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
-  import { getDisplayModifier } from '../utils/modifierUtils'
 
   interface Props {
     key: Key
@@ -22,7 +21,7 @@
   }: Props = $props()
 
   const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager'
+    'visualKeyboardManager',
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
@@ -46,8 +45,8 @@
   function spreadWeights(weight: number) {
     const maxWeight = Math.max(
       ...Object.values(visualKeyboardManager.keyStates).map(
-        (state) => state.weight || 0
-      )
+        (state) => state.weight || 0,
+      ),
     )
     const step = maxWeight / maxWeightSteps
     return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
@@ -68,7 +67,7 @@
     // Update visual state based on new active keys
     visualKeyboardManager.updateVisualState(
       activeKeysStore.activeKey,
-      activeKeysStore.activeModifiers
+      activeKeysStore.activeModifiers,
     )
   }
 </script>
@@ -93,7 +92,7 @@
     style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}}`}
     onclick={() => handleClick(key)}
   >
-    {getDisplayModifier(displayLabel)}
+    {displayLabel}
     <!-- <span class="debug-weight font-300 text-[10px]">{keyState.weight}</span> --var(--interactive-accent); -->
   </button>
 {/if}

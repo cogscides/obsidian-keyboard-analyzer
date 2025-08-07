@@ -9,11 +9,17 @@
   interface Props {
     filteredCommands: commandEntry[]
     selectedGroup: string
+    onStarClick?: (commandId: string) => void
+    onDuplicateHotkeyClick?: (hotkey: hotkeyEntry) => void
+    onPluginNameClick?: (pluginName: string) => void
   }
 
   let {
     filteredCommands = $bindable([]),
     selectedGroup = $bindable('all'),
+    onStarClick,
+    onDuplicateHotkeyClick,
+    onPluginNameClick,
   }: Props = $props()
 
   const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
@@ -22,6 +28,8 @@
   const commandsManager = plugin.commandsManager
   const hotkeyManager = plugin.hotkeyManager
 
+  // Using callback props instead of component events (Svelte 5)
+
   let groupSettings = $derived(groupManager.getGroupSettings(selectedGroup))
 
   function renderHotkey(hotkey: hotkeyEntry) {
@@ -29,17 +37,15 @@
   }
 
   function handleStarClick(commandId: string) {
-    commandsManager.toggleFeaturedCommand(commandId)
+    onStarClick?.(commandId)
   }
 
   function handlePluginNameClick(pluginName: string) {
-    console.log('pluginNameClick', pluginName)
-    // Implement search logic here
+    onPluginNameClick?.(pluginName)
   }
 
   function handleDuplicateHotkeyClick(hotkey: hotkeyEntry) {
-    console.log('duplicateHotkeyClick', hotkey)
-    // Implement duplicate hotkey handling here
+    onDuplicateHotkeyClick?.(hotkey)
   }
 </script>
 
@@ -85,7 +91,7 @@
                 class="kbanalizer-setting-hotkey setting-hotkey"
                 class:is-duplicate={hotkeyManager.isHotkeyDuplicate(
                   cmdEntry.id,
-                  hotkey
+                  hotkey,
                 ) && groupSettings?.HighlightDuplicates}
                 class:is-customized={hotkey.isCustom &&
                   groupSettings?.HighlightCustom}

@@ -73,20 +73,13 @@ export class ActiveKeysStore {
   }
 
   public handleKeyClick(keyIdentifier: string) {
-    console.log('==== Clicked key identifier:', keyIdentifier)
-
     const normalizedKey = this.normalizeKeyIdentifier(keyIdentifier)
 
-    console.log('Normalized key:', normalizedKey)
-
-    if (this.recognizedModifiers.has(normalizedKey as ModifierKey)) {
-      this.toggleModifier(normalizedKey)
+    if (this.isModifier(normalizedKey)) {
+      this.toggleModifier(normalizedKey as ModifierKey)
     } else {
       this.activeKey = this.activeKey === normalizedKey ? '' : normalizedKey
     }
-
-    console.log('Active modifiers:', this.activeModifiers)
-    console.log('Active key:', this.activeKey)
   }
 
   public handleKeyDown(e: KeyboardEvent) {
@@ -94,7 +87,7 @@ export class ActiveKeysStore {
       if (this.activeKey !== '') {
         this.activeKey = ''
       } else if (this.activeModifiers.length > 0) {
-        this.activeModifiers = this.activeModifiers.slice(0, -1)
+        this.activeModifiers.length = this.activeModifiers.length - 1
       }
       return
     }
@@ -103,28 +96,34 @@ export class ActiveKeysStore {
     this.handleKeyClick(keyCode)
   }
 
-  private toggleModifier(modifier: string) {
-    const obsidianModifier = convertModifier(modifier)
-    const index = this.activeModifiers.indexOf(obsidianModifier)
+  private isModifier(key: string): key is ModifierKey {
+    return this.recognizedModifiers.has(key as ModifierKey)
+  }
 
-    if (index !== -1) {
-      this.activeModifiers = this.activeModifiers.filter(
-        (mod) => mod !== obsidianModifier
-      )
+  private toggleModifier(modifier: ModifierKey) {
+    const obsidianModifier = convertModifier(modifier)
+    const newModifiers = new Set(this.activeModifiers)
+
+    if (newModifiers.has(obsidianModifier)) {
+      newModifiers.delete(obsidianModifier)
     } else {
-      this.activeModifiers = [...this.activeModifiers, obsidianModifier]
+      newModifiers.add(obsidianModifier)
     }
+
+    this.activeModifiers = Array.from(newModifiers)
   }
 
   private normalizeKeyIdentifier(keyIdentifier: string): string {
     const keyMap: { [key: string]: string } = {
       ControlLeft: 'Control',
       ControlRight: 'Control',
-      Control: 'Control',
-      Ctrl: 'Control',
-      // Add more mappings as needed
+      AltLeft: 'Alt',
+      AltRight: 'Alt',
+      ShiftLeft: 'Shift',
+      ShiftRight: 'Shift',
+      MetaLeft: 'Meta',
+      MetaRight: 'Meta',
     }
-
     return keyMap[keyIdentifier] || keyIdentifier
   }
 

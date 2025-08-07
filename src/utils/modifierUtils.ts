@@ -16,11 +16,11 @@ export const modifierMap: Record<ModifierKey, Modifier> = {
 }
 
 export const displayModifierMap: Record<ModifierKey, string> = {
-  Control: Platform.isMacOS ? 'Ctrl' : 'Control',
-  Shift: 'Shift',
-  Alt: Platform.isMacOS ? 'Option' : 'Alt',
-  Meta: Platform.isMacOS ? 'Cmd' : 'Meta',
-  Mod: Platform.isMacOS ? 'Cmd' : 'Ctrl',
+  Control: Platform.isMacOS ? '⌃' : 'Control',
+  Shift: '⇧',
+  Alt: Platform.isMacOS ? '⌥' : 'Alt',
+  Meta: Platform.isMacOS ? '⌘' : 'Meta',
+  Mod: Platform.isMacOS ? '⌘' : 'Ctrl',
 }
 
 // export function getModifierInfo(): {
@@ -68,7 +68,7 @@ export function sortModifiers(modifiers: string[]): string[] {
     ? ['Ctrl', 'Alt', 'Shift', 'Cmd']
     : ['Ctrl', 'Alt', 'Shift', 'Win']
 
-  return modifiers.sort((a, b) => {
+  return [...modifiers].sort((a, b) => {
     const indexA = order.indexOf(convertModifier(a))
     const indexB = order.indexOf(convertModifier(b))
     if (indexA === -1 && indexB === -1) return a.localeCompare(b)

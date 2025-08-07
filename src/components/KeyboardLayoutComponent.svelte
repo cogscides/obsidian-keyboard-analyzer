@@ -1,4 +1,4 @@
-<!-- src/components/KeyboardLayout.svelte -->
+<!-- src/Components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
   import { setContext, getContext } from 'svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
@@ -20,7 +20,7 @@
 
   const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
   const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager'
+    'visualKeyboardManager',
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
   let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
@@ -52,7 +52,7 @@
       acc[section.name] = calculateSectionColumns(section)
       return acc
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   )
 </script>
 
