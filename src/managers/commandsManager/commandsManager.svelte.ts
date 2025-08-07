@@ -49,8 +49,7 @@ export default class CommandsManager {
     this.hotkeyManager = HotkeyManager.getInstance(app)
     this.settingsManager = SettingsManager.getInstance(plugin)
     this.groupManager = GroupManager.getInstance(this.settingsManager)
-    this.loadCommands()
-    this.loadFeaturedCommands()
+    // Defer loading to an explicit initialize method
   }
 
   static getInstance(
@@ -61,6 +60,11 @@ export default class CommandsManager {
       CommandsManager.instance = new CommandsManager(app, plugin)
     }
     return CommandsManager.instance
+  }
+
+  public initialize() {
+    this.loadCommands()
+    this.loadFeaturedCommands()
   }
 
   /**
@@ -526,7 +530,7 @@ export default class CommandsManager {
    * @returns commandEntry[]
    */
   private sortByFeaturedFirst(commands: commandEntry[]): commandEntry[] {
-    return commands.sort((a, b) => {
+    return [...commands].sort((a, b) => {
       const aFeatured = this.featuredCommandIds.has(a.id)
       const bFeatured = this.featuredCommandIds.has(b.id)
       if (aFeatured && !bFeatured) return -1

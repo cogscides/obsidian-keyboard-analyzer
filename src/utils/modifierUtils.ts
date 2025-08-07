@@ -99,12 +99,16 @@ export function areModifiersEqual(
   modifiers2?: string[]
 ): boolean {
   if (!modifiers1 || !modifiers2) return modifiers1 === modifiers2
-  const sorted1 = sortModifiers(modifiers1)
-  const sorted2 = sortModifiers(modifiers2)
-  return (
-    sorted1.length === sorted2.length &&
-    sorted1.every((modifier, index) => modifier === sorted2[index])
-  )
+  if (modifiers1.length !== modifiers2.length) return false
+
+  const set1 = new Set(modifiers1)
+  for (const modifier of modifiers2) {
+    if (!set1.has(modifier)) {
+      return false
+    }
+  }
+
+  return true
 }
 
 export function normalizeKey(key: string): string {

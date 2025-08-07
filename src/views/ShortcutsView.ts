@@ -30,6 +30,15 @@ export default class ShortcutsView extends ItemView {
   }
 
   async onOpen() {
+    await this.refresh()
+  }
+
+  async refresh() {
+    // First, re-initialize the managers to get the latest data
+    await this.plugin.hotkeyManager.initialize()
+    this.plugin.commandsManager.initialize()
+
+    // Then, redraw the view
     await this.draw()
   }
   // async focus(): Promise<void> {

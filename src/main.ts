@@ -53,6 +53,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   async onload() {
     await this.settingsManager.loadSettings()
     await this.hotkeyManager.initialize()
+    this.commandsManager.initialize()
 
     this.registerPluginHotkeys()
     this.addStatusBarIndicator()
@@ -62,8 +63,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new ShortcutsView(leaf, this)
     )
 
-    // This adds a settings tab so the user can configure various aspects of the plugin
-    // this.addSettingTab(new KeyboardAnalyzerSettingTab(this.app, this))
+    // This will handle plugin reloads
+    this.app.workspace.onLayoutReady(() => {
+      this.app.workspace
+        .getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
+        .forEach((leaf) => {
+          if (leaf.view instanceof ShortcutsView) {
+            leaf.view.plugin = this // Update the plugin instance
+            leaf.view.onOpen() // Re-run onOpen to refresh the view
+          }
+        })
+    })
   }
 
   async onunload() {
@@ -71,55 +81,44 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   }
 
   addStatusBarIndicator() {
-    // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
     const statusBarIcon = this.addStatusBarItem()
     statusBarIcon.addClass('mod-clickable')
     statusBarIcon.setAttribute('aria-label', 'Keyboard Shortcuts')
     statusBarIcon.style.order = '10'
-
-    // create the status bar icon
     const icon = statusBarIcon.createSpan('icon')
-
-    // register click handler
-    setIcon(icon, 'keyboard-glyph') // inject svg icon
+    setIcon(icon, 'keyboard-glyph')
     icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
   }
 
   async onStatusBarClick(evt: MouseEvent) {
-    if (evt.ctrlKey === true) {
-      this.addShortcutsView(true)
-    } else {
-      this.addShortcutsView()
+    const isMeta = evt.ctrlKey === true || evt.metaKey === true
+    const useSplit = evt.altKey === true
+
+    let leafBehavior: boolean | 'split' = false
+    if (isMeta && useSplit) {
+      leafBehavior = 'split'
+    } else if (isMeta) {
+      leafBehavior = true
     }
+
+    this.addShortcutsView(leafBehavior)
   }
 
-  async addShortcutsView(newLeaf = false) {
-    const isNotAlreadyOpen =
-      this.app.workspace.getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
-        .length === 0
+  async addShortcutsView(leafBehavior: boolean | 'split' = false) {
+    const existingLeaves = this.app.workspace.getLeavesOfType(
+      VIEW_TYPE_SHORTCUTS_ANALYZER
+    )
 
-    if (isNotAlreadyOpen) {
-      if (newLeaf) {
-        this.app.workspace
-          .getLeaf(true)
-          .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
-          .then(() => {
-            this.focusView(VIEW_TYPE_SHORTCUTS_ANALYZER)
-          })
-      } else {
-        this.app.workspace
-          .getLeaf()
-          .setViewState({ type: VIEW_TYPE_SHORTCUTS_ANALYZER })
-      }
-    } else {
-      if (newLeaf) {
-        this.app.workspace.getLeaf(true).setViewState({
-          type: VIEW_TYPE_SHORTCUTS_ANALYZER,
-        })
-      } else {
-        this.focusView(VIEW_TYPE_SHORTCUTS_ANALYZER)
-      }
+    if (existingLeaves.length > 0 && !leafBehavior) {
+      this.app.workspace.revealLeaf(existingLeaves[0])
+      return
     }
+
+    const leaf = this.app.workspace.getLeaf(leafBehavior || false)
+    await leaf.setViewState({
+      type: VIEW_TYPE_SHORTCUTS_ANALYZER,
+      active: true,
+    })
   }
 
   registerPluginHotkeys() {
