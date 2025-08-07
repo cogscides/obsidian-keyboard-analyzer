@@ -313,6 +313,10 @@ export default class CommandsManager {
     let filterSettings = this.groupManager.getGroupSettings(
       selectedGroupID || GroupType.All
     )
+    console.log('[KB] CommandsManager.filterCommands settings', {
+      selectedGroupID,
+      filterSettings,
+    })
 
     if (selectedGroupID) {
       console.log('selectedGroupID', selectedGroupID)
@@ -334,6 +338,10 @@ export default class CommandsManager {
     const searchLower = search.toLowerCase()
 
     const filteredCommands = commandsToFilter.filter((command) => {
+      if (!filterSettings) return true
+      const logPrefix = '[KB] CommandsManager.filterCommands'
+      // debug per-command (lightweight)
+      // console.debug(logPrefix, { id: command.id, filterSettings })
       const nameMatch =
         `${command.pluginName} ${command.cmdName}`
           .toLowerCase()
@@ -355,9 +363,10 @@ export default class CommandsManager {
         )
       )
 
+      // "Only with hotkeys": when true → only include commands that have hotkeys
       const hasHotkeysMatch = filterSettings?.ViewWOhotkeys
-        ? true
-        : command.hotkeys.length > 0
+        ? command.hotkeys.length > 0
+        : true
 
       const internalModuleMatch = filterSettings?.DisplayInternalModules
         ? true

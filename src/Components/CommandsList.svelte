@@ -30,7 +30,15 @@
 
   // Using callback props instead of component events (Svelte 5)
 
-  let groupSettings = $derived(groupManager.getGroupSettings(selectedGroup))
+  let groupSettings = $derived.by(() => {
+    groupManager.groups
+    const settings = groupManager.getGroupSettings(selectedGroup)
+    console.log('[KB] CommandsList groupSettings derived', {
+      selectedGroup,
+      settings,
+    })
+    return settings
+  })
 
   function renderHotkey(hotkey: hotkeyEntry) {
     return hotkeyManager.renderHotkey(hotkey)

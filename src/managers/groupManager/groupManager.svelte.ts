@@ -100,10 +100,11 @@ export default class GroupManager {
 
   getGroupSettings(groupId: string): CGroupFilterSettings {
     const group = this.getGroup(groupId)
-    return (
+    const settings =
       group?.filterSettings ||
       this.settingsManager.settings.defaultFilterSettings
-    )
+    console.log('[KB] GroupManager.getGroupSettings', { groupId, group, settings })
+    return settings
   }
 
   setGroupSetting(
@@ -127,16 +128,41 @@ export default class GroupManager {
     groupId: string,
     newSettings: Partial<CGroupFilterSettings>
   ): void {
-    const updatedGroups = this.groups.map((group) => {
-      if (group.id === groupId) {
-        return {
-          ...group,
-          filterSettings: { ...group.filterSettings, ...newSettings },
-        }
-      }
-      return group
+    console.log('[KB] GroupManager.updateGroupFilterSettings start', {
+      groupId,
+      newSettings,
     })
-    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+    // Update in place if group exists
+    const currentGroups = this.groups
+    const groupIndex = currentGroups.findIndex((g) => g.id === groupId)
+    if (groupIndex !== -1) {
+      const updated = [...currentGroups]
+      updated[groupIndex] = {
+        ...updated[groupIndex],
+        filterSettings: {
+          ...updated[groupIndex].filterSettings,
+          ...newSettings,
+        },
+      }
+      this.settingsManager.updateSettings({ commandGroups: updated })
+      console.log('[KB] GroupManager.updateGroupFilterSettings saved group', {
+        groupId,
+        groups: updated,
+      })
+      return
+    }
+
+    // Fallback: if group doesn't exist (e.g., default "all" group), update defaults
+    const updatedDefaults = {
+      ...this.settingsManager.settings.defaultFilterSettings,
+      ...newSettings,
+    }
+    this.settingsManager.updateSettings({
+      defaultFilterSettings: updatedDefaults,
+    })
+    console.log('[KB] GroupManager.updateGroupFilterSettings saved defaults', {
+      defaults: updatedDefaults,
+    })
   }
 
   toggleFilterSetting(groupId: string, key: keyof CGroupFilterSettings): void {

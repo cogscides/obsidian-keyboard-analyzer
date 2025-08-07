@@ -52,9 +52,20 @@
   const commandsManager = plugin.commandsManager
   const groupManager = plugin.groupManager
 
-  const filterSettings: CGroupFilterSettings = $derived(
-    groupManager.getGroupSettings(selectedGroup),
-  )
+  const filterSettings: CGroupFilterSettings = $derived.by(() => {
+    // Track group and default settings changes so this recomputes when settings update
+    groupManager.groups
+    settingsManager.settings.defaultFilterSettings
+    return groupManager.getGroupSettings(selectedGroup)
+  })
+
+  $effect(() => {
+    const fs = filterSettings
+    console.log('[KB] SearchMenu filterSettings derived changed', {
+      selectedGroup,
+      filterSettings: fs,
+    })
+  })
 
   $inspect(plugin.settingsManager)
   console.log(
@@ -72,10 +83,14 @@
   let refreshIsActive = $state(false)
   let PressedKeysStore = $derived(activeKeysStore)
 
+  // No local UI snapshot to avoid reactive loops; use derived filterSettings directly
+
   // Groups
-  let excludedModules = $derived(
-    groupManager.getExcludedModulesForGroup(selectedGroup),
-  )
+  let excludedModules = $derived.by(() => {
+    // Track group changes to recompute excluded modules
+    groupManager.groups
+    return groupManager.getExcludedModulesForGroup(selectedGroup)
+  })
 
   function ClearSearch() {
     if (search === '') {
@@ -95,10 +110,21 @@
   }
 
   // TODO Unify this with the settingsManager
-  function toggleFilterSetting(setting: keyof typeof filterSettings) {
-    groupManager.updateGroupFilterSettings(selectedGroup, {
-      [setting]: !filterSettings[setting],
+  function setFilterSetting(
+    setting: keyof CGroupFilterSettings,
+    value: boolean,
+  ) {
+    console.log('[KB] SearchMenu setFilterSetting called', {
+      selectedGroup,
+      setting,
+      value,
     })
+    groupManager.updateGroupFilterSettings(selectedGroup, { [setting]: value })
+    console.log('[KB] SearchMenu after updateGroupFilterSettings', {
+      selectedGroup,
+      persisted: groupManager.getGroupSettings(selectedGroup),
+    })
+    handleSearchInput()
   }
 
   function ActivateKeyboardListener() {
@@ -122,6 +148,13 @@
   }
 
   function handleSearchInput() {
+    console.log('[KB] SearchMenu handleSearchInput', {
+      search,
+      activeModifiers: PressedKeysStore.activeModifiers,
+      activeKey: PressedKeysStore.activeKey,
+      selectedGroup,
+      filterSettings,
+    })
     onSearch(
       search,
       convertModifiers(PressedKeysStore.activeModifiers),
@@ -209,214 +242,222 @@
       </div>
     </div>
   </div>
-  <button
-    id="hotkey-filter-button"
-    class={filterIsOpen ? 'is-active' : ''}
-    aria-label="Filter Commands"
-    onclick={() => (filterIsOpen = !filterIsOpen)}
-  >
-    <FilterIcon size={16} />
-  </button>
-
-  <!-- COMPONENT: Popup Filter Menu -->
-
-  {#if filterIsOpen}
-    <!-- use:clickOutside={() =>
-        // await timeout 40ms
-        setTimeout(() => {
-          if (filterIsOpen) {
-            filterIsOpen = false
-          }
-        }, 40)} -->
-    <div
-      transition:slide
-      class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
+  <div class="menu-anchor">
+    <button
+      id="hotkey-filter-button"
+      class={filterIsOpen ? 'is-active' : ''}
+      aria-label="Filter Commands"
+      onclick={() => (filterIsOpen = !filterIsOpen)}
     >
-      <div transition:fade>
-        <!-- OPTION: Featured First -->
-        <div class="setting-item mod-toggle popup-filter-menu">
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="checkbox-container"
-            class:is-enabled={filterSettings.StrictModifierMatch}
-            onclick={() => {
-              toggleFilterSetting(FilterSettingsKeys.StrictModifierMatch)
-            }}
-          >
-            <input
-              type="checkbox"
-              tabindex="0"
-              bind:checked={filterSettings.StrictModifierMatch}
-            />
-          </div>
-          <div class="setting-item-name popup-filter-title">Strict Search</div>
-        </div>
-        <!-- OPTION: Highlight Custom -->
-        <div class="setting-item mod-toggle popup-filter-menu">
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="checkbox-container"
-            class:is-enabled={filterSettings.ViewWOhotkeys}
-            onclick={() => {
-              toggleFilterSetting(FilterSettingsKeys.ViewWOhotkeys)
-            }}
-          >
-            <input
-              type="checkbox"
-              tabindex="0"
-              bind:checked={filterSettings.ViewWOhotkeys}
-            />
-          </div>
-          <div class="setting-item-name popup-filter-title">
-            Only with hotkeys
-          </div>
-        </div>
-        <!-- OPTION: Highlight Duplicates -->
-        <div class="setting-item mod-toggle popup-filter-menu">
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="checkbox-container"
-            class:is-enabled={filterSettings.HighlightDuplicates}
-            onclick={() => {
-              toggleFilterSetting(FilterSettingsKeys.HighlightDuplicates)
-            }}
-          >
-            <input
-              type="checkbox"
-              tabindex="0"
-              bind:checked={filterSettings.HighlightDuplicates}
-            />
-          </div>
-          <div class="setting-item-name popup-filter-title">
-            Highlight hotkey duplicates
-          </div>
-        </div>
-        <!-- OPTION: Display Command IDs -->
-        <div class="setting-item mod-toggle popup-filter-menu">
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="checkbox-container"
-            class:is-enabled={filterSettings.DisplayIDs}
-            onclick={() => {
-              toggleFilterSetting(FilterSettingsKeys.DisplayIDs)
-            }}
-          >
-            <input
-              type="checkbox"
-              tabindex="0"
-              bind:checked={filterSettings.DisplayIDs}
-            />
-          </div>
-          <div class="setting-item-name popup-filter-title">
-            Display command ID's
-          </div>
-        </div>
-      </div>
-      <!-- popup darker background -->
-      <!-- svelte-ignore element_invalid_self_closing_tag -->
-      <div class="popup-filter-menu-background" />
-    </div>
-  {/if}
+      <FilterIcon size={16} />
+    </button>
 
-  <!-- COMPONENT: View Dropdown -->
-
-  <button
-    id="hotkey-view-button"
-    aria-label="View Options"
-    class={viewDropdownOpen ? 'is-active' : ''}
-    onclick={ToggleViewDropdown}
-    >View <ChevronDown size={16} />
-  </button>
-  {#if viewDropdownOpen}
-    <div class="popup-filter-menu-container is-open" transition:slide>
-      <div class="popup-filter-menu">
-        <!-- Move FeaturedFirst, HighlightCustom, HighlightDuplicates here -->
-        <!-- Add GroupByPlugin, DisplayGroupAssignment options -->
-        {#each Object.values(FilterSettingsKeys) as setting}
-          <div class="setting-item mod-toggle">
+    {#if filterIsOpen}
+      <div
+        transition:slide
+        class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
+      >
+        <div transition:fade>
+          <div class="setting-item mod-toggle popup-filter-menu">
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
-              aria-label="Toggle {setting}"
               class="checkbox-container"
-              class:is-enabled={filterSettings[setting as keyof FilterSettings]}
+              class:is-enabled={filterSettings.StrictModifierMatch}
               onclick={() =>
-                toggleFilterSetting(setting as keyof FilterSettings)}
+                setFilterSetting(
+                  FilterSettingsKeys.StrictModifierMatch,
+                  !filterSettings.StrictModifierMatch,
+                )}
             >
               <input
                 type="checkbox"
                 tabindex="0"
-                bind:checked={filterSettings[setting as keyof FilterSettings]}
+                id="filter-StrictModifierMatch"
+                checked={filterSettings.StrictModifierMatch}
               />
             </div>
-            <div class="setting-item-name">{setting}</div>
+            <div class="setting-item-name popup-filter-title">
+              Strict Search
+            </div>
           </div>
-        {/each}
+          <div class="setting-item mod-toggle popup-filter-menu">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.ViewWOhotkeys}
+              onclick={() =>
+                setFilterSetting(
+                  FilterSettingsKeys.ViewWOhotkeys,
+                  !filterSettings.ViewWOhotkeys,
+                )}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                id="filter-ViewWOhotkeys"
+                checked={filterSettings.ViewWOhotkeys}
+              />
+            </div>
+            <div class="setting-item-name popup-filter-title">
+              Only with hotkeys
+            </div>
+          </div>
+          <div class="setting-item mod-toggle popup-filter-menu">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.HighlightDuplicates}
+              onclick={() =>
+                setFilterSetting(
+                  FilterSettingsKeys.HighlightDuplicates,
+                  !filterSettings.HighlightDuplicates,
+                )}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                id="filter-HighlightDuplicates"
+                checked={filterSettings.HighlightDuplicates}
+              />
+            </div>
+            <div class="setting-item-name popup-filter-title">
+              Highlight hotkey duplicates
+            </div>
+          </div>
+          <div class="setting-item mod-toggle popup-filter-menu">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.DisplayIDs}
+              onclick={() =>
+                setFilterSetting(
+                  FilterSettingsKeys.DisplayIDs,
+                  !filterSettings.DisplayIDs,
+                )}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                id="filter-DisplayIDs"
+                checked={filterSettings.DisplayIDs}
+              />
+            </div>
+            <div class="setting-item-name popup-filter-title">
+              Display command ID's
+            </div>
+          </div>
+        </div>
+        <div class="popup-filter-menu-background"></div>
       </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
+
+  <!-- COMPONENT: View Dropdown -->
+
+  <div class="menu-anchor">
+    <button
+      id="hotkey-view-button"
+      aria-label="View Options"
+      class={viewDropdownOpen ? 'is-active' : ''}
+      onclick={ToggleViewDropdown}
+      >View <ChevronDown size={16} />
+    </button>
+    {#if viewDropdownOpen}
+      <div class="popup-filter-menu-container is-open" transition:slide>
+        <div class="popup-filter-menu">
+          {#each Object.values(FilterSettingsKeys) as setting}
+            <div class="setting-item mod-toggle">
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <div
+                aria-label="Toggle {setting}"
+                class="checkbox-container"
+                class:is-enabled={filterSettings[
+                  setting as keyof FilterSettings
+                ]}
+                onclick={() =>
+                  setFilterSetting(
+                    setting as keyof CGroupFilterSettings,
+                    !(filterSettings[
+                      setting as keyof FilterSettings
+                    ] as boolean),
+                  )}
+              >
+                <input
+                  type="checkbox"
+                  tabindex="0"
+                  checked={filterSettings[setting as keyof FilterSettings]}
+                  id={`filter-${setting}`}
+                />
+              </div>
+              <div class="setting-item-name">{setting}</div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+  </div>
 
   <!-- COMPONENT: Modules Dropdown -->
 
-  <button
-    id="hotkey-modules-button"
-    class={modulesDropdownOpen ? 'is-active' : ''}
-    aria-label="Modules Options"
-    onclick={ToggleModulesDropdown}
-  >
-    Modules <ChevronDown size={16} />
-  </button>
+  <div class="menu-anchor">
+    <button
+      id="hotkey-modules-button"
+      class={modulesDropdownOpen ? 'is-active' : ''}
+      aria-label="Modules Options"
+      onclick={ToggleModulesDropdown}
+    >
+      Modules <ChevronDown size={16} />
+    </button>
 
-  <!-- COMPONENT: Popup Filter Menu -->
-
-  {#if modulesDropdownOpen}
-    <div class="popup-filter-menu-container is-open" transition:slide>
-      <div class="popup-filter-menu">
-        <div class="setting-item mod-toggle">
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="checkbox-container"
-            class:is-enabled={filterSettings.DisplayInternalModules}
-            onclick={() =>
-              toggleFilterSetting(
-                'DisplayInternalModules' as keyof FilterSettings,
-              )}
-          >
-            <input
-              type="checkbox"
-              tabindex="0"
-              bind:checked={filterSettings.DisplayInternalModules}
-            />
+    {#if modulesDropdownOpen}
+      <div class="popup-filter-menu-container is-open" transition:slide>
+        <div class="popup-filter-menu">
+          <div class="setting-item mod-toggle">
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.DisplayInternalModules}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                checked={filterSettings.DisplayInternalModules}
+                onchange={(e) =>
+                  setFilterSetting(
+                    'DisplayInternalModules' as keyof CGroupFilterSettings,
+                    (e.currentTarget as HTMLInputElement).checked,
+                  )}
+              />
+            </div>
+            <div class="setting-item-name">Display Internal Modules</div>
           </div>
-          <div class="setting-item-name">Display Internal Modules</div>
-        </div>
-        <div class="installed-plugins-container">
-          {#each commandsManager.getInstalledPluginIDs() as pluginID}
-            {#if commandsManager.isInternalModule(pluginID)}
-              <div class="setting-item mod-toggle">
-                <div class="installed-plugin-name">{plugin.manifest.id}</div>
-                <div class="installed-plugin-icon">
-                  <div class="checkbox-container">
-                    <input
-                      type="checkbox"
-                      tabindex="0"
-                      checked={!excludedModules.includes(plugin.manifest.id)}
-                      onchange={() => {
-                        groupManager.toggleExcludedModuleForGroup(
-                          selectedGroup,
-                          plugin.manifest.id,
-                        )
-                      }}
-                    />
+          <div class="installed-plugins-container">
+            {#each commandsManager.getInstalledPluginIDs() as pluginID}
+              {#if commandsManager.isInternalModule(pluginID)}
+                <div class="setting-item mod-toggle">
+                  <div class="installed-plugin-name">{pluginID}</div>
+                  <div class="installed-plugin-icon">
+                    <div class="checkbox-container">
+                      <input
+                        type="checkbox"
+                        tabindex="0"
+                        checked={!excludedModules.includes(pluginID)}
+                        onchange={() => {
+                          groupManager.toggleExcludedModuleForGroup(
+                            selectedGroup,
+                            pluginID,
+                          )
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            {/if}
-          {/each}
+              {/if}
+            {/each}
+          </div>
         </div>
-        <!-- Add a list of modules with checkboxes here -->
       </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
 
   <!-- COMPONENT: Community Plugin Search Summary -->
 
