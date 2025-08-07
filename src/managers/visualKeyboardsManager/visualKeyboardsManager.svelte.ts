@@ -83,10 +83,22 @@ export class VisualKeyboardManager {
         }
         for (const modifier of hotkey.modifiers) {
           const modKey = modifier.toLowerCase()
-          // Handle Control key variations
-          if (modKey === 'ctrl' || modKey === 'mod' || modKey === 'control') {
-            // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-            keyWeights['control'] = (keyWeights['control'] || 0) + 1
+          // Normalize modifier names into buckets that match visual keys
+          let bucket: string | null = null
+          if (modKey === 'mod') {
+            bucket = Platform.isMacOS ? 'meta' : 'control'
+          } else if (modKey === 'ctrl' || modKey === 'control') {
+            bucket = 'control'
+          } else if (modKey === 'cmd' || modKey === 'meta' || modKey === 'win') {
+            bucket = 'meta'
+          } else if (modKey === 'alt' || modKey === 'option') {
+            bucket = 'alt'
+          } else if (modKey === 'shift') {
+            bucket = 'shift'
+          }
+
+          if (bucket) {
+            keyWeights[bucket] = (keyWeights[bucket] || 0) + 1
           } else {
             keyWeights[modKey] = (keyWeights[modKey] || 0) + 1
           }
@@ -97,9 +109,16 @@ export class VisualKeyboardManager {
     // Assign weights to keyStates
     for (const key in this.keyStates) {
       const lowerKey = key.toLowerCase()
-      if (lowerKey === 'control' || lowerKey === 'ctrl') {
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+      const code = this.keyStates[key].code?.toLowerCase() || ''
+      // Map left/right modifier keys to their shared bucket
+      if (code.startsWith('control')) {
         this.keyStates[key].weight = keyWeights['control'] || 0
+      } else if (code.startsWith('alt')) {
+        this.keyStates[key].weight = keyWeights['alt'] || 0
+      } else if (code.startsWith('shift')) {
+        this.keyStates[key].weight = keyWeights['shift'] || 0
+      } else if (code.startsWith('meta')) {
+        this.keyStates[key].weight = keyWeights['meta'] || 0
       } else {
         this.keyStates[key].weight = keyWeights[lowerKey] || 0
       }
