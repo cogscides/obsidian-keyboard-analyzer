@@ -18,7 +18,8 @@
     type CGroupSettingTitles,
   } from '../managers/settingsManager'
   import type { FilterSettings } from '../managers/settingsManager'
-  import { convertModifiers } from '../utils/modifierUtils'
+  import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
+  import type { Modifier } from 'obsidian'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -129,6 +130,12 @@
     )
   }
 
+  function handleModifierChipClick(modifier: string) {
+    // Convert displayed modifier (e.g., 'Ctrl') back to abstract ('Control') so it's recognized as a modifier
+    const abstractModifier = unconvertModifier(modifier as Modifier)
+    PressedKeysStore.handleKeyClick(abstractModifier)
+  }
+
   // $effect(() => {
   //   handleSearchInput()
   // })
@@ -159,10 +166,7 @@
     <div class="modifiers-wrapper">
       {#each PressedKeysStore.sortedModifiers as modifier}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <kbd
-          class="modifier"
-          onclick={() => PressedKeysStore.handleKeyClick(modifier)}
-        >
+        <kbd class="modifier" onclick={() => handleModifierChipClick(modifier)}>
           {modifier}
         </kbd>
       {/each}

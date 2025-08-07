@@ -77,6 +77,14 @@
     handleResize(viewWidth)
   })
 
+  // Keep visual keyboard in sync when active key/modifiers change
+  $effect(() => {
+    visualKeyboardManager.updateVisualState(
+      activeKeysStore.ActiveKey,
+      activeKeysStore.ActiveModifiers,
+    )
+  })
+
   // function handleGroupSelection(event: CustomEvent<string>) {
   //   selectedGroup = event.detail
   //   handleSearch()

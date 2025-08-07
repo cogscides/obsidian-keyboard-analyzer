@@ -52,7 +52,8 @@ export class ActiveKeysStore {
   }
 
   set ActiveModifiers(modifiers: Modifier[]) {
-    this.activeModifiers = modifiers
+    // Ensure no duplicate modifiers (e.g., when 'Mod' and 'Ctrl' both map to 'Ctrl')
+    this.activeModifiers = Array.from(new Set(modifiers))
   }
 
   get state() {
