@@ -170,6 +170,7 @@
   <div class="shortcuts-wrapper">
     <SearchMenu
       bind:inputHTML={input}
+      bind:search
       {searchCommandsCount}
       {searchHotkeysCount}
       bind:keyboardListenerIsActive

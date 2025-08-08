@@ -9,6 +9,7 @@
     CrossIcon,
     RefreshCw,
     ChevronDown,
+    Info as InfoIcon,
   } from 'lucide-svelte'
   import { slide, fade } from 'svelte/transition'
   import {
@@ -44,13 +45,42 @@
     keyboardListenerIsActive = $bindable(false),
     selectedGroup = $bindable(''),
     onSearch = $bindable(() => {}),
+    search = $bindable(''),
   }: Props = $props()
-
-  let search = $state('')
 
   const settingsManager = plugin.settingsManager
   const commandsManager = plugin.commandsManager
   const groupManager = plugin.groupManager
+
+  // Friendly labels and tooltips for filter settings
+  const settingTitles: Record<string, string> = {
+    StrictModifierMatch: 'Strict modifiers filtration',
+    ViewWOhotkeys: 'Only with hotkeys',
+    FeaturedFirst: 'Featured first',
+    HighlightCustom: 'Highlight custom keys',
+    HighlightDuplicates: 'Highlight duplicates',
+    DisplayIDs: 'Display command IDs',
+    GroupByPlugin: 'Group by plugin',
+    DisplayGroupAssignment: 'Show group assignment',
+    DisplayInternalModules: 'Display internal modules',
+  }
+
+  const settingTooltips: Record<string, string> = {
+    StrictModifierMatch:
+      "Match modifiers exactly. Example: Ctrl+K won't match Ctrl+Shift+K.",
+    ViewWOhotkeys:
+      'Show only commands that have at least one hotkey assigned.',
+    FeaturedFirst: 'Pin featured commands to the top of results.',
+    HighlightCustom: 'Visually mark hotkeys customized by you.',
+    HighlightDuplicates:
+      'Highlight when the same hotkey is used by multiple commands.',
+    DisplayIDs:
+      'Show internal command IDs and allow searching by ID.',
+    GroupByPlugin: 'Group commands by their plugin.',
+    DisplayGroupAssignment: 'Display which group a command belongs to.',
+    DisplayInternalModules:
+      'Include commands from Obsidian’s built-in modules (e.g., File Explorer).',
+  }
 
   const filterSettings: CGroupFilterSettings = $derived.by(() => {
     // Track group and default settings changes so this recomputes when settings update
@@ -145,6 +175,8 @@
       PressedKeysStore.handleKeyDown(e)
     }
     PressedKeysStore.handlePhysicalKeyDown(e)
+    // Re-apply search when hotkey listeners mutate active keys
+    handleSearchInput()
   }
 
   function handleSearchInput() {
@@ -167,11 +199,19 @@
     // Convert displayed modifier (e.g., 'Ctrl') back to abstract ('Control') so it's recognized as a modifier
     const abstractModifier = unconvertModifier(modifier as Modifier)
     PressedKeysStore.handleKeyClick(abstractModifier)
+    // Ensure current text query is applied alongside modifier changes
+    handleSearchInput()
   }
 
   // $effect(() => {
   //   handleSearchInput()
   // })
+
+  // Re-filter when the selected group changes so existing search text applies
+  $effect(() => {
+    selectedGroup
+    handleSearchInput()
+  })
 </script>
 
 <select class="dropdown mt-4" bind:value={selectedGroup}>
@@ -277,7 +317,14 @@
               />
             </div>
             <div class="setting-item-name popup-filter-title">
-              Strict Search
+              {settingTitles.StrictModifierMatch}
+              <span
+                class="info-icon"
+                title={settingTooltips.StrictModifierMatch}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
             </div>
           </div>
           <div class="setting-item mod-toggle popup-filter-menu">
@@ -299,7 +346,14 @@
               />
             </div>
             <div class="setting-item-name popup-filter-title">
-              Only with hotkeys
+              {settingTitles.ViewWOhotkeys}
+              <span
+                class="info-icon"
+                title={settingTooltips.ViewWOhotkeys}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
             </div>
           </div>
           <div class="setting-item mod-toggle popup-filter-menu">
@@ -321,7 +375,14 @@
               />
             </div>
             <div class="setting-item-name popup-filter-title">
-              Highlight hotkey duplicates
+              {settingTitles.HighlightDuplicates}
+              <span
+                class="info-icon"
+                title={settingTooltips.HighlightDuplicates}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
             </div>
           </div>
           <div class="setting-item mod-toggle popup-filter-menu">
@@ -343,7 +404,14 @@
               />
             </div>
             <div class="setting-item-name popup-filter-title">
-              Display command ID's
+              {settingTitles.DisplayIDs}
+              <span
+                class="info-icon"
+                title={settingTooltips.DisplayIDs}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
             </div>
           </div>
         </div>
@@ -389,7 +457,16 @@
                   id={`filter-${setting}`}
                 />
               </div>
-              <div class="setting-item-name">{setting}</div>
+              <div class="setting-item-name">
+                {settingTitles[setting] || setting}
+                <span
+                  class="info-icon"
+                  title={settingTooltips[setting] || setting}
+                  tabindex="0"
+                >
+                  <InfoIcon size={14} />
+                </span>
+              </div>
             </div>
           {/each}
         </div>
@@ -428,13 +505,27 @@
                   )}
               />
             </div>
-            <div class="setting-item-name">Display Internal Modules</div>
+            <div class="setting-item-name">
+              {settingTitles.DisplayInternalModules}
+              <span
+                class="info-icon"
+                title={settingTooltips.DisplayInternalModules}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
+            </div>
           </div>
           <div class="installed-plugins-container">
             {#each commandsManager.getInstalledPluginIDs() as pluginID}
               {#if commandsManager.isInternalModule(pluginID)}
                 <div class="setting-item mod-toggle">
-                  <div class="installed-plugin-name">{pluginID}</div>
+                  <div
+                    class="installed-plugin-name"
+                    title={`Built-in module ID: ${pluginID}`}
+                  >
+                    {commandsManager.getPluginName(pluginID)}
+                  </div>
                   <div class="installed-plugin-icon">
                     <div class="checkbox-container">
                       <input

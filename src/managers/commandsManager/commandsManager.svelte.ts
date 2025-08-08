@@ -124,7 +124,7 @@ export default class CommandsManager {
    * @param pluginId - The ID of the plugin to get the name of
    * @returns string - The name of the plugin
    */
-  private getPluginName(pluginId: string): string {
+  public getPluginName(pluginId: string): string {
     const plugin = (this.app as UnsafeAppInterface).plugins.plugins[pluginId]
     if (plugin) return plugin.manifest.name
 
@@ -330,45 +330,51 @@ export default class CommandsManager {
     let commandsToFilter = this.getCommandsForGroup(selectedGroupID)
     console.log('commandsToFilter', commandsToFilter)
 
-    // If no search and no active hotkeys, return all commands for the selected group
-    if (!search && activeModifiers.length === 0 && !activeKey) {
+    // If there's no search and no active keys, we may still need to apply list-level filters
+    // Apply filters unless none of them affect the list
+    const hasListAffectingFilters =
+      // Only with hotkeys
+      !!filterSettings?.ViewWOhotkeys ||
+      // Exclude internal modules when DisplayInternalModules is false
+      filterSettings?.DisplayInternalModules === false
+    if (!search && activeModifiers.length === 0 && !activeKey && !hasListAffectingFilters) {
       return commandsToFilter
     }
 
     const searchLower = search.toLowerCase()
+    const hasActiveHotkeyQuery =
+      (activeModifiers && activeModifiers.length > 0) || !!activeKey
 
     const filteredCommands = commandsToFilter.filter((command) => {
       if (!filterSettings) return true
-      const logPrefix = '[KB] CommandsManager.filterCommands'
-      // debug per-command (lightweight)
-      // console.debug(logPrefix, { id: command.id, filterSettings })
+
       const nameMatch =
-        `${command.pluginName} ${command.cmdName}`
+        searchLower.length === 0 ||
+        `${command.pluginName} ${command.name} ${command.cmdName}`
           .toLowerCase()
           .includes(searchLower) ||
-        (filterSettings?.DisplayIDs &&
+        (filterSettings.DisplayIDs &&
           command.id.toLowerCase().includes(searchLower))
 
-      // If there's a search, only filter by the search term
-      if (search) {
-        return nameMatch
-      }
+      // Only apply hotkey matching when the user has an active hotkey query
+      const hotkeyMatch = hasActiveHotkeyQuery
+        ? command.hotkeys.some((hotkey) =>
+            this.hotkeyMatches(
+              hotkey,
+              activeModifiers,
+              activeKey,
+              filterSettings.StrictModifierMatch || false
+            )
+          )
+        : true
 
-      const hotkeyMatch = command.hotkeys.some((hotkey) =>
-        this.hotkeyMatches(
-          hotkey,
-          activeModifiers,
-          activeKey,
-          filterSettings?.StrictModifierMatch || false
-        )
-      )
-
-      // "Only with hotkeys": when true → only include commands that have hotkeys
-      const hasHotkeysMatch = filterSettings?.ViewWOhotkeys
+      // Only with hotkeys: when true → only include commands that have hotkeys
+      const hasHotkeysMatch = filterSettings.ViewWOhotkeys
         ? command.hotkeys.length > 0
         : true
 
-      const internalModuleMatch = filterSettings?.DisplayInternalModules
+      // Internal modules visibility
+      const internalModuleMatch = filterSettings.DisplayInternalModules
         ? true
         : !command.isInternalModule
 

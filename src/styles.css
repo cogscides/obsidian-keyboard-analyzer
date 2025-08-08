@@ -92,6 +92,40 @@
   flex-wrap: wrap;
 }
 
+/* Inline info icon styles for filter items */
+.setting-item-name .info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  min-width: 16px; /* reserve space to prevent layout shift */
+  height: 16px;
+  margin-left: 6px; /* spacing between text and icon */
+  color: var(--text-muted);
+  opacity: 0; /* hidden by default */
+  visibility: hidden;
+  transition: color 80ms ease; /* show instantly; only color animates */
+  position: relative;
+  z-index: 1;
+}
+
+/* Show the icon only when hovering the setting row; avoid width jump via min-width */
+.popup-filter-menu .setting-item:hover .info-icon,
+.popup-filter-menu .setting-item:focus-within .info-icon {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Active/hover state of the info icon */
+.setting-item-name .info-icon:hover,
+.setting-item-name .info-icon:focus-visible,
+.setting-item-name .info-icon:focus,
+.setting-item-name .info-icon:active {
+  color: var(--text-accent);
+}
+
+/* (Using native title tooltips for icons to match Obsidian) */
+
 #keyboard-component .setting-item-name .command-name {
   padding-right: 8px;
 }
