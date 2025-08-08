@@ -25,6 +25,7 @@
   interface Props {
     plugin: KeyboardAnalyzerPlugin
     inputHTML?: HTMLInputElement | undefined
+    search?: string
     searchCommandsCount?: number
     searchHotkeysCount?: number
     keyboardListenerIsActive?: boolean

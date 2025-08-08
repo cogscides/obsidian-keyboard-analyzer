@@ -1,28 +1,24 @@
-<!-- src/Components/KeyboardComponent.svelte -->
+<!-- src/components/KeyboardComponent.svelte -->
 
 <script lang="ts">
   import { setContext } from 'svelte'
-  import type { Hotkey, Modifier } from 'obsidian'
+  import type { Modifier } from 'obsidian'
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
   import type {
     commandEntry,
-    KeyboardLayout,
     hotkeyEntry,
   } from '../interfaces/Interfaces'
   import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import { convertModifiers } from '../utils/modifierUtils'
-  import { UNIFIED_KEYBOARD_LAYOUT } from '../Constants'
 
   import type CommandsManager from '../managers/commandsManager'
-  import type SettingsManager from '../managers/settingsManager'
 
-  import KeyboardLayoutComponent from '../Components/KeyboardLayoutComponent.svelte'
-  import SearchMenu from '../Components/SearchMenu.svelte'
-  import CommandsList from '../Components/CommandsList.svelte'
-  import { DEFAULT_GROUP_NAMES } from '../managers/groupManager/groupManager.svelte'
-  import { GroupType } from '../managers/settingsManager'
+  import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
+  import SearchMenu from './SearchMenu.svelte'
+  import CommandsList from './CommandsList.svelte'
+  import { GroupType } from '../managers/groupManager/groupManager.svelte'
 
   // Props and Context
   interface Props {
