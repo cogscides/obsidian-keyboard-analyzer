@@ -148,6 +148,18 @@
   margin-right: 6px; /* space before command title */
 }
 
+#keyboard-component .setting-item-name button.suggestion-prefix.is-builtin::before,
+#keyboard-component .setting-item-name span.suggestion-prefix.is-builtin::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 #keyboard-component .setting-item .star-icon {
   display: none;
 }
@@ -299,6 +311,27 @@ kbd.modifier:hover {
 
 .plugin-group-header .chevron.is-collapsed {
   transform: rotate(-90deg);
+}
+
+.plugin-group-header.is-builtin .plugin-name::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.plugin-badge.built-in {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 0 4px;
+  text-transform: uppercase;
 }
 
 .plugin-group-body {

@@ -81,7 +81,7 @@
     return collapsedPlugins.has(pluginName)
   }
 
-  type PluginGroup = { pluginName: string; commands: commandEntry[] }
+  type PluginGroup = { pluginName: string; commands: commandEntry[]; isBuiltIn: boolean }
   let groupedByPlugin: PluginGroup[] = $derived.by(() => {
     // Track changes
     groupSettings
@@ -103,7 +103,8 @@
           return 0
         })
       }
-      return { pluginName, commands }
+      const isBuiltIn = commands.some((c) => c.isInternalModule)
+      return { pluginName, commands, isBuiltIn }
     })
     groups.sort((a, b) => a.pluginName.localeCompare(b.pluginName))
     return groups
@@ -144,7 +145,7 @@
         {#each groupedByPlugin as group (group.pluginName)}
           <div class="plugin-group">
             <div
-              class="plugin-group-header"
+              class="plugin-group-header {group.isBuiltIn && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}"
               role="button"
               aria-expanded={!isCollapsed(group.pluginName)}
               aria-controls={`group-${slugify(group.pluginName)}`}
@@ -154,6 +155,9 @@
                 <ChevronDown size={14} />
               </span>
               <span class="plugin-name">{group.pluginName}</span>
+              {#if group.isBuiltIn}
+                <span class="plugin-badge built-in">built-in</span>
+              {/if}
               <span class="plugin-meta u-muted">{group.commands.length} cmds</span>
             </div>
             {#if !isCollapsed(group.pluginName)}
@@ -203,7 +207,7 @@
             <div class="setting-item-info">
               <div class="setting-item-name">
                 <button
-                  class="suggestion-prefix"
+                  class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
                   onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
                 >
                   {cmdEntry.pluginName}

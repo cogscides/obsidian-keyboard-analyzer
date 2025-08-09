@@ -16,10 +16,11 @@ const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   FeaturedFirst: false,
   HighlightCustom: false,
   HighlightDuplicates: false,
+  HighlightBuiltIns: false,
   DisplayIDs: false,
   GroupByPlugin: false,
   DisplayGroupAssignment: false,
-  DisplayInternalModules: false,
+  DisplayInternalModules: true,
   DisplaySystemShortcuts: false,
 }
 

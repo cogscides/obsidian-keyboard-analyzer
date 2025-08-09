@@ -64,6 +64,7 @@ export default class HotkeyManager {
   }
 
   private isInternalModule(commandId: string): boolean {
+    const pluginId = (commandId || '').split(':')[0] || ''
     const internalModules = [
       'audio-recorder',
       'backlink',
@@ -95,7 +96,26 @@ export default class HotkeyManager {
       'workspaces',
       'zk-prefixer',
     ]
-    return internalModules.some((module) => commandId.startsWith(module))
+    const coreNamespaces = [
+      'app',
+      'editor',
+      'markdown',
+      'open-with-default-app',
+      'theme',
+      'window',
+      'workspace',
+    ]
+    if (internalModules.includes(pluginId)) return true
+    if (coreNamespaces.includes(pluginId)) return true
+    // Heuristic fallback: not a community plugin => internal
+    const unsafe = this.app as UnsafeAppInterface
+    const isCommunity = Boolean(unsafe.plugins.plugins[pluginId])
+    if (isCommunity) return false
+    const enabledInternal = unsafe.internalPlugins.getEnabledPlugins() as UnsafeInternalPlugin[]
+    const isInternal = enabledInternal.some(
+      (p) => (p.instance as UnsafeInternalPluginInstance).id === pluginId
+    )
+    return isInternal || !isCommunity
   }
 
   private getPluginName(pluginId: string): string {

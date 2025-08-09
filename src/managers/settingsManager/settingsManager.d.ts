@@ -31,6 +31,7 @@ export enum ViewSettingsKeys {
   HighlightCustom = 'HighlightCustom',
   HighlightDuplicates = 'HighlightDuplicates',
   DisplayIDs = 'DisplayIDs',
+  HighlightBuiltIns = 'HighlightBuiltIns',
 }
 
 type FilterSettings = {

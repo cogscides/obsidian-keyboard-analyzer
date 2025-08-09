@@ -65,6 +65,7 @@
     FeaturedFirst: 'Featured first',
     HighlightCustom: 'Highlight custom keys',
     HighlightDuplicates: 'Highlight duplicates',
+    HighlightBuiltIns: 'Highlight built-in modules',
     DisplayIDs: 'Display command IDs',
     GroupByPlugin: 'Group by plugin',
     DisplayGroupAssignment: 'Show group assignment',
@@ -83,6 +84,8 @@
     HighlightCustom: 'Visually mark hotkeys customized by you.',
     HighlightDuplicates:
       'Highlight when the same hotkey is used by multiple commands.',
+    HighlightBuiltIns:
+      'Subtly mark built-in (internal) plugin groups in grouped view.',
     DisplayIDs: 'Show internal command IDs and allow searching by ID.',
     GroupByPlugin: 'Group commands by their plugin.',
     DisplayGroupAssignment: 'Display which group a command belongs to.',
@@ -117,7 +120,7 @@
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
   let viewDropdownOpen = $state(false)
-  let modulesDropdownOpen = $state(false)
+  // let modulesDropdownOpen = $state(false) // removed
   let inputIsFocused = $state(false)
   let filterIsOpen = $state(false)
   let refreshIsActive = $state(false)
@@ -153,14 +156,7 @@
     }
   }
 
-  function ToggleModulesDropdown() {
-    const next = !modulesDropdownOpen
-    modulesDropdownOpen = next
-    if (next) {
-      filterIsOpen = false
-      viewDropdownOpen = false
-    }
-  }
+  // function ToggleModulesDropdown() {} // removed
 
   // TODO Unify this with the settingsManager
   function setFilterSetting(
@@ -560,87 +556,7 @@
     {/if}
   </div>
 
-  <!-- COMPONENT: Modules Dropdown -->
-
-  <div
-    class="menu-anchor"
-    use:clickOutside
-    ononclick_outside={() => (modulesDropdownOpen = false)}
-  >
-    <button
-      id="hotkey-modules-button"
-      class={modulesDropdownOpen ? 'is-active' : ''}
-      aria-label="Built-in Modules Options"
-      aria-pressed={modulesDropdownOpen}
-      onclick={ToggleModulesDropdown}
-    >
-      Built-in Modules <ChevronDown size={16} />
-    </button>
-
-    {#if modulesDropdownOpen}
-      <div class="popup-filter-menu-container is-open" transition:slide>
-        <div class="popup-filter-menu">
-          <div class="setting-item mod-toggle">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <div
-              class="checkbox-container"
-              class:is-enabled={filterSettings.DisplayInternalModules}
-              onclick={() =>
-                setFilterSetting(
-                  'DisplayInternalModules' as keyof CGroupFilterSettings,
-                  !filterSettings.DisplayInternalModules,
-                )}
-            >
-              <input
-                type="checkbox"
-                tabindex="0"
-                checked={filterSettings.DisplayInternalModules}
-              />
-            </div>
-            <div class="setting-item-name">
-              {settingTitles.DisplayInternalModules}
-              <span
-                class="info-icon"
-                title={settingTooltips.DisplayInternalModules}
-                tabindex="0"
-              >
-                <InfoIcon size={14} />
-              </span>
-            </div>
-          </div>
-          <div class="installed-plugins-container">
-            {#each commandsManager.getInstalledPluginIDs() as pluginID}
-              {#if commandsManager.isInternalModule(pluginID)}
-                <div class="setting-item mod-toggle">
-                  <div
-                    class="installed-plugin-name"
-                    title={`Built-in module ID: ${pluginID}`}
-                  >
-                    {commandsManager.getPluginName(pluginID)}
-                  </div>
-                  <div class="installed-plugin-icon">
-                    <div class="checkbox-container">
-                      <input
-                        type="checkbox"
-                        tabindex="0"
-                        checked={!excludedModules.includes(pluginID)}
-                        onchange={() => {
-                          groupManager.toggleExcludedModuleForGroup(
-                            selectedGroup,
-                            pluginID,
-                          )
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              {/if}
-            {/each}
-          </div>
-        </div>
-      </div>
-    {/if}
-  </div>
+  <!-- Modules dropdown removed intentionally -->
 
   <!-- COMPONENT: Community Plugin Search Summary -->
 

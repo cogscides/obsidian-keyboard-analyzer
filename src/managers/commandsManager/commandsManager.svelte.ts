@@ -188,6 +188,9 @@ export default class CommandsManager {
 		| "zk-prefixer";
    */
   public isInternalModule(commandId: string): boolean {
+    const pluginId = (commandId || '').split(':')[0] || ''
+
+    // Known internal plugin IDs (core plugins)
     const internalModules = [
       'audio-recorder',
       'backlink',
@@ -220,7 +223,29 @@ export default class CommandsManager {
       'zk-prefixer',
     ] as InternalPluginName[]
 
-    return internalModules.some((module) => commandId.startsWith(module))
+    // Additional core namespaces used by Obsidian for built-in commands
+    const coreNamespaces = [
+      'app',
+      'editor',
+      'markdown',
+      'open-with-default-app',
+      'theme',
+      'window',
+      'workspace',
+    ]
+
+    if (internalModules.includes(pluginId as InternalPluginName)) return true
+    if (coreNamespaces.includes(pluginId)) return true
+
+    // Heuristic fallback: if not a community plugin and not an internal plugin id, treat as internal
+    const unsafe = this.app as UnsafeAppInterface
+    const isCommunity = Boolean(unsafe.plugins.plugins[pluginId])
+    if (isCommunity) return false
+    const enabledInternal = unsafe.internalPlugins.getEnabledPlugins() as InternalPlugin[]
+    const isInternal = enabledInternal.some(
+      (p) => (p.instance as UnsafeInternalPluginInstance).id === pluginId
+    )
+    return isInternal || !isCommunity
   }
 
   /**
