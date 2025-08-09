@@ -9,7 +9,7 @@
     KeyboardSection,
   } from '../interfaces/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
-  import { Coffee as CoffeeIcon, Pin as PinIcon } from 'lucide-svelte'
+  import { Coffee as CoffeeIcon, Pin as PinIcon, Settings as SettingsIcon } from 'lucide-svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type CommandsManager from '../managers/commandsManager'
   import { GroupType } from '../managers/groupManager/groupManager.svelte'
@@ -67,6 +67,19 @@
   let panelCollapsed = $state(false)
   let isPinned = $state(Boolean(settingsManager.getSetting('pinKeyboardPanel')))
   let heatmapScope: 'filtered' | 'all' = $state('filtered')
+  let devMenuOpen = $state(false)
+  let showInspector = $state(false)
+  // Reflect live settings values
+  const devOptionsEnabled = $derived(
+    Boolean(settingsManager.settings.enableDeveloperOptions)
+  )
+  let devLoggingEnabled = $derived(
+    Boolean(settingsManager.settings.devLoggingEnabled)
+  )
+  let emulatedOS = $derived(
+    (settingsManager.settings.emulatedOS || 'none') as 'none' | 'windows' | 'macos' | 'linux'
+  )
+  import { setDevLoggingEnabled, setEmulatedOS } from '../utils/runtimeConfig'
 </script>
 
 <div class="keyboard-panel {panelCollapsed ? 'collapsed' : ''} {isPinned ? 'pinned' : ''}">
@@ -96,6 +109,58 @@
         {/if}
     </div>
     <div class="toolbar-right">
+      {#if devOptionsEnabled}
+        <div class="dev-menu">
+          <button
+            class="dev-gear"
+            aria-haspopup="true"
+            aria-expanded={devMenuOpen}
+            title="Developer options"
+            onclick={() => (devMenuOpen = !devMenuOpen)}
+          >
+            <SettingsIcon size={16} />
+          </button>
+          {#if devMenuOpen}
+            <div class="dev-dropdown" role="menu">
+              <div class="dev-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={devLoggingEnabled}
+                    oninput={(e: Event) => {
+                      const v = (e.currentTarget as HTMLInputElement).checked
+                      settingsManager.updateSettings({ devLoggingEnabled: v })
+                      setDevLoggingEnabled(v)
+                    }}
+                  />
+                  <span>Dev logging</span>
+                </label>
+              </div>
+              <div class="dev-item">
+                <button class="link" onclick={() => (showInspector = !showInspector)}>
+                  {showInspector ? 'Hide' : 'Show'} Active Keys inspector
+                </button>
+              </div>
+              <div class="dev-item">
+                <label class="inline">Emulated OS:</label>
+                <select
+                  bind:value={emulatedOS}
+                  oninput={(e: Event) => {
+                    const val = (e.currentTarget as HTMLSelectElement).value as 'none'|'windows'|'macos'|'linux'
+                    settingsManager.updateSettings({ emulatedOS: val })
+                    setEmulatedOS(val)
+                  }}
+                >
+                  <option value="none">None</option>
+                  <option value="windows">Windows</option>
+                  <option value="macos">macOS</option>
+                  <option value="linux">Linux</option>
+                </select>
+              </div>
+            </div>
+          {/if}
+        </div>
+      {/if}
       <button
         class="pin-toggle"
         aria-label={isPinned ? 'Unpin keyboard panel' : 'Pin keyboard panel'}
@@ -124,6 +189,13 @@
   </div>
 
   <div class="panel-content">
+
+    {#if showInspector}
+      <div class="dev-inspector" aria-live="polite">
+        <div class="dev-row"><span class="k">Active key:</span><span class="v">{activeKeysStore.getDisplayKey() || '—'}</span></div>
+        <div class="dev-row"><span class="k">Modifiers:</span><span class="v">{activeKeysStore.ActiveModifiers.length ? activeKeysStore.ActiveModifiers.join(' + ') : '—'}</span></div>
+      </div>
+    {/if}
 
     {#if !panelCollapsed}
       <div class="keyboard-surface">
@@ -279,6 +351,52 @@
     font-size: 12px;
     cursor: pointer;
   }
+
+  /* Developer menu */
+  .dev-menu { position: relative; }
+  .dev-gear {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-modifier-form-field);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .dev-gear:hover, .dev-gear:focus-visible {
+    border-color: var(--interactive-accent);
+    color: var(--text-normal);
+  }
+  .dev-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-s);
+    padding: 8px;
+    min-width: 220px;
+    z-index: 1000;
+  }
+  .dev-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 2px; }
+  .dev-item .inline { margin-right: auto; color: var(--text-muted); }
+  .dev-item .link { background: none; border: none; color: var(--interactive-accent); cursor: pointer; padding: 0; }
+  .dev-item select { width: 120px; }
+
+  .dev-inspector {
+    margin: 8px 0 0 0;
+    padding: 6px 8px;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .dev-inspector .dev-row { display: flex; gap: 8px; line-height: 1.4; }
+  .dev-inspector .k { color: var(--text-muted); min-width: 84px; }
+  .dev-inspector .v { color: var(--text-normal); font-weight: 600; }
 
   .pin-toggle {
     display: inline-flex;

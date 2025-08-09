@@ -79,7 +79,7 @@
   // Hover preview for hotkeys on the visual keyboard
   function handleHotkeyMouseEnter(hk: hotkeyEntry) {
     const mods = convertModifiers(hk.modifiers)
-    visualKeyboardManager.updateVisualState(hk.key, mods)
+    visualKeyboardManager.previewHoverState(hk.key, mods)
   }
   function handleHotkeyMouseLeave() {
     visualKeyboardManager.updateVisualState(

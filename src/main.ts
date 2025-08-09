@@ -18,6 +18,8 @@ import type { PluginSettings } from './managers/settingsManager'
 
 import 'virtual:uno.css'
 import './styles.css'
+import { setDevLoggingEnabled, setEmulatedOS, setLogLevel } from './utils/runtimeConfig'
+import KeyboardAnalyzerSettingTab from './settingsTab'
 
 export default class KeyboardAnalyzerPlugin extends Plugin {
   commandsManager: CommandsManager
@@ -55,6 +57,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     await this.hotkeyManager.initialize()
     this.commandsManager.initialize()
 
+    // Initialize runtime config from settings
+    setDevLoggingEnabled(!!this.settingsManager.getSetting('devLoggingEnabled'))
+    setLogLevel('debug')
+    setEmulatedOS(
+      (this.settingsManager.getSetting('emulatedOS') || 'none') as
+        | 'none'
+        | 'windows'
+        | 'macos'
+        | 'linux'
+    )
+
     this.registerPluginHotkeys()
     this.addStatusBarIndicator()
 
@@ -62,6 +75,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       VIEW_TYPE_SHORTCUTS_ANALYZER,
       (leaf: WorkspaceLeaf) => new ShortcutsView(leaf, this)
     )
+
+    this.addSettingTab(new KeyboardAnalyzerSettingTab(this))
 
     // This will handle plugin reloads
     this.app.workspace.onLayoutReady(() => {

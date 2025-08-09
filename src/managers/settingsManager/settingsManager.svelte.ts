@@ -35,6 +35,9 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   featuredCommandIDs: [],
   commandGroups: [],
   pinKeyboardPanel: false,
+  enableDeveloperOptions: false,
+  devLoggingEnabled: false,
+  emulatedOS: 'none',
 }
 
 export default class SettingsManager {
@@ -66,7 +69,8 @@ export default class SettingsManager {
       const loadedData = await this.plugin.loadData()
       this.settings = { ...DEFAULT_PLUGIN_SETTINGS, ...loadedData }
     } catch (error) {
-      console.error('Failed to Plugin load settings:', error)
+      const { default: logger } = await import('../../utils/logger')
+      logger.error('Failed to Plugin load settings:', error)
     }
   }
 
@@ -74,7 +78,8 @@ export default class SettingsManager {
     try {
       await this.plugin.saveData(this.settings)
     } catch (error) {
-      console.error('Failed to Plugin save settings:', error)
+      const { default: logger } = await import('../../utils/logger')
+      logger.error('Failed to Plugin save settings:', error)
     }
   }
 

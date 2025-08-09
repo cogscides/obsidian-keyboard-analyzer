@@ -1,26 +1,34 @@
 // modifierUtils.ts
 
 import { Platform } from 'obsidian'
+import { getEmulatedOS } from './runtimeConfig'
 import type { Modifier } from 'obsidian'
 
 export type ModifierMap = { [key: string]: Modifier }
 
 export type ModifierKey = 'Control' | 'Shift' | 'Alt' | 'Meta' | 'Mod'
 
+function isMac(): boolean {
+  const emu = getEmulatedOS()
+  if (emu === 'macos') return true
+  if (emu === 'windows' || emu === 'linux') return false
+  return Platform.isMacOS
+}
+
 export const modifierMap: Record<ModifierKey, Modifier> = {
   Control: 'Ctrl',
   Shift: 'Shift',
   Alt: 'Alt',
   Meta: 'Meta',
-  Mod: Platform.isMacOS ? 'Meta' : 'Ctrl',
+  Mod: isMac() ? 'Meta' : 'Ctrl',
 }
 
 export const displayModifierMap: Record<ModifierKey, string> = {
-  Control: Platform.isMacOS ? '⌃' : 'Control',
+  Control: isMac() ? '⌃' : 'Control',
   Shift: '⇧',
-  Alt: Platform.isMacOS ? '⌥' : 'Alt',
-  Meta: Platform.isMacOS ? '⌘' : 'Meta',
-  Mod: Platform.isMacOS ? '⌘' : 'Ctrl',
+  Alt: isMac() ? '⌥' : 'Alt',
+  Meta: isMac() ? '⌘' : 'Meta',
+  Mod: isMac() ? '⌘' : 'Ctrl',
 }
 
 // export function getModifierInfo(): {
@@ -64,7 +72,7 @@ export function getDisplayModifiers(modifiers: string[]): string[] {
 }
 
 export function sortModifiers(modifiers: string[]): string[] {
-  const order = Platform.isMacOS
+  const order = isMac()
     ? ['Ctrl', 'Alt', 'Shift', 'Cmd']
     : ['Ctrl', 'Alt', 'Shift', 'Win']
 

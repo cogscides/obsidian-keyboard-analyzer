@@ -8,6 +8,10 @@ export interface PluginSettings {
   featuredCommandIDs: string[]
   commandGroups: CGroup[]
   pinKeyboardPanel?: boolean
+  // Developer options (non-breaking defaults)
+  enableDeveloperOptions?: boolean
+  devLoggingEnabled?: boolean
+  emulatedOS?: 'none' | 'windows' | 'macos' | 'linux'
 }
 
 export enum FilterSettingsKeys {

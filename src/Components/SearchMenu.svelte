@@ -24,6 +24,7 @@
   import type { Modifier } from 'obsidian'
   // @ts-ignore: No type declaration for clickOutside
   import { clickOutside } from '../utils/clickOutside'
+  import logger from '../utils/logger'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -107,18 +108,14 @@
 
   $effect(() => {
     const fs = filterSettings
-    console.log('[KB] SearchMenu filterSettings derived changed', {
+    logger.debug('SearchMenu filterSettings derived changed', {
       selectedGroup,
       filterSettings: fs,
     })
   })
 
   $inspect(plugin.settingsManager)
-  console.log(
-    'GroupManager try to find',
-    selectedGroup,
-    groupManager.getGroup(selectedGroup),
-  )
+  logger.debug('GroupManager try to find', selectedGroup, groupManager.getGroup(selectedGroup))
 
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
@@ -165,13 +162,13 @@
     setting: keyof CGroupFilterSettings,
     value: boolean,
   ) {
-    console.log('[KB] SearchMenu setFilterSetting called', {
+    logger.debug('SearchMenu setFilterSetting called', {
       selectedGroup,
       setting,
       value,
     })
     groupManager.updateGroupFilterSettings(selectedGroup, { [setting]: value })
-    console.log('[KB] SearchMenu after updateGroupFilterSettings', {
+    logger.debug('SearchMenu after updateGroupFilterSettings', {
       selectedGroup,
       persisted: groupManager.getGroupSettings(selectedGroup),
     })
@@ -214,7 +211,7 @@
   }
 
   function handleSearchInput() {
-    console.log('[KB] SearchMenu handleSearchInput', {
+    logger.debug('SearchMenu handleSearchInput', {
       search,
       activeModifiers: PressedKeysStore.activeModifiers,
       activeKey: PressedKeysStore.activeKey,
@@ -261,16 +258,7 @@
   {/each}
 </select>
 
-<div class="logger py-4 rounded-lg bg-base-100 border border-base-300">
-  <div class="logger-header flex flex-col">
-    <div class="logger-title">ActiveKeysStore:</div>
-    <div class="logger-data">
-      {activeKeysStore.ActiveModifiers}
-      {activeKeysStore.ActiveKey}
-    </div>
-    <div class="logger-close absolute right-0"></div>
-  </div>
-</div>
+<!-- Developer logger removed in favor of toolbar inspector -->
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="hotkey-settings-container" onkeydown={handleKeyDown}>
@@ -550,8 +538,12 @@
 
   <div class="community-plugin-search-summary u-muted">
     {#if searchCommandsCount !== 0}
-      <span>
-        {searchHotkeysCount} keys | {searchCommandsCount} cmds
+      <span class="counts-line">
+        <span class="n">{searchHotkeysCount}</span>
+        <span class="label"> keys</span>
+        <span> | </span>
+        <span class="n">{searchCommandsCount}</span>
+        <span class="label"> cmds</span>
       </span>
     {:else}
       <span>Hotkeys not found</span>

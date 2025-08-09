@@ -60,7 +60,7 @@ export interface KeyboardLayout {
 export interface KeyboardKeyState {
   displayValue: string // This replaces 'output'
   code: string // This replaces 'keyCode'
-  state: 'active' | 'inactive' | 'possible' | 'disabled' | 'empty'
+  state: 'active' | 'inactive' | 'hover' | 'possible' | 'disabled' | 'empty'
   weight?: number
   smallText?: boolean
 }

@@ -1,8 +1,8 @@
 ---
 title: Add Developer Settings dropdown in toolbar
-status: todo
-owner: "@you"
-updated: 2025-08-09 13:55 UTC
+status: in_progress
+owner: "@agent"
+updated: 2025-08-09 21:55 UTC
 related:
   - [[250809-list-of-bugs-and-new-feature-requests]]
   - [[250809-keyboard-panel-collapse-toggle]]
@@ -31,14 +31,17 @@ Add a compact settings dropdown in the keyboard toolbar (left of Donate) for dev
 - Emulated OS affects modifier rendering and filtering behavior consistently; easy to revert to None.
 
 ## Next Steps
-- [ ] Add `enableDeveloperOptions` to plugin settings; default false (owner)
-- [ ] Add `devLoggingEnabled` and `emulatedOS` settings (owner)
-- [ ] Implement `logger` utility and replace scattered `console.log` calls where feasible (owner)
-- [ ] Add toolbar gear button and dropdown; conditionally render when `enableDeveloperOptions` is true (owner)
-- [ ] Implement Active Keys inspector panel with improved layout (owner)
+- [x] Add `enableDeveloperOptions` to plugin settings; default false (owner)
+- [x] Add `devLoggingEnabled` and `emulatedOS` settings (owner)
+- [x] Implement `logger` utility and replace scattered `console.log` calls where feasible (owner)
+- [x] Add toolbar gear button and dropdown; conditionally render when `enableDeveloperOptions` is true (owner)
+- [x] Implement Active Keys inspector panel with improved layout (owner)
 - [ ] Verify behavior across themes and small panes; attach notes (owner)
+
+## Decisions
+- [2025-08-09] Introduced `runtimeConfig` to avoid tight coupling between utilities and the settings manager. Settings tab updates runtime flags so changes apply immediately without reload.
+- [2025-08-09] Scoped dev inspector panel to the keyboard toolbar area; removed the raw logger box from SearchMenu for a cleaner UI.
 
 ## Links
 - [[250809-list-of-bugs-and-new-feature-requests]]
 - [[250809-keyboard-panel-collapse-toggle]]
-

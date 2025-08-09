@@ -60,7 +60,10 @@
 
   function handleClick(key: Key) {
     const keyIdentifier = key.code || key.label
-    console.log('Clicked key:', keyIdentifier)
+    ;(async () => {
+      const { default: logger } = await import('../utils/logger')
+      logger.debug('Clicked key:', keyIdentifier)
+    })()
 
     activeKeysStore.handleKeyClick(keyIdentifier)
 
@@ -89,9 +92,10 @@
       ? spreadWeights(keyState.weight)
       : 0}
     class:is-active={keyState.state === 'active'}
+    class:is-hover={keyState.state === 'hover'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
-    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}}`}
+    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : (keyState.state === 'inactive' || keyState.state === 'possible') && keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}`}
     onclick={() => handleClick(key)}
   >
     {displayLabel}
@@ -121,6 +125,14 @@
     color: var(--text-on-accent);
     background-color: var(--interactive-accent);
     box-shadow: var(--button-shadow-active);
+  }
+
+  /* Distinct style for hover-previewed hotkeys (from commands list hover) */
+  .kb-layout-key.is-hover {
+    background-color: var(--background-modifier-form-field);
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 1px var(--interactive-accent);
+    color: var(--text-normal);
   }
 
   .kb-layout-key.has-hotkey {

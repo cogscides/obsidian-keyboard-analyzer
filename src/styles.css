@@ -625,6 +625,12 @@ kbd.modifier:hover {
   text-align: center;
 }
 
+/* On extra-small/mobile screens, hide the labels ("keys"/"cmds") to save space */
+#keyboard-component.xs .community-plugin-search-summary .label,
+#keyboard-component.is-mobile .community-plugin-search-summary .label {
+  display: none;
+}
+
 button#hotkey-refresh-button {
   background-color: transparent;
   border: none;

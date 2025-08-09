@@ -1,4 +1,5 @@
 import { Platform, type Modifier } from 'obsidian'
+import { getEmulatedOS } from '../../utils/runtimeConfig'
 import { UNIFIED_KEYBOARD_LAYOUT } from '../../Constants'
 import type {
   KeyboardLayout,
@@ -7,11 +8,8 @@ import type {
   KeyboardSection,
   commandEntry,
 } from '../../interfaces/Interfaces'
-import {
-  convertModifier,
-  getDisplayModifier,
-  unconvertModifiers,
-} from '../../utils/modifierUtils'
+import { convertModifier, getDisplayModifier, unconvertModifiers } from '../../utils/modifierUtils'
+import logger from '../../utils/logger'
 
 /**
  * The VisualKeyboardManager class is responsible for managing and processing the visual keyboard layout.
@@ -29,7 +27,46 @@ export class VisualKeyboardManager {
   public keyStates: Record<string, KeyboardKeyState> = $state({})
 
   constructor() {
+    // Prepare layout with OS-specific ordering (e.g., swap Win/Alt on Windows/Linux)
+    this.layout = this.getProcessedLayout(UNIFIED_KEYBOARD_LAYOUT)
     this.initializeKeyStates()
+  }
+
+  private getProcessedLayout(src: KeyboardLayout): KeyboardLayout {
+    // Deep-clone lightweight structure
+    const layout: KeyboardLayout = {
+      sections: src.sections.map((section) => ({
+        name: section.name,
+        gridRatio: section.gridRatio,
+        rows: section.rows.map((row) => row.map((k) => ({ ...k }))),
+      })),
+    }
+
+    // If not macOS, swap Alt and Meta positions in the bottom row of the main section
+    const emu = getEmulatedOS()
+    const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
+    if (!isMac) {
+      const main = layout.sections.find((s) => s.name === 'main')
+      if (main && main.rows[5]) {
+        const row = main.rows[5]
+        // Expect order: ControlLeft, AltLeft, MetaLeft, Space, MetaRight, AltRight, ControlRight
+        // Desired Windows/Linux order: ControlLeft, MetaLeft, AltLeft, Space, AltRight, MetaRight, ControlRight
+        const idxAltL = row.findIndex((k) => k.code === 'AltLeft')
+        const idxMetaL = row.findIndex((k) => k.code === 'MetaLeft')
+        if (idxAltL !== -1 && idxMetaL !== -1 && idxAltL < idxMetaL) {
+          // Swap positions so MetaLeft precedes AltLeft
+          ;[row[idxAltL], row[idxMetaL]] = [row[idxMetaL], row[idxAltL]]
+        }
+        const idxAltR = row.findIndex((k) => k.code === 'AltRight')
+        const idxMetaR = row.findIndex((k) => k.code === 'MetaRight')
+        if (idxAltR !== -1 && idxMetaR !== -1 && idxMetaR < idxAltR) {
+          // Swap so AltRight precedes MetaRight (mirror left side intent)
+          ;[row[idxAltR], row[idxMetaR]] = [row[idxMetaR], row[idxAltR]]
+        }
+      }
+    }
+
+    return layout
   }
 
   private initializeKeyStates() {
@@ -47,9 +84,9 @@ export class VisualKeyboardManager {
                 weight: 0,
               }
               this.keyStates[stateKey] = keyState
-            } else {
-              console.warn('Invalid key found:', key)
-            }
+              } else {
+                logger.warn('Invalid key found:', key)
+              }
           }
         })
       })
@@ -58,9 +95,11 @@ export class VisualKeyboardManager {
 
   private getUnicodeForKey(key: Key): string {
     if (!key) return ''
-    if (Platform.isMacOS && key.mac_unicode) {
+    const emu = getEmulatedOS()
+    const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
+    if (isMac && key.mac_unicode) {
       return key.mac_unicode
-    } else if (!Platform.isMacOS && key.win_unicode) {
+    } else if (!isMac && key.win_unicode) {
       return key.win_unicode
     }
     return key.unicode || key.label || ''
@@ -86,7 +125,9 @@ export class VisualKeyboardManager {
           // Normalize modifier names into buckets that match visual keys
           let bucket: string | null = null
           if (modKey === 'mod') {
-            bucket = Platform.isMacOS ? 'meta' : 'control'
+            const emu = getEmulatedOS()
+            const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
+            bucket = isMac ? 'meta' : 'control'
           } else if (modKey === 'ctrl' || modKey === 'control') {
             bucket = 'control'
           } else if (modKey === 'cmd' || modKey === 'meta' || modKey === 'win') {
@@ -125,8 +166,8 @@ export class VisualKeyboardManager {
     }
 
     // Debug log
-    console.log('Key Weights:', keyWeights)
-    console.log('Key States:', this.keyStates)
+    logger.debug('Key Weights:', keyWeights)
+    logger.debug('Key States:', this.keyStates)
   }
 
   public getKeyState(key: Key): KeyboardKeyState {
@@ -143,9 +184,7 @@ export class VisualKeyboardManager {
       }
     }
 
-    console.warn(
-      `Key state for ${stateKey} is undefined. Check initialization.`
-    )
+    logger.warn(`Key state for ${stateKey} is undefined. Check initialization.`)
     return {
       displayValue: key.label,
       code: '',
@@ -160,9 +199,7 @@ export class VisualKeyboardManager {
         this.keyStates[stateKey].state === 'active' ? 'inactive' : 'active'
       return this.keyStates[stateKey].state === 'active'
     } else {
-      console.warn(
-        `Key state for ${stateKey} is undefined. Check initialization.`
-      )
+      logger.warn(`Key state for ${stateKey} is undefined. Check initialization.`)
       return false
     }
   }
@@ -182,9 +219,7 @@ export class VisualKeyboardManager {
         : 'inactive'
       this.keyStates[stateKey].weight = weight
     } else {
-      console.warn(
-        `Key state for ${stateKey} is undefined. Check initialization.`
-      )
+      logger.warn(`Key state for ${stateKey} is undefined. Check initialization.`)
     }
   }
 
@@ -211,6 +246,37 @@ export class VisualKeyboardManager {
       const abstractModifier = this.normalizeModifier(keyLabel) // returns 'Control'
       if (abstractModifier && abstractActiveModifiers.has(abstractModifier)) {
         this.keyStates[key].state = 'active'
+      }
+    }
+  }
+
+  // Preview a hotkey on hover using a distinct 'hover' state without clearing active states
+  public previewHoverState(previewKey: string, previewModifiers: string[]) {
+    // Clear previous hover states only
+    for (const key in this.keyStates) {
+      if (this.keyStates[key].state === 'hover') {
+        this.keyStates[key].state = 'inactive'
+      }
+    }
+
+    const lowerKey = (previewKey || '').toLowerCase()
+    if (this.keyStates[lowerKey] && this.keyStates[lowerKey].state !== 'active') {
+      this.keyStates[lowerKey].state = 'hover'
+    }
+
+    // Normalize incoming modifiers into abstract names used by normalizeModifier
+    // previewModifiers might be display terms (e.g. 'Ctrl','Cmd'); map to abstract where possible
+    const abstractMods = new Set(
+      (previewModifiers || []).map((m) => convertModifier(m as unknown as Modifier))
+    )
+
+    for (const key in this.keyStates) {
+      const code = this.keyStates[key].code
+      const abstract = this.normalizeModifier(code)
+      if (abstract && abstractMods.has(abstract as unknown as Modifier)) {
+        if (this.keyStates[key].state !== 'active') {
+          this.keyStates[key].state = 'hover'
+        }
       }
     }
   }
