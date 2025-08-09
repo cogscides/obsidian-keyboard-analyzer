@@ -303,12 +303,25 @@ kbd.modifier:hover {
   font-weight: 400;
 }
 
+/* Generic chevron rotation helper */
+.chevron {
+  display: inline-flex;
+  transform: rotate(0deg); /* base: down */
+  transition: transform 120ms ease;
+}
+.chevron.is-collapsed { /* closed: point right */
+  transform: rotate(270deg);
+}
+.chevron.is-open-up { /* open: rotate 270deg CW to point up */
+  transform: rotate(540deg);
+}
+
+/* Keep explicit scope for plugin groups for clarity (same values) */
 .plugin-group-header .chevron {
   display: inline-flex;
   transform: rotate(0deg);
   transition: transform 120ms ease;
 }
-
 .plugin-group-header .chevron.is-collapsed {
   transform: rotate(-90deg);
 }

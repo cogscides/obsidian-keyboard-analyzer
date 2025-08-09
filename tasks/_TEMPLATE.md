@@ -6,8 +6,6 @@
   - #<issue>, PR #<id>, <links>
 ---
 
-# Task: <concise title>
-
 ## Context
 1–3 lines describing the why, scope, and definition of done.
 

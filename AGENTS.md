@@ -35,7 +35,7 @@
 
 ## Active Tasks Documentation
 - Purpose: Track ongoing work in `tasks//` so engineers and the AI agent keep a shared, searchable history of progress and decisions.
-- Location & naming: `tasks/ISSUE-<id>.md` or `tasks/TASK-<slug>.md` (one file per task).
+- Location & naming: `tasks/250808-<id>.md` (one file per task).
 - Frontmatter: Use YAML props at the top of each task file.
 
 ```markdown
@@ -45,9 +45,9 @@ status: in_progress # todo|in_progress|blocked|done
 owner: "@you"
 updated: 2025-08-08 12:00 UTC
 related:
-  - ISSUE-123
-  - PR-456
-  - design-note
+  - [[ISSUE-123]]
+  - [[PR-456]]
+  - [[design-note]]
 ---
 
 ## Context

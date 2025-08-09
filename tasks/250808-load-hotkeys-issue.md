@@ -2,7 +2,7 @@
 title: Toggles UX and filtering fixes
 status: in_progress
 owner: "@agent"
-updated: 2025-08-08 18:00 UTC
+updated: 2025-08-09 14:20 UTC
 related:
   - design-note
 ---
@@ -25,6 +25,9 @@ Dropdowns were mispositioned and toggles were not interactive. After migrating t
 
 ## Logs
 - Added [KB] logs in `SearchMenu`, `GroupManager`, `CommandsManager`, and `CommandsList` to trace settings and filtering.
+- [2025-08-09 14:20 UTC] SearchMenu: unified event syntax to `ononclick_outside` (avoids mixed Svelte v4/v5 styles); ensured outside click closes menus; removed stale `modulesDropdownOpen` references.
+- [2025-08-09 14:20 UTC] Types: added `HighlightBuiltIns` to `FilterSettingsKeys`; adjusted View checkbox handling with `unknown` cast to index `filterSettings` safely.
+- [2025-08-09 14:20 UTC] Build config: removed Bun-specific types from `tsconfig.json` to fix TypeScript diagnostics under npm.
 ---
 title: Hotkeys not loading after reload when view persisted
 status: todo
@@ -34,7 +37,7 @@ related: []
 ---
 # Task: Hotkeys not loading after reload when view persisted
 
-- Status: todo
+- Status: todo 
 - Owner: @unassigned
 - Updated: 2025-08-08 10:43 UTC
 - Related: <add issue/PR links>

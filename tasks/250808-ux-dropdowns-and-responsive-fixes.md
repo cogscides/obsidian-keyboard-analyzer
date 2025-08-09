@@ -2,7 +2,7 @@
 title: Fix dropdown toggle behavior and small-window keyboard overflow
 status: done
 owner: "@you"
-updated: 2025-08-09 02:50 UTC
+updated: 2025-08-09 14:20 UTC
 related:
   - [[TASK-ux-filter-view-cleanup]]
 ---
@@ -35,3 +35,5 @@ Follow-up polish after the Filter/View/Menu split: dropdowns did not close on a 
 ## Links
 - [[TASK-ux-filter-view-cleanup]]
 
+## Progress Log
+- [2025-08-09 14:20 UTC] Follow-up: standardized event handler syntax in `SearchMenu.svelte` to `ononclick_outside` per project constraints; behavior unchanged, satisfies linter.

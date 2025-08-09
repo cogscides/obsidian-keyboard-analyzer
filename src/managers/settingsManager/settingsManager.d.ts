@@ -15,6 +15,7 @@ export enum FilterSettingsKeys {
   OnlyCustom = 'OnlyCustom',
   OnlyDuplicates = 'OnlyDuplicates',
   FeaturedFirst = 'FeaturedFirst',
+  HighlightBuiltIns = 'HighlightBuiltIns',
   GroupByPlugin = 'GroupByPlugin',
   HighlightCustom = 'HighlightCustom',
   HighlightDuplicates = 'HighlightDuplicates',

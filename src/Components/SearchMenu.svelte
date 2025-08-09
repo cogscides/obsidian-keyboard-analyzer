@@ -152,7 +152,6 @@
     viewDropdownOpen = next
     if (next) {
       filterIsOpen = false
-      modulesDropdownOpen = false
     }
   }
 
@@ -192,9 +191,8 @@
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       // Close any open menus and deactivate keyboard listener
-      if (viewDropdownOpen || modulesDropdownOpen || filterIsOpen) {
+      if (viewDropdownOpen || filterIsOpen) {
         viewDropdownOpen = false
-        modulesDropdownOpen = false
         filterIsOpen = false
         e.stopPropagation()
         return
@@ -370,7 +368,6 @@
               <span
                 class="info-icon"
                 title={settingTooltips.StrictModifierMatch}
-                tabindex="0"
               >
                 <InfoIcon size={14} />
               </span>
@@ -399,7 +396,6 @@
               <span
                 class="info-icon"
                 title={settingTooltips.ViewWOhotkeys}
-                tabindex="0"
               >
                 <InfoIcon size={14} />
               </span>
@@ -428,7 +424,6 @@
               <span
                 class="info-icon"
                 title={settingTooltips.OnlyCustom}
-                tabindex="0"
               >
                 <InfoIcon size={14} />
               </span>
@@ -457,7 +452,6 @@
               <span
                 class="info-icon"
                 title={settingTooltips.OnlyDuplicates}
-                tabindex="0"
               >
                 <InfoIcon size={14} />
               </span>
@@ -486,7 +480,6 @@
               <span
                 class="info-icon"
                 title={settingTooltips.DisplaySystemShortcuts}
-                tabindex="0"
               >
                 <InfoIcon size={14} />
               </span>
@@ -511,7 +504,7 @@
       class={viewDropdownOpen ? 'is-active' : ''}
       aria-pressed={viewDropdownOpen}
       onclick={ToggleViewDropdown}
-      >View <ChevronDown size={16} />
+      >View
     </button>
     {#if viewDropdownOpen}
       <div class="popup-filter-menu-container is-open" transition:slide>
@@ -521,21 +514,17 @@
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <div
                 class="checkbox-container"
-                class:is-enabled={filterSettings[
-                  setting as keyof FilterSettings
-                ]}
+                class:is-enabled={filterSettings[setting as unknown as keyof FilterSettings]}
                 onclick={() =>
                   setFilterSetting(
-                    setting as keyof CGroupFilterSettings,
-                    !(filterSettings[
-                      setting as keyof FilterSettings
-                    ] as boolean),
+                    setting as unknown as keyof CGroupFilterSettings,
+                    !(filterSettings[setting as unknown as keyof FilterSettings] as boolean),
                   )}
               >
                 <input
                   type="checkbox"
                   tabindex="0"
-                  checked={filterSettings[setting as keyof FilterSettings]}
+                  checked={filterSettings[setting as unknown as keyof FilterSettings]}
                   id={`view-${setting}`}
                 />
               </div>
@@ -544,7 +533,6 @@
                 <span
                   class="info-icon"
                   title={settingTooltips[setting] || setting}
-                  tabindex="0"
                 >
                   <InfoIcon size={14} />
                 </span>

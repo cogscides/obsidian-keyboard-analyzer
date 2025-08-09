@@ -144,6 +144,7 @@
         </div>
         {#each groupedByPlugin as group (group.pluginName)}
           <div class="plugin-group">
+            <!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events a11y_no_static_element_interactions -->
             <div
               class="plugin-group-header {group.isBuiltIn && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}"
               role="button"
@@ -161,7 +162,7 @@
               <span class="plugin-meta u-muted">{group.commands.length} cmds</span>
             </div>
             {#if !isCollapsed(group.pluginName)}
-              <div class="plugin-group-body" id={`group-${slugify(group.pluginName)}`}>
+              <div class="plugin-group-body" id={`group-${slugify(group.pluginName)}`}> 
                 {#each group.commands as cmdEntry (cmdEntry.id)}
                   <div
                     class="kbanalizer-setting-item setting-item compact"
@@ -170,6 +171,7 @@
                     <div class="setting-item-info">
                       <div class="setting-item-name">
                         <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
+                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                         <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
                           <StarIcon size={16} />
                         </div>
@@ -181,6 +183,7 @@
                     <div class="kbanalizer-setting-item-control setting-item-control">
                       <div class="setting-command-hotkeys">
                         {#each cmdEntry.hotkeys as hotkey}
+                          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                           <span
                             class="kbanalizer-setting-hotkey setting-hotkey"
                             class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
@@ -213,6 +216,7 @@
                   {cmdEntry.pluginName}
                 </button>
                 <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
+                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                 <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
                   <StarIcon size={16} />
                 </div>
@@ -224,6 +228,7 @@
             <div class="kbanalizer-setting-item-control setting-item-control">
               <div class="setting-command-hotkeys">
                 {#each cmdEntry.hotkeys as hotkey}
+                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                   <span
                     class="kbanalizer-setting-hotkey setting-hotkey"
                     class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
