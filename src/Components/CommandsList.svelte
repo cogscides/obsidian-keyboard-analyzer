@@ -63,6 +63,16 @@
   class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"
 >
   <div class="hotkey-list-container">
+    {#if filteredCommands.length === 0}
+      <div class="empty-state u-muted">
+        <div>No matching commands</div>
+        <ul>
+          <li>Try typing a different term</li>
+          <li>Toggle the key listener to filter by keys</li>
+          <li>Check filters or include built-in modules</li>
+        </ul>
+      </div>
+    {:else}
     {#each filteredCommands as cmdEntry (cmdEntry.id)}
       <div
         class="kbanalizer-setting-item setting-item"
@@ -112,5 +122,6 @@
         </div>
       </div>
     {/each}
+    {/if}
   </div>
 </div>

@@ -367,6 +367,25 @@ kbd.modifier:hover {
   background-color: var(--interactive-accent);
 }
 
+/* Mirror active state for other dropdown buttons */
+#hotkey-view-button.is-active,
+#hotkey-modules-button.is-active {
+  color: var(--text-primary);
+  background-color: var(--interactive-accent);
+}
+
+/* Spacing and sizing for view and modules buttons */
+#hotkey-view-button,
+#hotkey-modules-button {
+  height: 32px;
+  margin-right: 8px;
+}
+
+/* A bit more space before the summary */
+#keyboard-component .community-plugin-search-summary.u-muted {
+  margin-left: 8px;
+}
+
 .hotkey-search-container button {
   /* height: 40px; */
   height: fit-content;
@@ -633,7 +652,10 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-preview-view {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* grid-template-columns: 3.75fr 0.75fr 1fr; */
@@ -654,7 +676,7 @@ button#hotkey-refresh-button:hover {
 
 .sm #keyboard-layout,
 .xs #keyboard-layout {
-  min-width: 100%;
+  /* Keep intrinsic min width for horizontal scroll inside preview view */
   border-radius: 0px;
   margin-top: 0px;
 }

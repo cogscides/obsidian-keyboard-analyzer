@@ -59,6 +59,7 @@ export default class ShortcutsView extends ItemView {
     contentEl.empty()
     contentEl.setAttribute('id', 'KB-view')
     contentEl.style.padding = '0'
+    contentEl.style.overflowX = 'hidden'
 
     this.component = mount(KeyboardComponent, {
       target: contentEl,

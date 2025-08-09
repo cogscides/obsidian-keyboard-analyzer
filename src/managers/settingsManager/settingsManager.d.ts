@@ -21,6 +21,15 @@ export enum FilterSettingsKeys {
   DisplayInternalModules = 'DisplayInternalModules',
 }
 
+// View/presentation-related subset to separate UI concerns from filtering
+export enum ViewSettingsKeys {
+  FeaturedFirst = 'FeaturedFirst',
+  GroupByPlugin = 'GroupByPlugin',
+  HighlightCustom = 'HighlightCustom',
+  HighlightDuplicates = 'HighlightDuplicates',
+  DisplayIDs = 'DisplayIDs',
+}
+
 type FilterSettings = {
   [key in FilterSettingsKeys]: boolean
 }

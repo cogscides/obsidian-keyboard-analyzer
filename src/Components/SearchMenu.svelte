@@ -6,7 +6,7 @@
   import {
     CircleDotIcon,
     FilterIcon,
-    CrossIcon,
+    X,
     RefreshCw,
     ChevronDown,
     Info as InfoIcon,
@@ -14,6 +14,7 @@
   import { slide, fade } from 'svelte/transition'
   import {
     FilterSettingsKeys,
+    ViewSettingsKeys,
     type CGroup,
     type CGroupFilterSettings,
     type CGroupSettingTitles,
@@ -21,6 +22,7 @@
   import type { FilterSettings } from '../managers/settingsManager'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import type { Modifier } from 'obsidian'
+  import { clickOutside } from '../utils/clickOutside'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -114,6 +116,9 @@
   let refreshIsActive = $state(false)
   let PressedKeysStore = $derived(activeKeysStore)
 
+  // Debounce for text input
+  let inputDebounce: ReturnType<typeof setTimeout> | null = null
+
   // No local UI snapshot to avoid reactive loops; use derived filterSettings directly
 
   // Groups
@@ -133,11 +138,21 @@
   }
 
   function ToggleViewDropdown() {
-    viewDropdownOpen = !viewDropdownOpen
+    const next = !viewDropdownOpen
+    viewDropdownOpen = next
+    if (next) {
+      filterIsOpen = false
+      modulesDropdownOpen = false
+    }
   }
 
   function ToggleModulesDropdown() {
-    modulesDropdownOpen = !modulesDropdownOpen
+    const next = !modulesDropdownOpen
+    modulesDropdownOpen = next
+    if (next) {
+      filterIsOpen = false
+      viewDropdownOpen = false
+    }
   }
 
   // TODO Unify this with the settingsManager
@@ -172,6 +187,20 @@
   }
 
   function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      // Close any open menus and deactivate keyboard listener
+      if (viewDropdownOpen || modulesDropdownOpen || filterIsOpen) {
+        viewDropdownOpen = false
+        modulesDropdownOpen = false
+        filterIsOpen = false
+        e.stopPropagation()
+        return
+      }
+      if (keyboardListenerIsActive) {
+        keyboardListenerIsActive = false
+        return
+      }
+    }
     if (keyboardListenerIsActive) {
       PressedKeysStore.handleKeyDown(e)
     }
@@ -194,6 +223,13 @@
       PressedKeysStore.activeKey,
       selectedGroup,
     )
+  }
+
+  function handleDebouncedInput() {
+    if (inputDebounce) clearTimeout(inputDebounce)
+    inputDebounce = setTimeout(() => {
+      handleSearchInput()
+    }, 200)
   }
 
   function handleModifierChipClick(modifier: string) {
@@ -263,31 +299,39 @@
         bind:this={inputHTML}
         onfocus={() => (inputIsFocused = true)}
         onblur={() => (inputIsFocused = false)}
-        oninput={handleSearchInput}
+        oninput={handleDebouncedInput}
       />
       <div class="meta-search-wrapper">
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <div
+        <button
           class="keyboard-icon icon {keyboardListenerIsActive ? 'pulse' : ''}"
           aria-label={keyboardListenerIsActive
             ? 'Press Esc to deactivate key listener'
             : `Press ${convertModifiers(['Mod'])[0]}+F or long press to activate key listener`}
+          aria-pressed={keyboardListenerIsActive}
+          title={keyboardListenerIsActive
+            ? 'Deactivate key listener (Esc)'
+            : 'Activate key listener'}
           onclick={ActivateKeyboardListener}
         >
-          <CircleDotIcon size={20} />
-        </div>
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <div class="clear-icon icon" onclick={ClearSearch}>
-          <CrossIcon size={20} />
-        </div>
+          <CircleDotIcon size={16} />
+        </button>
+        <button
+          class="clear-icon icon"
+          aria-label="Clear text or reset keys"
+          title="Clear text or reset keys"
+          onclick={ClearSearch}
+        >
+          <X size={16} />
+        </button>
       </div>
     </div>
   </div>
-  <div class="menu-anchor">
+  <div class="menu-anchor" use:clickOutside ononclick_outside={() => (filterIsOpen = false)}>
     <button
       id="hotkey-filter-button"
       class={filterIsOpen ? 'is-active' : ''}
       aria-label="Filter Commands"
+      aria-pressed={filterIsOpen}
       onclick={() => (filterIsOpen = !filterIsOpen)}
     >
       <FilterIcon size={16} />
@@ -357,64 +401,6 @@
               </span>
             </div>
           </div>
-          <div class="setting-item mod-toggle popup-filter-menu">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <div
-              class="checkbox-container"
-              class:is-enabled={filterSettings.HighlightDuplicates}
-              onclick={() =>
-                setFilterSetting(
-                  FilterSettingsKeys.HighlightDuplicates,
-                  !filterSettings.HighlightDuplicates,
-                )}
-            >
-              <input
-                type="checkbox"
-                tabindex="0"
-                id="filter-HighlightDuplicates"
-                checked={filterSettings.HighlightDuplicates}
-              />
-            </div>
-            <div class="setting-item-name popup-filter-title">
-              {settingTitles.HighlightDuplicates}
-              <span
-                class="info-icon"
-                title={settingTooltips.HighlightDuplicates}
-                tabindex="0"
-              >
-                <InfoIcon size={14} />
-              </span>
-            </div>
-          </div>
-          <div class="setting-item mod-toggle popup-filter-menu">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <div
-              class="checkbox-container"
-              class:is-enabled={filterSettings.DisplayIDs}
-              onclick={() =>
-                setFilterSetting(
-                  FilterSettingsKeys.DisplayIDs,
-                  !filterSettings.DisplayIDs,
-                )}
-            >
-              <input
-                type="checkbox"
-                tabindex="0"
-                id="filter-DisplayIDs"
-                checked={filterSettings.DisplayIDs}
-              />
-            </div>
-            <div class="setting-item-name popup-filter-title">
-              {settingTitles.DisplayIDs}
-              <span
-                class="info-icon"
-                title={settingTooltips.DisplayIDs}
-                tabindex="0"
-              >
-                <InfoIcon size={14} />
-              </span>
-            </div>
-          </div>
         </div>
         <div class="popup-filter-menu-background"></div>
       </div>
@@ -423,39 +409,35 @@
 
   <!-- COMPONENT: View Dropdown -->
 
-  <div class="menu-anchor">
+  <div class="menu-anchor" use:clickOutside ononclick_outside={() => (viewDropdownOpen = false)}>
     <button
       id="hotkey-view-button"
       aria-label="View Options"
       class={viewDropdownOpen ? 'is-active' : ''}
+      aria-pressed={viewDropdownOpen}
       onclick={ToggleViewDropdown}
       >View <ChevronDown size={16} />
     </button>
     {#if viewDropdownOpen}
       <div class="popup-filter-menu-container is-open" transition:slide>
         <div class="popup-filter-menu">
-          {#each Object.values(FilterSettingsKeys) as setting}
+          {#each Object.values(ViewSettingsKeys) as setting}
             <div class="setting-item mod-toggle">
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <div
-                aria-label="Toggle {setting}"
                 class="checkbox-container"
-                class:is-enabled={filterSettings[
-                  setting as keyof FilterSettings
-                ]}
+                class:is-enabled={filterSettings[setting as keyof FilterSettings]}
                 onclick={() =>
                   setFilterSetting(
                     setting as keyof CGroupFilterSettings,
-                    !(filterSettings[
-                      setting as keyof FilterSettings
-                    ] as boolean),
+                    !(filterSettings[setting as keyof FilterSettings] as boolean),
                   )}
               >
                 <input
                   type="checkbox"
                   tabindex="0"
                   checked={filterSettings[setting as keyof FilterSettings]}
-                  id={`filter-${setting}`}
+                  id={`view-${setting}`}
                 />
               </div>
               <div class="setting-item-name">
@@ -477,33 +459,35 @@
 
   <!-- COMPONENT: Modules Dropdown -->
 
-  <div class="menu-anchor">
+  <div class="menu-anchor" use:clickOutside ononclick_outside={() => (modulesDropdownOpen = false)}>
     <button
       id="hotkey-modules-button"
       class={modulesDropdownOpen ? 'is-active' : ''}
-      aria-label="Modules Options"
+      aria-label="Built-in Modules Options"
+      aria-pressed={modulesDropdownOpen}
       onclick={ToggleModulesDropdown}
     >
-      Modules <ChevronDown size={16} />
+      Built-in Modules <ChevronDown size={16} />
     </button>
 
     {#if modulesDropdownOpen}
       <div class="popup-filter-menu-container is-open" transition:slide>
         <div class="popup-filter-menu">
           <div class="setting-item mod-toggle">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
               class="checkbox-container"
               class:is-enabled={filterSettings.DisplayInternalModules}
+              onclick={() =>
+                setFilterSetting(
+                  'DisplayInternalModules' as keyof CGroupFilterSettings,
+                  !filterSettings.DisplayInternalModules,
+                )}
             >
               <input
                 type="checkbox"
                 tabindex="0"
                 checked={filterSettings.DisplayInternalModules}
-                onchange={(e) =>
-                  setFilterSetting(
-                    'DisplayInternalModules' as keyof CGroupFilterSettings,
-                    (e.currentTarget as HTMLInputElement).checked,
-                  )}
               />
             </div>
             <div class="setting-item-name">
@@ -568,6 +552,7 @@
   <button
     id="hotkey-refresh-button"
     aria-label="Refresh Commands"
+    title="Refresh commands"
     class={refreshIsActive ? 'animation-is-active' : ''}
     onclick={RefreshCommands}
   >

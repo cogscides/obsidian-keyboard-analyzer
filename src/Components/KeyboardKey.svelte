@@ -78,6 +78,8 @@
     class="kb-layout-key"
     style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)};`}
     class:empty={keyState.state === 'empty'}
+    aria-label="Empty key"
+    disabled
   />
 {:else}
   <button
