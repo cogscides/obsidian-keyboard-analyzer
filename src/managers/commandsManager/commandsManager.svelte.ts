@@ -348,7 +348,10 @@ export default class CommandsManager {
       // Exclude internal modules when DisplayInternalModules is false
       filterSettings?.DisplayInternalModules === false
     if (!search && activeModifiers.length === 0 && !activeKey && !hasListAffectingFilters) {
-      return commandsToFilter
+      // Still respect FeaturedFirst even when no other list-affecting filters are active
+      return filterSettings?.FeaturedFirst
+        ? this.sortByFeaturedFirst(commandsToFilter)
+        : commandsToFilter
     }
 
     const searchLower = search.toLowerCase()

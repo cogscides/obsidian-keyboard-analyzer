@@ -266,6 +266,78 @@ kbd.modifier:hover {
   box-shadow: unset;
 }
 
+/* Group by plugin view */
+.plugin-group {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background: var(--background-secondary);
+}
+
+.plugin-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plugin-group-header .plugin-name {
+  flex: 1 1 auto;
+}
+
+.plugin-group-header .plugin-meta {
+  font-weight: 400;
+}
+
+.plugin-group-header .chevron {
+  display: inline-flex;
+  transform: rotate(0deg);
+  transition: transform 120ms ease;
+}
+
+.plugin-group-header .chevron.is-collapsed {
+  transform: rotate(-90deg);
+}
+
+.plugin-group-body {
+  padding: 0 10px 0 26px;
+}
+
+/* Compact rows inside groups */
+.setting-item.compact {
+  padding: 6px 0;
+  margin: 0;
+  border: none;
+}
+
+.plugin-group-body .setting-item.compact + .setting-item.compact {
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.plugin-groups-toolbar {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin: 6px 0 10px;
+}
+
+.plugin-groups-toolbar .btn-filter {
+  height: 32px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-form-field);
+  color: var(--text-muted);
+}
+
+.plugin-groups-toolbar .btn-filter:hover,
+.plugin-groups-toolbar .btn-filter:focus-visible {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
 #keyboard-component .hotkey-search-container div.icon {
   display: flex;
   align-content: center;

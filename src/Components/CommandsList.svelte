@@ -2,7 +2,7 @@
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
-  import { Star as StarIcon } from 'lucide-svelte'
+  import { Star as StarIcon, ChevronDown } from 'lucide-svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
 
@@ -67,6 +67,57 @@
   function handleDuplicateHotkeyClick(hotkey: hotkeyEntry) {
     onDuplicateHotkeyClick?.(hotkey)
   }
+
+  // Grouped view state and helpers
+  const slugify = (s: string) => s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')
+  let collapsedPlugins = $state(new Set<string>())
+  function togglePluginCollapse(pluginName: string) {
+    const next = new Set(collapsedPlugins)
+    if (next.has(pluginName)) next.delete(pluginName)
+    else next.add(pluginName)
+    collapsedPlugins = next
+  }
+  function isCollapsed(pluginName: string): boolean {
+    return collapsedPlugins.has(pluginName)
+  }
+
+  type PluginGroup = { pluginName: string; commands: commandEntry[] }
+  let groupedByPlugin: PluginGroup[] = $derived.by(() => {
+    // Track changes
+    groupSettings
+    const map = new Map<string, commandEntry[]>()
+    for (const cmd of filteredCommands) {
+      const key = cmd.pluginName || 'Unknown'
+      const arr = map.get(key) || []
+      arr.push(cmd)
+      map.set(key, arr)
+    }
+    const groups = Array.from(map.entries()).map(([pluginName, commands]) => {
+      // If FeaturedFirst is enabled, bring featured commands to the top within the group
+      if (groupSettings?.FeaturedFirst) {
+        commands = [...commands].sort((a, b) => {
+          const aF = commandsManager.featuredCommandIds.has(a.id)
+          const bF = commandsManager.featuredCommandIds.has(b.id)
+          if (aF && !bF) return -1
+          if (!aF && bF) return 1
+          return 0
+        })
+      }
+      return { pluginName, commands }
+    })
+    groups.sort((a, b) => a.pluginName.localeCompare(b.pluginName))
+    return groups
+  })
+
+  function collapseAll() {
+    const next = new Set<string>()
+    for (const g of groupedByPlugin) next.add(g.pluginName)
+    collapsedPlugins = next
+  }
+
+  function expandAll() {
+    collapsedPlugins = new Set<string>()
+  }
 </script>
 
 <span>Selected Group: {selectedGroup}</span>
@@ -85,55 +136,104 @@
         </ul>
       </div>
     {:else}
-    {#each filteredCommands as cmdEntry (cmdEntry.id)}
-      <div
-        class="kbanalizer-setting-item setting-item"
-        class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
-      >
-        <div class="setting-item-info">
-          <div class="setting-item-name">
-            <button
-              class="suggestion-prefix"
-              onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
-            >
-              {cmdEntry.pluginName}
-            </button>
-            <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
+      {#if groupSettings?.GroupByPlugin}
+        <div class="plugin-groups-toolbar">
+          <button class="btn-filter" onclick={collapseAll}>Collapse all</button>
+          <button class="btn-filter" onclick={expandAll}>Expand all</button>
+        </div>
+        {#each groupedByPlugin as group (group.pluginName)}
+          <div class="plugin-group">
             <div
-              class="star-icon icon"
-              onclick={() => handleStarClick(cmdEntry.id)}
+              class="plugin-group-header"
+              role="button"
+              aria-expanded={!isCollapsed(group.pluginName)}
+              aria-controls={`group-${slugify(group.pluginName)}`}
+              onclick={() => togglePluginCollapse(group.pluginName)}
             >
-              <StarIcon size={16} />
+              <span class="chevron {isCollapsed(group.pluginName) ? 'is-collapsed' : ''}">
+                <ChevronDown size={14} />
+              </span>
+              <span class="plugin-name">{group.pluginName}</span>
+              <span class="plugin-meta u-muted">{group.commands.length} cmds</span>
+            </div>
+            {#if !isCollapsed(group.pluginName)}
+              <div class="plugin-group-body" id={`group-${slugify(group.pluginName)}`}>
+                {#each group.commands as cmdEntry (cmdEntry.id)}
+                  <div
+                    class="kbanalizer-setting-item setting-item compact"
+                    class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
+                  >
+                    <div class="setting-item-info">
+                      <div class="setting-item-name">
+                        <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
+                        <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
+                          <StarIcon size={16} />
+                        </div>
+                      </div>
+                      {#if groupSettings?.DisplayIDs}
+                        <small>{cmdEntry.id}</small>
+                      {/if}
+                    </div>
+                    <div class="kbanalizer-setting-item-control setting-item-control">
+                      <div class="setting-command-hotkeys">
+                        {#each cmdEntry.hotkeys as hotkey}
+                          <span
+                            class="kbanalizer-setting-hotkey setting-hotkey"
+                            class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
+                            class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                            onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                          >
+                            {renderHotkey(hotkey)}
+                          </span>
+                        {/each}
+                      </div>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/each}
+      {:else}
+        {#each filteredCommands as cmdEntry (cmdEntry.id)}
+          <div
+            class="kbanalizer-setting-item setting-item"
+            class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
+          >
+            <div class="setting-item-info">
+              <div class="setting-item-name">
+                <button
+                  class="suggestion-prefix"
+                  onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
+                >
+                  {cmdEntry.pluginName}
+                </button>
+                <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
+                <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
+                  <StarIcon size={16} />
+                </div>
+              </div>
+              {#if groupSettings?.DisplayIDs}
+                <small>{cmdEntry.id}</small>
+              {/if}
+            </div>
+            <div class="kbanalizer-setting-item-control setting-item-control">
+              <div class="setting-command-hotkeys">
+                {#each cmdEntry.hotkeys as hotkey}
+                  <span
+                    class="kbanalizer-setting-hotkey setting-hotkey"
+                    class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
+                    class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                    onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                  >
+                    {renderHotkey(hotkey)}
+                  </span>
+                {/each}
+              </div>
             </div>
           </div>
-          {#if groupSettings?.DisplayIDs}
-            <small>{cmdEntry.id}</small>
-          {/if}
-        </div>
-        <div class="kbanalizer-setting-item-control setting-item-control">
-          <div class="setting-command-hotkeys">
-            {#each cmdEntry.hotkeys as hotkey}
-              <!-- svelte-ignore a11y_click_events_have_key_events -->
-              <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <span
-                class="kbanalizer-setting-hotkey setting-hotkey"
-                class:is-duplicate={hotkeyManager.isHotkeyDuplicate(
-                  cmdEntry.id,
-                  hotkey,
-                ) && groupSettings?.HighlightDuplicates}
-                class:is-customized={hotkey.isCustom &&
-                  groupSettings?.HighlightCustom}
-                onclick={() => handleDuplicateHotkeyClick(hotkey)}
-              >
-                {renderHotkey(hotkey)}
-              </span>
-            {/each}
-          </div>
-        </div>
-      </div>
-    {/each}
+        {/each}
+      {/if}
     {/if}
   </div>
 </div>
