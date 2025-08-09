@@ -22,11 +22,12 @@
   import type { FilterSettings } from '../managers/settingsManager'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import type { Modifier } from 'obsidian'
+  // @ts-ignore: No type declaration for clickOutside
   import { clickOutside } from '../utils/clickOutside'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
-    inputHTML?: HTMLInputElement | undefined
+    inputHTML?: HTMLInputElement
     search?: string
     searchCommandsCount?: number
     searchHotkeysCount?: number
@@ -59,6 +60,8 @@
   const settingTitles: Record<string, string> = {
     StrictModifierMatch: 'Strict modifiers filtration',
     ViewWOhotkeys: 'Only with hotkeys',
+    OnlyCustom: 'Only custom hotkeys',
+    OnlyDuplicates: 'Only duplicates',
     FeaturedFirst: 'Featured first',
     HighlightCustom: 'Highlight custom keys',
     HighlightDuplicates: 'Highlight duplicates',
@@ -66,23 +69,27 @@
     GroupByPlugin: 'Group by plugin',
     DisplayGroupAssignment: 'Show group assignment',
     DisplayInternalModules: 'Display internal modules',
+    DisplaySystemShortcuts: 'Include system shortcuts',
   }
 
   const settingTooltips: Record<string, string> = {
     StrictModifierMatch:
       "Match modifiers exactly. Example: Ctrl+K won't match Ctrl+Shift+K.",
-    ViewWOhotkeys:
-      'Show only commands that have at least one hotkey assigned.',
+    ViewWOhotkeys: 'Show only commands that have at least one hotkey assigned.',
+    OnlyCustom: 'Show only commands that have at least one user-set hotkey.',
+    OnlyDuplicates:
+      'Show only commands where at least one hotkey is duplicated.',
     FeaturedFirst: 'Pin featured commands to the top of results.',
     HighlightCustom: 'Visually mark hotkeys customized by you.',
     HighlightDuplicates:
       'Highlight when the same hotkey is used by multiple commands.',
-    DisplayIDs:
-      'Show internal command IDs and allow searching by ID.',
+    DisplayIDs: 'Show internal command IDs and allow searching by ID.',
     GroupByPlugin: 'Group commands by their plugin.',
     DisplayGroupAssignment: 'Display which group a command belongs to.',
     DisplayInternalModules:
       'Include commands from Obsidian’s built-in modules (e.g., File Explorer).',
+    DisplaySystemShortcuts:
+      'List common OS/editor defaults like Copy/Paste, Undo/Redo, Zoom.',
   }
 
   const filterSettings: CGroupFilterSettings = $derived.by(() => {
@@ -326,7 +333,11 @@
       </div>
     </div>
   </div>
-  <div class="menu-anchor" use:clickOutside ononclick_outside={() => (filterIsOpen = false)}>
+  <div
+    class="menu-anchor"
+    use:clickOutside
+    ononclick_outside={() => (filterIsOpen = false)}
+  >
     <button
       id="hotkey-filter-button"
       class={filterIsOpen ? 'is-active' : ''}
@@ -338,12 +349,9 @@
     </button>
 
     {#if filterIsOpen}
-      <div
-        transition:slide
-        class="popup-filter-menu-container {filterIsOpen ? 'is-open' : ''}"
-      >
-        <div transition:fade>
-          <div class="setting-item mod-toggle popup-filter-menu">
+      <div class="popup-filter-menu-container is-open" transition:slide>
+        <div class="popup-filter-menu" transition:fade>
+          <div class="setting-item mod-toggle">
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
               class="checkbox-container"
@@ -372,7 +380,7 @@
               </span>
             </div>
           </div>
-          <div class="setting-item mod-toggle popup-filter-menu">
+          <div class="setting-item mod-toggle">
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
               class="checkbox-container"
@@ -401,6 +409,93 @@
               </span>
             </div>
           </div>
+          <div class="setting-item mod-toggle">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.OnlyCustom}
+              onclick={() =>
+                setFilterSetting(
+                  FilterSettingsKeys.OnlyCustom,
+                  !filterSettings.OnlyCustom,
+                )}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                id="filter-OnlyCustom"
+                checked={filterSettings.OnlyCustom}
+              />
+            </div>
+            <div class="setting-item-name popup-filter-title">
+              {settingTitles.OnlyCustom}
+              <span
+                class="info-icon"
+                title={settingTooltips.OnlyCustom}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
+            </div>
+          </div>
+          <div class="setting-item mod-toggle">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.OnlyDuplicates}
+              onclick={() =>
+                setFilterSetting(
+                  FilterSettingsKeys.OnlyDuplicates,
+                  !filterSettings.OnlyDuplicates,
+                )}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                id="filter-OnlyDuplicates"
+                checked={filterSettings.OnlyDuplicates}
+              />
+            </div>
+            <div class="setting-item-name popup-filter-title">
+              {settingTitles.OnlyDuplicates}
+              <span
+                class="info-icon"
+                title={settingTooltips.OnlyDuplicates}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
+            </div>
+          </div>
+          <div class="setting-item mod-toggle">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="checkbox-container"
+              class:is-enabled={filterSettings.DisplaySystemShortcuts}
+              onclick={() =>
+                setFilterSetting(
+                  FilterSettingsKeys.DisplaySystemShortcuts,
+                  !filterSettings.DisplaySystemShortcuts,
+                )}
+            >
+              <input
+                type="checkbox"
+                tabindex="0"
+                id="filter-DisplaySystemShortcuts"
+                checked={filterSettings.DisplaySystemShortcuts}
+              />
+            </div>
+            <div class="setting-item-name popup-filter-title">
+              {settingTitles.DisplaySystemShortcuts}
+              <span
+                class="info-icon"
+                title={settingTooltips.DisplaySystemShortcuts}
+                tabindex="0"
+              >
+                <InfoIcon size={14} />
+              </span>
+            </div>
+          </div>
         </div>
         <div class="popup-filter-menu-background"></div>
       </div>
@@ -409,7 +504,11 @@
 
   <!-- COMPONENT: View Dropdown -->
 
-  <div class="menu-anchor" use:clickOutside ononclick_outside={() => (viewDropdownOpen = false)}>
+  <div
+    class="menu-anchor"
+    use:clickOutside
+    ononclick_outside={() => (viewDropdownOpen = false)}
+  >
     <button
       id="hotkey-view-button"
       aria-label="View Options"
@@ -426,11 +525,15 @@
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <div
                 class="checkbox-container"
-                class:is-enabled={filterSettings[setting as keyof FilterSettings]}
+                class:is-enabled={filterSettings[
+                  setting as keyof FilterSettings
+                ]}
                 onclick={() =>
                   setFilterSetting(
                     setting as keyof CGroupFilterSettings,
-                    !(filterSettings[setting as keyof FilterSettings] as boolean),
+                    !(filterSettings[
+                      setting as keyof FilterSettings
+                    ] as boolean),
                   )}
               >
                 <input
@@ -459,7 +562,11 @@
 
   <!-- COMPONENT: Modules Dropdown -->
 
-  <div class="menu-anchor" use:clickOutside ononclick_outside={() => (modulesDropdownOpen = false)}>
+  <div
+    class="menu-anchor"
+    use:clickOutside
+    ononclick_outside={() => (modulesDropdownOpen = false)}
+  >
     <button
       id="hotkey-modules-button"
       class={modulesDropdownOpen ? 'is-active' : ''}

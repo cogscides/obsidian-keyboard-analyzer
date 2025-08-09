@@ -12,6 +12,8 @@ export interface PluginSettings {
 export enum FilterSettingsKeys {
   StrictModifierMatch = 'StrictModifierMatch',
   ViewWOhotkeys = 'ViewWOhotkeys',
+  OnlyCustom = 'OnlyCustom',
+  OnlyDuplicates = 'OnlyDuplicates',
   FeaturedFirst = 'FeaturedFirst',
   GroupByPlugin = 'GroupByPlugin',
   HighlightCustom = 'HighlightCustom',
@@ -19,6 +21,7 @@ export enum FilterSettingsKeys {
   DisplayIDs = 'DisplayIDs',
   DisplayGroupAssignment = 'DisplayGroupAssignment',
   DisplayInternalModules = 'DisplayInternalModules',
+  DisplaySystemShortcuts = 'DisplaySystemShortcuts',
 }
 
 // View/presentation-related subset to separate UI concerns from filtering

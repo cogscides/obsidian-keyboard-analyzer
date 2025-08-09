@@ -44,6 +44,18 @@
     return hotkeyManager.renderHotkey(hotkey)
   }
 
+  function getDisplayCommandName(name: string, pluginName: string): string {
+    const p = (pluginName || '').trim()
+    const n = name || ''
+    if (!p) return n
+    const lower = n.toLowerCase()
+    const pref = p.toLowerCase() + ': '
+    if (lower.startsWith(pref)) {
+      return n.slice(pref.length).trim()
+    }
+    return n
+  }
+
   function handleStarClick(commandId: string) {
     onStarClick?.(commandId)
   }
@@ -86,7 +98,7 @@
             >
               {cmdEntry.pluginName}
             </button>
-            <span class="command-name">{cmdEntry.name}</span>
+            <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div

@@ -24,6 +24,7 @@ import GroupManager, {
   DEFAULT_GROUP_NAMES,
 } from '../groupManager/groupManager.svelte'
 import type KeyboardAnalyzerPlugin from '../../main'
+import { getSystemShortcutCommands } from '../../utils/systemShortcuts'
 
 /**
  * The CommandsManager class is responsible for managing and processing commands.
@@ -78,6 +79,11 @@ export default class CommandsManager {
     const allCommands = this.getCommands()
     console.log('Retrieved commands:', allCommands.length)
     this.commands = this.processCommands(allCommands)
+    // Append virtual system/editor default shortcuts so they can be filtered/displayed
+    const systemEntries = getSystemShortcutCommands()
+    for (const entry of systemEntries) {
+      this.commands[entry.id] = entry
+    }
     console.log('Processed commands:', Object.keys(this.commands).length)
   }
 
@@ -335,6 +341,10 @@ export default class CommandsManager {
     const hasListAffectingFilters =
       // Only with hotkeys
       !!filterSettings?.ViewWOhotkeys ||
+      // Only custom hotkeys
+      !!filterSettings?.OnlyCustom ||
+      // Only duplicate hotkeys
+      !!filterSettings?.OnlyDuplicates ||
       // Exclude internal modules when DisplayInternalModules is false
       filterSettings?.DisplayInternalModules === false
     if (!search && activeModifiers.length === 0 && !activeKey && !hasListAffectingFilters) {
@@ -378,7 +388,30 @@ export default class CommandsManager {
         ? true
         : !command.isInternalModule
 
-      return nameMatch && hotkeyMatch && hasHotkeysMatch && internalModuleMatch
+      // System shortcuts visibility (virtual commands with pluginName 'System Shortcuts')
+      const systemShortcutsMatch = filterSettings.DisplaySystemShortcuts
+        ? true
+        : command.pluginName !== 'System Shortcuts'
+
+      // Only commands that have at least one user-set hotkey
+      const onlyCustomMatch = filterSettings.OnlyCustom
+        ? command.hotkeys.some((hk) => hk.isCustom)
+        : true
+
+      // Only commands that have at least one duplicate hotkey
+      const onlyDuplicatesMatch = filterSettings.OnlyDuplicates
+        ? command.hotkeys.some((hk) => this.hotkeyManager.isHotkeyDuplicate(command.id, hk))
+        : true
+
+      return (
+        nameMatch &&
+        hotkeyMatch &&
+        hasHotkeysMatch &&
+        internalModuleMatch &&
+        systemShortcutsMatch &&
+        onlyCustomMatch &&
+        onlyDuplicatesMatch
+      )
     })
 
     if (filterSettings?.FeaturedFirst) {

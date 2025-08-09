@@ -11,6 +11,8 @@ import {
 const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   StrictModifierMatch: true,
   ViewWOhotkeys: true,
+  OnlyCustom: false,
+  OnlyDuplicates: false,
   FeaturedFirst: false,
   HighlightCustom: false,
   HighlightDuplicates: false,
@@ -18,6 +20,7 @@ const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   GroupByPlugin: false,
   DisplayGroupAssignment: false,
   DisplayInternalModules: false,
+  DisplaySystemShortcuts: false,
 }
 
 const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {

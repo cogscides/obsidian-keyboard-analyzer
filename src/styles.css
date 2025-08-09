@@ -130,16 +130,22 @@
   padding-right: 8px;
 }
 
+/* Keep legacy styling for span prefix (if used elsewhere) */
 #keyboard-component .setting-item-name span.suggestion-prefix {
   color: var(--text-accent);
   font-size: 90%;
   font-style: italic;
   text-transform: uppercase;
-  padding-right: 6px;
+  margin-right: 6px; /* space before command title */
 }
 
 #keyboard-component .setting-item-name span.suggestion-prefix:hover {
   cursor: pointer;
+}
+
+/* Commands list uses a button for the plugin name. Keep style neutral, only add spacing. */
+#keyboard-component .setting-item-name button.suggestion-prefix {
+  margin-right: 6px; /* space before command title */
 }
 
 #keyboard-component .setting-item .star-icon {
@@ -652,8 +658,14 @@ button#hotkey-refresh-button:hover {
 
 #keyboard-preview-view {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
+}
+
+/* On small widths, allow inner horizontal scrolling and left-align */
+#keyboard-component.xs #keyboard-preview-view,
+#keyboard-component.sm #keyboard-preview-view {
+  justify-content: flex-start;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
