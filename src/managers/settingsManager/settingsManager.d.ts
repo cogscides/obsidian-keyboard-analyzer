@@ -7,6 +7,7 @@ export interface PluginSettings {
   }
   featuredCommandIDs: string[]
   commandGroups: CGroup[]
+  pinKeyboardPanel?: boolean
 }
 
 export enum FilterSettingsKeys {
@@ -20,6 +21,7 @@ export enum FilterSettingsKeys {
   HighlightCustom = 'HighlightCustom',
   HighlightDuplicates = 'HighlightDuplicates',
   DisplayIDs = 'DisplayIDs',
+  ShowPluginBadges = 'ShowPluginBadges',
   DisplayGroupAssignment = 'DisplayGroupAssignment',
   DisplayInternalModules = 'DisplayInternalModules',
   DisplaySystemShortcuts = 'DisplaySystemShortcuts',
@@ -33,6 +35,7 @@ export enum ViewSettingsKeys {
   HighlightDuplicates = 'HighlightDuplicates',
   DisplayIDs = 'DisplayIDs',
   HighlightBuiltIns = 'HighlightBuiltIns',
+  ShowPluginBadges = 'ShowPluginBadges',
 }
 
 type FilterSettings = {

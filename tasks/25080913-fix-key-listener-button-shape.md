@@ -1,6 +1,6 @@
 ---
 title: Fix key listener button shape in Search menu
-status: in_progress
+status: done
 owner: "@you"
 updated: 2025-08-09 13:12 UTC
 related:
@@ -23,7 +23,7 @@ In some Obsidian themes the keyboard listener button in the Search menu appears 
 ## Next Steps
 - [x] Audit current listener button markup and classes in `src/components/SearchMenu.svelte` (owner)
 - [x] Align padding/height/radius with standard icon/button styles; unify icon size (owner)
-- [ ] Test in default + 2 themes; attach before/after screenshots (owner)
+- [x] Test in default + 2 themes; attach before/after screenshots (owner)
 - [x] Update `styles.css` only if necessary; prefer component-scoped classes (owner)
 
 ## Links

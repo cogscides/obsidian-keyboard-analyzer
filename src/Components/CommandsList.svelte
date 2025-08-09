@@ -5,6 +5,9 @@
   import { Star as StarIcon, ChevronDown } from 'lucide-svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import { convertModifiers } from '../utils/modifierUtils'
 
   interface Props {
     filteredCommands: commandEntry[]
@@ -27,6 +30,8 @@
   const groupManager: GroupManager = plugin.groupManager
   const commandsManager = plugin.commandsManager
   const hotkeyManager = plugin.hotkeyManager
+  const visualKeyboardManager: VisualKeyboardManager = getContext('visualKeyboardManager')
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
   // Using callback props instead of component events (Svelte 5)
 
@@ -50,7 +55,10 @@
     if (!p) return n
     const lower = n.toLowerCase()
     const pref = p.toLowerCase() + ': '
-    if (lower.startsWith(pref)) {
+    // In grouped view, always strip plugin prefix from title.
+    // In flat view, strip only when showing plugin badges; otherwise keep full name for clarity.
+    const shouldStripPrefix = groupSettings?.GroupByPlugin || groupSettings?.ShowPluginBadges
+    if (shouldStripPrefix && lower.startsWith(pref)) {
       return n.slice(pref.length).trim()
     }
     return n
@@ -66,6 +74,18 @@
 
   function handleDuplicateHotkeyClick(hotkey: hotkeyEntry) {
     onDuplicateHotkeyClick?.(hotkey)
+  }
+
+  // Hover preview for hotkeys on the visual keyboard
+  function handleHotkeyMouseEnter(hk: hotkeyEntry) {
+    const mods = convertModifiers(hk.modifiers)
+    visualKeyboardManager.updateVisualState(hk.key, mods)
+  }
+  function handleHotkeyMouseLeave() {
+    visualKeyboardManager.updateVisualState(
+      activeKeysStore.ActiveKey,
+      activeKeysStore.ActiveModifiers,
+    )
   }
 
   // Grouped view state and helpers
@@ -189,6 +209,8 @@
                             class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
                             class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
                             onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                            onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
+                            onmouseleave={handleHotkeyMouseLeave}
                           >
                             {renderHotkey(hotkey)}
                           </span>
@@ -209,12 +231,14 @@
           >
             <div class="setting-item-info">
               <div class="setting-item-name">
-                <button
-                  class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
-                  onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
-                >
-                  {cmdEntry.pluginName}
-                </button>
+                {#if groupSettings?.ShowPluginBadges}
+                  <button
+                    class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
+                    onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
+                  >
+                    {cmdEntry.pluginName}
+                  </button>
+                {/if}
                 <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                 <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
@@ -234,6 +258,8 @@
                     class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
                     class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
                     onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                    onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
+                    onmouseleave={handleHotkeyMouseLeave}
                   >
                     {renderHotkey(hotkey)}
                   </span>

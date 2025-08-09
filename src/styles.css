@@ -47,7 +47,10 @@
 }
 
 #keyboard-component {
-  height: 100%;
+  /* Allow the component to grow with content so sticky can remain pinned
+     across the entire scroll; avoid forcing it to viewport height. */
+  height: auto;
+  min-height: 100%;
 }
 
 .keyboard-wrapper {
@@ -63,8 +66,19 @@
 #keyboard-preview-view {
   display: flex;
   justify-content: center;
-  overflow-x: hidden; /* prevent whole section from scrolling; inner surface/grid owns scroll */
+  /* allow child sticky (.keyboard-panel.pinned) to work across full scroll */
+  overflow: visible;
   width: 100%;
+}
+
+/* removed wrapper-level sticky; use panel-level sticky instead */
+/* When keyboard panel is pinned, make the wrapper sticky so it
+   remains at the top while the command list scrolls underneath. */
+#keyboard-preview-view:has(.keyboard-panel.pinned) {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  background: var(--background-primary);
 }
 
 /* #keyboard-component .hotkey-setting-container {

@@ -1,6 +1,7 @@
 ---
 - Status: todo | in_progress | blocked | done
 - Owner: @your-handle
+- Created: YYYY-MM-DD HH:MM UTC
 - Updated: YYYY-MM-DD HH:MM UTC
 - Related:
   - #<issue>, PR #<id>, <links>

@@ -35,7 +35,7 @@
 
 ## Active Tasks Documentation
 - Purpose: Track ongoing work in `tasks//` so engineers and the AI agent keep a shared, searchable history of progress and decisions.
-- Location & naming: `tasks/250808-<id>.md` (one file per task).
+- Location & naming: `tasks/25080812-<id>.md` (one file per task).
 - Frontmatter: Use YAML props at the top of each task file.
 
 ```markdown

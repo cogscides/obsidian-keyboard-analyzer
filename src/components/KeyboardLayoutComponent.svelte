@@ -9,8 +9,10 @@
     KeyboardSection,
   } from '../interfaces/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
-  import { Coffee as CoffeeIcon, CrossIcon } from 'lucide-svelte'
+  import { Coffee as CoffeeIcon, Pin as PinIcon } from 'lucide-svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
+  import type CommandsManager from '../managers/commandsManager'
+  import { GroupType } from '../managers/groupManager/groupManager.svelte'
 
   interface Props {
     visibleCommands: commandEntry[]
@@ -23,6 +25,9 @@
     'visualKeyboardManager',
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  import type SettingsManager from '../managers/settingsManager'
+  const settingsManager: SettingsManager = plugin.settingsManager
+  const commandsManager: CommandsManager = plugin.commandsManager
   let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
 
   // DEBUGGER
@@ -38,7 +43,10 @@
   }
 
   $effect(() => {
-    visualKeyboardManager.calculateAndAssignWeights(visibleCommands)
+    const commands = heatmapScope === 'all'
+      ? commandsManager.getCommandsForGroup(GroupType.All)
+      : visibleCommands
+    visualKeyboardManager.calculateAndAssignWeights(commands)
   })
 
   let gridTemplateColumns = KeyboardObject.sections
@@ -57,10 +65,11 @@
 
   // Local UI state for toolbar controls
   let panelCollapsed = $state(false)
+  let isPinned = $state(Boolean(settingsManager.getSetting('pinKeyboardPanel')))
   let heatmapScope: 'filtered' | 'all' = $state('filtered')
 </script>
 
-<div class="keyboard-panel {panelCollapsed ? 'collapsed' : ''}">
+<div class="keyboard-panel {panelCollapsed ? 'collapsed' : ''} {isPinned ? 'pinned' : ''}">
   <div class="keyboard-toolbar" role="toolbar" aria-label="Keyboard controls">
     <div class="toolbar-left">
       <button
@@ -73,26 +82,33 @@
         <span class={`chevron ${panelCollapsed ? 'is-collapsed' : ''}`}>⌄</span>
         <span class="toggle-label">Keyboard</span>
       </button>
-      <div class="segmented" role="group" aria-label="Heatmap scope">
-        <button
-          class={heatmapScope === 'filtered' ? 'is-active' : ''}
-          aria-pressed={heatmapScope === 'filtered'}
-          title="Heatmap matches current filters/search"
-          onclick={() => (heatmapScope = 'filtered')}
-        >
-          Filtered
-        </button>
-        <button
-          class={heatmapScope === 'all' ? 'is-active' : ''}
-          aria-pressed={heatmapScope === 'all'}
-          title="Heatmap counts all commands"
-          onclick={() => (heatmapScope = 'all')}
-        >
-          All
-        </button>
-      </div>
+        {#if !panelCollapsed}
+          <button
+            class="scope-toggle"
+            aria-label="Toggle heatmap scope"
+            aria-pressed={heatmapScope === 'all'}
+            title={heatmapScope === 'filtered' ? 'Heatmap matches current filters/search' : 'Heatmap counts all commands'}
+            onclick={() => (heatmapScope = heatmapScope === 'filtered' ? 'all' : 'filtered')}
+          >
+            <span class="scope-label">Show:</span>
+            <span class="scope-value">{heatmapScope === 'filtered' ? 'Filtered' : 'All'}</span>
+          </button>
+        {/if}
     </div>
     <div class="toolbar-right">
+      <button
+        class="pin-toggle"
+        aria-label={isPinned ? 'Unpin keyboard panel' : 'Pin keyboard panel'}
+        aria-pressed={isPinned}
+        title={isPinned ? 'Unpin from top' : 'Pin to top'}
+        onclick={() => {
+          isPinned = !isPinned
+          settingsManager.updateSettings({ pinKeyboardPanel: isPinned })
+        }}
+      >
+        <PinIcon size={16} />
+        <span class="pin-label">{isPinned ? 'Unpin' : 'Pin'}</span>
+      </button>
       <button
         class="donation-badge"
         onclick={() => window.open('https://ko-fi.com/S6S5E6K74', '_blank')}
@@ -136,7 +152,7 @@
 </div>
 <style>
   .keyboard-panel {
-    display: inline-block;
+    display: block; /* sticky works reliably on block-level */
     width: 100%;
     background: var(--background-modifier-border);
     border: 1px solid var(--indentation-guide);
@@ -212,28 +228,27 @@
     margin-left: 6px;
   }
 
-  /* Segmented control for scope */
-  .segmented {
+  /* Single scope toggle button */
+  .scope-toggle {
     display: inline-flex;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .segmented > button {
+    align-items: center;
+    justify-content: center;
     height: 28px;
     padding: 0 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
     background: var(--background-modifier-form-field);
     color: var(--text-muted);
-    border: none;
     cursor: pointer;
+    line-height: 1;
   }
-  .segmented > button + button {
-    border-left: 1px solid var(--background-modifier-border);
-  }
-  .segmented > button.is-active {
-    background: var(--background-primary);
+  .scope-toggle:hover,
+  .scope-toggle:focus-visible {
+    border-color: var(--interactive-accent);
     color: var(--text-normal);
   }
+  .scope-toggle .scope-label { margin-right: 4px; color: var(--text-muted); }
+  .scope-toggle .scope-value { color: var(--text-normal); font-weight: 600; }
 
   .keyboard-surface { overflow-x: auto; overflow-y: hidden; width: 100%; }
   #keyboard-layout {
@@ -263,6 +278,31 @@
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
+  }
+
+  .pin-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-modifier-form-field);
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+  }
+  .pin-toggle:hover,
+  .pin-toggle:focus-visible {
+    border-color: var(--interactive-accent);
+    color: var(--text-normal);
+  }
+
+  .keyboard-panel.pinned {
+    position: sticky;
+    top: 0;
+    z-index: 20;
   }
 
   /* Ensure chevron here uses simple collapsed rotation, overriding globals */

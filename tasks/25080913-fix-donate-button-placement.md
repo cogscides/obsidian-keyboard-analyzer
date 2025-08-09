@@ -1,6 +1,6 @@
 ---
 title: Fix Donate button placement in Visual Keyboard
-status: in_progress
+status: done
 owner: "@you"
 updated: 2025-08-09 13:18 UTC
 related:

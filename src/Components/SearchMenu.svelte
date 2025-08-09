@@ -67,6 +67,7 @@
     HighlightDuplicates: 'Highlight duplicates',
     HighlightBuiltIns: 'Highlight built-in modules',
     DisplayIDs: 'Display command IDs',
+    ShowPluginBadges: 'Show plugin badges',
     GroupByPlugin: 'Group by plugin',
     DisplayGroupAssignment: 'Show group assignment',
     DisplayInternalModules: 'Display internal modules',
@@ -87,6 +88,8 @@
     HighlightBuiltIns:
       'Subtly mark built-in (internal) plugin groups in commands list.',
     DisplayIDs: 'Show internal command IDs and allow searching by ID.',
+    ShowPluginBadges:
+      'Show a compact plugin label before each command (flat list).',
     GroupByPlugin: 'Group commands by their plugin.',
     DisplayGroupAssignment: 'Display which group a command belongs to.',
     DisplayInternalModules:

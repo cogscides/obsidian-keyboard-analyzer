@@ -1,8 +1,8 @@
 ---
 title: View setting — Toggle plugin name badge in commands list
-status: todo
-owner: "@you"
-updated: 2025-08-09 13:08 UTC
+status: done
+owner: "@agent"
+updated: 2025-08-09 20:25 UTC
 related:
   - [[250809-list-of-bugs-and-new-feature-requests]]
   - [[250808-ux-filter-view-cleanup]]
@@ -22,13 +22,12 @@ Plugin name badges improve scanability but can consume horizontal space. Provide
 - Works with Highlight Built‑ins and Featured First consistently.
 
 ## Next Steps
-- [ ] Add `showPluginBadges` to view settings/store with persistence (owner)
-- [ ] Update `CommandsList.svelte` row rendering to conditionally show badge (owner)
-- [ ] Adjust title formatting to avoid duplicate plugin text when badges are off (owner)
-- [ ] Expose toggle in `SearchMenu.svelte` View menu with tooltip (owner)
-- [ ] Manual verification in flat and grouped modes; screenshots (owner)
+- [x] Add `ShowPluginBadges` to view settings/store with persistence (owner)
+- [x] Update `CommandsList.svelte` row rendering to conditionally show badge (owner)
+- [x] Adjust title formatting to avoid duplicate plugin text when badges are off (owner)
+- [x] Expose toggle in `SearchMenu.svelte` View menu with tooltip (owner)
+- [x] Manual verification in flat and grouped modes; screenshots (owner)
 
 ## Links
 - [[250809-list-of-bugs-and-new-feature-requests]]
 - [[250808-ux-filter-view-cleanup]]
-

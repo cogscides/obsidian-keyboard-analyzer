@@ -18,6 +18,7 @@ const DEFAULT_FILTER_SETTINGS: FilterSettings = {
   HighlightDuplicates: false,
   HighlightBuiltIns: false,
   DisplayIDs: false,
+  ShowPluginBadges: true,
   GroupByPlugin: false,
   DisplayGroupAssignment: false,
   DisplayInternalModules: true,
@@ -33,6 +34,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   },
   featuredCommandIDs: [],
   commandGroups: [],
+  pinKeyboardPanel: false,
 }
 
 export default class SettingsManager {
