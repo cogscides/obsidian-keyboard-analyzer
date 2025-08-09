@@ -85,7 +85,7 @@
     HighlightDuplicates:
       'Highlight when the same hotkey is used by multiple commands.',
     HighlightBuiltIns:
-      'Subtly mark built-in (internal) plugin groups in grouped view.',
+      'Subtly mark built-in (internal) plugin groups in commands list.',
     DisplayIDs: 'Show internal command IDs and allow searching by ID.',
     GroupByPlugin: 'Group commands by their plugin.',
     DisplayGroupAssignment: 'Display which group a command belongs to.',
@@ -393,10 +393,7 @@
             </div>
             <div class="setting-item-name popup-filter-title">
               {settingTitles.ViewWOhotkeys}
-              <span
-                class="info-icon"
-                title={settingTooltips.ViewWOhotkeys}
-              >
+              <span class="info-icon" title={settingTooltips.ViewWOhotkeys}>
                 <InfoIcon size={14} />
               </span>
             </div>
@@ -421,10 +418,7 @@
             </div>
             <div class="setting-item-name popup-filter-title">
               {settingTitles.OnlyCustom}
-              <span
-                class="info-icon"
-                title={settingTooltips.OnlyCustom}
-              >
+              <span class="info-icon" title={settingTooltips.OnlyCustom}>
                 <InfoIcon size={14} />
               </span>
             </div>
@@ -449,10 +443,7 @@
             </div>
             <div class="setting-item-name popup-filter-title">
               {settingTitles.OnlyDuplicates}
-              <span
-                class="info-icon"
-                title={settingTooltips.OnlyDuplicates}
-              >
+              <span class="info-icon" title={settingTooltips.OnlyDuplicates}>
                 <InfoIcon size={14} />
               </span>
             </div>
@@ -514,17 +505,23 @@
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <div
                 class="checkbox-container"
-                class:is-enabled={filterSettings[setting as unknown as keyof FilterSettings]}
+                class:is-enabled={filterSettings[
+                  setting as unknown as keyof FilterSettings
+                ]}
                 onclick={() =>
                   setFilterSetting(
                     setting as unknown as keyof CGroupFilterSettings,
-                    !(filterSettings[setting as unknown as keyof FilterSettings] as boolean),
+                    !(filterSettings[
+                      setting as unknown as keyof FilterSettings
+                    ] as boolean),
                   )}
               >
                 <input
                   type="checkbox"
                   tabindex="0"
-                  checked={filterSettings[setting as unknown as keyof FilterSettings]}
+                  checked={filterSettings[
+                    setting as unknown as keyof FilterSettings
+                  ]}
                   id={`view-${setting}`}
                 />
               </div>

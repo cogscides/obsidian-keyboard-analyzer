@@ -59,6 +59,14 @@
   overflow-y: scroll;
 }
 
+/* Center the keyboard panel and allow inner horizontal scroll */
+#keyboard-preview-view {
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden; /* prevent whole section from scrolling; inner surface/grid owns scroll */
+  width: 100%;
+}
+
 /* #keyboard-component .hotkey-setting-container {
   display: flex;
   overflow: unset;
@@ -230,10 +238,13 @@
 }
 
 .meta-search-wrapper {
-  transform: translate(-50%, -50%);
+  position: absolute;
   top: 50%;
   right: 8px;
-  position: absolute;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .modifiers-wrapper {
@@ -351,6 +362,29 @@ kbd.modifier:hover {
   padding: 0 10px 0 26px;
 }
 
+/* Reduce left padding on extra-small/mobile to save space */
+#keyboard-component.is-mobile .plugin-group-body {
+  padding-left: 10px;
+}
+
+/* Slightly smaller command text on extra-small panes */
+#keyboard-component.is-mobile .hotkey-list-container .setting-item .setting-item-name {
+  font-size: 13px;
+}
+#keyboard-component.is-mobile .hotkey-list-container .setting-item-info {
+  font-size: 12px;
+}
+
+/* Mobile: keyboard surface takes full width; grid scrolls horizontally */
+#keyboard-component.is-mobile .keyboard-panel .keyboard-surface {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+#keyboard-component.is-mobile #keyboard-layout {
+  width: 100%;
+}
+
 /* Compact rows inside groups */
 .setting-item.compact {
   padding: 6px 0;
@@ -390,30 +424,40 @@ kbd.modifier:hover {
   justify-content: center;
 }
 
+/* Normalize meta search action buttons (keyboard listener, clear) */
+.meta-search-wrapper .icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-modifier-form-field);
+  color: var(--text-faint);
+}
+.meta-search-wrapper .icon:hover,
+.meta-search-wrapper .icon:focus-visible {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
 .keyboard-icon {
   cursor: pointer;
-  color: var(--text-faint);
-  opacity: var(--icon-muted);
-  border-radius: 50%;
-  right: 9px;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0px 0px 1px 1px #c415151a;
-  position: absolute;
 }
 
 .keyboard-icon:hover {
-  border-color: var(--interactive-accent);
   opacity: 1;
 }
 
 .keyboard-icon:pressed {
-  border-color: var(--interactive-accent);
   opacity: 1;
 }
 
 .keyboard-icon.pulse {
   color: var(--text-error);
+  box-shadow: 0 0 0 0 rgba(10, 228, 112, 0.5);
 }
 
 /* .meta-search-indicator .inner-circle {
@@ -454,9 +498,6 @@ kbd.modifier:hover {
 .clear-icon {
   color: var(--text-faint);
   cursor: var(--cursor);
-  top: 50%;
-  position: absolute;
-  transform: translate(-50%, -50%);
 }
 
 .clear-icon:hover {

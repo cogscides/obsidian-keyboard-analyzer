@@ -42,7 +42,7 @@
 ---
 title: Status bar Cmd/Ctrl+Click should open new pane
 status: in_progress # todo|in_progress|blocked|done
-owner: "@you"
+owner: "@you" | "@agent"
 updated: 2025-08-08 12:00 UTC
 related:
   - [[ISSUE-123]]

@@ -1,0 +1,35 @@
+---
+title: Toggle heatmap scope — Filters vs All commands
+status: in_progress
+owner: "@you"
+updated: 2025-08-09 13:18 UTC
+related:
+  - [[250809-list-of-bugs-and-new-feature-requests]]
+---
+
+## Context
+The visual keyboard heatmap currently reflects active search/filters, which can confuse exploration of global hotkey usage. Add a toggle to choose whether the heatmap reflects the current filters/search only or all known hotkeys.
+
+## Decisions
+- Default to “Match filters/search” to preserve current expectations.
+- Offer “All commands” as the alternate state; active keys remain highlighted correctly in both modes.
+- Compute intensities efficiently; memoize per scope to avoid expensive recomputation.
+
+## Acceptance Criteria
+- Two explicit states with clear labels; default matches current behavior.
+- Heat intensities recalc per scope; active key styling remains correct.
+- No noticeable lag when toggling scope on large command sets.
+
+## Next Steps
+- [x] Add temporary `heatmapScope` UI control in keyboard toolbar (owner)
+- [ ] Add `heatmapScope` view setting (`filtered | all`) with persistence (owner)
+- [ ] Update heatmap computation pipeline/util to accept scope (owner)
+- [ ] Update keyboard legend/tooltip to indicate current scope (owner)
+- [ ] Manual performance check with large vault; screenshots of both states (owner)
+
+## Links
+- [[250809-list-of-bugs-and-new-feature-requests]]
+
+## Progress Log
+- [2025-08-09 13:18 UTC] Added a visible Scope select in the keyboard toolbar (`filtered` vs `all`) in `KeyboardLayoutComponent.svelte`. Currently UI-only; wiring to heatmap computation pending.
+- [2025-08-09 13:28 UTC] Replaced dropdown with a segmented two-button toggle (Filtered/All) for better UX and smaller footprint.
