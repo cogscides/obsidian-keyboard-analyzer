@@ -209,7 +209,6 @@
     if (keyboardListenerIsActive) {
       PressedKeysStore.handleKeyDown(e)
     }
-    PressedKeysStore.handlePhysicalKeyDown(e)
     // Re-apply search when hotkey listeners mutate active keys
     handleSearchInput()
   }
@@ -247,7 +246,7 @@
     selectedGroup
     handleSearchInput()
   })
-  import GroupSelector from './GroupSelector.svelte'
+  import GroupSelector from '../components/GroupSelector.svelte'
 </script>
 
 <GroupSelector bind:selectedGroup />
