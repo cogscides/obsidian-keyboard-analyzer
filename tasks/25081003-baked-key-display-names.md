@@ -49,6 +49,7 @@ Definition of done:
 - [2025-08-10 17:35 UTC] Reverted per-OS layout copies and override structures. Introduced Key-level `os` config (single JSON) and apply per-OS label/code/unicode/modifier at init. Kept minimal logic and removed ad-hoc swaps.
 - [2025-08-10 17:50 UTC] Updated `README.md` to include a "Custom Keyboard Layouts" section, documenting the Key-level `os` configuration for end-users.
 - [2025-08-10 18:20 UTC] Added letter and digit code aliases in `VisualKeyboardManager` to restore heatmaps for literal keys.
+- [2025-08-10 19:10 UTC] Corrected OS emulation layout mapping so bottom row modifiers reflect Windows vs macOS; fixed case-sensitive import for `KeyboardComponent`.
 
 ## Decisions
 - [2025-08-10] Implemented `normalizeKeyDisplay` utility to provide platform-aware, text-first labels for keys and modifiers.

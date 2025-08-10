@@ -247,7 +247,7 @@
     selectedGroup
     handleSearchInput()
   })
-  import GroupSelector from './GroupSelector.svelte'
+  import GroupSelector from '../components/GroupSelector.svelte'
 </script>
 
 <GroupSelector bind:selectedGroup />
