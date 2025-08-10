@@ -1,4 +1,4 @@
-<!-- src/Components/KeyboardLayoutComponent.svelte -->
+<!-- src/components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
   import { setContext, getContext } from 'svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
@@ -8,7 +8,7 @@
     commandEntry,
     KeyboardSection,
   } from '../interfaces/Interfaces'
-  import KeyboardKey from '../Components/KeyboardKey.svelte'
+  import KeyboardKey from './KeyboardKey.svelte'
   import { Coffee as CoffeeIcon, Pin as PinIcon, Settings as SettingsIcon } from 'lucide-svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type CommandsManager from '../managers/commandsManager'

@@ -58,7 +58,7 @@
 <div
   class="kb-popover {placeAbove ? 'is-above' : 'is-below'}"
   use:clickOutside
-  ononclick_outside={onClose}
+  onclick_outside={onClose}
   role="dialog"
   aria-label="Add to group"
   bind:this={rootEl}

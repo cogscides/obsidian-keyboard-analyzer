@@ -1,16 +1,5 @@
 // src/interfaces/Interfaces.ts
-import type {
-  Command,
-  Hotkey,
-  Modifier,
-  App,
-  SuggestModal,
-  HotkeyManager as ObsidianHotkeyManager,
-  InternalPlugins,
-  KeymapInfo,
-  InternalPlugin,
-  InternalPluginInstance,
-} from 'obsidian-typings'
+import type { Command, Hotkey, Modifier, App, KeymapInfo } from 'obsidian'
 
 export interface commandEntry {
   id: string
@@ -26,10 +15,9 @@ export interface commandEntry {
 export type commandsArray = commandEntry[]
 
 // Plugin Data
-export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
-  modifiers: Modifier[]
-  backedModifiers?: string
+export interface hotkeyEntry extends Hotkey {
   isCustom: boolean
+  backedModifiers?: string
 }
 
 export interface hotkeyDict {
@@ -79,7 +67,7 @@ export interface KeyboardKeyState {
   smallText?: boolean
 }
 
-export interface UnsafeHotkeyManager extends ObsidianHotkeyManager {
+export interface UnsafeHotkeyManager {
   getHotkeys(id: string): KeymapInfo[]
   getDefaultHotkeys(id: string): KeymapInfo[]
   customKeys: Record<string, KeymapInfo[]>
@@ -102,26 +90,15 @@ export interface UnsafeCommands {
   executeCommandById(id: string): boolean
 }
 
-export interface UnsafeAppInterface extends App {
-  commands: UnsafeCommands
-  HotKeyManager: UnsafeHotkeyManager
-  internalPlugins: InternalPlugins & {
-    getPluginById(id: string): { instance: { options: { pinned: [] } } }
-  } & { getEnabledPlugins(): UnsafeInternalPlugin[] }
-}
-
-export interface UnsafeInternalPlugin extends InternalPlugin {
-  instance: InternalPluginInstance & {
-    id: string
-    name: string
-    commands?: Record<string, Command>
-  }
-}
-
-export interface UnsafeInternalPluginInstance extends InternalPluginInstance {
+export interface UnsafeInternalPluginInstance {
   id: string
   name: string
   commands?: Record<string, Command>
+}
+
+export interface UnsafeInternalPlugin {
+  manifest?: { id?: string; name?: string }
+  instance: UnsafeInternalPluginInstance
 }
 
 // Helper type to convert KeymapInfo to Hotkey

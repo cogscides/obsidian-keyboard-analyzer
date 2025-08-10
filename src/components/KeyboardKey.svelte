@@ -1,4 +1,4 @@
-<!-- src/Components/KeyboardKey.svelte -->
+<!-- src/components/KeyboardKey.svelte -->
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
@@ -16,7 +16,8 @@
       unicode: '',
       width: 1,
       height: 1,
-    },
+      type: 'empty',
+    } as Key,
     maxWeightSteps = 5,
   }: Props = $props()
 
@@ -59,7 +60,7 @@
   }
 
   function handleClick(key: Key) {
-    const keyIdentifier = key.code || key.label
+    const keyIdentifier = key.code || key.label || ''
     ;(async () => {
       const { default: logger } = await import('../utils/logger')
       logger.debug('Clicked key:', keyIdentifier)
@@ -84,18 +85,23 @@
     if (!previewing) {
       storedKey = activeKeysStore.ActiveKey
       altReleaseListener = (e: KeyboardEvent) => {
-        if (e.key === 'Alt') {
-          stopPreview()
+        if (e.key === 'Alt' || e.key === 'AltGraph') {
+          stopPreview(false)
         }
       }
       window.addEventListener('keyup', altReleaseListener)
     }
     previewing = true
-    activeKeysStore.ActiveKey = key.code || key.label
+    activeKeysStore.ActiveKey = key.code || key.label || ''
   }
 
-  function stopPreview() {
-    activeKeysStore.ActiveKey = storedKey
+  function stopPreview(restore = true) {
+    if (restore) {
+      activeKeysStore.ActiveKey = storedKey
+    } else {
+      activeKeysStore.clearActiveKey()
+      storedKey = ''
+    }
     previewing = false
     if (altReleaseListener) {
       window.removeEventListener('keyup', altReleaseListener)
@@ -106,19 +112,25 @@
   function handleMouseEnter(event: MouseEvent) {
     hovered = true
     const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
-      key.code || key.label,
+      key.code || key.label || '',
     )
 
     if (!isModifierKey) {
-      if (event.altKey) {
+      if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         startPreview()
       }
       altKeydownListener = (e: KeyboardEvent) => {
-        if (hovered && e.key === 'Alt') {
+        if (
+          hovered &&
+          (e.key === 'Alt' || e.key === 'AltGraph') &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !e.shiftKey
+        ) {
           startPreview()
         }
       }
-      window.addEventListener('keydown', altKeydownListener)
+      window.addEventListener('keydown', altKeydownListener, true)
     }
   }
 
@@ -128,7 +140,7 @@
       stopPreview()
     }
     if (altKeydownListener) {
-      window.removeEventListener('keydown', altKeydownListener)
+      window.removeEventListener('keydown', altKeydownListener, true)
       altKeydownListener = null
     }
   }

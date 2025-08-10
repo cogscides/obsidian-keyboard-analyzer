@@ -22,7 +22,6 @@
   import type { FilterSettings } from '../managers/settingsManager'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import type { Modifier } from 'obsidian'
-  // @ts-ignore: No type declaration for clickOutside
   import { clickOutside } from '../utils/clickOutside'
   import logger from '../utils/logger'
   import { getBakedModifierLabel, getBakedKeyLabel } from '../utils/normalizeKeyDisplay'
@@ -246,7 +245,7 @@
     selectedGroup
     handleSearchInput()
   })
-  import GroupSelector from '../components/GroupSelector.svelte'
+  import GroupSelector from './GroupSelector.svelte'
 </script>
 
 <GroupSelector bind:selectedGroup />
@@ -318,7 +317,7 @@
   <div
     class="menu-anchor"
     use:clickOutside
-    ononclick_outside={() => (filterIsOpen = false)}
+    onclick_outside={() => (filterIsOpen = false)}
   >
     <button
       id="hotkey-filter-button"
@@ -475,7 +474,7 @@
   <div
     class="menu-anchor"
     use:clickOutside
-    ononclick_outside={() => (viewDropdownOpen = false)}
+    onclick_outside={() => (viewDropdownOpen = false)}
   >
     <button
       id="hotkey-view-button"

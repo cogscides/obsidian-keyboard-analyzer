@@ -39,8 +39,7 @@ export class VisualKeyboardManager {
       emu === 'none'
         ? Platform.isMacOS
           ? 'macos'
-          : // @ts-expect-error -- `isLinux` exists at runtime
-            Platform.isLinux
+          : (Platform as { isLinux?: boolean }).isLinux
           ? 'linux'
           : 'windows'
         : emu

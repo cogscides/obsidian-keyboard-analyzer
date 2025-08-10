@@ -1,17 +1,9 @@
-import type {
-  App,
-  InternalPlugin,
-  InternalPluginName,
-  Command,
-  Plugin,
-} from 'obsidian-typings'
+import type { App, Command, Plugin } from 'obsidian'
 import type {
   hotkeyEntry,
   UnsafeInternalPlugin,
-  UnsafeInternalPluginInstance,
   commandEntry,
 } from '../../interfaces/Interfaces'
-import type { UnsafeAppInterface } from '../../interfaces/Interfaces'
 import HotkeyManager from '../hotkeyManager/hotkeyManager.svelte'
 import SettingsManager, { GroupType, type CGroup } from '../settingsManager'
 import {
@@ -91,8 +83,7 @@ export default class CommandsManager {
    * @returns Command[]
    */
   private getCommands(): Command[] {
-    const unsafeApp = this.app as UnsafeAppInterface
-    return Object.values(unsafeApp.commands.commands)
+    return Object.values(this.app.commands.commands)
   }
 
   /**
@@ -128,16 +119,12 @@ export default class CommandsManager {
    * @returns string - The name of the plugin
    */
   public getPluginName(pluginId: string): string {
-    const plugin = (this.app as UnsafeAppInterface).plugins.plugins[pluginId]
+    const plugin = this.app.plugins.plugins[pluginId]
     if (plugin) return plugin.manifest.name
 
-    const internalPlugins = (
-      this.app as UnsafeAppInterface
-    ).internalPlugins.getEnabledPlugins()
-
+    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
     const internalPlugin = internalPlugins.find(
-      (plugin) =>
-        (plugin.instance as UnsafeInternalPluginInstance).id === pluginId
+      (plugin) => plugin.instance.id === pluginId
     ) as UnsafeInternalPlugin | undefined
 
     if (internalPlugin?.instance) {
@@ -148,41 +135,10 @@ export default class CommandsManager {
   }
 
   /**
-  * Returns a boolean value indicating if a command is an internal module
-  *
-  * @param commandId - The ID of the command to check
-  * @returns boolean
-  * @types of InternalPluginName from obsidian-typings
-  type InternalPluginName =
-		| "audio-recorder"
-		| "backlink"
-		| "bookmarks"
-		| "canvas"
-		| "command-palette"
-		| "daily-notes"
-		| "editor-status"
-		| "file-explorer"
-		| "file-recovery"
-		| "global-search"
-		| "graph"
-		| "markdown-importer"
-		| "note-composer"
-		| "outgoing-link"
-		| "outline"
-		| "page-preview"
-		| "properties"
-		| "publish"
-		| "random-note"
-		| "slash-command"
-		| "slides"
-		| "starred"
-		| "switcher"
-		| "sync"
-		| "tag-pane"
-		| "templates"
-		| "word-count"
-		| "workspaces"
-		| "zk-prefixer";
+   * Returns a boolean value indicating if a command is an internal module
+   *
+   * @param commandId - The ID of the command to check
+   * @returns boolean
    */
   public isInternalModule(commandId: string): boolean {
     const pluginId = (commandId || '').split(':')[0] || ''
@@ -218,7 +174,7 @@ export default class CommandsManager {
       'word-count',
       'workspaces',
       'zk-prefixer',
-    ] as InternalPluginName[]
+    ]
 
     // Additional core namespaces used by Obsidian for built-in commands
     const coreNamespaces = [
@@ -231,16 +187,15 @@ export default class CommandsManager {
       'workspace',
     ]
 
-    if (internalModules.includes(pluginId as InternalPluginName)) return true
+    if (internalModules.includes(pluginId)) return true
     if (coreNamespaces.includes(pluginId)) return true
 
     // Heuristic fallback: if not a community plugin and not an internal plugin id, treat as internal
-    const unsafe = this.app as UnsafeAppInterface
-    const isCommunity = Boolean(unsafe.plugins.plugins[pluginId])
+    const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
     if (isCommunity) return false
-    const enabledInternal = unsafe.internalPlugins.getEnabledPlugins() as InternalPlugin[]
+    const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
     const isInternal = enabledInternal.some(
-      (p) => (p.instance as UnsafeInternalPluginInstance).id === pluginId
+      (p) => p.instance.id === pluginId
     )
     return isInternal || !isCommunity
   }
@@ -442,9 +397,7 @@ export default class CommandsManager {
    * @returns {Plugin[]}
    */
   public getInstalledPluginIDs(): string[] {
-    const internalPlugins = (
-      this.app as UnsafeAppInterface
-    ).internalPlugins.getEnabledPlugins() as InternalPlugin[]
+    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
 
     const internalPluginIDs = internalPlugins.map(
       (plugin) => plugin.manifest?.id || ''
