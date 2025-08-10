@@ -3,8 +3,6 @@ import { Platform } from 'obsidian'
 import { getEmulatedOS } from '../utils/runtimeConfig'
 import {
   convertModifier,
-  getDisplayModifier,
-  modifierMap,
   type ModifierKey,
   sortModifiers,
 } from '../utils/modifierUtils'
@@ -142,29 +140,6 @@ export class ActiveKeysStore {
       })(),
     }
     return keyMap[keyIdentifier] || keyIdentifier
-  }
-
-  public handlePhysicalKeyDown(e: KeyboardEvent) {
-    const keyLabel = this.normalizeKeyIdentifier(e.code)
-    if (this.isModifier(keyLabel)) {
-      const modifierKey = convertModifier(keyLabel as ModifierKey)
-      const mods = new Set(this.activeModifiers)
-      mods.add(modifierKey)
-      this.activeModifiers = Array.from(mods)
-    }
-  }
-
-  public handlePhysicalKeyUp(e: KeyboardEvent) {
-    const keyLabel = this.normalizeKeyIdentifier(e.code)
-    if (this.isModifier(keyLabel)) {
-      const modifierKey = convertModifier(keyLabel as ModifierKey)
-      const mods = new Set(this.activeModifiers)
-      mods.delete(modifierKey)
-      this.activeModifiers = Array.from(mods)
-      if (this.activeModifiers.length === 0) {
-        this.activeKey = ''
-      }
-    }
   }
 
   public getDisplayKey() {

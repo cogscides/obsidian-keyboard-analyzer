@@ -4,6 +4,8 @@
   import { getContext } from 'svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type { Modifier } from 'obsidian'
+  import { convertModifier } from '../utils/modifierUtils'
 
   interface Props {
     key: Key
@@ -76,18 +78,35 @@
 
   let previewing = false
   let storedKey = ''
+  let storedModifiers: Modifier[] = []
 
-  function handleMouseEnter() {
-    if (activeKeysStore.ActiveModifiers.length > 0) {
-      if (!previewing) storedKey = activeKeysStore.ActiveKey
+  function handleMouseEnter(event: MouseEvent) {
+    const mods: Modifier[] = []
+    if (event.ctrlKey) mods.push(convertModifier('Control'))
+    if (event.altKey) mods.push(convertModifier('Alt'))
+    if (event.shiftKey) mods.push(convertModifier('Shift'))
+    if (event.metaKey) mods.push(convertModifier('Meta'))
+    const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
+      key.code || key.label,
+    )
+    if (mods.length > 0 && !isModifierKey) {
+      if (!previewing) {
+        storedKey = activeKeysStore.ActiveKey
+        storedModifiers = activeKeysStore.ActiveModifiers
+      }
       previewing = true
       activeKeysStore.ActiveKey = key.code || key.label
+      activeKeysStore.ActiveModifiers = [
+        ...activeKeysStore.ActiveModifiers,
+        ...mods,
+      ]
     }
   }
 
   function handleMouseLeave() {
     if (previewing) {
       activeKeysStore.ActiveKey = storedKey
+      activeKeysStore.ActiveModifiers = storedModifiers
       previewing = false
     }
   }

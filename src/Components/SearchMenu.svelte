@@ -209,7 +209,6 @@
     if (keyboardListenerIsActive) {
       PressedKeysStore.handleKeyDown(e)
     }
-    PressedKeysStore.handlePhysicalKeyDown(e)
     // Re-apply search when hotkey listeners mutate active keys
     handleSearchInput()
   }

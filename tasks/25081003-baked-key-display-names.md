@@ -2,7 +2,7 @@
 title: Baked key display names in search and commands list
 status: in_progress
 owner: "@agent"
-updated: 2025-08-10 18:30 UTC
+updated: 2025-08-10 19:10 UTC
 related:
   - [[25081001-visual-keyboard-keys-and-hover-highlights]]
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
