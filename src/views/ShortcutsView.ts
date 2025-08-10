@@ -2,7 +2,7 @@ import { ItemView, type WorkspaceLeaf } from 'obsidian'
 import { mount, unmount } from 'svelte'
 
 import type KeyboardAnalyzerPlugin from '../main'
-import KeyboardComponent from '../Components/KeyboardComponent.svelte'
+import KeyboardComponent from '../components/KeyboardComponent.svelte'
 import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from '../Constants'
 import { VisualKeyboardManager } from '../managers'

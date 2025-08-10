@@ -22,7 +22,6 @@
   import type { FilterSettings } from '../managers/settingsManager'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import type { Modifier } from 'obsidian'
-  // @ts-ignore: No type declaration for clickOutside
   import { clickOutside } from '../utils/clickOutside'
   import logger from '../utils/logger'
   import { getBakedModifierLabel, getBakedKeyLabel } from '../utils/normalizeKeyDisplay'

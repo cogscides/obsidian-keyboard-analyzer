@@ -15,7 +15,7 @@
 
   import type CommandsManager from '../managers/commandsManager'
 
-  import KeyboardLayoutComponent from '../components/KeyboardLayoutComponent.svelte'
+  import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
   import { GroupType } from '../managers/groupManager/groupManager.svelte'

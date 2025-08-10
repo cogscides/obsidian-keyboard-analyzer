@@ -4,13 +4,8 @@ import type {
   Hotkey,
   Modifier,
   App,
-  SuggestModal,
-  HotkeyManager as ObsidianHotkeyManager,
-  InternalPlugins,
   KeymapInfo,
-  InternalPlugin,
-  InternalPluginInstance,
-} from 'obsidian-typings'
+} from 'obsidian'
 
 export interface commandEntry {
   id: string
@@ -26,7 +21,7 @@ export interface commandEntry {
 export type commandsArray = commandEntry[]
 
 // Plugin Data
-export interface hotkeyEntry extends Omit<Hotkey, 'modifiers'> {
+export interface hotkeyEntry extends Hotkey {
   modifiers: Modifier[]
   backedModifiers?: string
   isCustom: boolean
@@ -79,7 +74,7 @@ export interface KeyboardKeyState {
   smallText?: boolean
 }
 
-export interface UnsafeHotkeyManager extends ObsidianHotkeyManager {
+export interface UnsafeHotkeyManager {
   getHotkeys(id: string): KeymapInfo[]
   getDefaultHotkeys(id: string): KeymapInfo[]
   customKeys: Record<string, KeymapInfo[]>
@@ -102,23 +97,12 @@ export interface UnsafeCommands {
   executeCommandById(id: string): boolean
 }
 
-export interface UnsafeAppInterface extends App {
-  commands: UnsafeCommands
-  HotKeyManager: UnsafeHotkeyManager
-  internalPlugins: InternalPlugins & {
-    getPluginById(id: string): { instance: { options: { pinned: [] } } }
-  } & { getEnabledPlugins(): UnsafeInternalPlugin[] }
+export interface UnsafeInternalPlugin {
+  manifest?: { id: string }
+  instance: UnsafeInternalPluginInstance
 }
 
-export interface UnsafeInternalPlugin extends InternalPlugin {
-  instance: InternalPluginInstance & {
-    id: string
-    name: string
-    commands?: Record<string, Command>
-  }
-}
-
-export interface UnsafeInternalPluginInstance extends InternalPluginInstance {
+export interface UnsafeInternalPluginInstance {
   id: string
   name: string
   commands?: Record<string, Command>

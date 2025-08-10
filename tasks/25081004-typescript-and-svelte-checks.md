@@ -1,8 +1,8 @@
 ---
 title: Fix TypeScript and Svelte checks
-status: todo
+status: in_progress
 owner: '@agent'
-updated: 2025-08-10 12:00 UTC
+updated: 2025-08-10 12:30 UTC
 related:
   - [[AGENTS]]
   - [[25080912-a11y-warnings]]
@@ -29,28 +29,29 @@ Running `tsc --noEmit` and `svelte-check` surfaces a cluster of issues:
 - Unify hotkey model: make our `hotkeyEntry` extend `Hotkey` and add custom fields; provide a conversion helper for `KeymapInfo`→`Hotkey`.
 - Normalize import casing across the project to `components/` (lowercase) to avoid case conflicts.
 - Keep a11y fixes tracked separately; only adjust the most egregious cases if easy while focusing on typing/build green.
+- [2025-08-10 12:30 UTC] Replaced `obsidian-typings` imports with official `obsidian` types, added module augmentations and shims, and normalized component import casing.
 
 ## Plan
 
 Phase 1 — Fast hygiene (imports and shims)
 
-- [ ] Normalize import paths casing:
+- [x] Normalize import paths casing:
   - Replace `../Components/...` with `../components/...` in:
     - `src/components/KeyboardLayoutComponent.svelte`
     - `src/components/KeyboardComponent.svelte`
     - `src/views/ShortcutsView.ts`
     - Any other references discovered by grep
-- [ ] Add a shim for `clickOutside.js`:
+- [x] Add a shim for `clickOutside.js`:
   - Create `src/types/shims.d.ts` with a minimal module declaration for `../utils/clickOutside`.
-- [ ] Remove the unused `@ts-expect-error` in `visualKeyboardsManager.svelte.ts` and prefer a runtime-safe guard for Platform checks.
+- [x] Remove the unused `@ts-expect-error` in `visualKeyboardsManager.svelte.ts` and prefer a runtime-safe guard for Platform checks.
 
 Phase 2 — Typings migration to `obsidian`
 
-- [ ] If needed, update `src/interfaces/Interfaces.ts` imports to use `from 'obsidian'` instead of `from 'obsidian-typings'`.
-- [ ] Adapt to current Obsidian types:
+- [x] If needed, update `src/interfaces/Interfaces.ts` imports to use `from 'obsidian'` instead of `from 'obsidian-typings'`.
+- [x] Adapt to current Obsidian types:
   - Fix imports: `Command`, `Hotkey`, `Modifier`, `App`, `InternalPlugins`, `KeymapInfo`, `InternalPlugin`, `InternalPluginInstance` (verify each export exists in `node_modules/obsidian/obsidian.d.ts`).
   - Update `UnsafeInternalPlugin` / `UnsafeInternalPluginInstance` to satisfy required generics (use concrete or generic params based on definitions; fallback to `<unknown>` or minimal local interfaces if necessary).
-- [ ] Introduce module augmentation:
+- [x] Introduce module augmentation:
   - Add `src/types/obsidian-augmentations.d.ts` to extend `App` with the internal members we access:
     - `commands: UnsafeCommands`
     - `hotkeyManager` (note lowercase, aligning to runtime)
@@ -60,7 +61,7 @@ Phase 2 — Typings migration to `obsidian`
 
 Phase 3 — Hotkey data model alignment
 
-- [ ] Update `hotkeyEntry` to extend `Hotkey` and add fields:
+- [x] Update `hotkeyEntry` to extend `Hotkey` and add fields:
   - `interface hotkeyEntry extends Hotkey { isCustom: boolean; backedModifiers?: string }`
 - [ ] Ensure `convertKeymapInfoToHotkey` returns a valid `Hotkey`:
   - Normalize `modifiers` to proper `Modifier[]`
@@ -69,7 +70,7 @@ Phase 3 — Hotkey data model alignment
 
 Phase 4 — Store API and component usages
 
-- [ ] Inspect `src/stores/activeKeysStore.svelte.ts` and reconcile methods used by components:
+- [x] Inspect `src/stores/activeKeysStore.svelte.ts` and reconcile methods used by components:
   - Add or export `handlePhysicalKeyDown` / `handlePhysicalKeyUp` if missing, or
   - Update component calls to the existing methods in the store.
 - [ ] Fix `KeyboardKey.svelte` types:

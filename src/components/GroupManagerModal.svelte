@@ -20,8 +20,8 @@
     plugin = getContext('keyboard-analyzer-plugin')
   }
 
-  const groupManager = plugin.groupManager
-  const commandsManager = plugin.commandsManager
+  const groupManager = plugin!.groupManager
+  const commandsManager = plugin!.commandsManager
 
   let groups = $derived.by(() => groupManager.getGroups())
 

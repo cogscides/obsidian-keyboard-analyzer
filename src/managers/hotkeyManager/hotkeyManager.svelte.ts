@@ -1,6 +1,5 @@
 import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
 import type {
-  UnsafeAppInterface,
   hotkeyEntry,
   commandEntry,
   UnsafeInternalPlugin,
@@ -41,8 +40,7 @@ export default class HotkeyManager {
   }
 
   private getCommands(): Command[] {
-    const unsafeApp = this.app as UnsafeAppInterface
-    const commands = unsafeApp.commands.commands
+    const commands = this.app.commands.commands
     return Object.values(commands)
   }
 
@@ -109,10 +107,9 @@ export default class HotkeyManager {
     if (internalModules.includes(pluginId)) return true
     if (coreNamespaces.includes(pluginId)) return true
     // Heuristic fallback: not a community plugin => internal
-    const unsafe = this.app as UnsafeAppInterface
-    const isCommunity = Boolean(unsafe.plugins.plugins[pluginId])
+    const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
     if (isCommunity) return false
-    const enabledInternal = unsafe.internalPlugins.getEnabledPlugins() as UnsafeInternalPlugin[]
+    const enabledInternal = this.app.internalPlugins.getEnabledPlugins() as UnsafeInternalPlugin[]
     const isInternal = enabledInternal.some(
       (p) => (p.instance as UnsafeInternalPluginInstance).id === pluginId
     )
@@ -120,12 +117,10 @@ export default class HotkeyManager {
   }
 
   private getPluginName(pluginId: string): string {
-    const plugin = (this.app as UnsafeAppInterface).plugins.plugins[pluginId]
+    const plugin = this.app.plugins.plugins[pluginId]
     if (plugin) return plugin.manifest.name
 
-    const internalPlugins = (
-      this.app as UnsafeAppInterface
-    ).internalPlugins.getEnabledPlugins()
+      const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
 
     const internalPlugin = internalPlugins.find(
       (plugin) =>
@@ -144,9 +139,8 @@ export default class HotkeyManager {
     default: hotkeyEntry[]
     custom: hotkeyEntry[]
   } {
-    const unsafeApp = this.app as UnsafeAppInterface
-    const defaultHotkeys = unsafeApp.hotkeyManager.getDefaultHotkeys(id) || []
-    const customHotkeys = unsafeApp.hotkeyManager.customKeys[id] || []
+    const defaultHotkeys = this.app.hotkeyManager.getDefaultHotkeys(id) || []
+    const customHotkeys = this.app.hotkeyManager.customKeys[id] || []
 
     const processHotkeys = (
       hotkeys: KeymapInfo[],

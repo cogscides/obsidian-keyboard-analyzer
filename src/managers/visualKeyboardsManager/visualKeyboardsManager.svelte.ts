@@ -35,14 +35,14 @@ export class VisualKeyboardManager {
 
   private getProcessedLayout(src: KeyboardLayout): KeyboardLayout {
     const emu = getEmulatedOS()
+    const isLinux = (Platform as unknown as { isLinux?: boolean }).isLinux
     const os: 'macos' | 'windows' | 'linux' =
       emu === 'none'
         ? Platform.isMacOS
           ? 'macos'
-          : // @ts-expect-error -- `isLinux` exists at runtime
-            Platform.isLinux
-          ? 'linux'
-          : 'windows'
+          : isLinux
+            ? 'linux'
+            : 'windows'
         : emu
 
     const processedSections = src.sections.map((section) => ({
