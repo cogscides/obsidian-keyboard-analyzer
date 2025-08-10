@@ -2,7 +2,7 @@
 title: User-defined Hotkey Groups (manual)
 status: in_progress
 owner: "@agent"
-updated: 2025-08-09 23:05 UTC
+updated: 2025-08-10 02:25 UTC
 related: []
 ---
 
@@ -29,6 +29,9 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - [2025-08-09] Add-to-group UX: a folder-plus button on each command row opens a popover with search + checkboxes and inline “New group”.
 - [2025-08-09] Missing commands: display badge in group details; offer “Clean up” to remove stale ids.
 - [2025-08-09] Schema: add `settingsSchemaVersion` and migration from `0` to `1` to include groups.
+- [2025-08-10] Popover anchoring: render inline under the icon group; rely on row containers with `overflow: visible` to avoid clipping; avoid portal-to-body.
+- [2025-08-10] Icon visibility: keep star and folder icons visible while the popover is open to prevent jumpy positioning.
+- [2025-08-10] Alignment: align popover to the left edge of the icon group; add inline clear button to popover search.
 
 ## Non-Goals / Out of Scope
 - Cloud sync/sharing of groups (future: import/export JSON).
@@ -118,20 +121,20 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 
 ## Implementation Plan
 - Data & Stores
-  - [ ] Add `interfaces/groups.ts` with `HotkeyGroup`, `SmartQuery`, `GroupFilters`, `SortOption` types.
+  - [ ] Add `interfaces/groups.ts` with `HotkeyGroup`, `GroupFilters`, `SortOption` types.
   - [ ] Add `stores/groups.ts` (Svelte store) with CRUD, ordering, and persistence hooks.
-  - [ ] Add `managers/groupManager.ts` for higher-level operations and migrations.
+  - [x] Add `managers/groupManager` ordering + helpers (create unique id, rename, add/remove, move).
 
 - UI Components
-  - [ ] `Components/GroupSelector.svelte` (tabs + combobox)
-  - [ ] `Components/GroupManagerModal.svelte` (create/edit/manage with DnD ordering)
-  - [ ] `Components/AddToGroupPopover.svelte` (checkbox list + search + new group)
-  - [ ] Integrate selector into `views/KeyboardView.svelte` and wire defaults.
+  - [x] `Components/GroupSelector.svelte` (combobox; minimal manage entry)
+  - [x] `Components/GroupManagerModal.svelte` (DnD ordering; minimal)
+  - [x] `Components/AddToGroupPopover.svelte` (checkbox list + search + new group + clear button)
+  - [x] Integrate selector into search/menu and wire groups.
 
 - List Integration
-  - [ ] In All commands list component, add folder-plus action; open `AddToGroupPopover` anchored to row.
-  - [ ] Wire membership changes for manual groups; disable for smart groups with tooltip.
-  - [ ] Ensure added commands append to the end by default; provide optional “Add to top” in popover.
+  - [x] In All commands list component, add folder-plus action; open `AddToGroupPopover` anchored to icons.
+  - [x] Wire membership changes for manual groups.
+  - [ ] Provide optional “Add to top” in popover.
 
 - Commands & View Opening
   - [ ] Register generic `Open Group…` command.
@@ -179,3 +182,9 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - [ ] Wire selector and generic “Open Group…” command (owner: @agent)
 - [ ] Add list integration + popover (owner: @agent)
 - [ ] Validate in `test-vault/` across platforms
+
+## Progress Log
+- [2025-08-09 23:15 UTC] Scaffolded GroupSelector and GroupManagerModal with DnD reorder; added moveCommandInGroup/setGroupCommandOrder in GroupManager; integrated selector into SearchMenu.
+- [2025-08-10 01:50 UTC] Implemented AddToGroupPopover with search + checkboxes + new group; wired folder-plus action into commands list (grouped and flat); added group CRUD helpers (rename, unique create, remove from all, isCommandInGroup).
+- [2025-08-10 02:10 UTC] Fixed modal layering (z-index) to appear above list and pinned keyboard panel.
+- [2025-08-10 02:20 UTC] Anchored Add-to-group popover inline under icons; ensured `.setting-item-name` and `.setting-item-info` allow overflow; kept star/folder icons visible when popover open; aligned popover left; added clear button to popover search; resolved jumpiness on hover/scroll.

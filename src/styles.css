@@ -112,6 +112,13 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  overflow: visible; /* ensure inline popovers are not clipped */
+  position: relative; /* safe anchor context for children */
+}
+
+/* Ensure info container doesn't clip anchored popovers */
+#keyboard-component .setting-item-info {
+  overflow: visible;
 }
 
 /* Inline info icon styles for filter items */
@@ -184,10 +191,18 @@
 
 #keyboard-component .setting-item .star-icon {
   display: none;
+  line-height: 0;
 }
 
 #keyboard-component .setting-item:hover .star-icon {
   cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Keep action icons visible when row has active popover */
+#keyboard-component .setting-item.show-actions .star-icon,
+#keyboard-component .setting-item.show-actions .folder-plus-icon {
   display: flex;
   align-items: center;
 }
@@ -199,6 +214,23 @@
 #keyboard-component .setting-item.is-starred .star-icon {
   color: var(--text-accent);
   display: flex;
+}
+
+/* Add-to-group icon mirrors star behavior: hidden until hover */
+#keyboard-component .setting-item .folder-plus-icon {
+  display: none;
+  margin-left: 6px;
+  line-height: 0;
+}
+
+#keyboard-component .setting-item:hover .folder-plus-icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+#keyboard-component .setting-item .folder-plus-icon:hover {
+  color: var(--text-accent);
 }
 
 .shortcuts-wrapper {

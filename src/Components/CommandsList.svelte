@@ -2,7 +2,8 @@
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
-  import { Star as StarIcon, ChevronDown } from 'lucide-svelte'
+  import { Star as StarIcon, ChevronDown, FolderPlus as FolderPlusIcon } from 'lucide-svelte'
+  import AddToGroupPopover from './AddToGroupPopover.svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
@@ -101,6 +102,13 @@
     return collapsedPlugins.has(pluginName)
   }
 
+  // Add-to-group popover state
+  let openPopoverFor: string | null = $state(null)
+  function toggleAddToGroupPopover(event: MouseEvent, commandId: string) {
+    event.stopPropagation()
+    openPopoverFor = openPopoverFor === commandId ? null : commandId
+  }
+
   type PluginGroup = { pluginName: string; commands: commandEntry[]; isBuiltIn: boolean }
   let groupedByPlugin: PluginGroup[] = $derived.by(() => {
     // Track changes
@@ -187,13 +195,25 @@
                   <div
                     class="kbanalizer-setting-item setting-item compact"
                     class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
+                    class:show-actions={openPopoverFor === cmdEntry.id}
                   >
                     <div class="setting-item-info">
                       <div class="setting-item-name">
                         <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
                         <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                        <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
-                          <StarIcon size={16} />
+                        <div class="action-icons">
+                          <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
+                            <StarIcon size={16} />
+                          </div>
+                          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                          <div class="folder-plus-icon icon" title="Add to group" onclick={(e) => toggleAddToGroupPopover(e, cmdEntry.id)}>
+                            <FolderPlusIcon size={16} />
+                          </div>
+                          {#if openPopoverFor === cmdEntry.id}
+                            <span class="kb-popover-anchor">
+                              <AddToGroupPopover commandId={cmdEntry.id} onClose={() => (openPopoverFor = null)} />
+                            </span>
+                          {/if}
                         </div>
                       </div>
                       {#if groupSettings?.DisplayIDs}
@@ -228,6 +248,7 @@
           <div
             class="kbanalizer-setting-item setting-item"
             class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
+            class:show-actions={openPopoverFor === cmdEntry.id}
           >
             <div class="setting-item-info">
               <div class="setting-item-name">
@@ -241,8 +262,19 @@
                 {/if}
                 <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
-                  <StarIcon size={16} />
+                <div class="action-icons">
+                  <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
+                    <StarIcon size={16} />
+                  </div>
+                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                  <div class="folder-plus-icon icon" title="Add to group" onclick={(e) => toggleAddToGroupPopover(e, cmdEntry.id)}>
+                    <FolderPlusIcon size={16} />
+                  </div>
+                  {#if openPopoverFor === cmdEntry.id}
+                    <span class="kb-popover-anchor">
+                      <AddToGroupPopover commandId={cmdEntry.id} onClose={() => (openPopoverFor = null)} />
+                    </span>
+                  {/if}
                 </div>
               </div>
               {#if groupSettings?.DisplayIDs}
@@ -272,3 +304,11 @@
     {/if}
   </div>
 </div>
+
+<style>
+  /* Add-to-group popover anchored to icon group */
+  .action-icons { position: relative; display: inline-flex; align-items: center; overflow: visible; }
+  .kb-popover-anchor { position: relative; display: inline-block; overflow: visible; }
+  .folder-plus-icon { margin-left: 6px; cursor: pointer; opacity: 0.8; }
+  .folder-plus-icon:hover { opacity: 1; }
+</style>

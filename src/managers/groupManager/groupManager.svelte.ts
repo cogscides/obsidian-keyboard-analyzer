@@ -45,8 +45,9 @@ export default class GroupManager {
   }
 
   createGroup(groupName: string): void {
+    const id = this.slugifyUnique(groupName)
     const newGroup: CGroup = {
-      id: groupName.toLowerCase().replace(/\s+/g, '-'),
+      id,
       name: groupName,
       commandIds: [],
       excludedModules: [],
@@ -75,6 +76,14 @@ export default class GroupManager {
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
   }
 
+  removeCommandFromAllGroups(commandId: string): void {
+    const updatedGroups = this.groups.map((group) => ({
+      ...group,
+      commandIds: group.commandIds.filter((id) => id !== commandId),
+    }))
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
   getFeaturedCommandsByGroup(groupId: string): string[] {
     const group = this.getGroup(groupId)
     // filter commands in group by featuredCommandIDs from settings
@@ -96,6 +105,22 @@ export default class GroupManager {
       return group
     })
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  renameGroup(groupId: string, newName: string): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        return { ...group, name: newName }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Utility: does a given group contain the command id? */
+  isCommandInGroup(groupId: string, commandId: string): boolean {
+    const g = this.getGroup(groupId)
+    return !!g && g.commandIds.includes(commandId)
   }
 
   getGroupSettings(groupId: string): CGroupFilterSettings {
@@ -199,6 +224,64 @@ export default class GroupManager {
       return group
     })
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /**
+   * Reorder commands within a manual group by moving an item from one index to another.
+   * Persists the updated order to settings.
+   */
+  moveCommandInGroup(groupId: string, fromIndex: number, toIndex: number): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        const ids = [...group.commandIds]
+        if (
+          fromIndex < 0 ||
+          fromIndex >= ids.length ||
+          toIndex < 0 ||
+          toIndex >= ids.length
+        ) {
+          return group
+        }
+        const [moved] = ids.splice(fromIndex, 1)
+        ids.splice(toIndex, 0, moved)
+        return { ...group, commandIds: ids }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /**
+   * Replace the entire command order for a manual group with the provided list.
+   * Unknown ids are filtered out; missing ids are ignored.
+   */
+  setGroupCommandOrder(groupId: string, orderedIds: string[]): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        const set = new Set(group.commandIds)
+        const next = orderedIds.filter((id) => set.has(id))
+        return { ...group, commandIds: next }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  private slugifyUnique(name: string): string {
+    const base = name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\-]/g, '')
+      .slice(0, 60)
+      || 'group'
+    let id = base
+    let i = 1
+    const existing = new Set(this.groups.map((g) => String(g.id)))
+    while (existing.has(id)) {
+      id = `${base}-${i++}`
+    }
+    return id
   }
 }
 

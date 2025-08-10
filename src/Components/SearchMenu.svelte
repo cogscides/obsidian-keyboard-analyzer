@@ -250,13 +250,10 @@
     selectedGroup
     handleSearchInput()
   })
+  import GroupSelector from './GroupSelector.svelte'
 </script>
 
-<select class="dropdown mt-4" bind:value={selectedGroup}>
-  {#each groupManager.getGroups() as group}
-    <option value={group.id}>{group.name}</option>
-  {/each}
-</select>
+<GroupSelector bind:selectedGroup />
 
 <!-- Developer logger removed in favor of toolbar inspector -->
 
