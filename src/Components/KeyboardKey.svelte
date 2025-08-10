@@ -1,3 +1,4 @@
+<!-- src/Components/KeyboardKey.svelte -->
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
@@ -74,39 +75,61 @@
   }
 
   let previewing = false
+  let hovered = false
   let storedKey = ''
+  let altKeydownListener: ((e: KeyboardEvent) => void) | null = null
   let altReleaseListener: ((e: KeyboardEvent) => void) | null = null
 
+  function startPreview() {
+    if (!previewing) {
+      storedKey = activeKeysStore.ActiveKey
+      altReleaseListener = (e: KeyboardEvent) => {
+        if (e.key === 'Alt') {
+          stopPreview()
+        }
+      }
+      window.addEventListener('keyup', altReleaseListener)
+    }
+    previewing = true
+    activeKeysStore.ActiveKey = key.code || key.label
+  }
+
+  function stopPreview() {
+    activeKeysStore.ActiveKey = storedKey
+    previewing = false
+    if (altReleaseListener) {
+      window.removeEventListener('keyup', altReleaseListener)
+      altReleaseListener = null
+    }
+  }
+
   function handleMouseEnter(event: MouseEvent) {
+    hovered = true
     const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
       key.code || key.label,
     )
-    if (event.altKey && !isModifierKey) {
-      if (!previewing) {
-        storedKey = activeKeysStore.ActiveKey
-        altReleaseListener = (e: KeyboardEvent) => {
-          if (e.key === 'Alt') {
-            activeKeysStore.ActiveKey = storedKey
-            previewing = false
-            window.removeEventListener('keyup', altReleaseListener!)
-            altReleaseListener = null
-          }
-        }
-        window.addEventListener('keyup', altReleaseListener)
+
+    if (!isModifierKey) {
+      if (event.altKey) {
+        startPreview()
       }
-      previewing = true
-      activeKeysStore.ActiveKey = key.code || key.label
+      altKeydownListener = (e: KeyboardEvent) => {
+        if (hovered && e.key === 'Alt') {
+          startPreview()
+        }
+      }
+      window.addEventListener('keydown', altKeydownListener)
     }
   }
 
   function handleMouseLeave() {
+    hovered = false
     if (previewing) {
-      activeKeysStore.ActiveKey = storedKey
-      previewing = false
-      if (altReleaseListener) {
-        window.removeEventListener('keyup', altReleaseListener)
-        altReleaseListener = null
-      }
+      stopPreview()
+    }
+    if (altKeydownListener) {
+      window.removeEventListener('keydown', altKeydownListener)
+      altKeydownListener = null
     }
   }
 </script>

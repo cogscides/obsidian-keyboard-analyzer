@@ -1,3 +1,4 @@
+<!-- src/Components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
   import { setContext, getContext } from 'svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
@@ -8,11 +9,7 @@
     KeyboardSection,
   } from '../interfaces/Interfaces'
   import KeyboardKey from '../Components/KeyboardKey.svelte'
-  import {
-    Coffee as CoffeeIcon,
-    Pin as PinIcon,
-    Settings as SettingsIcon,
-  } from 'lucide-svelte'
+  import { Coffee as CoffeeIcon, Pin as PinIcon, Settings as SettingsIcon } from 'lucide-svelte'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type CommandsManager from '../managers/commandsManager'
   import { GroupType } from '../managers/groupManager/groupManager.svelte'
@@ -46,10 +43,9 @@
   }
 
   $effect(() => {
-    const commands =
-      heatmapScope === 'all'
-        ? commandsManager.getCommandsForGroup(GroupType.All)
-        : visibleCommands
+    const commands = heatmapScope === 'all'
+      ? commandsManager.getCommandsForGroup(GroupType.All)
+      : visibleCommands
     visualKeyboardManager.calculateAndAssignWeights(commands)
   })
 
@@ -75,26 +71,18 @@
   let showInspector = $state(false)
   // Reflect live settings values
   const devOptionsEnabled = $derived(
-    Boolean(settingsManager.settings.enableDeveloperOptions),
+    Boolean(settingsManager.settings.enableDeveloperOptions)
   )
   let devLoggingEnabled = $derived(
-    Boolean(settingsManager.settings.devLoggingEnabled),
+    Boolean(settingsManager.settings.devLoggingEnabled)
   )
   let emulatedOS = $derived(
-    (settingsManager.settings.emulatedOS || 'none') as
-      | 'none'
-      | 'windows'
-      | 'macos'
-      | 'linux',
+    (settingsManager.settings.emulatedOS || 'none') as 'none' | 'windows' | 'macos' | 'linux'
   )
   import { setDevLoggingEnabled, setEmulatedOS } from '../utils/runtimeConfig'
 </script>
 
-<div
-  class="keyboard-panel {panelCollapsed ? 'collapsed' : ''} {isPinned
-    ? 'pinned'
-    : ''}"
->
+<div class="keyboard-panel {panelCollapsed ? 'collapsed' : ''} {isPinned ? 'pinned' : ''}">
   <div class="keyboard-toolbar" role="toolbar" aria-label="Keyboard controls">
     <div class="toolbar-left">
       <button
@@ -107,23 +95,18 @@
         <span class={`chevron ${panelCollapsed ? 'is-collapsed' : ''}`}>⌄</span>
         <span class="toggle-label">Keyboard</span>
       </button>
-      {#if !panelCollapsed}
-        <button
-          class="scope-toggle"
-          aria-label="Toggle heatmap scope"
-          aria-pressed={heatmapScope === 'all'}
-          title={heatmapScope === 'filtered'
-            ? 'Heatmap matches current filters/search'
-            : 'Heatmap counts all commands'}
-          onclick={() =>
-            (heatmapScope = heatmapScope === 'filtered' ? 'all' : 'filtered')}
-        >
-          <span class="scope-label">Show:</span>
-          <span class="scope-value"
-            >{heatmapScope === 'filtered' ? 'Filtered' : 'All'}</span
+        {#if !panelCollapsed}
+          <button
+            class="scope-toggle"
+            aria-label="Toggle heatmap scope"
+            aria-pressed={heatmapScope === 'all'}
+            title={heatmapScope === 'filtered' ? 'Heatmap matches current filters/search' : 'Heatmap counts all commands'}
+            onclick={() => (heatmapScope = heatmapScope === 'filtered' ? 'all' : 'filtered')}
           >
-        </button>
-      {/if}
+            <span class="scope-label">Show:</span>
+            <span class="scope-value">{heatmapScope === 'filtered' ? 'Filtered' : 'All'}</span>
+          </button>
+        {/if}
     </div>
     <div class="toolbar-right">
       {#if devOptionsEnabled}
@@ -167,26 +150,17 @@
                 </label>
               </div>
               <div class="dev-item">
-                <button
-                  class="link"
-                  onclick={() => (showInspector = !showInspector)}
-                >
+                <button class="link" onclick={() => (showInspector = !showInspector)}>
                   {showInspector ? 'Hide' : 'Show'} Active Keys inspector
                 </button>
               </div>
               <div class="dev-item">
-                <label class="inline" for="kbd-emu-os-select"
-                  >Emulated OS:</label
-                >
+                <label class="inline" for="kbd-emu-os-select">Emulated OS:</label>
                 <select
                   id="kbd-emu-os-select"
                   bind:value={emulatedOS}
                   oninput={(e: Event) => {
-                    const val = (e.currentTarget as HTMLSelectElement).value as
-                      | 'none'
-                      | 'windows'
-                      | 'macos'
-                      | 'linux'
+                    const val = (e.currentTarget as HTMLSelectElement).value as 'none'|'windows'|'macos'|'linux'
                     settingsManager.updateSettings({ emulatedOS: val })
                     setEmulatedOS(val)
                   }}
@@ -229,20 +203,11 @@
   </div>
 
   <div class="panel-content">
+
     {#if showInspector}
       <div class="dev-inspector" aria-live="polite">
-        <div class="dev-row">
-          <span class="k">Active key:</span><span class="v"
-            >{activeKeysStore.getDisplayKey() || '—'}</span
-          >
-        </div>
-        <div class="dev-row">
-          <span class="k">Modifiers:</span><span class="v"
-            >{activeKeysStore.ActiveModifiers.length
-              ? activeKeysStore.ActiveModifiers.join(' + ')
-              : '—'}</span
-          >
-        </div>
+        <div class="dev-row"><span class="k">Active key:</span><span class="v">{activeKeysStore.getDisplayKey() || '—'}</span></div>
+        <div class="dev-row"><span class="k">Modifiers:</span><span class="v">{activeKeysStore.ActiveModifiers.length ? activeKeysStore.ActiveModifiers.join(' + ') : '—'}</span></div>
       </div>
     {/if}
 
@@ -271,7 +236,6 @@
     {/if}
   </div>
 </div>
-
 <style>
   .keyboard-panel {
     display: block; /* sticky works reliably on block-level */
@@ -282,15 +246,8 @@
     padding: 8px 12px 12px 12px;
   }
 
-  .panel-content {
-    margin: 0 auto;
-    width: 100%;
-    max-width: 100%;
-  }
-  .keyboard-panel.collapsed .panel-content {
-    max-width: 816px;
-    width: 100%;
-  }
+  .panel-content { margin: 0 auto; width: 100%; max-width: 100%; }
+  .keyboard-panel.collapsed .panel-content { max-width: 816px; width: 100%; }
 
   .keyboard-toolbar {
     display: flex;
@@ -376,20 +333,10 @@
     border-color: var(--interactive-accent);
     color: var(--text-normal);
   }
-  .scope-toggle .scope-label {
-    margin-right: 4px;
-    color: var(--text-muted);
-  }
-  .scope-toggle .scope-value {
-    color: var(--text-normal);
-    font-weight: 600;
-  }
+  .scope-toggle .scope-label { margin-right: 4px; color: var(--text-muted); }
+  .scope-toggle .scope-value { color: var(--text-normal); font-weight: 600; }
 
-  .keyboard-surface {
-    overflow-x: auto;
-    overflow-y: hidden;
-    width: 100%;
-  }
+  .keyboard-surface { overflow-x: auto; overflow-y: hidden; width: 100%; }
   #keyboard-layout {
     display: grid;
     position: relative;
@@ -420,9 +367,7 @@
   }
 
   /* Developer menu */
-  .dev-menu {
-    position: relative;
-  }
+  .dev-menu { position: relative; }
   .dev-gear {
     display: inline-flex;
     align-items: center;
@@ -434,8 +379,7 @@
     color: var(--text-muted);
     cursor: pointer;
   }
-  .dev-gear:hover,
-  .dev-gear:focus-visible {
+  .dev-gear:hover, .dev-gear:focus-visible {
     border-color: var(--interactive-accent);
     color: var(--text-normal);
   }
@@ -451,27 +395,10 @@
     min-width: 220px;
     z-index: 1000;
   }
-  .dev-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 4px 2px;
-  }
-  .dev-item .inline {
-    margin-right: auto;
-    color: var(--text-muted);
-  }
-  .dev-item .link {
-    background: none;
-    border: none;
-    color: var(--interactive-accent);
-    cursor: pointer;
-    padding: 0;
-  }
-  .dev-item select {
-    width: 120px;
-  }
+  .dev-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 2px; }
+  .dev-item .inline { margin-right: auto; color: var(--text-muted); }
+  .dev-item .link { background: none; border: none; color: var(--interactive-accent); cursor: pointer; padding: 0; }
+  .dev-item select { width: 120px; }
 
   .dev-inspector {
     margin: 8px 0 0 0;
@@ -481,19 +408,9 @@
     border-radius: 6px;
     font-size: 12px;
   }
-  .dev-inspector .dev-row {
-    display: flex;
-    gap: 8px;
-    line-height: 1.4;
-  }
-  .dev-inspector .k {
-    color: var(--text-muted);
-    min-width: 84px;
-  }
-  .dev-inspector .v {
-    color: var(--text-normal);
-    font-weight: 600;
-  }
+  .dev-inspector .dev-row { display: flex; gap: 8px; line-height: 1.4; }
+  .dev-inspector .k { color: var(--text-muted); min-width: 84px; }
+  .dev-inspector .v { color: var(--text-normal); font-weight: 600; }
 
   .pin-toggle {
     display: inline-flex;
