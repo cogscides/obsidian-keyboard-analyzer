@@ -36,7 +36,14 @@ export class VisualKeyboardManager {
   private getProcessedLayout(src: KeyboardLayout): KeyboardLayout {
     const emu = getEmulatedOS()
     const os: 'macos' | 'windows' | 'linux' =
-      emu === 'macos' ? 'macos' : emu === 'linux' ? 'linux' : Platform.isMacOS ? 'macos' : 'windows'
+      emu === 'none'
+        ? Platform.isMacOS
+          ? 'macos'
+          : // @ts-expect-error -- `isLinux` exists at runtime
+            Platform.isLinux
+          ? 'linux'
+          : 'windows'
+        : emu
 
     const processedSections = src.sections.map((section) => ({
       ...section,
@@ -227,6 +234,11 @@ export class VisualKeyboardManager {
       Object.entries(symbolToCode).map(([sym, code]) => [code, sym])
     )
     if (key in codeToSymbol) out.add(codeToSymbol[key])
+    // Letters and digits ↔ code aliases (e.g., 'a' ↔ 'keya', '1' ↔ 'digit1')
+    if (/^[a-z]$/.test(key)) out.add(`key${key}`)
+    if (/^key[a-z]$/.test(key)) out.add(key.slice(3))
+    if (/^[0-9]$/.test(key)) out.add(`digit${key}`)
+    if (/^digit[0-9]$/.test(key)) out.add(key.slice(5))
     return Array.from(out)
   }
 
@@ -319,8 +331,13 @@ export class VisualKeyboardManager {
     }
 
     const lowerKey = (previewKey || '').toLowerCase()
-    if (this.keyStates[lowerKey] && this.keyStates[lowerKey].state !== 'active') {
-      this.keyStates[lowerKey].state = 'hover'
+    const aliases = this.resolveKeyAliases(lowerKey)
+    for (const alias of aliases) {
+      const state = this.keyStates[alias]
+      if (state && state.state !== 'active') {
+        state.state = 'hover'
+        break
+      }
     }
 
     // Normalize incoming modifiers into abstract names used by normalizeModifier
