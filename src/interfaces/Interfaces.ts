@@ -45,6 +45,14 @@ export interface Key {
   width?: number
   height?: number
   smallText?: boolean
+  // OS-specific modifier role (assigned during layout processing)
+  logicalModifier?: 'Control' | 'Alt' | 'Shift' | 'Meta'
+  // Optional per-OS configuration (single JSON source)
+  os?: {
+    macos?: { label?: string; code?: string; unicode?: string; modifier?: 'Control' | 'Alt' | 'Shift' | 'Meta' }
+    windows?: { label?: string; code?: string; unicode?: string; modifier?: 'Control' | 'Alt' | 'Shift' | 'Meta' }
+    linux?: { label?: string; code?: string; unicode?: string; modifier?: 'Control' | 'Alt' | 'Shift' | 'Meta' }
+  }
 }
 
 export interface KeyboardSection {

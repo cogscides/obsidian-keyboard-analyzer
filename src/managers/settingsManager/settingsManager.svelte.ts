@@ -40,6 +40,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   enableDeveloperOptions: false,
   devLoggingEnabled: false,
   emulatedOS: 'none',
+  useBakedKeyNames: true,
 }
 
 export default class SettingsManager {

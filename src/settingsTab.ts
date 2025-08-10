@@ -66,6 +66,18 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
           setEmulatedOS(os)
         })
       })
+
+    // Baked key display names (dev-facing toggle)
+    new Setting(containerEl)
+      .setName('Use baked key names')
+      .setDesc('Show human-friendly key names (e.g., Backspace, Up Arrow, Cmd). Turn off to debug raw keys/glyphs.')
+      .addToggle((toggle) => {
+        toggle.setValue(
+          !!this.plugin.settingsManager.getSetting('useBakedKeyNames')
+        )
+        toggle.onChange((value) => {
+          this.plugin.settingsManager.updateSettings({ useBakedKeyNames: value })
+        })
+      })
   }
 }
-

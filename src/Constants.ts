@@ -1,10 +1,6 @@
 // src/Constants.ts
 
-import type {
-  KeyboardLayout,
-  KeyboardSection,
-  Key,
-} from './interfaces/Interfaces'
+import type { KeyboardLayout } from './interfaces/Interfaces'
 
 export const VIEW_TYPE_SHORTCUTS_ANALYZER = 'keyboard-shortcuts-visualization'
 
@@ -101,6 +97,12 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
             win_unicode: 'Ctrl',
             mac_unicode: '⌃',
             width: 1.5,
+            logicalModifier: 'Control',
+            os: {
+              macos: { modifier: 'Control' },
+              windows: { modifier: 'Control' },
+              linux: { modifier: 'Control' },
+            },
           },
           {
             label: 'Alt',
@@ -108,6 +110,12 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
             win_unicode: 'Alt',
             mac_unicode: '⌥',
             width: 1.5,
+            logicalModifier: 'Alt',
+            os: {
+              macos: { modifier: 'Alt' },
+              windows: { modifier: 'Alt' },
+              linux: { modifier: 'Alt' },
+            },
           },
           {
             label: 'Meta',
@@ -115,6 +123,11 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
             win_unicode: '⊞',
             mac_unicode: '⌘',
             width: 1.5,
+            os: {
+              macos: { modifier: 'Meta', unicode: '⌘', label: 'Meta' },
+              windows: { modifier: undefined, unicode: 'Win', label: 'Win' },
+              linux: { modifier: undefined, unicode: 'Win', label: 'Win' },
+            },
           },
           { label: ' ', code: 'Space', unicode: '⎵', width: 6 },
           {
@@ -123,6 +136,11 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
             win_unicode: '⊞',
             mac_unicode: '⌘',
             width: 1.5,
+            os: {
+              macos: { modifier: 'Meta', unicode: '⌘', label: 'Meta' },
+              windows: { modifier: undefined, unicode: 'Win', label: 'Win' },
+              linux: { modifier: undefined, unicode: 'Win', label: 'Win' },
+            },
           },
           {
             label: 'Alt',
@@ -130,6 +148,12 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
             win_unicode: 'Alt',
             mac_unicode: '⌥',
             width: 1.5,
+            logicalModifier: 'Alt',
+            os: {
+              macos: { modifier: 'Alt' },
+              windows: { modifier: 'Alt' },
+              linux: { modifier: 'Alt' },
+            },
           },
           {
             label: 'Control',
@@ -137,6 +161,12 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
             win_unicode: 'Ctrl',
             mac_unicode: '⌃',
             width: 1.5,
+            logicalModifier: 'Control',
+            os: {
+              macos: { modifier: 'Control' },
+              windows: { modifier: 'Control' },
+              linux: { modifier: 'Control' },
+            },
           },
         ],
       ],
@@ -214,3 +244,5 @@ export const UNIFIED_KEYBOARD_LAYOUT: KeyboardLayout = {
     },
   ],
 }
+
+// Per-key OS-specific configuration is defined inline on each Key via `os` field.

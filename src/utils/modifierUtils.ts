@@ -63,6 +63,31 @@ export function convertModifiers(modifiers: string[]): Modifier[] {
   return modifiers.map(convertModifier)
 }
 
+// Canonicalize modifiers for the current OS (emulation-aware)
+// - On macOS: keep Meta; on Windows/Linux: treat Meta/Cmd as Ctrl; Option→Alt.
+export function platformizeModifier(mod: string): Modifier {
+  const m = String(mod)
+  if (isMac()) {
+    if (m === 'Mod') return 'Meta'
+    if (m === 'Control' || m === 'Ctrl') return 'Ctrl'
+    if (m === 'Alt' || m === 'Option') return 'Alt'
+    if (m === 'Meta' || m === 'Cmd' || m === 'Win') return 'Meta'
+    if (m === 'Shift') return 'Shift'
+    return (m as Modifier)
+  }
+  // Windows/Linux
+  if (m === 'Mod') return 'Ctrl'
+  if (m === 'Meta' || m === 'Cmd') return 'Ctrl'
+  if (m === 'Option') return 'Alt'
+  if (m === 'Control') return 'Ctrl'
+  if (m === 'Win') return 'Meta' // keep distinct bucket name if needed
+  return (m as Modifier)
+}
+
+export function platformizeModifiers(mods: string[] | Modifier[]): Modifier[] {
+  return (mods as string[]).map(platformizeModifier)
+}
+
 export function unconvertModifiers(modifiers: Modifier[]): string[] {
   return modifiers.map(unconvertModifier)
 }

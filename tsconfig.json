@@ -15,7 +15,7 @@
     "strict": true,
     "target": "es6",
     "useDefineForClassFields": true,
-    "types": ["svelte", "node"]
+    "types": ["obsidian-typings", "svelte", "node"]
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
 }

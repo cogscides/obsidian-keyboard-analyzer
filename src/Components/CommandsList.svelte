@@ -9,6 +9,7 @@
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
   import { convertModifiers } from '../utils/modifierUtils'
+  import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
 
   interface Props {
     filteredCommands: commandEntry[]
@@ -49,6 +50,9 @@
   })
 
   function renderHotkey(hotkey: hotkeyEntry) {
+    if (settingsManager.settings.useBakedKeyNames) {
+      return formatHotkeyBaked(hotkey)
+    }
     return hotkeyManager.renderHotkey(hotkey)
   }
 

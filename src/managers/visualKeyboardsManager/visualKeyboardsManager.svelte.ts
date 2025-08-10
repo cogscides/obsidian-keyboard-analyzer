@@ -1,6 +1,6 @@
 import { Platform, type Modifier } from 'obsidian'
 import { getEmulatedOS } from '../../utils/runtimeConfig'
-import { UNIFIED_KEYBOARD_LAYOUT } from '../../Constants'
+import { KEYBOARD_LAYOUTS, UNIFIED_KEYBOARD_LAYOUT } from '../../Constants'
 import type {
   KeyboardLayout,
   Key,
@@ -25,9 +25,10 @@ import logger from '../../utils/logger'
 export class VisualKeyboardManager {
   public layout: KeyboardLayout = $state(UNIFIED_KEYBOARD_LAYOUT)
   public keyStates: Record<string, KeyboardKeyState> = $state({})
+  // Helper map for OS-aware modifier roles by event.code
+  private codeToObsidianModifier: Record<string, 'Control' | 'Alt' | 'Shift' | 'Meta'> = {}
 
   constructor() {
-    // Prepare layout with OS-specific ordering (e.g., swap Win/Alt on Windows/Linux)
     this.layout = this.getProcessedLayout(UNIFIED_KEYBOARD_LAYOUT)
     this.initializeKeyStates()
   }
@@ -42,30 +43,32 @@ export class VisualKeyboardManager {
       })),
     }
 
-    // If not macOS, swap Alt and Meta positions in the bottom row of the main section
     const emu = getEmulatedOS()
     const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
-    if (!isMac) {
-      const main = layout.sections.find((s) => s.name === 'main')
-      if (main && main.rows[5]) {
-        const row = main.rows[5]
-        // Expect order: ControlLeft, AltLeft, MetaLeft, Space, MetaRight, AltRight, ControlRight
-        // Desired Windows/Linux order: ControlLeft, MetaLeft, AltLeft, Space, AltRight, MetaRight, ControlRight
-        const idxAltL = row.findIndex((k) => k.code === 'AltLeft')
-        const idxMetaL = row.findIndex((k) => k.code === 'MetaLeft')
-        if (idxAltL !== -1 && idxMetaL !== -1 && idxAltL < idxMetaL) {
-          // Swap positions so MetaLeft precedes AltLeft
-          ;[row[idxAltL], row[idxMetaL]] = [row[idxMetaL], row[idxAltL]]
-        }
-        const idxAltR = row.findIndex((k) => k.code === 'AltRight')
-        const idxMetaR = row.findIndex((k) => k.code === 'MetaRight')
-        if (idxAltR !== -1 && idxMetaR !== -1 && idxMetaR < idxAltR) {
-          // Swap so AltRight precedes MetaRight (mirror left side intent)
-          ;[row[idxAltR], row[idxMetaR]] = [row[idxMetaR], row[idxAltR]]
+    const os: 'macos' | 'windows' | 'linux' = isMac ? 'macos' : emu === 'linux' ? 'linux' : 'windows'
+    // Apply per-OS key config at key level and assign modifier roles
+    for (const section of layout.sections) {
+      for (const row of section.rows) {
+        for (const key of row) {
+          if (!key || !key.code) continue
+          const cfg = key.os?.[os]
+          if (cfg) {
+            if (cfg.label) key.label = cfg.label
+            if (cfg.code) key.code = cfg.code
+            if (cfg.unicode) key.unicode = cfg.unicode
+            if (typeof cfg.modifier !== 'undefined') key.logicalModifier = cfg.modifier
+          }
+          // Fallback derive modifier by code + OS if not specified
+          if (typeof key.logicalModifier === 'undefined') {
+            const lc = (key.code || '').toLowerCase()
+            if (lc.startsWith('control')) key.logicalModifier = 'Control'
+            else if (lc.startsWith('alt')) key.logicalModifier = 'Alt'
+            else if (lc.startsWith('shift')) key.logicalModifier = 'Shift'
+            else if (lc.startsWith('meta')) key.logicalModifier = isMac ? 'Meta' : undefined
+          }
         }
       }
     }
-
     return layout
   }
 
@@ -84,6 +87,8 @@ export class VisualKeyboardManager {
                 weight: 0,
               }
               this.keyStates[stateKey] = keyState
+              // Populate code→modifier mapping for OS-aware handling
+              if (key.code) this.assignModifierRole(key)
               } else {
                 logger.warn('Invalid key found:', key)
               }
@@ -93,16 +98,43 @@ export class VisualKeyboardManager {
     })
   }
 
+  private assignModifierRole(key: Key) {
+    const code = key.code || ''
+    const role = key.logicalModifier
+    if (!role) {
+      delete this.codeToObsidianModifier[code]
+      return
+    }
+    this.codeToObsidianModifier[code] = role
+  }
+
+  public mapCodeToObsidianModifier(codeOrLabel: string): ('Control' | 'Alt' | 'Shift' | 'Meta') | undefined {
+    // Prefer direct code lookup
+    if (this.codeToObsidianModifier[codeOrLabel]) return this.codeToObsidianModifier[codeOrLabel]
+    // Try normalized by capitalized code form
+    const norm = codeOrLabel
+    if (this.codeToObsidianModifier[norm]) return this.codeToObsidianModifier[norm]
+    // Handle common code names
+    if (/^Control(Left|Right)$/.test(codeOrLabel)) return 'Control'
+    if (/^Alt(Left|Right)$/.test(codeOrLabel)) return 'Alt'
+    if (/^Shift(Left|Right)$/.test(codeOrLabel)) return 'Shift'
+    if (/^Meta(Left|Right)$/.test(codeOrLabel)) {
+      const emu = getEmulatedOS()
+      const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
+      return isMac ? 'Meta' : undefined
+    }
+    return undefined
+  }
+
   private getUnicodeForKey(key: Key): string {
     if (!key) return ''
+    // Prefer explicit unicode (possibly set via Key.os[os])
+    if (key.unicode) return key.unicode
     const emu = getEmulatedOS()
     const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
-    if (isMac && key.mac_unicode) {
-      return key.mac_unicode
-    } else if (!isMac && key.win_unicode) {
-      return key.win_unicode
-    }
-    return key.unicode || key.label || ''
+    if (isMac && key.mac_unicode) return key.mac_unicode
+    if (!isMac && key.win_unicode) return key.win_unicode
+    return key.label || ''
   }
 
   public calculateAndAssignWeights(visibleCommands: commandEntry[] | undefined | null) {
@@ -118,22 +150,29 @@ export class VisualKeyboardManager {
     for (const command of cmds) {
       const hkList = Array.isArray(command.hotkeys) ? command.hotkeys : []
       for (const hotkey of hkList) {
-        const key = (hotkey.key || '').toLowerCase()
-        if (key in keyWeights) {
-          keyWeights[key]++
+        const keyRaw = (hotkey.key || '').toLowerCase()
+        const aliases = this.resolveKeyAliases(keyRaw)
+        for (const alias of aliases) {
+          if (alias in keyWeights) {
+            keyWeights[alias] = (keyWeights[alias] || 0) + 1
+            break
+          }
         }
         const mods = Array.isArray(hotkey.modifiers) ? hotkey.modifiers : []
         for (const modifier of mods) {
           const modKey = modifier.toLowerCase()
           // Normalize modifier names into buckets that match visual keys
           let bucket: string | null = null
+          const emu = getEmulatedOS()
+          const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
           if (modKey === 'mod') {
-            const emu = getEmulatedOS()
-            const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
             bucket = isMac ? 'meta' : 'control'
           } else if (modKey === 'ctrl' || modKey === 'control') {
             bucket = 'control'
-          } else if (modKey === 'cmd' || modKey === 'meta' || modKey === 'win') {
+          } else if (modKey === 'cmd' || modKey === 'meta') {
+            // When emulating Windows/Linux, treat 'cmd'/'meta' defaults as Control for weights
+            bucket = isMac ? 'meta' : 'control'
+          } else if (modKey === 'win') {
             bucket = 'meta'
           } else if (modKey === 'alt' || modKey === 'option') {
             bucket = 'alt'
@@ -171,6 +210,36 @@ export class VisualKeyboardManager {
     // Optionally log with dev flag; disabled by default to reduce spam
     // logger.debug('Key Weights:', keyWeights)
     // logger.debug('Key States:', this.keyStates)
+  }
+
+  private resolveKeyAliases(k: string): string[] {
+    // Try multiple representations to match state keys from layout
+    const out = new Set<string>()
+    const key = (k || '').toLowerCase()
+    if (!key) return []
+    out.add(key)
+    // Symbol → code aliases used by layout
+    const symbolToCode: Record<string, string> = {
+      '`': 'backquote',
+      '-': 'minus',
+      '=': 'equal',
+      '[': 'bracketleft',
+      ']': 'bracketright',
+      ';': 'semicolon',
+      "'": 'quote',
+      ',': 'comma',
+      '.': 'period',
+      '/': 'slash',
+      '\\': 'backslash',
+      ' ': 'space',
+    }
+    if (key in symbolToCode) out.add(symbolToCode[key])
+    // code → symbol
+    const codeToSymbol: Record<string, string> = Object.fromEntries(
+      Object.entries(symbolToCode).map(([sym, code]) => [code, sym])
+    )
+    if (key in codeToSymbol) out.add(codeToSymbol[key])
+    return Array.from(out)
   }
 
   public getKeyState(key: Key): KeyboardKeyState {

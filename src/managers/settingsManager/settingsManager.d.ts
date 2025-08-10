@@ -13,6 +13,8 @@ export interface PluginSettings {
   enableDeveloperOptions?: boolean
   devLoggingEnabled?: boolean
   emulatedOS?: 'none' | 'windows' | 'macos' | 'linux'
+  // Debuggable presentation toggle for key display names
+  useBakedKeyNames?: boolean
 }
 
 export enum FilterSettingsKeys {

@@ -25,6 +25,7 @@
   // @ts-ignore: No type declaration for clickOutside
   import { clickOutside } from '../utils/clickOutside'
   import logger from '../utils/logger'
+  import { getBakedModifierLabel, getBakedKeyLabel } from '../utils/normalizeKeyDisplay'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -262,7 +263,9 @@
       {#each PressedKeysStore.sortedModifiers as modifier}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <kbd class="modifier" onclick={() => handleModifierChipClick(modifier)}>
-          {modifier}
+          {settingsManager.settings.useBakedKeyNames
+            ? getBakedModifierLabel(modifier)
+            : modifier}
         </kbd>
       {/each}
       {#if PressedKeysStore.activeKey}
@@ -272,7 +275,9 @@
           onclick={() =>
             PressedKeysStore.handleKeyClick(PressedKeysStore.activeKey)}
         >
-          {PressedKeysStore.getDisplayKey()}
+          {settingsManager.settings.useBakedKeyNames
+            ? getBakedKeyLabel(PressedKeysStore.activeKey)
+            : PressedKeysStore.getDisplayKey()}
         </kbd>
       {/if}
     </div>

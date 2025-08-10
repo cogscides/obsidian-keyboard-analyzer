@@ -12,6 +12,7 @@ import {
   modifiersToString,
   areModifiersEqual,
   isKeyMatch,
+  platformizeModifiers,
 } from '../../utils/modifierUtils'
 
 export default class HotkeyManager {
@@ -230,16 +231,19 @@ export default class HotkeyManager {
     activeModifiers: Modifier[],
     activeKey: string
   ): boolean {
+    // Normalize both sides so 'Mod' matches 'Ctrl' on Windows/Linux and 'Meta' on macOS
+    const normalizedActive = sortModifiers(platformizeModifiers(activeModifiers as unknown as string[]))
+    const normalizedHotkey = sortModifiers(platformizeModifiers(hotkey.modifiers as unknown as string[]))
     const modifiersMatch = areModifiersEqual(
-      sortModifiers(activeModifiers),
-      sortModifiers(hotkey.modifiers)
+      normalizedActive,
+      normalizedHotkey
     )
     const keyMatch = !activeKey || isKeyMatch(activeKey, hotkey.key)
     return modifiersMatch && keyMatch
   }
 
   public renderHotkey(hotkey: hotkeyEntry): string {
-    const bakedModifiers = convertModifiers(hotkey.modifiers)
+    const bakedModifiers = platformizeModifiers(hotkey.modifiers)
     return [...bakedModifiers, hotkey.key].join(' + ')
   }
 

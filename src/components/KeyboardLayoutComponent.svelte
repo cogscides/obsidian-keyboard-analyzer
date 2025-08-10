@@ -137,13 +137,27 @@
                 </label>
               </div>
               <div class="dev-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(settingsManager.settings.useBakedKeyNames)}
+                    oninput={(e: Event) => {
+                      const v = (e.currentTarget as HTMLInputElement).checked
+                      settingsManager.updateSettings({ useBakedKeyNames: v })
+                    }}
+                  />
+                  <span>Use baked key names</span>
+                </label>
+              </div>
+              <div class="dev-item">
                 <button class="link" onclick={() => (showInspector = !showInspector)}>
                   {showInspector ? 'Hide' : 'Show'} Active Keys inspector
                 </button>
               </div>
               <div class="dev-item">
-                <label class="inline">Emulated OS:</label>
+                <label class="inline" for="kbd-emu-os-select">Emulated OS:</label>
                 <select
+                  id="kbd-emu-os-select"
                   bind:value={emulatedOS}
                   oninput={(e: Event) => {
                     const val = (e.currentTarget as HTMLSelectElement).value as 'none'|'windows'|'macos'|'linux'

@@ -1,4 +1,6 @@
 import type { Modifier, App } from 'obsidian'
+import { Platform } from 'obsidian'
+import { getEmulatedOS } from '../utils/runtimeConfig'
 import {
   convertModifier,
   getDisplayModifier,
@@ -74,8 +76,13 @@ export class ActiveKeysStore {
   }
 
   public handleKeyClick(keyIdentifier: string) {
+    // First, try OS-aware modifier mapping by code
+    const obsidianModifier = this.visualKeyboardManager.mapCodeToObsidianModifier(keyIdentifier)
+    if (obsidianModifier) {
+      this.toggleModifier(obsidianModifier as unknown as ModifierKey)
+      return
+    }
     const normalizedKey = this.normalizeKeyIdentifier(keyIdentifier)
-
     if (this.isModifier(normalizedKey)) {
       this.toggleModifier(normalizedKey as ModifierKey)
     } else {
@@ -122,8 +129,17 @@ export class ActiveKeysStore {
       AltRight: 'Alt',
       ShiftLeft: 'Shift',
       ShiftRight: 'Shift',
-      MetaLeft: 'Meta',
-      MetaRight: 'Meta',
+      // OS-specific mapping for Meta: on Windows/Linux treat as 'Win' (not an Obsidian modifier)
+      MetaLeft: (() => {
+        const emu = getEmulatedOS()
+        const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
+        return isMac ? 'Meta' : 'Win'
+      })(),
+      MetaRight: (() => {
+        const emu = getEmulatedOS()
+        const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
+        return isMac ? 'Meta' : 'Win'
+      })(),
     }
     return keyMap[keyIdentifier] || keyIdentifier
   }
