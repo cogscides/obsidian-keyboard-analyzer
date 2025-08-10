@@ -331,8 +331,13 @@ export class VisualKeyboardManager {
     }
 
     const lowerKey = (previewKey || '').toLowerCase()
-    if (this.keyStates[lowerKey] && this.keyStates[lowerKey].state !== 'active') {
-      this.keyStates[lowerKey].state = 'hover'
+    const aliases = this.resolveKeyAliases(lowerKey)
+    for (const alias of aliases) {
+      const state = this.keyStates[alias]
+      if (state && state.state !== 'active') {
+        state.state = 'hover'
+        break
+      }
     }
 
     // Normalize incoming modifiers into abstract names used by normalizeModifier

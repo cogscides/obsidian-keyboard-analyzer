@@ -73,6 +73,24 @@
       activeKeysStore.activeModifiers,
     )
   }
+
+  let previewing = false
+  let storedKey = ''
+
+  function handleMouseEnter() {
+    if (activeKeysStore.ActiveModifiers.length > 0) {
+      if (!previewing) storedKey = activeKeysStore.ActiveKey
+      previewing = true
+      activeKeysStore.ActiveKey = key.code || key.label
+    }
+  }
+
+  function handleMouseLeave() {
+    if (previewing) {
+      activeKeysStore.ActiveKey = storedKey
+      previewing = false
+    }
+  }
 </script>
 
 {#if displayLabel === 'empty'}
@@ -97,6 +115,8 @@
     class:small-text={key.smallText}
     style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : (keyState.state === 'inactive' || keyState.state === 'possible') && keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}`}
     onclick={() => handleClick(key)}
+    onmouseenter={handleMouseEnter}
+    onmouseleave={handleMouseLeave}
   >
     {displayLabel}
     <!-- <span class="debug-weight font-300 text-[10px]">{keyState.weight}</span> --var(--interactive-accent); -->
