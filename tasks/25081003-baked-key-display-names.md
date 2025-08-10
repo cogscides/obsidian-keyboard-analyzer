@@ -2,7 +2,7 @@
 title: Baked key display names in search and commands list
 status: in_progress
 owner: "@agent"
-updated: 2025-08-10 14:45 UTC
+updated: 2025-08-10 18:30 UTC
 related:
   - [[25081001-visual-keyboard-keys-and-hover-highlights]]
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
@@ -48,6 +48,7 @@ Definition of done:
 - [2025-08-10 17:15 UTC] Introduced platformized modifiers: transform command hotkeys and active modifiers to OS-appropriate forms (Meta→Ctrl on Windows) for rendering and matching. Commands list no longer clusters Meta on Windows emulation; Ctrl shows expected commands.
 - [2025-08-10 17:35 UTC] Reverted per-OS layout copies and override structures. Introduced Key-level `os` config (single JSON) and apply per-OS label/code/unicode/modifier at init. Kept minimal logic and removed ad-hoc swaps.
 - [2025-08-10 17:50 UTC] Updated `README.md` to include a "Custom Keyboard Layouts" section, documenting the Key-level `os` configuration for end-users.
+- [2025-08-10 18:20 UTC] Added letter and digit code aliases in `VisualKeyboardManager` to restore heatmaps for literal keys.
 
 ## Decisions
 - [2025-08-10] Implemented `normalizeKeyDisplay` utility to provide platform-aware, text-first labels for keys and modifiers.

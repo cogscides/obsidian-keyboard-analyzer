@@ -227,6 +227,11 @@ export class VisualKeyboardManager {
       Object.entries(symbolToCode).map(([sym, code]) => [code, sym])
     )
     if (key in codeToSymbol) out.add(codeToSymbol[key])
+    // Letters and digits ↔ code aliases (e.g., 'a' ↔ 'keya', '1' ↔ 'digit1')
+    if (/^[a-z]$/.test(key)) out.add(`key${key}`)
+    if (/^key[a-z]$/.test(key)) out.add(key.slice(3))
+    if (/^[0-9]$/.test(key)) out.add(`digit${key}`)
+    if (/^digit[0-9]$/.test(key)) out.add(key.slice(5))
     return Array.from(out)
   }
 
