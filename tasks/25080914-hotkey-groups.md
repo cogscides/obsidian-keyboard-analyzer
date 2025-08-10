@@ -131,9 +131,9 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
   - [x] Add `managers/groupManager` ordering + helpers (create unique id, rename, add/remove, move).
 
 - UI Components
-  - [x] `Components/GroupSelector.svelte` (combobox; minimal manage entry)
-  - [x] `Components/GroupManagerModal.svelte` (DnD ordering; minimal)
-  - [x] `Components/AddToGroupPopover.svelte` (checkbox list + search + new group + clear button)
+  - [x] `components/GroupSelector.svelte` (combobox; minimal manage entry)
+  - [x] `components/GroupManagerModal.svelte` (DnD ordering; minimal)
+  - [x] `components/AddToGroupPopover.svelte` (checkbox list + search + new group + clear button)
   - [x] Integrate selector into search/menu and wire groups.
 
 - List Integration
@@ -177,8 +177,8 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - Data bloat/performance → use ids and compact structures; debounce writes.
 
 ## Links
-- [[src/stores/groups.ts]] [[src/managers/groupManager.ts]] [[src/Components/GroupSelector.svelte]]
-- [[src/Components/GroupManagerModal.svelte]] [[src/Components/AddToGroupPopover.svelte]] [[src/interfaces/groups.ts]]
+- [[src/stores/groups.ts]] [[src/managers/groupManager.ts]] [[src/components/GroupSelector.svelte]]
+- [[src/components/GroupManagerModal.svelte]] [[src/components/AddToGroupPopover.svelte]] [[src/interfaces/groups.ts]]
 
 ## Next Steps
 - [ ] Confirm reorder UX (manager only vs also in main list)

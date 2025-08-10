@@ -1,4 +1,3 @@
-<!-- src/Components/KeyboardKey.svelte -->
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'

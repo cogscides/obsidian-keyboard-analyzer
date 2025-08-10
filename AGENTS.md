@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Source: `src/` (Svelte + TypeScript). Notable folders: `Components/`, `managers/`, `views/`, `utils/`, `stores/`, `interfaces/`.
+- Source: `src/` (Svelte + TypeScript). Notable folders: `components/`, `managers/`, `views/`, `utils/`, `stores/`, `interfaces/`.
 - Build output: configured in `vite.config.mts` to `../obsidian-keyboard-analyzer-dev/`.
 - Config: `tsconfig.json`, `uno.config.ts`, `biome.json`.
 - Assets: `public/`, styles in `src/styles.css` and UnoCSS utilities.
