@@ -73,6 +73,43 @@
       activeKeysStore.activeModifiers,
     )
   }
+
+  let previewing = false
+  let storedKey = ''
+  let altReleaseListener: ((e: KeyboardEvent) => void) | null = null
+
+  function handleMouseEnter(event: MouseEvent) {
+    const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
+      key.code || key.label,
+    )
+    if (event.altKey && !isModifierKey) {
+      if (!previewing) {
+        storedKey = activeKeysStore.ActiveKey
+        altReleaseListener = (e: KeyboardEvent) => {
+          if (e.key === 'Alt') {
+            activeKeysStore.ActiveKey = storedKey
+            previewing = false
+            window.removeEventListener('keyup', altReleaseListener!)
+            altReleaseListener = null
+          }
+        }
+        window.addEventListener('keyup', altReleaseListener)
+      }
+      previewing = true
+      activeKeysStore.ActiveKey = key.code || key.label
+    }
+  }
+
+  function handleMouseLeave() {
+    if (previewing) {
+      activeKeysStore.ActiveKey = storedKey
+      previewing = false
+      if (altReleaseListener) {
+        window.removeEventListener('keyup', altReleaseListener)
+        altReleaseListener = null
+      }
+    }
+  }
 </script>
 
 {#if displayLabel === 'empty'}
@@ -97,6 +134,8 @@
     class:small-text={key.smallText}
     style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : (keyState.state === 'inactive' || keyState.state === 'possible') && keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}`}
     onclick={() => handleClick(key)}
+    onmouseenter={handleMouseEnter}
+    onmouseleave={handleMouseLeave}
   >
     {displayLabel}
     <!-- <span class="debug-weight font-300 text-[10px]">{keyState.weight}</span> --var(--interactive-accent); -->
