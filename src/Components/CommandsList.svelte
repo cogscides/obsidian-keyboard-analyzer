@@ -2,7 +2,7 @@
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
-  import { Star as StarIcon, ChevronDown, FolderPlus as FolderPlusIcon } from 'lucide-svelte'
+  import { Star as StarIcon, ChevronDown, FolderPlus as FolderPlusIcon, Search as SearchIcon } from 'lucide-svelte'
   import AddToGroupPopover from './AddToGroupPopover.svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
@@ -39,16 +39,20 @@
   let groupSettings = $derived.by(() => {
     groupManager.groups
     const settings = groupManager.getGroupSettings(selectedGroup)
-    console.log('[KB] CommandsList groupSettings derived', {
-      selectedGroup,
-      settings,
-    })
     return settings
+  })
+
+  let groupIsEmpty = $derived.by(() => {
+    if (!selectedGroup || selectedGroup === 'all') return false
+    const g = groupManager.getGroup(selectedGroup)
+    return !g || (g.commandIds?.length || 0) === 0
   })
 
   function renderHotkey(hotkey: hotkeyEntry) {
     return hotkeyManager.renderHotkey(hotkey)
   }
+
+  let featuredIds = $derived.by(() => new Set(settingsManager.settings.featuredCommandIDs || []))
 
   function getDisplayCommandName(name: string, pluginName: string): string {
     const p = (pluginName || '').trim()
@@ -149,20 +153,28 @@
   }
 </script>
 
-<span>Selected Group: {selectedGroup}</span>
 <div
   id="hotkeys-wrapper"
   class="markdown-preview-sizer markdown-preview-section hotkey-settings-container"
 >
   <div class="hotkey-list-container">
     {#if filteredCommands.length === 0}
-      <div class="empty-state u-muted">
-        <div>No matching commands</div>
-        <ul>
-          <li>Try typing a different term</li>
-          <li>Toggle the key listener to filter by keys</li>
-          <li>Check filters or include built-in modules</li>
-        </ul>
+      <div class="empty-state" role="status" aria-live="polite">
+        <div class="empty-icon"><SearchIcon size={28} /></div>
+        {#if groupIsEmpty}
+          <div class="empty-title">This group is empty</div>
+          <div class="empty-subtitle">Add commands from the “All Commands” list using the folder icon, or manage groups.</div>
+        {:else}
+          <div class="empty-title">No matching commands</div>
+          <div class="empty-subtitle">Try a different term or adjust filters.</div>
+        {/if}
+        {#if !groupIsEmpty}
+          <ul class="empty-hints">
+            <li>Press Esc to clear keys</li>
+            <li>Use the Filter button to tweak results</li>
+            <li>Include built-ins if hidden</li>
+          </ul>
+        {/if}
       </div>
     {:else}
       {#if groupSettings?.GroupByPlugin}
@@ -194,7 +206,7 @@
                 {#each group.commands as cmdEntry (cmdEntry.id)}
                   <div
                     class="kbanalizer-setting-item setting-item compact"
-                    class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
+                    class:is-starred={featuredIds.has(cmdEntry.id)}
                     class:show-actions={openPopoverFor === cmdEntry.id}
                   >
                     <div class="setting-item-info">
@@ -245,9 +257,9 @@
         {/each}
       {:else}
         {#each filteredCommands as cmdEntry (cmdEntry.id)}
-          <div
-            class="kbanalizer-setting-item setting-item"
-            class:is-starred={commandsManager.featuredCommandIds.has(cmdEntry.id)}
+                  <div
+                    class="kbanalizer-setting-item setting-item"
+                    class:is-starred={featuredIds.has(cmdEntry.id)}
             class:show-actions={openPopoverFor === cmdEntry.id}
           >
             <div class="setting-item-info">
@@ -306,6 +318,26 @@
 </div>
 
 <style>
+  /* Centered, polished empty state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 220px;
+    padding: 24px;
+    margin: 24px auto;
+    max-width: 640px;
+    border: 1px dashed var(--indentation-guide);
+    border-radius: 12px;
+    background: var(--background-secondary);
+  }
+  .empty-icon { color: var(--text-muted); margin-bottom: 8px; }
+  .empty-title { font-weight: 600; margin-bottom: 4px; }
+  .empty-subtitle { color: var(--text-muted); margin-bottom: 12px; }
+  .empty-hints { color: var(--text-muted); text-align: left; margin: 0; padding-left: 18px; }
+
   /* Add-to-group popover anchored to icon group */
   .action-icons { position: relative; display: inline-flex; align-items: center; overflow: visible; }
   .kb-popover-anchor { position: relative; display: inline-block; overflow: visible; }

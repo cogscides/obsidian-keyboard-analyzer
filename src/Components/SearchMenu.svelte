@@ -106,16 +106,11 @@
     return groupManager.getGroupSettings(selectedGroup)
   })
 
-  $effect(() => {
-    const fs = filterSettings
-    logger.debug('SearchMenu filterSettings derived changed', {
-      selectedGroup,
-      filterSettings: fs,
-    })
-  })
+  // Quiet derived re-computations to avoid noisy consoles
+  $effect(() => { filterSettings; selectedGroup })
 
-  $inspect(plugin.settingsManager)
-  logger.debug('GroupManager try to find', selectedGroup, groupManager.getGroup(selectedGroup))
+  // Removed noisy $inspect to avoid dev console spam
+  // logger.debug('GroupManager try to find', selectedGroup, groupManager.getGroup(selectedGroup))
 
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
@@ -199,6 +194,14 @@
       }
       if (keyboardListenerIsActive) {
         keyboardListenerIsActive = false
+        // fall through to allow clearing keys below if any are active
+      }
+      // Clear active key/modifiers if present
+      if (PressedKeysStore.activeKey || PressedKeysStore.activeModifiers.length) {
+        PressedKeysStore.reset()
+        handleSearchInput()
+        e.stopPropagation()
+        e.preventDefault()
         return
       }
     }
@@ -211,13 +214,6 @@
   }
 
   function handleSearchInput() {
-    logger.debug('SearchMenu handleSearchInput', {
-      search,
-      activeModifiers: PressedKeysStore.activeModifiers,
-      activeKey: PressedKeysStore.activeKey,
-      selectedGroup,
-      filterSettings,
-    })
     onSearch(
       search,
       convertModifiers(PressedKeysStore.activeModifiers),

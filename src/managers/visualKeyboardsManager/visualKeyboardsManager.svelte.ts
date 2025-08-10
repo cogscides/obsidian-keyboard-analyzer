@@ -105,7 +105,8 @@ export class VisualKeyboardManager {
     return key.unicode || key.label || ''
   }
 
-  public calculateAndAssignWeights(visibleCommands: commandEntry[]) {
+  public calculateAndAssignWeights(visibleCommands: commandEntry[] | undefined | null) {
+    const cmds = Array.isArray(visibleCommands) ? visibleCommands : []
     const keyWeights: Record<string, number> = {}
 
     // Initialize weights to 0
@@ -114,13 +115,15 @@ export class VisualKeyboardManager {
     }
 
     // Calculate weights
-    for (const command of visibleCommands) {
-      for (const hotkey of command.hotkeys) {
-        const key = hotkey.key.toLowerCase()
+    for (const command of cmds) {
+      const hkList = Array.isArray(command.hotkeys) ? command.hotkeys : []
+      for (const hotkey of hkList) {
+        const key = (hotkey.key || '').toLowerCase()
         if (key in keyWeights) {
           keyWeights[key]++
         }
-        for (const modifier of hotkey.modifiers) {
+        const mods = Array.isArray(hotkey.modifiers) ? hotkey.modifiers : []
+        for (const modifier of mods) {
           const modKey = modifier.toLowerCase()
           // Normalize modifier names into buckets that match visual keys
           let bucket: string | null = null
@@ -165,9 +168,9 @@ export class VisualKeyboardManager {
       }
     }
 
-    // Debug log
-    logger.debug('Key Weights:', keyWeights)
-    logger.debug('Key States:', this.keyStates)
+    // Optionally log with dev flag; disabled by default to reduce spam
+    // logger.debug('Key Weights:', keyWeights)
+    // logger.debug('Key States:', this.keyStates)
   }
 
   public getKeyState(key: Key): KeyboardKeyState {

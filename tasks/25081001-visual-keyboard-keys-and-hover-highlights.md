@@ -21,7 +21,11 @@ Definition of done:
 
 ## Next Steps
 - [ ] Correct Windows bottom-row mapping for `Win` and `Alt` in keyboard layout/config.
-- [ ] Differentiate hover highlight vs search-active highlight (color or border style), ensure accessible contrast in light/dark.
+  - User note: they are placed correctly, but on Windows emulation `Meta` still be produced by clicking on Windows key. `Ctrl` modifier has just few shorcuts.
+- [x] Differentiate hover highlight vs search-active highlight (color or border style), ensure accessible contrast in light/dark.
+- Visual keyboard's - Other keys:
+  - the backspace key `⌫` produces the `⌫` symbol in search, but I think it should be Backspace. Please create new task for correctly displaying (some sort of baked) keys and modifiers in search menu and in the commands list. Please also add a dev log feature toggle to turn this on/off for ease of debugging.
+  - Clicking on `Arrows` visual keys producing correct baked `arrows` in search menu, but in command list they displayed as `Arrow{direction}`
 - [ ] Sanity-check macOS/Linux layouts unaffected by change.
 - [ ] Verify with keyboard listener on/off and with heatmap scope toggles.
 - [ ] Update screenshots/notes after validation in test-vault.

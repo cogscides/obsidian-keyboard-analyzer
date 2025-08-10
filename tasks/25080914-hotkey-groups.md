@@ -2,7 +2,7 @@
 title: User-defined Hotkey Groups (manual)
 status: in_progress
 owner: "@agent"
-updated: 2025-08-10 02:25 UTC
+updated: 2025-08-10 14:35 UTC
 related: []
 ---
 
@@ -21,6 +21,11 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - Validate performance with large command sets; ensure accessibility and keyboard navigation.
 
 ## Decisions
+- [2025-08-10] Stability: eliminated group-switch reactive loop by removing settings dependency in view effect; persist `lastOpenedGroupId` via local cache + 200 ms debounce.
+- [2025-08-10] Persistence: debounced, serialized saves with explicit `flushAllSaves()` and `onunload()` flush to prevent truncated `data.json`.
+- [2025-08-10] UI polish: redesigned empty state in commands list with centered layout, icon, contextual copy for empty group vs no matches.
+- [2025-08-10] UX tweak: hide generic empty-state hints when the active group has no commands; keep hints only for “no matches” case.
+- [2025-08-10] Shortcut: Esc now clears active key/modifiers when no menus are open; also deactivates key-listener if it was active.
 - [2025-08-09] Data model: versioned `HotkeyGroup` entities stored in plugin settings; separate `groupsStore` for reactive UI.
 - [2025-08-09] UI: pinned tabs (for favorites) + searchable combobox for all groups; context menu for manage actions.
 - [2025-08-09] Groups are manual only; membership is an ordered list.
@@ -134,10 +139,10 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - List Integration
   - [x] In All commands list component, add folder-plus action; open `AddToGroupPopover` anchored to icons.
   - [x] Wire membership changes for manual groups.
-  - [ ] Provide optional “Add to top” in popover.
+  - [x] Provide optional “Add to top” in popover.
 
 - Commands & View Opening
-  - [ ] Register generic `Open Group…` command.
+  - [x] Register generic `Open Group…` command.
   - [ ] Add optional per-group command registration; keep ids stable (e.g., `open-group:${group.id}`).
   - [ ] Implement `openKeyboardViewWithGroup(id)` util that resolves/creates a leaf and sets group context.
 
@@ -188,3 +193,4 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - [2025-08-10 01:50 UTC] Implemented AddToGroupPopover with search + checkboxes + new group; wired folder-plus action into commands list (grouped and flat); added group CRUD helpers (rename, unique create, remove from all, isCommandInGroup).
 - [2025-08-10 02:10 UTC] Fixed modal layering (z-index) to appear above list and pinned keyboard panel.
 - [2025-08-10 02:20 UTC] Anchored Add-to-group popover inline under icons; ensured `.setting-item-name` and `.setting-item-info` allow overflow; kept star/folder icons visible when popover open; aligned popover left; added clear button to popover search; resolved jumpiness on hover/scroll.
+- [2025-08-10 03:05 UTC] Added “Add to top” option in popover and top-insert API; auto-flip popover above when near viewport bottom; added rename/delete controls in manager modal; persisted last opened group and added generic “Open Group…” command.

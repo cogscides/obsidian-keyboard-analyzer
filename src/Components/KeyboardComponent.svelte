@@ -44,7 +44,9 @@
   let input: HTMLInputElement | undefined = $state()
   let keyboardListenerIsActive = $state(false)
 
-  let selectedGroupID = $state(GroupType.All)
+  let selectedGroupID = $state(
+    (plugin.settingsManager.settings.lastOpenedGroupId as string) || GroupType.All
+  )
 
   let visibleCommands = $state<commandEntry[]>([])
   let searchCommandsCount = $derived(visibleCommands.length)
@@ -63,6 +65,25 @@
       selectedGroupID,
     )
     return
+  })
+
+  // Persist last opened group for future opens.
+  // Avoid creating a reactive dependency on settings to prevent rerender loops.
+  let lastPersistedGroup = $state(
+    (plugin.settingsManager.getSetting('lastOpenedGroupId') as string) || GroupType.All
+  )
+  let persistTimer: ReturnType<typeof setTimeout> | null = null
+  $effect(() => {
+    // Only react to local selectedGroupID changes
+    const next = selectedGroupID
+    if (next && next !== lastPersistedGroup) {
+      if (persistTimer) clearTimeout(persistTimer)
+      // Debounce to coalesce rapid group switches and reduce save churn
+      persistTimer = setTimeout(() => {
+        plugin.settingsManager.updateSettings({ lastOpenedGroupId: next })
+        lastPersistedGroup = next
+      }, 200)
+    }
   })
 
   $effect(() => {

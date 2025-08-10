@@ -4,6 +4,7 @@ import {
   type App,
   type WorkspaceLeaf,
   type PluginManifest,
+  SuggestModal,
 } from 'obsidian'
 
 import ShortcutsView from './views/ShortcutsView'
@@ -69,6 +70,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     )
 
     this.registerPluginHotkeys()
+    this.registerGroupOpenCommand()
     this.addStatusBarIndicator()
 
     this.registerView(
@@ -92,6 +94,10 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   }
 
   async onunload() {
+    // Try to flush any pending settings writes to avoid truncated JSON on shutdown
+    try {
+      await this.settingsManager.flushAllSaves()
+    } catch {}
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
   }
 
@@ -166,6 +172,46 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         return true
       },
     })
+  }
+
+  private registerGroupOpenCommand() {
+    this.addCommand({
+      id: 'open-keyboard-analyzer-group',
+      name: 'Open Keyboard Analyzer: Group…',
+      callback: () => this.openGroupPicker(),
+    })
+  }
+
+  private async openGroupPicker() {
+    const plugin = this
+    const groups = [{ id: 'all', name: 'All Commands' }, ...plugin.settingsManager.settings.commandGroups]
+    class GroupSuggest extends SuggestModal<{ id: string; name: string }> {
+      available: { id: string; name: string }[]
+      constructor(app: App, items: { id: string; name: string }[]) {
+        super(app)
+        this.available = items
+        this.setPlaceholder('Open group…')
+      }
+      getSuggestions(query: string) {
+        const q = query.toLowerCase().trim()
+        return !q
+          ? this.available
+          : this.available.filter((g) => g.name.toLowerCase().includes(q))
+      }
+      renderSuggestion(value: { id: string; name: string }, el: HTMLElement) {
+        el.setText(value.name)
+      }
+      onChooseSuggestion(item: { id: string; name: string }) {
+        plugin.openWithGroup(item.id)
+      }
+    }
+    const modal = new GroupSuggest(this.app, groups.map((g) => ({ id: String((g as any).id || g.id), name: (g as any).name || g.name })))
+    modal.open()
+  }
+
+  public async openWithGroup(groupId: string) {
+    this.settingsManager.updateSettings({ lastOpenedGroupId: groupId })
+    await this.addShortcutsView(false)
   }
 
   // // Helper methods to access settings

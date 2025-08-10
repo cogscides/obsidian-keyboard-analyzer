@@ -44,7 +44,7 @@ export default class GroupManager {
     return this.groups.find((g) => g.id === groupId)
   }
 
-  createGroup(groupName: string): void {
+  createGroup(groupName: string): string {
     const id = this.slugifyUnique(groupName)
     const newGroup: CGroup = {
       id,
@@ -58,12 +58,29 @@ export default class GroupManager {
     this.settingsManager.updateSettings({
       commandGroups: [...this.groups, newGroup],
     })
+    return id
   }
 
   removeGroup(groupId: string): void {
     this.settingsManager.updateSettings({
       commandGroups: this.groups.filter((g) => g.id !== groupId),
     })
+  }
+
+  duplicateGroup(sourceGroupId: string, newName?: string): string | undefined {
+    const src = this.getGroup(sourceGroupId)
+    if (!src) return undefined
+    const name = (newName && newName.trim()) || `${src.name} Copy`
+    const id = this.slugifyUnique(name)
+    const clone: CGroup = {
+      id,
+      name,
+      commandIds: [...(src.commandIds || [])],
+      excludedModules: [...(src.excludedModules || [])],
+      filterSettings: { ...src.filterSettings },
+    }
+    this.settingsManager.updateSettings({ commandGroups: [...this.groups, clone] })
+    return id
   }
 
   addCommandToGroup(groupId: string, commandId: string): void {
@@ -74,6 +91,25 @@ export default class GroupManager {
       return group
     })
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Insert a command at a specific index within a group (bounds clamped). */
+  insertCommandInGroup(groupId: string, commandId: string, index: number): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId && !group.commandIds.includes(commandId)) {
+        const next = [...group.commandIds]
+        const clamped = Math.max(0, Math.min(index, next.length))
+        next.splice(clamped, 0, commandId)
+        return { ...group, commandIds: next }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Convenience: add command at the top (index 0). */
+  addCommandToGroupAtTop(groupId: string, commandId: string): void {
+    this.insertCommandInGroup(groupId, commandId, 0)
   }
 
   removeCommandFromAllGroups(commandId: string): void {
@@ -128,7 +164,6 @@ export default class GroupManager {
     const settings =
       group?.filterSettings ||
       this.settingsManager.settings.defaultFilterSettings
-    console.log('[KB] GroupManager.getGroupSettings', { groupId, group, settings })
     return settings
   }
 
@@ -153,10 +188,6 @@ export default class GroupManager {
     groupId: string,
     newSettings: Partial<CGroupFilterSettings>
   ): void {
-    console.log('[KB] GroupManager.updateGroupFilterSettings start', {
-      groupId,
-      newSettings,
-    })
     // Update in place if group exists
     const currentGroups = this.groups
     const groupIndex = currentGroups.findIndex((g) => g.id === groupId)
@@ -170,10 +201,6 @@ export default class GroupManager {
         },
       }
       this.settingsManager.updateSettings({ commandGroups: updated })
-      console.log('[KB] GroupManager.updateGroupFilterSettings saved group', {
-        groupId,
-        groups: updated,
-      })
       return
     }
 
@@ -184,9 +211,6 @@ export default class GroupManager {
     }
     this.settingsManager.updateSettings({
       defaultFilterSettings: updatedDefaults,
-    })
-    console.log('[KB] GroupManager.updateGroupFilterSettings saved defaults', {
-      defaults: updatedDefaults,
     })
   }
 
@@ -265,6 +289,22 @@ export default class GroupManager {
       return group
     })
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Reorder the groups array to persist custom order in UI. */
+  moveGroup(fromIndex: number, toIndex: number): void {
+    const current = [...this.groups]
+    if (
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= current.length ||
+      toIndex >= current.length
+    ) {
+      return
+    }
+    const [moved] = current.splice(fromIndex, 1)
+    current.splice(toIndex, 0, moved)
+    this.settingsManager.updateSettings({ commandGroups: current })
   }
 
   private slugifyUnique(name: string): string {

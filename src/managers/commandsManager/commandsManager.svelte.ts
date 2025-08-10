@@ -75,16 +75,13 @@ export default class CommandsManager {
    * @returns void
    */
   private loadCommands() {
-    console.log('Loading commands...')
     const allCommands = this.getCommands()
-    console.log('Retrieved commands:', allCommands.length)
     this.commands = this.processCommands(allCommands)
     // Append virtual system/editor default shortcuts so they can be filtered/displayed
     const systemEntries = getSystemShortcutCommands()
     for (const entry of systemEntries) {
       this.commands[entry.id] = entry
     }
-    console.log('Processed commands:', Object.keys(this.commands).length)
   }
 
   /**
@@ -268,6 +265,9 @@ export default class CommandsManager {
    */
   public getGroupCommands(groupID: string): commandEntry[] {
     if (groupID === GroupType.All) {
+      return Object.values(this.commands)
+    }
+    if (groupID === GroupType.Featured) {
       return Array.from(this.featuredCommandIds)
         .map((id) => this.commands[id])
         .filter(Boolean)
@@ -293,11 +293,10 @@ export default class CommandsManager {
    * @returns void
    */
   public toggleFeaturedCommand(commandId: string) {
-    if (this.featuredCommandIds.has(commandId)) {
-      this.featuredCommandIds.delete(commandId)
-    } else {
-      this.featuredCommandIds.add(commandId)
-    }
+    const next = new Set(this.featuredCommandIds)
+    if (next.has(commandId)) next.delete(commandId)
+    else next.add(commandId)
+    this.featuredCommandIds = next
     this.settingsManager.updateSettings({
       featuredCommandIDs: Array.from(this.featuredCommandIds),
     })
@@ -332,34 +331,19 @@ export default class CommandsManager {
     activeKey: string,
     selectedGroupID?: string
   ): commandEntry[] {
-    console.log(
-      'filterCommands:',
-      search,
-      activeModifiers,
-      activeKey,
-      selectedGroupID
-    )
-
     // Get the filter settings for the selected group
     let filterSettings = this.groupManager.getGroupSettings(
       selectedGroupID || GroupType.All
     )
-    console.log('[KB] CommandsManager.filterCommands settings', {
-      selectedGroupID,
-      filterSettings,
-    })
 
     if (selectedGroupID) {
-      console.log('selectedGroupID', selectedGroupID)
       const selectedCommandGroup = this.groupManager.getGroup(selectedGroupID)
-      console.log('selectedCommandGroup', selectedCommandGroup)
 
       filterSettings = selectedCommandGroup?.filterSettings || filterSettings
     }
 
     // Start with all commands for the selected group
     let commandsToFilter = this.getCommandsForGroup(selectedGroupID)
-    console.log('commandsToFilter', commandsToFilter)
 
     // If there's no search and no active keys, we may still need to apply list-level filters
     // Apply filters unless none of them affect the list
@@ -462,13 +446,11 @@ export default class CommandsManager {
       this.app as UnsafeAppInterface
     ).internalPlugins.getEnabledPlugins() as InternalPlugin[]
 
-    console.log('internalPlugins', internalPlugins)
     const internalPluginIDs = internalPlugins.map(
       (plugin) => plugin.manifest?.id || ''
     )
 
     const installedPlugins = Object.values(this.app.plugins.plugins)
-    console.log('installedPlugins', installedPlugins)
 
     const installedPluginIDs = installedPlugins.map((plugin) => {
       return (plugin as Plugin).manifest?.id || ''
@@ -551,26 +533,19 @@ export default class CommandsManager {
    * @returns commandEntry[]
    */
   public getCommandsForGroup(selectedGroupID?: string): commandEntry[] {
-    console.log('Getting commands for group:', selectedGroupID)
-    console.log('All commands:', Object.keys(this.commands).length)
-
     if (!selectedGroupID || selectedGroupID === GroupType.All) {
-      console.log('Returning all commands:', Object.keys(this.commands).length)
       return Object.values(this.commands)
     }
 
     let group = this.groupManager.getGroup(selectedGroupID)
-    console.log('Found group:', group)
 
     if (!group) {
-      console.log('No group found, returning empty array')
       return []
     }
 
-    const groupCommands = group.commandIds
+    const groupCommands = (group.commandIds || [])
       .map((id) => this.commands[id])
       .filter(Boolean)
-    console.log('Group commands:', groupCommands.length)
     return groupCommands
   }
 

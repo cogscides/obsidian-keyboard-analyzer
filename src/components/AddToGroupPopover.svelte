@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from 'svelte'
+  import { getContext, onMount } from 'svelte'
   import { X } from 'lucide-svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import { clickOutside } from '../utils/clickOutside'
@@ -17,6 +17,7 @@
   let search = $state('')
   let newGroupName = $state('')
   let placeAbove = $state(false)
+  let rootEl: HTMLDivElement | null = null
 
   function filteredGroups() {
     const term = search.trim().toLowerCase()
@@ -34,13 +35,24 @@
   function createGroupAndAdd() {
     const name = newGroupName.trim()
     if (!name) return
-    groupManager.createGroup(name)
-    // add to the newly created group by id lookup
-    const g = groupManager.getGroups().find((gg) => gg.name === name)
-    if (g) groupManager.addCommandToGroup(String(g.id), commandId)
+    const id = groupManager.createGroup(name)
+    if (id) groupManager.addCommandToGroup(String(id), commandId)
     newGroupName = ''
     search = ''
   }
+
+  onMount(() => {
+    // Flip above if there is not enough space below
+    try {
+      const el = rootEl
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const viewportH = window.innerHeight || document.documentElement.clientHeight
+      const spaceBelow = viewportH - rect.top
+      // heuristic threshold
+      placeAbove = spaceBelow < 260
+    } catch {}
+  })
 </script>
 
 <div
@@ -49,6 +61,7 @@
   ononclick_outside={onClose}
   role="dialog"
   aria-label="Add to group"
+  bind:this={rootEl}
 >
   <div class="kb-popover-header">
     <div class="kb-input-wrap">
@@ -106,6 +119,7 @@
     left: 12px;
     border-bottom: 7px solid var(--background-primary);
   }
+  .kb-popover.is-above { top: auto; bottom: calc(100% + 6px); }
   .kb-popover.is-above::after {
     bottom: -7px;
     left: 12px;
@@ -114,7 +128,7 @@
   .kb-input-wrap { position: relative; }
   .kb-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); opacity: .8; display: inline-flex; align-items: center; justify-content: center; }
   .kb-clear:hover { opacity: 1; }
-  .kb-popover-header { padding: 4px; }
+  .kb-popover-header { padding: 4px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
   .kb-popover-body { padding: 4px 0; display: flex; flex-direction: column; gap: 4px; }
   .kb-popover-footer { display: flex; gap: 6px; padding: 4px; }
   .kb-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; }
