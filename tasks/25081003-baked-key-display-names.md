@@ -47,11 +47,13 @@ Definition of done:
 - [2025-08-10 16:50 UTC] Added per-OS modifier roles to processed layout (`logicalModifier` on Key) and centralized role lookup via VisualKeyboardManager. ActiveKeysStore now toggles only OS-valid modifiers (e.g., Win is not a modifier on Windows emulation).
 - [2025-08-10 17:15 UTC] Introduced platformized modifiers: transform command hotkeys and active modifiers to OS-appropriate forms (Meta→Ctrl on Windows) for rendering and matching. Commands list no longer clusters Meta on Windows emulation; Ctrl shows expected commands.
 - [2025-08-10 17:35 UTC] Reverted per-OS layout copies and override structures. Introduced Key-level `os` config (single JSON) and apply per-OS label/code/unicode/modifier at init. Kept minimal logic and removed ad-hoc swaps.
+- [2025-08-10 17:50 UTC] Updated `README.md` to include a "Custom Keyboard Layouts" section, documenting the Key-level `os` configuration for end-users.
 
 ## Decisions
 - [2025-08-10] Implemented `normalizeKeyDisplay` utility to provide platform-aware, text-first labels for keys and modifiers.
 - [2025-08-10] Added `useBakedKeyNames` plugin setting (default: true) exposed in Settings; can be toggled under developer options.
 - [2025-08-10] Integrated baked names in `SearchMenu` modifier chips and active key chip, and in `CommandsList` rendered hotkeys. Kept HotkeyManager unchanged for raw rendering when toggle is off.
+- [2025-08-10] Documented Key-level OS configuration in `README.md` to guide users in customizing layouts.
 
 ## Implementation Notes
 - Files added/changed:

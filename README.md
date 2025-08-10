@@ -33,6 +33,37 @@ With this plugin you will be able to:
 The plugin is poorly tested on operating systems other than Windows, I would be
 grateful for any help with testing support.
 
+## Custom Keyboard Layouts
+
+This plugin uses a unified keyboard layout defined in the code. While it's not possible to provide a custom layout file yet, you can modify the existing layout if you are comfortable with editing the plugin's code.
+
+The layout is defined in `src/Constants.ts` in the `UNIFIED_KEYBOARD_LAYOUT` object.
+
+### OS-Specific Key Configuration
+
+To handle differences between operating systems, you can provide OS-specific configurations for each key using the `os` property. This is useful for keys like `Ctrl`, `Alt`, `Win`, and `Cmd`.
+
+Here is an example for the "Win" key (or "Command" key on macOS):
+
+```typescript
+{
+  label: 'Meta',
+  code: 'MetaLeft',
+  os: {
+    macos: { modifier: 'Meta', unicode: '⌘', label: 'Meta' },
+    windows: { modifier: undefined, unicode: 'Win', label: 'Win' },
+    linux: { modifier: undefined, unicode: 'Win', label: 'Win' },
+  },
+}
+```
+
+- `label`: The text displayed on the key.
+- `code`: The `KeyboardEvent.code` value for the key. This is important for matching hotkeys.
+- `unicode`: A character to display on the key, often a symbol.
+- `modifier`: The modifier role of the key (`'Control'`, `'Alt'`, `'Shift'`, `'Meta'`). If `undefined`, the key is not treated as a modifier for hotkey searches.
+
+For a comprehensive list of key codes, you can refer to this [Key Code Reference Table](https://www.toptal.com/developers/keycode).
+
 ## Installation
 
 As plugin is not yet published in community plugins library, you will need to install it manually or with
