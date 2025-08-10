@@ -2,7 +2,7 @@
 title: Fix visual keyboard keys mapping and hover highlight contrast
 status: in_progress
 owner: "@agent"
-updated: 2025-08-10 16:30 UTC
+updated: 2025-08-10 18:00 UTC
 related:
   - [[25080914-hotkey-groups]]
 ---
@@ -22,6 +22,8 @@ Definition of done:
 - [2025-08-10] Added modifier-hover hotkey preview.
 - [2025-08-10] Simplified modifier-hover preview to rely on held modifiers during hover.
 - [2025-08-10] Hover previews add only the hovered key; physically held modifiers are ignored in search.
+- [2025-08-10] Hover preview is limited to the Alt modifier and clears on Alt release.
+- [2025-08-10] Command list hover now highlights modifiers even if they are active.
 
 ## Next Steps
 - [ ] Correct Windows bottom-row mapping for `Win` and `Alt` in keyboard layout/config.

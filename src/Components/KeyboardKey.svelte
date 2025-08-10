@@ -76,16 +76,24 @@
 
   let previewing = false
   let storedKey = ''
+  let altReleaseListener: ((e: KeyboardEvent) => void) | null = null
 
   function handleMouseEnter(event: MouseEvent) {
     const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
       key.code || key.label,
     )
-    const hasModifier =
-      event.ctrlKey || event.altKey || event.shiftKey || event.metaKey
-    if (hasModifier && !isModifierKey) {
+    if (event.altKey && !isModifierKey) {
       if (!previewing) {
         storedKey = activeKeysStore.ActiveKey
+        altReleaseListener = (e: KeyboardEvent) => {
+          if (e.key === 'Alt') {
+            activeKeysStore.ActiveKey = storedKey
+            previewing = false
+            window.removeEventListener('keyup', altReleaseListener!)
+            altReleaseListener = null
+          }
+        }
+        window.addEventListener('keyup', altReleaseListener)
       }
       previewing = true
       activeKeysStore.ActiveKey = key.code || key.label
@@ -96,6 +104,10 @@
     if (previewing) {
       activeKeysStore.ActiveKey = storedKey
       previewing = false
+      if (altReleaseListener) {
+        window.removeEventListener('keyup', altReleaseListener)
+        altReleaseListener = null
+      }
     }
   }
 </script>

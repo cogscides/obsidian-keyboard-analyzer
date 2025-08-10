@@ -334,7 +334,7 @@ export class VisualKeyboardManager {
     const aliases = this.resolveKeyAliases(lowerKey)
     for (const alias of aliases) {
       const state = this.keyStates[alias]
-      if (state && state.state !== 'active') {
+      if (state) {
         state.state = 'hover'
         break
       }
@@ -350,9 +350,7 @@ export class VisualKeyboardManager {
       const code = this.keyStates[key].code
       const abstract = this.normalizeModifier(code)
       if (abstract && abstractMods.has(abstract as unknown as Modifier)) {
-        if (this.keyStates[key].state !== 'active') {
-          this.keyStates[key].state = 'hover'
-        }
+        this.keyStates[key].state = 'hover'
       }
     }
   }
