@@ -1,7 +1,7 @@
 <!-- src/components/KeyboardComponent.svelte -->
 
 <script lang="ts">
-  import { setContext } from 'svelte'
+  import { setContext, onMount } from 'svelte'
   import type { Modifier } from 'obsidian'
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
@@ -15,7 +15,7 @@
 
   import type CommandsManager from '../managers/commandsManager'
 
-  import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
+  import KeyboardLayoutComponent from '../components/KeyboardLayoutComponent.svelte'
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
   import { GroupType } from '../managers/groupManager/groupManager.svelte'
@@ -36,6 +36,17 @@
   setContext('keyboard-analyzer-plugin', plugin)
   setContext('activeKeysStore', activeKeysStore)
   setContext('visualKeyboardManager', visualKeyboardManager)
+
+  onMount(() => {
+    const down = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyDown(e)
+    const up = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyUp(e)
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
+  })
 
   // Reactive variables
   let viewWidth = $state(0)

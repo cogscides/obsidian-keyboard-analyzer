@@ -3,7 +3,7 @@
   import type KeyboardAnalyzerPlugin from '../main'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import { Star as StarIcon, ChevronDown, FolderPlus as FolderPlusIcon, Search as SearchIcon } from 'lucide-svelte'
-  import AddToGroupPopover from './AddToGroupPopover.svelte'
+  import AddToGroupPopover from '../components/AddToGroupPopover.svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
