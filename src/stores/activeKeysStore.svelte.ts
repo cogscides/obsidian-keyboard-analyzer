@@ -102,6 +102,14 @@ export class ActiveKeysStore {
     this.handleKeyClick(keyCode)
   }
 
+  public handlePhysicalKeyDown(e: KeyboardEvent) {
+    this.handleKeyDown(e)
+  }
+
+  public handlePhysicalKeyUp(_e: KeyboardEvent) {
+    this.reset()
+  }
+
   private isModifier(key: string): key is ModifierKey {
     return this.recognizedModifiers.has(key as ModifierKey)
   }

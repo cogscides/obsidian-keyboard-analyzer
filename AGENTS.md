@@ -15,6 +15,7 @@
 
 ## Coding Style & Naming Conventions
 - Language: TypeScript (strict) + Svelte 5.
+- Obsidian API typings: import from the official `obsidian` package; internal members are declared via `src/types/obsidian-augmentations.d.ts`.
 - Components: PascalCase (e.g., `KeyboardLayoutComponent.svelte`). Utilities/managers: camelCase filenames (e.g., `hotkeyManager`).
 - Indentation: 2 spaces; prefer explicit types and `const` where possible.
 - Formatting/Linting: Biome config present (`biome.json`). Example: `npx @biomejs/biome check .` and `npx @biomejs/biome format .`.
