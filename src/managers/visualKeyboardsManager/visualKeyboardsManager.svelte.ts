@@ -1,6 +1,6 @@
 import { Platform, type Modifier } from 'obsidian'
 import { getEmulatedOS } from '../../utils/runtimeConfig'
-import { KEYBOARD_LAYOUTS, UNIFIED_KEYBOARD_LAYOUT } from '../../Constants'
+import { UNIFIED_KEYBOARD_LAYOUT } from '../../Constants'
 import type {
   KeyboardLayout,
   Key,
@@ -34,54 +34,42 @@ export class VisualKeyboardManager {
   }
 
   private getProcessedLayout(src: KeyboardLayout): KeyboardLayout {
-    // Deep-clone lightweight structure
-    const layout: KeyboardLayout = {
-      sections: src.sections.map((section) => ({
-        name: section.name,
-        gridRatio: section.gridRatio,
-        rows: section.rows.map((row) => row.map((k) => ({ ...k }))),
-      })),
-    }
-
     const emu = getEmulatedOS()
-    const isMac = emu === 'macos' ? true : emu === 'none' ? Platform.isMacOS : false
-    const os: 'macos' | 'windows' | 'linux' = isMac ? 'macos' : emu === 'linux' ? 'linux' : 'windows'
-    // Apply per-OS key config at key level and assign modifier roles
-    for (const section of layout.sections) {
-      for (const row of section.rows) {
-        for (const key of row) {
-          if (!key || !key.code) continue
-          const cfg = key.os?.[os]
-          if (cfg) {
-            if (cfg.label) key.label = cfg.label
-            if (cfg.code) key.code = cfg.code
-            if (cfg.unicode) key.unicode = cfg.unicode
-            if (typeof cfg.modifier !== 'undefined') key.logicalModifier = cfg.modifier
+    const os: 'macos' | 'windows' | 'linux' =
+      emu === 'macos' ? 'macos' : emu === 'linux' ? 'linux' : Platform.isMacOS ? 'macos' : 'windows'
+
+    const processedSections = src.sections.map((section) => ({
+      ...section,
+      rows: section.rows.map((row) =>
+        row.map((key) => {
+          if (key.type === 'os-specific' && key.os) {
+            const osKeyDef = key.os[os]
+            return {
+              ...key,
+              label: osKeyDef.label,
+              code: osKeyDef.code,
+              unicode: osKeyDef.unicode,
+              logicalModifier: osKeyDef.modifier,
+            }
           }
-          // Fallback derive modifier by code + OS if not specified
-          if (typeof key.logicalModifier === 'undefined') {
-            const lc = (key.code || '').toLowerCase()
-            if (lc.startsWith('control')) key.logicalModifier = 'Control'
-            else if (lc.startsWith('alt')) key.logicalModifier = 'Alt'
-            else if (lc.startsWith('shift')) key.logicalModifier = 'Shift'
-            else if (lc.startsWith('meta')) key.logicalModifier = isMac ? 'Meta' : undefined
-          }
-        }
-      }
-    }
-    return layout
+          return key
+        })
+      ),
+    }))
+
+    return { ...src, sections: processedSections }
   }
 
   private initializeKeyStates() {
     this.layout.sections.forEach((section) => {
       section.rows.forEach((row) => {
         row.forEach((key) => {
-          if (key?.label && key.label !== 'empty') {
+          if (key.type !== 'empty') {
             const stateKey = (key.code || key.label || '').toLowerCase()
             if (stateKey) {
               const keyState: KeyboardKeyState = {
                 displayValue: this.getUnicodeForKey(key),
-                code: key.code || key.label,
+                code: key.code || key.label!,
                 state: 'inactive',
                 smallText: key.smallText,
                 weight: 0,
@@ -89,9 +77,9 @@ export class VisualKeyboardManager {
               this.keyStates[stateKey] = keyState
               // Populate code→modifier mapping for OS-aware handling
               if (key.code) this.assignModifierRole(key)
-              } else {
-                logger.warn('Invalid key found:', key)
-              }
+            } else {
+              logger.warn('Invalid key found:', key)
+            }
           }
         })
       })
@@ -243,22 +231,21 @@ export class VisualKeyboardManager {
   }
 
   public getKeyState(key: Key): KeyboardKeyState {
-    const stateKey = key.code?.toLowerCase() ?? key.label.toLowerCase()
-    if (this.keyStates[stateKey]) {
-      return this.keyStates[stateKey]
-    }
-
-    if (key.label === 'empty') {
+    if (key.type === 'empty') {
       return {
-        displayValue: key.label,
+        displayValue: 'empty',
         code: '',
         state: 'empty',
       }
     }
+    const stateKey = (key.code || key.label!).toLowerCase()
+    if (this.keyStates[stateKey]) {
+      return this.keyStates[stateKey]
+    }
 
     logger.warn(`Key state for ${stateKey} is undefined. Check initialization.`)
     return {
-      displayValue: key.label,
+      displayValue: key.label!,
       code: '',
       state: 'inactive',
     }
