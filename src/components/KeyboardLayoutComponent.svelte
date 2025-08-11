@@ -64,7 +64,9 @@
   )
 
   // Local UI state for toolbar controls
-  let panelCollapsed = $state(false)
+  let panelCollapsed = $state(
+    Boolean(settingsManager.getSetting('keyboardCollapsed')),
+  )
   let isPinned = $state(Boolean(settingsManager.getSetting('pinKeyboardPanel')))
   let heatmapScope: 'filtered' | 'all' = $state('filtered')
   let devMenuOpen = $state(false)
@@ -89,7 +91,10 @@
         class="panel-toggle"
         aria-label={panelCollapsed ? 'Expand keyboard' : 'Collapse keyboard'}
         aria-expanded={!panelCollapsed}
-        onclick={() => (panelCollapsed = !panelCollapsed)}
+        onclick={() => {
+          panelCollapsed = !panelCollapsed
+          settingsManager.updateSettings({ keyboardCollapsed: panelCollapsed })
+        }}
         title={panelCollapsed ? 'Show keyboard' : 'Hide keyboard'}
       >
         <span class={`chevron ${panelCollapsed ? 'is-collapsed' : ''}`}>⌄</span>

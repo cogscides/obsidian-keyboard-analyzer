@@ -2,7 +2,7 @@
 title: Collapse/expand Visual Keyboard panel
 status: in_progress
 owner: "@agent"
-updated: 2025-08-09 21:10 UTC
+updated: 2025-08-11 14:30 UTC
 related:
   - [[250809-list-of-bugs-and-new-feature-requests]]
 ---
@@ -22,10 +22,10 @@ Allow users to hide/show the visual keyboard to save space in narrow panes while
 - No horizontal overflow introduced in collapsed or expanded states.
 
 ## Next Steps
-- [ ] Add `keyboardCollapsed` state to store with persistence (owner)
+- [x] Add `keyboardCollapsed` state to store with persistence (owner)
 - [x] Render a toggle control in the keyboard header area (owner)
 - [x] Apply CSS to collapse panel cleanly; test narrow panes (owner)
-- [ ] SKIPPED: Verify accessibility (focus order, aria) and attach screenshots (owner) 
+- [ ] SKIPPED: Verify accessibility (focus order, aria) and attach screenshots (owner)
  - [x] Add Pin toggle, persistence, and sticky behavior (owner)
  - [ ] Optional: Add shadow and top offset for pinned state (owner)
 
@@ -39,3 +39,4 @@ Allow users to hide/show the visual keyboard to save space in narrow panes while
  - [2025-08-09 20:56 UTC] Investigated inconsistency: sticky released after ~panel height due to wrapper/overflow constraints; tested wrapper-level sticky and overflow visibility.
  - [2025-08-09 21:02 UTC] Final approach: panel is block-level and sticky; `#keyboard-component` uses `height:auto; min-height:100%`; wrapper `#keyboard-preview-view` allows overflow; added wrapper sticky fallback when panel pinned to ensure consistent pin across full scroll.
  - [2025-08-09 21:08 UTC] Verified: Pin now keeps the keyboard visible while scrolling long lists; will add minor polish (shadow/offset) if desired.
+- [2025-08-11 14:30 UTC] Persisted collapsed state via `keyboardCollapsed` setting; panel remembers state across reloads.
