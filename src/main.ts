@@ -19,7 +19,11 @@ import type { PluginSettings } from './managers/settingsManager'
 
 import 'virtual:uno.css'
 import './styles.css'
-import { setDevLoggingEnabled, setEmulatedOS, setLogLevel } from './utils/runtimeConfig'
+import {
+  setDevLoggingEnabled,
+  setEmulatedOS,
+  setLogLevel,
+} from './utils/runtimeConfig'
 import KeyboardAnalyzerSettingTab from './settingsTab'
 
 export default class KeyboardAnalyzerPlugin extends Plugin {
@@ -105,6 +109,10 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     const statusBarIcon = this.addStatusBarItem()
     statusBarIcon.addClass('mod-clickable')
     statusBarIcon.setAttribute('aria-label', 'Keyboard Shortcuts')
+    statusBarIcon.setAttribute(
+      'title',
+      'Keyboard Shortcuts — Cmd/Ctrl+Click to open in a new pane.'
+    )
     statusBarIcon.style.order = '10'
     const icon = statusBarIcon.createSpan('icon')
     setIcon(icon, 'keyboard-glyph')
@@ -184,7 +192,10 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 
   private async openGroupPicker() {
     const plugin = this
-    const groups = [{ id: 'all', name: 'All Commands' }, ...plugin.settingsManager.settings.commandGroups]
+    const groups = [
+      { id: 'all', name: 'All Commands' },
+      ...plugin.settingsManager.settings.commandGroups,
+    ]
     class GroupSuggest extends SuggestModal<{ id: string; name: string }> {
       available: { id: string; name: string }[]
       constructor(app: App, items: { id: string; name: string }[]) {
@@ -205,7 +216,13 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         plugin.openWithGroup(item.id)
       }
     }
-    const modal = new GroupSuggest(this.app, groups.map((g) => ({ id: String((g as any).id || g.id), name: (g as any).name || g.name })))
+    const modal = new GroupSuggest(
+      this.app,
+      groups.map((g) => ({
+        id: String((g as any).id || g.id),
+        name: (g as any).name || g.name,
+      }))
+    )
     modal.open()
   }
 

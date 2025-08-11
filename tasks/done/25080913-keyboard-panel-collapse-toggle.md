@@ -1,8 +1,8 @@
 ---
 title: Collapse/expand Visual Keyboard panel
-status: in_progress
+status: done
 owner: '@agent'
-updated: 2025-08-11 14:30 UTC
+updated: 2025-08-11 23:15 UTC
 related:
   - [[250809-list-of-bugs-and-new-feature-requests]]
 ---
@@ -31,7 +31,7 @@ Allow users to hide/show the visual keyboard to save space in narrow panes while
 - [x] Apply CSS to collapse panel cleanly; test narrow panes (owner)
 - [ ] SKIPPED: Verify accessibility (focus order, aria) and attach screenshots (owner)
 - [x] Add Pin toggle, persistence, and sticky behavior (owner)
-- [ ] Optional: Add shadow and top offset for pinned state (owner)
+- [x] Optional: Add shadow and top offset for pinned state (owner)
 
 ## Links
 

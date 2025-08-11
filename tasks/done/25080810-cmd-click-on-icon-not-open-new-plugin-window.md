@@ -1,8 +1,8 @@
 ---
 title: Status bar Cmd/Ctrl+Click should open new pane
-status: todo
+status: done
 owner: '@unassigned'
-updated: 2025-08-08 10:48 UTC
+updated: 2025-08-11 23:16 UTC
 related: []
 ---
 
@@ -26,7 +26,7 @@ Clicking the keyboard icon in the status bar does not open a new plugin pane. It
 
 - [x] Reproduce on macOS and Windows; confirm current modifiers in `onStatusBarClick`.
 - [x] Update logic so meta-only click -> `split`; document behavior in README.
-- [ ] Add a small note in tooltip: “Cmd/Ctrl+Click to open in new pane”.
+- [x] Add a small note in tooltip: “Cmd/Ctrl+Click to open in new pane”.
 
 ## Progress Log
 

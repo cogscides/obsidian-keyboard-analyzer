@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onMount } from 'svelte'
+  import { getContext, onMount, onDestroy } from 'svelte'
   import { X } from 'lucide-svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import { clickOutside } from '../utils/clickOutside'
@@ -44,25 +44,56 @@
     search = ''
   }
 
-  onMount(() => {
-    // Flip above if there is not enough space below and clamp horizontally
+  function recomputePosition() {
     try {
       const el = rootEl
       if (!el) return
-      const rect = el.getBoundingClientRect()
+      const anchor = el.parentElement || el
+      const rect = anchor.getBoundingClientRect()
       const viewportH =
         window.innerHeight || document.documentElement.clientHeight
       const viewportW =
         window.innerWidth || document.documentElement.clientWidth
-      const spaceBelow = viewportH - rect.top
-      // heuristic threshold
-      placeAbove = spaceBelow < 260
 
-      const overflowRight = rect.right - viewportW
-      const overflowLeft = rect.left
-      if (overflowRight > 0) offsetX = -overflowRight - 8
-      if (overflowLeft < 0) offsetX += -overflowLeft + 8
+      // Vertical flip if not enough space below the anchor
+      const spaceBelow = viewportH - rect.bottom
+      const spaceAbove = rect.top
+      // threshold ~ popover height
+      placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow
+
+      // Horizontal clamping relative to viewport
+      // Compute the popover's projected left/right if left:0 on anchor plus current offsetX
+      const projectedLeft = rect.left + 0 + offsetX
+      const projectedRight = projectedLeft + (rootEl?.offsetWidth || 260)
+
+      let dx = 0
+      if (projectedRight > viewportW) dx -= projectedRight - viewportW + 8
+      if (projectedLeft + dx < 0) dx += -(projectedLeft + dx) + 8
+
+      offsetX += dx
     } catch {}
+  }
+
+  let ro: ResizeObserver | null = null
+  const onScroll = () => recomputePosition()
+
+  onMount(() => {
+    recomputePosition()
+    window.addEventListener('resize', recomputePosition)
+    // Capture-phase scroll to react to any scrolling ancestor
+    document.addEventListener('scroll', onScroll, true)
+
+    if ('ResizeObserver' in window && rootEl) {
+      ro = new ResizeObserver(() => recomputePosition())
+      ro.observe(rootEl)
+    }
+  })
+
+  onDestroy(() => {
+    window.removeEventListener('resize', recomputePosition)
+    document.removeEventListener('scroll', onScroll, true)
+    ro?.disconnect()
+    ro = null
   })
 </script>
 
