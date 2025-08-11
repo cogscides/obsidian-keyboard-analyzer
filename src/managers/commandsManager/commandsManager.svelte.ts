@@ -4,7 +4,7 @@ import type {
   UnsafeInternalPlugin,
   commandEntry,
 } from '../../interfaces/Interfaces'
-import HotkeyManager from '../hotkeyManager/hotkeyManager.svelte'
+import HotkeyManager from '../hotkeyManager'
 import SettingsManager, { GroupType, type CGroup } from '../settingsManager'
 import {
   convertModifiers,
@@ -14,7 +14,7 @@ import {
 import type groupManager from '../groupManager'
 import GroupManager, {
   DEFAULT_GROUP_NAMES,
-} from '../groupManager/groupManager.svelte'
+} from '../groupManager/groupManager.svelte.ts'
 import type KeyboardAnalyzerPlugin from '../../main'
 import { getSystemShortcutCommands } from '../../utils/systemShortcuts'
 

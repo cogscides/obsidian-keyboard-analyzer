@@ -2,7 +2,7 @@ import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
 import type {
   hotkeyEntry,
   commandEntry,
-  UnsafeInternalPlugin,
+  UnsafeInternalPlugin
 } from '../../interfaces/Interfaces'
 import {
   convertModifiers,
@@ -10,7 +10,7 @@ import {
   modifiersToString,
   areModifiersEqual,
   isKeyMatch,
-  platformizeModifiers,
+  platformizeModifiers
 } from '../../utils/modifierUtils'
 
 export default class HotkeyManager {
@@ -257,3 +257,4 @@ export default class HotkeyManager {
     })
   }
 }
+

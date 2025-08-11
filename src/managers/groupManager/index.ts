@@ -1,3 +1,3 @@
-export * from './groupManager.svelte'
+export * from './groupManager.svelte.ts'
 
-export { default } from './groupManager.svelte'
+export { default } from './groupManager.svelte.ts'

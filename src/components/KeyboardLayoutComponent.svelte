@@ -1,7 +1,7 @@
 <!-- src/components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
   import { setContext, getContext } from 'svelte'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import type KeyboardAnalyzerPlugin from '../main'
   import type {
     KeyboardLayout,
@@ -10,9 +10,9 @@
   } from '../interfaces/Interfaces'
   import KeyboardKey from './KeyboardKey.svelte'
   import { Coffee as CoffeeIcon, Pin as PinIcon, Settings as SettingsIcon } from 'lucide-svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
   import type CommandsManager from '../managers/commandsManager'
-  import { GroupType } from '../managers/groupManager/groupManager.svelte'
+  import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
 
   interface Props {
     visibleCommands: commandEntry[]

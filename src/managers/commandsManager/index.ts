@@ -1,3 +1,3 @@
-export * from './commandsManager.svelte'
+export * from './commandsManager.svelte.ts'
 
-export { default } from './commandsManager.svelte'
+export { default } from './commandsManager.svelte.ts'

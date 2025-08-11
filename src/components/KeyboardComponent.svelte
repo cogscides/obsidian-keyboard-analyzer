@@ -5,12 +5,12 @@
   import type { Modifier } from 'obsidian'
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
-  import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import type {
     commandEntry,
     hotkeyEntry,
   } from '../interfaces/Interfaces'
-  import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
+  import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
   import { convertModifiers } from '../utils/modifierUtils'
 
   import type CommandsManager from '../managers/commandsManager'
@@ -18,7 +18,7 @@
   import KeyboardLayoutComponent from './KeyboardLayoutComponent.svelte'
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
-  import { GroupType } from '../managers/groupManager/groupManager.svelte'
+  import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
 
   // Props and Context
   interface Props {
@@ -37,14 +37,17 @@
   setContext('activeKeysStore', activeKeysStore)
   setContext('visualKeyboardManager', visualKeyboardManager)
 
-  onMount(() => {
-    const down = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyDown(e)
-    const up = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyUp(e)
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
+  // Attach physical keyboard listeners only when explicitly enabled
+  const down = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyDown(e)
+  const up = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyUp(e)
+  $effect(() => {
+    if (keyboardListenerIsActive) {
+      window.addEventListener('keydown', down)
+      window.addEventListener('keyup', up)
+      return () => {
+        window.removeEventListener('keydown', down)
+        window.removeEventListener('keyup', up)
+      }
     }
   })
 

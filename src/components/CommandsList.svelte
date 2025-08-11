@@ -6,8 +6,8 @@
   import AddToGroupPopover from './AddToGroupPopover.svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import { convertModifiers } from '../utils/modifierUtils'
   import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
 

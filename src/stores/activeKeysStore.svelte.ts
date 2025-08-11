@@ -7,7 +7,7 @@ import {
   sortModifiers,
 } from '../utils/modifierUtils'
 import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
-import HotkeyManager from '../managers/hotkeyManager/hotkeyManager.svelte'
+import HotkeyManager from '../managers/hotkeyManager'
 import type { commandEntry } from '../interfaces/Interfaces'
 
 export class ActiveKeysStore {
@@ -89,6 +89,10 @@ export class ActiveKeysStore {
   }
 
   public handleKeyDown(e: KeyboardEvent) {
+    // Ignore Alt for modifier state changes; Alt is reserved for preview only
+    if (e.key === 'Alt' || e.key === 'AltGraph') {
+      return
+    }
     if (e.key === 'Backspace') {
       if (this.activeKey !== '') {
         this.activeKey = ''

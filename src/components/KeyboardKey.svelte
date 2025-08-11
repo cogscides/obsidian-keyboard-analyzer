@@ -2,8 +2,8 @@
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
 
   interface Props {
     key: Key
@@ -22,7 +22,7 @@
   }: Props = $props()
 
   const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager',
+    'visualKeyboardManager'
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
@@ -46,8 +46,8 @@
   function spreadWeights(weight: number) {
     const maxWeight = Math.max(
       ...Object.values(visualKeyboardManager.keyStates).map(
-        (state) => state.weight || 0,
-      ),
+        (state) => state.weight || 0
+      )
     )
     const step = maxWeight / maxWeightSteps
     return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
@@ -71,7 +71,7 @@
     // Update visual state based on new active keys
     visualKeyboardManager.updateVisualState(
       activeKeysStore.activeKey,
-      activeKeysStore.activeModifiers,
+      activeKeysStore.activeModifiers
     )
   }
 
@@ -86,7 +86,8 @@
       storedKey = activeKeysStore.ActiveKey
       altReleaseListener = (e: KeyboardEvent) => {
         if (e.key === 'Alt' || e.key === 'AltGraph') {
-          stopPreview(false)
+          // Match mouseleave behavior: restore previous active key
+          stopPreview(true)
         }
       }
       window.addEventListener('keyup', altReleaseListener)
@@ -112,21 +113,16 @@
   function handleMouseEnter(event: MouseEvent) {
     hovered = true
     const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
-      key.code || key.label || '',
+      key.code || key.label || ''
     )
 
     if (!isModifierKey) {
-      if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      // Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
+      if (event.altKey) {
         startPreview()
       }
       altKeydownListener = (e: KeyboardEvent) => {
-        if (
-          hovered &&
-          (e.key === 'Alt' || e.key === 'AltGraph') &&
-          !e.ctrlKey &&
-          !e.metaKey &&
-          !e.shiftKey
-        ) {
+        if (hovered && (e.key === 'Alt' || e.key === 'AltGraph')) {
           startPreview()
         }
       }
@@ -137,7 +133,8 @@
   function handleMouseLeave() {
     hovered = false
     if (previewing) {
-      stopPreview()
+      // On mouse leave, restore previous active key
+      stopPreview(true)
     }
     if (altKeydownListener) {
       window.removeEventListener('keydown', altKeydownListener, true)
