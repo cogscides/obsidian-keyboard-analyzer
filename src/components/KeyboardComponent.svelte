@@ -12,6 +12,7 @@
   } from '../interfaces/Interfaces'
   import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
   import { convertModifiers } from '../utils/modifierUtils'
+  import logger from '../utils/logger'
 
   import type CommandsManager from '../managers/commandsManager'
 
@@ -19,6 +20,11 @@
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
   import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
+  
+  function isModF(e: KeyboardEvent) {
+    const isMod = e.metaKey || e.ctrlKey
+    return isMod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f'
+  }
 
   // Props and Context
   interface Props {
@@ -36,18 +42,78 @@
   setContext('keyboard-analyzer-plugin', plugin)
   setContext('activeKeysStore', activeKeysStore)
   setContext('visualKeyboardManager', visualKeyboardManager)
+  // Expose a live getter for whether physical listener is active to disable Alt-hover when active
+  setContext('isPhysicalListenerActive', () => keyboardListenerIsActive)
 
-  // Attach physical keyboard listeners only when explicitly enabled
-  const down = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyDown(e)
-  const up = (e: KeyboardEvent) => activeKeysStore.handlePhysicalKeyUp(e)
-  $effect(() => {
-    if (keyboardListenerIsActive) {
-      window.addEventListener('keydown', down)
-      window.addEventListener('keyup', up)
-      return () => {
-        window.removeEventListener('keydown', down)
-        window.removeEventListener('keyup', up)
+  // Always attach listeners; handlers no-op unless listener is active
+  const down = (e: KeyboardEvent) => {
+    // Global UX shortcuts for this view
+    if (isModF(e)) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (document.activeElement !== input) {
+        input?.focus()
+        logger.debug('[keys] Mod+F: focus search')
+      } else {
+        keyboardListenerIsActive = !keyboardListenerIsActive
+        logger.debug('[keys] Mod+F: toggle listener', { to: keyboardListenerIsActive })
       }
+      return
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      if (keyboardListenerIsActive) {
+        keyboardListenerIsActive = false
+        input?.focus()
+        logger.debug('[keys] Esc: disable listener and focus search')
+      } else if (document.activeElement === input) {
+        // Unfocus search for accessibility
+        ;(document.activeElement as HTMLElement)?.blur()
+        logger.debug('[keys] Esc: blur search input')
+      }
+      return
+    }
+
+    if (!keyboardListenerIsActive) {
+      logger.debug('[keys] ignored keydown (listener off)', e.key, e.code)
+      return
+    }
+    logger.debug('[keys] keydown', { key: e.key, code: e.code })
+    activeKeysStore.handlePhysicalKeyDown(e)
+    logger.debug('[keys] state after keydown', activeKeysStore.state)
+  }
+  const up = (e: KeyboardEvent) => {
+    if (!keyboardListenerIsActive) {
+      logger.debug('[keys] ignored keyup (listener off)', e.key, e.code)
+      return
+    }
+    logger.debug('[keys] keyup', { key: e.key, code: e.code })
+    activeKeysStore.handlePhysicalKeyUp(e)
+    logger.debug('[keys] state after keyup', activeKeysStore.state)
+  }
+  onMount(() => {
+    const w = window as unknown as Record<string, unknown>
+    // Remove any stale listeners from previous mounts/reloads
+    const prevDown = w.__kb_analyzer_keys_down as ((e: KeyboardEvent) => void) | undefined
+    const prevUp = w.__kb_analyzer_keys_up as ((e: KeyboardEvent) => void) | undefined
+    if (prevDown) {
+      window.removeEventListener('keydown', prevDown)
+    }
+    if (prevUp) {
+      window.removeEventListener('keyup', prevUp)
+    }
+    // Attach fresh listeners and stash them on window for future cleanup
+    window.addEventListener('keydown', down, true)
+    window.addEventListener('keyup', up, true)
+    ;(w as any).__kb_analyzer_keys_down = down
+    ;(w as any).__kb_analyzer_keys_up = up
+    logger.debug('[keys] global listeners attached')
+    return () => {
+      window.removeEventListener('keydown', down, true)
+      window.removeEventListener('keyup', up, true)
+      if ((w as any).__kb_analyzer_keys_down === down) (w as any).__kb_analyzer_keys_down = undefined
+      if ((w as any).__kb_analyzer_keys_up === up) (w as any).__kb_analyzer_keys_up = undefined
     }
   })
 

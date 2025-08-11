@@ -177,7 +177,9 @@
   }
 
   function ActivateKeyboardListener() {
-    keyboardListenerIsActive = !keyboardListenerIsActive
+    const next = !keyboardListenerIsActive
+    logger.debug('[keys] toggle listener', { from: keyboardListenerIsActive, to: next })
+    keyboardListenerIsActive = next
     inputHTML?.focus()
   }
 
@@ -215,8 +217,12 @@
       }
     }
     if (keyboardListenerIsActive) {
-      PressedKeysStore.handleKeyDown(e)
+      // Let the global listener handle physical keys; avoid double-processing
+      e.stopPropagation()
+      e.preventDefault()
+      return
     }
+    // Fallback: when listener is off, local handler can still process keys if needed
     // Re-apply search when hotkey listeners mutate active keys
     handleSearchInput()
   }

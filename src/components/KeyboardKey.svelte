@@ -25,6 +25,7 @@
     'visualKeyboardManager'
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  const isListenerActive: (() => boolean) | undefined = getContext('isPhysicalListenerActive')
 
   let keyState = $derived(visualKeyboardManager.getKeyState(key))
   let displayLabel = $derived(keyState.displayValue)
@@ -117,11 +118,16 @@
     )
 
     if (!isModifierKey) {
+      // If physical listener is active, disable Alt-hover preview to avoid UX conflicts
+      if (isListenerActive && isListenerActive()) {
+        return
+      }
       // Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
       if (event.altKey) {
         startPreview()
       }
       altKeydownListener = (e: KeyboardEvent) => {
+        if (isListenerActive && isListenerActive()) return
         if (hovered && (e.key === 'Alt' || e.key === 'AltGraph')) {
           startPreview()
         }

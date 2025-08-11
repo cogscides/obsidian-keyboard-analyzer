@@ -7,6 +7,7 @@ import {
   sortModifiers,
 } from '../utils/modifierUtils'
 import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
+import logger from '../utils/logger'
 import HotkeyManager from '../managers/hotkeyManager'
 import type { commandEntry } from '../interfaces/Interfaces'
 
@@ -89,29 +90,63 @@ export class ActiveKeysStore {
   }
 
   public handleKeyDown(e: KeyboardEvent) {
-    // Ignore Alt for modifier state changes; Alt is reserved for preview only
-    if (e.key === 'Alt' || e.key === 'AltGraph') {
-      return
-    }
+    logger.debug('[keys] store.handleKeyDown', { key: e.key, code: e.code })
     if (e.key === 'Backspace') {
       if (this.activeKey !== '') {
         this.activeKey = ''
       } else if (this.activeModifiers.length > 0) {
         this.activeModifiers.length = this.activeModifiers.length - 1
       }
+      logger.debug('[keys] backspace applied', this.state)
       return
     }
 
     const keyCode = e.code
     this.handleKeyClick(keyCode)
+    logger.debug('[keys] after handleKeyClick', this.state)
   }
 
   public handlePhysicalKeyDown(e: KeyboardEvent) {
-    this.handleKeyDown(e)
+    logger.debug('[keys] store.handlePhysicalKeyDown', { key: e.key, code: e.code })
+    // Toggle semantics per key click, ignore auto-repeat
+    if (e.repeat) {
+      logger.debug('[keys] ignored repeat keydown')
+      return
+    }
+    // Map to Obsidian modifier by code when possible
+    const mod = this.visualKeyboardManager.mapCodeToObsidianModifier(e.code || e.key)
+    if (mod) {
+      const m = convertModifier(mod as unknown as ModifierKey)
+      const has = this.activeModifiers.includes(m)
+      this.activeModifiers = has
+        ? this.activeModifiers.filter((x) => x !== m)
+        : [...this.activeModifiers, m]
+      logger.debug('[keys] toggled modifier', { m, on: !has, state: this.state })
+      return
+    }
+    const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key)
+    if (this.isModifier(normalizedKey)) {
+      const m = convertModifier(normalizedKey as ModifierKey)
+      const has = this.activeModifiers.includes(m)
+      this.activeModifiers = has
+        ? this.activeModifiers.filter((x) => x !== m)
+        : [...this.activeModifiers, m]
+      logger.debug('[keys] toggled modifier (normalized)', { m, on: !has, state: this.state })
+      return
+    }
+    // Non-modifier: toggle activeKey
+    if (this.activeKey === normalizedKey) {
+      this.activeKey = ''
+      logger.debug('[keys] cleared activeKey (toggle)', this.state)
+    } else {
+      this.activeKey = normalizedKey
+      logger.debug('[keys] set activeKey (toggle)', this.state)
+    }
   }
 
-  public handlePhysicalKeyUp(_e: KeyboardEvent) {
-    this.reset()
+  public handlePhysicalKeyUp(e: KeyboardEvent) {
+    // No-op for toggle mode, just trace
+    logger.debug('[keys] store.handlePhysicalKeyUp (toggle mode)', { key: e.key, code: e.code })
   }
 
   private isModifier(key: string): key is ModifierKey {
