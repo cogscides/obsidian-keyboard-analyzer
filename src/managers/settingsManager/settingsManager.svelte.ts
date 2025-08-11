@@ -37,6 +37,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   commandGroups: [],
   lastOpenedGroupId: 'all',
   pinKeyboardPanel: false,
+  keyboardCollapsed: false,
   enableDeveloperOptions: false,
   devLoggingEnabled: false,
   emulatedOS: 'none',
