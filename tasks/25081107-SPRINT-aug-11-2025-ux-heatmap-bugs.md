@@ -2,7 +2,7 @@
 title: SPRINT — Aug 11, 2025: Small-screen UX, Heatmap tuning, Bugfixes
 status: in_progress
 owner: "@agent"
-updated: 2025-08-11 12:30 UTC
+updated: 2025-08-11 13:05 UTC
 related:
   - [[25081101-redesign-manage-groups-modal]]
   - [[25081102-command-search-in-manage-groups]]
@@ -49,9 +49,10 @@ Coordinate parallel work across UX improvements for small screens, heatmap weigh
 - [ ] @agent-fe: Integrate/decide on positioning utility (e.g., Floating UI) and fix overflow. (rel: [[25081103-fix-popover-overflow]])
 - [ ] @agent-data: Update weights and normalization; adjust opacity curve if needed. (rel: [[25081104-heatmap-de-emphasize-modifiers]])
 - [ ] @agent-core: Correct normalization for `BracketLeft`; update matching logic; manual tests. (rel: [[25081105-fix-filtering-bracket-left]])
-- [ ] @agent-ux: Update hotkey joiner to space; regression check in all views. (rel: [[25081106-remove-plus-in-hotkey-display]])
+- [x] @agent-ux: Update hotkey joiner to space; regression check in all views. (rel: [[25081106-remove-plus-in-hotkey-display]])
 
 ## Notes
 
 - Please append brief progress updates to each linked task and this sprint note with timestamps.
 - Keep scope limited to acceptance criteria; spin off follow-ups as new tasks and link them here.
+- [2025-08-11] Hotkey joiner switched to space-separated display. (rel: [[25081106-remove-plus-in-hotkey-display]])
