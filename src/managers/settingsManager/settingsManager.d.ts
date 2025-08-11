@@ -9,6 +9,7 @@ export interface PluginSettings {
   commandGroups: CGroup[]
   lastOpenedGroupId?: string
   pinKeyboardPanel?: boolean
+  keyboardCollapsed?: boolean
   // Developer options (non-breaking defaults)
   enableDeveloperOptions?: boolean
   devLoggingEnabled?: boolean
