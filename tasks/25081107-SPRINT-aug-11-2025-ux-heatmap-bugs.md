@@ -19,15 +19,18 @@ Coordinate parallel work across UX improvements for small screens, heatmap weigh
 ## Workstreams & Assignments
 
 - Small-screen UX Improvements (Owners: @agent-ux, @agent-fe)
+
   - [[25081101-redesign-manage-groups-modal]] — responsive vertical layout + dropdown selector.
   - [[25081102-command-search-in-manage-groups]] — in-modal command search + add-to-group.
   - [[25081103-fix-popover-overflow]] — robust positioning for popovers/dropdowns.
   - Dependencies: 25081102 depends on modal structure from 25081101.
 
 - Heatmap Algorithm (Owner: @agent-data)
+
   - [[25081104-heatmap-de-emphasize-modifiers]] — reduce modifier weight, adjust opacity mapping as needed.
 
 - Bug Fixes (Owner: @agent-core)
+
   - [[25081105-fix-filtering-bracket-left]] — fix normalization/matching for BracketLeft.
 
 - UI Refinements (Owner: @agent-ux)
@@ -47,8 +50,8 @@ Coordinate parallel work across UX improvements for small screens, heatmap weigh
 - [ ] @agent-fe: Implement modal layout changes behind a feature flag; verify existing actions. (rel: [[25081101-redesign-manage-groups-modal]])
 - [ ] @agent-fe: Add debounced command search with hotkey display; wire to add-to-group. (rel: [[25081102-command-search-in-manage-groups]])
 - [ ] @agent-fe: Integrate/decide on positioning utility (e.g., Floating UI) and fix overflow. (rel: [[25081103-fix-popover-overflow]])
-- [ ] @agent-data: Update weights and normalization; adjust opacity curve if needed. (rel: [[25081104-heatmap-de-emphasize-modifiers]])
-- [ ] @agent-core: Correct normalization for `BracketLeft`; update matching logic; manual tests. (rel: [[25081105-fix-filtering-bracket-left]])
+- [x] @agent-data: Update weights and normalization; adjust opacity curve if needed. (rel: [[25081104-heatmap-de-emphasize-modifiers]])
+- [x] @agent-core: Correct normalization for `BracketLeft`; update matching logic; manual tests. (rel: [[25081105-fix-filtering-bracket-left]])
 - [x] @agent-ux: Update hotkey joiner to space; regression check in all views. (rel: [[25081106-remove-plus-in-hotkey-display]])
 
 ## Notes

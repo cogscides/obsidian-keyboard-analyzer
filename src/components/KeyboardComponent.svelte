@@ -6,10 +6,7 @@
   import type KeyboardAnalyzerPlugin from '../main'
   import type ShortcutsView from '../views/ShortcutsView'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
-  import type {
-    commandEntry,
-    hotkeyEntry,
-  } from '../interfaces/Interfaces'
+  import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
   import { convertModifiers } from '../utils/modifierUtils'
   import logger from '../utils/logger'
@@ -20,7 +17,7 @@
   import SearchMenu from './SearchMenu.svelte'
   import CommandsList from './CommandsList.svelte'
   import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
-  
+
   function isModF(e: KeyboardEvent) {
     const isMod = e.metaKey || e.ctrlKey
     return isMod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f'
@@ -38,6 +35,7 @@
   const commandsManager: CommandsManager = plugin.commandsManager
   const visualKeyboardManager = new VisualKeyboardManager()
   const activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager)
+  const groupManager = plugin.groupManager
 
   setContext('keyboard-analyzer-plugin', plugin)
   setContext('activeKeysStore', activeKeysStore)
@@ -56,7 +54,9 @@
         logger.debug('[keys] Mod+F: focus search')
       } else {
         keyboardListenerIsActive = !keyboardListenerIsActive
-        logger.debug('[keys] Mod+F: toggle listener', { to: keyboardListenerIsActive })
+        logger.debug('[keys] Mod+F: toggle listener', {
+          to: keyboardListenerIsActive,
+        })
       }
       return
     }
@@ -95,8 +95,12 @@
   onMount(() => {
     const w = window as unknown as Record<string, unknown>
     // Remove any stale listeners from previous mounts/reloads
-    const prevDown = w.__kb_analyzer_keys_down as ((e: KeyboardEvent) => void) | undefined
-    const prevUp = w.__kb_analyzer_keys_up as ((e: KeyboardEvent) => void) | undefined
+    const prevDown = w.__kb_analyzer_keys_down as
+      | ((e: KeyboardEvent) => void)
+      | undefined
+    const prevUp = w.__kb_analyzer_keys_up as
+      | ((e: KeyboardEvent) => void)
+      | undefined
     if (prevDown) {
       window.removeEventListener('keydown', prevDown)
     }
@@ -112,8 +116,10 @@
     return () => {
       window.removeEventListener('keydown', down, true)
       window.removeEventListener('keyup', up, true)
-      if ((w as any).__kb_analyzer_keys_down === down) (w as any).__kb_analyzer_keys_down = undefined
-      if ((w as any).__kb_analyzer_keys_up === up) (w as any).__kb_analyzer_keys_up = undefined
+      if ((w as any).__kb_analyzer_keys_down === down)
+        (w as any).__kb_analyzer_keys_down = undefined
+      if ((w as any).__kb_analyzer_keys_up === up)
+        (w as any).__kb_analyzer_keys_up = undefined
     }
   })
 
@@ -125,16 +131,26 @@
   let keyboardListenerIsActive = $state(false)
 
   let selectedGroupID = $state(
-    (plugin.settingsManager.settings.lastOpenedGroupId as string) || GroupType.All
+    (plugin.settingsManager.settings.lastOpenedGroupId as string) ||
+      GroupType.All
   )
+
+  // Strict modifier match flag derived from current group's filter settings
+  let strictModifierMatch = $derived.by(() => {
+    // Track groups to recompute when settings update
+    groupManager.groups
+    const gid = selectedGroupID
+    const settings = groupManager.getGroupSettings(gid)
+    return Boolean(settings?.StrictModifierMatch)
+  })
 
   let visibleCommands = $state<commandEntry[]>([])
   let searchCommandsCount = $derived(visibleCommands.length)
   let searchHotkeysCount = $derived(
     visibleCommands.reduce(
       (count, command) => count + command.hotkeys.length,
-      0,
-    ),
+      0
+    )
   )
 
   $effect(() => {
@@ -142,7 +158,7 @@
       search,
       activeKeysStore.ActiveModifiers,
       activeKeysStore.ActiveKey,
-      selectedGroupID,
+      selectedGroupID
     )
     return
   })
@@ -150,7 +166,8 @@
   // Persist last opened group for future opens.
   // Avoid creating a reactive dependency on settings to prevent rerender loops.
   let lastPersistedGroup = $state(
-    (plugin.settingsManager.getSetting('lastOpenedGroupId') as string) || GroupType.All
+    (plugin.settingsManager.getSetting('lastOpenedGroupId') as string) ||
+      GroupType.All
   )
   let persistTimer: ReturnType<typeof setTimeout> | null = null
   $effect(() => {
@@ -178,7 +195,7 @@
   $effect(() => {
     visualKeyboardManager.updateVisualState(
       activeKeysStore.ActiveKey,
-      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveModifiers
     )
   })
 
@@ -212,13 +229,13 @@
     search: string,
     activeModifiers: string[],
     activeKey: string,
-    selectedGroup?: string,
+    selectedGroup?: string
   ) {
     visibleCommands = commandsManager.filterCommands(
       search,
       activeModifiers,
       activeKey,
-      selectedGroup,
+      selectedGroup
     )
   }
 
@@ -239,7 +256,7 @@
 
     if (
       activeKeysStore.ActiveModifiers.every((modifier) =>
-        duplicativeModifiers.includes(modifier as Modifier),
+        duplicativeModifiers.includes(modifier as Modifier)
       ) &&
       activeKeysStore.ActiveKey.toLowerCase() === key.toLowerCase()
     ) {
@@ -262,7 +279,7 @@
   bind:offsetWidth={viewWidth}
 >
   <div id="keyboard-preview-view">
-    <KeyboardLayoutComponent {visibleCommands} />
+    <KeyboardLayoutComponent {visibleCommands} {strictModifierMatch} />
   </div>
   <div class="shortcuts-wrapper">
     <SearchMenu

@@ -8,7 +8,7 @@ import type {
   KeyboardSection,
   commandEntry,
 } from '../../interfaces/Interfaces'
-import { convertModifier, getDisplayModifier, unconvertModifiers } from '../../utils/modifierUtils'
+import { convertModifier, getDisplayModifier, unconvertModifiers, convertModifiers, areModifiersEqual, isKeyMatch } from '../../utils/modifierUtils'
 import logger from '../../utils/logger'
 
 /**
@@ -131,7 +131,12 @@ export class VisualKeyboardManager {
     return key.label || ''
   }
 
-  public calculateAndAssignWeights(visibleCommands: commandEntry[] | undefined | null) {
+  public calculateAndAssignWeights(
+    visibleCommands: commandEntry[] | undefined | null,
+    activeModifiers: string[] = [],
+    activeKey: string = '',
+    strictModifierMatch = false
+  ) {
     const cmds = Array.isArray(visibleCommands) ? visibleCommands : []
     const keyWeights: Record<string, number> = {}
 
@@ -140,10 +145,28 @@ export class VisualKeyboardManager {
       keyWeights[key.toLowerCase()] = 0
     }
 
+    const hasActive = (activeModifiers?.length ?? 0) > 0 || !!activeKey
+
     // Calculate weights
     for (const command of cmds) {
       const hkList = Array.isArray(command.hotkeys) ? command.hotkeys : []
       for (const hotkey of hkList) {
+        // When StrictModifierMatch is on and there is an active search (mods and/or key),
+        // only count hotkeys that satisfy the modifier criteria (and key if provided).
+        let includeHotkey = true
+        if (strictModifierMatch && hasActive) {
+          const convertedActive = convertModifiers(activeModifiers || [])
+          const convertedHotkey = convertModifiers(hotkey.modifiers || [])
+          const modifiersMatch = areModifiersEqual(convertedActive, convertedHotkey)
+          const keyMatch = !activeKey || isKeyMatch(activeKey, hotkey.key || '')
+          includeHotkey = modifiersMatch && keyMatch
+        }
+
+        if (!includeHotkey) {
+          continue
+        }
+
+        // Count primary key
         const keyRaw = (hotkey.key || '').toLowerCase()
         const aliases = this.resolveKeyAliases(keyRaw)
         for (const alias of aliases) {
@@ -152,6 +175,8 @@ export class VisualKeyboardManager {
             break
           }
         }
+
+        // Count modifiers (de-emphasized)
         const mods = Array.isArray(hotkey.modifiers) ? hotkey.modifiers : []
         for (const modifier of mods) {
           const modKey = modifier.toLowerCase()

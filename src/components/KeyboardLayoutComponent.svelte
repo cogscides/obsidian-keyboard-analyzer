@@ -20,9 +20,10 @@
 
   interface Props {
     visibleCommands: commandEntry[]
+    strictModifierMatch?: boolean
   }
 
-  let { visibleCommands = [] }: Props = $props()
+  let { visibleCommands = [], strictModifierMatch = false }: Props = $props()
 
   const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
   const visualKeyboardManager: VisualKeyboardManager = getContext(
@@ -51,7 +52,13 @@
       heatmapScope === 'all'
         ? commandsManager.getCommandsForGroup(GroupType.All)
         : visibleCommands
-    visualKeyboardManager.calculateAndAssignWeights(commands)
+    // Pass active search context and strict flag so non-matching shortcuts don't affect weights
+    visualKeyboardManager.calculateAndAssignWeights(
+      commands,
+      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveKey,
+      strictModifierMatch
+    )
   })
 
   let gridTemplateColumns = KeyboardObject.sections
