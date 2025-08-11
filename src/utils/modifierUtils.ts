@@ -152,7 +152,7 @@ export function normalizeKey(key: string): string {
     space: ' ',
     minus: '-',
     equal: '=',
-    bracket: '[',
+    bracketleft: '[',
     bracketright: ']',
     semicolon: ';',
     quote: "'",

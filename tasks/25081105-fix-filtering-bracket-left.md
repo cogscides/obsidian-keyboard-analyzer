@@ -1,8 +1,8 @@
 ---
 title: Investigate and fix filtering for '[' (BracketLeft)
-status: todo
+status: done
 owner: '@agent'
-updated: 2025-08-11 12:00 UTC
+updated: 2025-08-11 13:45 UTC
 related:
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
 ---
@@ -30,11 +30,15 @@ Commands using the `[` key are incorrectly filtered out when `[` is selected on 
 - No regressions for nearby keys (']', '{', '}', etc.).
 - Normalization logic covered for both `code` and `key` paths.
 
+## Decisions
+
+- [2025-08-11] Normalized `BracketLeft` to '[' and ensured `hotkeyMatches` compares normalized keys; commands bound to '[' now appear when selecting the key.
+
 ## Next Steps
 
-- [ ] Add/adjust normalization for `BracketLeft` and ensure consistent casing.
-- [ ] Fix `hotkeyMatches` predicate to use normalized forms.
-- [ ] Manual test across layouts and with combos (e.g., Cmd+[).
+- [x] Add/adjust normalization for `BracketLeft` and ensure consistent casing.
+- [x] Fix `hotkeyMatches` predicate to use normalized forms.
+- [x] Manual test across layouts and with combos (e.g., Cmd+[).
 
 ## Links
 
