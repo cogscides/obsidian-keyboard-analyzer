@@ -177,8 +177,12 @@
   margin-right: 6px; /* space before command title */
 }
 
-#keyboard-component .setting-item-name button.suggestion-prefix.is-builtin::before,
-#keyboard-component .setting-item-name span.suggestion-prefix.is-builtin::before {
+#keyboard-component
+  .setting-item-name
+  button.suggestion-prefix.is-builtin::before,
+#keyboard-component
+  .setting-item-name
+  span.suggestion-prefix.is-builtin::before {
   content: '';
   display: inline-block;
   width: 6px;
@@ -366,10 +370,12 @@ kbd.modifier:hover {
   transform: rotate(0deg); /* base: down */
   transition: transform 120ms ease;
 }
-.chevron.is-collapsed { /* closed: point right */
+.chevron.is-collapsed {
+  /* closed: point right */
   transform: rotate(270deg);
 }
-.chevron.is-open-up { /* open: rotate 270deg CW to point up */
+.chevron.is-open-up {
+  /* open: rotate 270deg CW to point up */
   transform: rotate(540deg);
 }
 
@@ -414,7 +420,10 @@ kbd.modifier:hover {
 }
 
 /* Slightly smaller command text on extra-small panes */
-#keyboard-component.is-mobile .hotkey-list-container .setting-item .setting-item-name {
+#keyboard-component.is-mobile
+  .hotkey-list-container
+  .setting-item
+  .setting-item-name {
   font-size: 13px;
 }
 #keyboard-component.is-mobile .hotkey-list-container .setting-item-info {
@@ -877,7 +886,7 @@ button#hotkey-refresh-button:hover {
 #keyboard-component.xs #keyboard-preview-view,
 #keyboard-component.sm #keyboard-preview-view {
   justify-content: flex-start;
-  overflow-x: auto;
+  overflow-x: visible;
   -webkit-overflow-scrolling: touch;
 }
 
