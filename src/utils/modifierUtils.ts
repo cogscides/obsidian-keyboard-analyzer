@@ -73,7 +73,7 @@ export function platformizeModifier(mod: string): Modifier {
     if (m === 'Alt' || m === 'Option') return 'Alt'
     if (m === 'Meta' || m === 'Cmd' || m === 'Win') return 'Meta'
     if (m === 'Shift') return 'Shift'
-    return (m as Modifier)
+    return m as Modifier
   }
   // Windows/Linux
   if (m === 'Mod') return 'Ctrl'
@@ -81,7 +81,7 @@ export function platformizeModifier(mod: string): Modifier {
   if (m === 'Option') return 'Alt'
   if (m === 'Control') return 'Ctrl'
   if (m === 'Win') return 'Meta' // keep distinct bucket name if needed
-  return (m as Modifier)
+  return m as Modifier
 }
 
 export function platformizeModifiers(mods: string[] | Modifier[]): Modifier[] {
@@ -98,7 +98,7 @@ export function getDisplayModifiers(modifiers: string[]): string[] {
 
 export function sortModifiers(modifiers: string[]): string[] {
   const order = isMac()
-    ? ['Ctrl', 'Alt', 'Shift', 'Cmd']
+    ? ['Cmd', 'Ctrl', 'Alt', 'Shift']
     : ['Ctrl', 'Alt', 'Shift', 'Win']
 
   return [...modifiers].sort((a, b) => {

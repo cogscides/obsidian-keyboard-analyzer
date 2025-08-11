@@ -14,10 +14,10 @@ Improve group management by allowing users to search and add commands directly w
 
 ## Acceptance Criteria
 
-1. A search input is present at the top of the modal.
+1. A search input is present at the top of the active group.
 2. Typing shows a dropdown of matching commands (by name) below the input.
 3. Each result displays the command name and current assigned hotkey.
-4. Clicking a result adds it to the currently selected group and removes that item from results.
+4. Clicking a result adds it to the currently selected group and removes that item from dropdown results.
 5. Other matching results remain until search is cleared.
 6. Input includes a clear (x) icon to reset.
 

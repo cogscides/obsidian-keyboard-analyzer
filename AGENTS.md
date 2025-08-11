@@ -88,4 +88,6 @@ related:
 - When closing a task, mark incomplete items as either:
   - done — implemented and verified, or
   - skipped — with a brief rationale and a link to a follow-up task if needed.
+- When closing a task, move it to the `done` folder and update the status in the frontmatter.
+- If a task is split into multiple follow-ups, link them in the `related` section and in relavant parts of the task.
 - Update the `related` list when splitting or linking follow-ups to keep navigation clear.
