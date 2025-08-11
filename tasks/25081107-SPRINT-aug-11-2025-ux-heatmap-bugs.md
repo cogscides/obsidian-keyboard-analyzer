@@ -2,7 +2,7 @@
 title: SPRINT — Aug 11, 2025: Small-screen UX, Heatmap tuning, Bugfixes
 status: in_progress
 owner: "@agent"
-updated: 2025-08-11 12:30 UTC
+updated: 2025-08-11 19:15 UTC
 related:
   - [[25081101-redesign-manage-groups-modal]]
   - [[25081102-command-search-in-manage-groups]]
@@ -55,3 +55,4 @@ Coordinate parallel work across UX improvements for small screens, heatmap weigh
 
 - Please append brief progress updates to each linked task and this sprint note with timestamps.
 - Keep scope limited to acceptance criteria; spin off follow-ups as new tasks and link them here.
+- [2025-08-11] Implemented horizontal clamping for `AddToGroupPopover` to keep popover within viewport. (rel: [[25081103-fix-popover-overflow]])

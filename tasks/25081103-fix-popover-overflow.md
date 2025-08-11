@@ -1,8 +1,8 @@
 ---
 title: Fix overflow/cropping of in-place pop-ups and dropdowns
-status: todo
+status: in_progress
 owner: '@agent'
-updated: 2025-08-11 12:00 UTC
+updated: 2025-08-11 19:15 UTC
 related:
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
 ---
@@ -27,12 +27,13 @@ Dropdowns and popovers are cropped or overflow when near pane/window edges. Ensu
 
 ## Decisions
 
-- [2025-08-11] Pending — adopt a positioning utility (e.g., Floating UI) vs. custom logic.
+- [2025-08-11] Opted for custom horizontal clamping in `AddToGroupPopover`; utility adoption still under review.
 
 ## Next Steps
 
 - [ ] Audit current measurement/position code; list edge cases (narrow sidebars, bottom edge, RTL).
 - [ ] If approved, integrate `@floating-ui/dom` for flip/shift/offset middleware; otherwise enhance custom logic.
+- [x] Add horizontal clamping in `AddToGroupPopover` to keep popover within viewport.
 - [ ] Add resize/scroll observers to recompute positions.
 - [ ] Verify clickOutside works with portals and doesn't interfere with focus.
 - [ ] Manual test in narrow panes and near edges (top/bottom/left/right).

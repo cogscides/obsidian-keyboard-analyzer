@@ -17,6 +17,7 @@
   let search = $state('')
   let newGroupName = $state('')
   let placeAbove = $state(false)
+  let offsetX = $state(0)
   let rootEl: HTMLDivElement | null = null
 
   function filteredGroups() {
@@ -44,22 +45,30 @@
   }
 
   onMount(() => {
-    // Flip above if there is not enough space below
+    // Flip above if there is not enough space below and clamp horizontally
     try {
       const el = rootEl
       if (!el) return
       const rect = el.getBoundingClientRect()
       const viewportH =
         window.innerHeight || document.documentElement.clientHeight
+      const viewportW =
+        window.innerWidth || document.documentElement.clientWidth
       const spaceBelow = viewportH - rect.top
       // heuristic threshold
       placeAbove = spaceBelow < 260
+
+      const overflowRight = rect.right - viewportW
+      const overflowLeft = rect.left
+      if (overflowRight > 0) offsetX = -overflowRight - 8
+      if (overflowLeft < 0) offsetX += -overflowLeft + 8
     } catch {}
   })
 </script>
 
 <div
   class="kb-popover {placeAbove ? 'is-above' : 'is-below'}"
+  style="transform: translateX({offsetX}px);"
   use:clickOutside
   onclick_outside={onClose}
   role="dialog"
