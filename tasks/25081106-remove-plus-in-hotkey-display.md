@@ -1,8 +1,8 @@
 ---
 title: Remove '+' separator in hotkey display
-status: todo
+status: done
 owner: '@agent'
-updated: 2025-08-11 12:00 UTC
+updated: 2025-08-11 13:05 UTC
 related:
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
 ---
@@ -21,10 +21,14 @@ Hotkeys are rendered with `+` separators (e.g., `Ctrl + Shift + K`). Switch to s
 - `src/utils/normalizeKeyDisplay.ts` — change `formatHotkeyBaked` joiner from `' + '` to a single space.
 - `src/managers/hotkeyManager/hotkeyManager.svelte.ts` — update `renderHotkey` similarly.
 
+## Decisions
+
+- [2025-08-11] Replaced `+` joiners with single spaces for hotkey rendering.
+
 ## Next Steps
 
-- [ ] Update joiners and verify no double spaces in edge cases.
-- [ ] Manual check in list and popovers where hotkeys appear.
+- [x] Update joiners and verify no double spaces in edge cases.
+- [x] Manual check in list and popovers where hotkeys appear.
 
 ## Links
 

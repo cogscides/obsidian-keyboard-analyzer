@@ -119,5 +119,5 @@ export function getBakedKeyLabel(rawKey: string): string {
 export function formatHotkeyBaked(hotkey: { modifiers: string[]; key: string }): string {
   const mods = platformizeModifiers(hotkey.modifiers || []).map(getBakedModifierLabel)
   const key = getBakedKeyLabel(hotkey.key || '')
-  return [...mods, key].filter(Boolean).join(' + ')
+  return [...mods, key].filter(Boolean).join(' ')
 }

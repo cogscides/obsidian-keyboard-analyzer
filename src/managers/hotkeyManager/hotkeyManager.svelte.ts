@@ -236,7 +236,7 @@ export default class HotkeyManager {
 
   public renderHotkey(hotkey: hotkeyEntry): string {
     const bakedModifiers = platformizeModifiers(hotkey.modifiers)
-    return [...bakedModifiers, hotkey.key].join(' + ')
+    return [...bakedModifiers, hotkey.key].join(' ')
   }
 
   public searchHotkeys(
