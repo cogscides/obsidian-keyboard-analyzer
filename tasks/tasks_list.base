@@ -1,0 +1,18 @@
+views:
+  - type: table
+    name: Table
+    order:
+      - file.name
+      - created
+      - owner
+      - status
+      - title
+      - file.mtime
+    sort:
+      - property: status
+        direction: DESC
+      - property: file.mtime
+        direction: DESC
+    columnSize:
+      note.status: 113
+      note.title: 399

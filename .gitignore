@@ -28,3 +28,9 @@ test-vault/.obsidian/plugins/obsidian-svelte-plugin/*.json
 *.njsproj
 *.sln
 *.sw?
+
+#repomix
+repomix-output.xml
+
+# Obsidian
+tasks/.obsidian/*

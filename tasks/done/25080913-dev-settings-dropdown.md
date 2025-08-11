@@ -1,8 +1,8 @@
 ---
 title: Add Developer Settings dropdown in toolbar
-status: in_progress
+status: done
 owner: "@agent"
-updated: 2025-08-09 21:55 UTC
+updated: 2025-08-11 12:17 UTC
 related:
   - [[250809-list-of-bugs-and-new-feature-requests]]
   - [[250809-keyboard-panel-collapse-toggle]]
@@ -36,7 +36,7 @@ Add a compact settings dropdown in the keyboard toolbar (left of Donate) for dev
 - [x] Implement `logger` utility and replace scattered `console.log` calls where feasible (owner)
 - [x] Add toolbar gear button and dropdown; conditionally render when `enableDeveloperOptions` is true (owner)
 - [x] Implement Active Keys inspector panel with improved layout (owner)
-- [ ] Verify behavior across themes and small panes; attach notes (owner)
+- [ ] Verify behavior across themes and small panes; attach notes (owner) — follow-up
 
 ## Decisions
 - [2025-08-09] Introduced `runtimeConfig` to avoid tight coupling between utilities and the settings manager. Settings tab updates runtime flags so changes apply immediately without reload.

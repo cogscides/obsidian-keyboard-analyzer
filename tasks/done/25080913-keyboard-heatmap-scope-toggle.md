@@ -1,10 +1,11 @@
 ---
 title: Toggle heatmap scope — Filters vs All commands
-status: in_progress
+status: done
 owner: "@you"
-updated: 2025-08-09 13:18 UTC
+updated: 2025-08-11 12:07 UTC
 related:
   - [[250809-list-of-bugs-and-new-feature-requests]]
+  - [[25081002-fix-show-all-heatmap-scope]]
 ---
 
 ## Context
@@ -23,8 +24,8 @@ The visual keyboard heatmap currently reflects active search/filters, which can 
 ## Next Steps
 - [x] Add temporary `heatmapScope` UI control in keyboard toolbar (owner)
 - [x] Replace with a single toggle button to cycle Filtered/All (owner)
-- [ ] Add `heatmapScope` view setting (`filtered | all`) with persistence (owner)
-- [ ] Update heatmap computation pipeline/util to accept scope (owner)
+- [x] Add `heatmapScope` view setting (`filtered | all`) with persistence (owner) — moved to [[25081002-fix-show-all-heatmap-scope]]
+- [x] Update heatmap computation pipeline/util to accept scope (owner)
 - [ ] Update keyboard legend/tooltip to indicate current scope (owner)
 - [ ] Manual performance check with large vault; screenshots of both states (owner)
 

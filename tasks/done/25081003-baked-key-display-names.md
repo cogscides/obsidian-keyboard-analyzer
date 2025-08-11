@@ -1,8 +1,8 @@
 ---
 title: Baked key display names in search and commands list
-status: in_progress
+status: done
 owner: "@agent"
-updated: 2025-08-10 19:10 UTC
+updated: 2025-08-11 12:11 UTC
 related:
   - [[25081001-visual-keyboard-keys-and-hover-highlights]]
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
@@ -31,10 +31,10 @@ Definition of done:
 - [x] Add dev setting toggle to enable/disable baked names; default on in production builds.
 - [x] Ensure arrows label consistently in both views (choose text-first: e.g., "Up Arrow").
 - [x] Ensure Backspace label shows "Backspace" (no glyph) when baked names are enabled.
-- [ ] Verify macOS/Windows/Linux naming conventions and modifier labels.
-- [ ] Implement OS-specific layout transformation to assign per-OS modifier roles (Cmd vs Win) and labels at model level; use it in ActiveKeysStore modifier handling and VisualKeyboard heatmap.
-- [ ] Remove remaining ad-hoc platform branches after model-level mapping is in place.
-- [ ] After the task is done: Update README dev settings and add screenshots in `test-vault/` validation notes.
+- [x] Verify macOS/Windows/Linux naming conventions and modifier labels.
+- [x] Implement OS-specific layout transformation to assign per-OS modifier roles (Cmd vs Win) and labels at model level; use it in ActiveKeysStore modifier handling and VisualKeyboard heatmap.
+- [x] Remove remaining ad-hoc platform branches after model-level mapping is in place.
+- [ ] After the task is done: Update README dev settings and add screenshots in `test-vault/` validation notes. — follow-up
 
 ## Work Log
 - [2025-08-10 15:10 UTC] Added canonical baked display utility `src/utils/normalizeKeyDisplay.ts` with Obsidian-aligned labels and numpad glyphs.

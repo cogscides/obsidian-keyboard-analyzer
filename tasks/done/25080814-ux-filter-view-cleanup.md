@@ -1,8 +1,8 @@
 ---
 title: Unify Filter/View dropdowns and polish Keyboard UI
-status: in_progress
+status: done
 owner: "@you"
-updated: 2025-08-09 14:20 UTC
+updated: 2025-08-11 12:09 UTC
 related:
   - [[design-note]]
 ---
@@ -33,11 +33,11 @@ Filter and View controls are currently duplicated/mixed across multiple dropdown
 - [x] Sorting/Presentation: move `FeaturedFirst`, `DisplayIDs`, `HighlightCustom`, `HighlightDuplicates`, `GroupByPlugin` to View (owner)
 - [x] Filtering: keep `StrictModifierMatch`, `ViewWOhotkeys`; add `OnlyCustom`, `OnlyDuplicates` (owner)
 - [x] Close behaviors: ESC/outside-click to close dropdowns (owner)
-- [ ] Close behaviors: focus trap while open (owner)
-- [ ] Visual: unify spacing, icon sizes, and button states across menus (owner)
+- [ ] Close behaviors: focus trap while open (owner) — defer to follow-up task
+- [ ] Visual: unify spacing, icon sizes, and button states across menus (owner) — defer to follow-up task
 - [x] Grouped View: compact rows, per‑plugin collapse w/ toolbar; built‑in badge (owner)
 - [x] Built‑ins: add `HighlightBuiltIns` view toggle and subtle dot badge in both flat and grouped views (owner)
-- [ ] Persist collapse state per plugin across sessions (owner)
+- [ ] Persist collapse state per plugin across sessions (owner) — defer to follow-up task
 
 ## Links
 - [[design-note]]

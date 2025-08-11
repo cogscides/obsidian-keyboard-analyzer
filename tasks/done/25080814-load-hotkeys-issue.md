@@ -1,8 +1,8 @@
 ---
 title: Toggles UX and filtering fixes
-status: in_progress
+status: done
 owner: "@agent"
-updated: 2025-08-09 14:20 UTC
+updated: 2025-08-11 12:15 UTC
 related:
   - design-note
 ---

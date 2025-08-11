@@ -1,8 +1,8 @@
 ---
 title: Include system/editor default shortcuts in results
-status: in_progress
+status: done
 owner: "@you"
-updated: 2025-08-09 03:40 UTC
+updated: 2025-08-11 12:05 UTC
 related:
   - design-note
 ---

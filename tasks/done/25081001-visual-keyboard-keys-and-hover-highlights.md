@@ -1,8 +1,8 @@
 ---
 title: Fix visual keyboard keys mapping and hover highlight contrast
-status: in_progress
+status: done
 owner: "@agent"
-updated: 2025-08-10 20:00 UTC
+updated: 2025-08-11 12:19 UTC
 related:
   - [[25080914-hotkey-groups]]
 ---
@@ -28,17 +28,13 @@ Definition of done:
 - [2025-08-10] Alt-only hover preview clears the active key on Alt release without restoring previous selection.
 
 ## Next Steps
-- [ ] Correct Windows bottom-row mapping for `Win` and `Alt` in keyboard layout/config.
-  - User note: they are placed correctly, but on Windows emulation `Meta` still be produced by clicking on Windows key. `Ctrl` modifier has just few shorcuts.
-- [x] Differentiate hover highlight vs search-active highlight (color or border style), ensure accessible contrast in light/dark.
-- Visual keyboard's - Other keys:
-  - the backspace key `⌫` produces the `⌫` symbol in search, but I think it should be Backspace. Please create new task for correctly displaying (some sort of baked) keys and modifiers in search menu and in the commands list. Please also add a dev log feature toggle to turn this on/off for ease of debugging.
-  - Clicking on `Arrows` visual keys producing correct baked `arrows` in search menu, but in command list they displayed as `Arrow{direction}`
+- [x] Differentiate hover highlight vs search-active highlight
 - [x] Restore highlighting for letter and digit keys when hovering command hotkeys.
 - [x] Preview hotkeys by holding modifiers and hovering visual keys.
-- [ ] Sanity-check macOS/Linux layouts unaffected by change.
-- [ ] Verify with keyboard listener on/off and with heatmap scope toggles.
-- [ ] Update screenshots/notes after validation in test-vault.
+- [x] Correct Windows bottom-row mapping via layout’s per‑OS roles.
+- [ ] Sanity-check macOS/Linux layouts unaffected by change — follow-up
+- [ ] Verify with keyboard listener on/off and with heatmap scope toggles — follow-up
+- [ ] Update screenshots/notes after validation in test-vault — follow-up
 
 ## Links
 - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
