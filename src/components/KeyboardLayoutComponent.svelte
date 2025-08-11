@@ -1,85 +1,75 @@
 <!-- src/components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
-  import { setContext, getContext } from 'svelte'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
-  import type KeyboardAnalyzerPlugin from '../main'
-  import type {
-    KeyboardLayout,
-    commandEntry,
-    KeyboardSection,
-  } from '../interfaces/Interfaces'
-  import KeyboardKey from './KeyboardKey.svelte'
-  import { Coffee as CoffeeIcon, Pin as PinIcon, Settings as SettingsIcon } from 'lucide-svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
-  import type CommandsManager from '../managers/commandsManager'
-  import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
+import {
+	Coffee as CoffeeIcon,
+	Pin as PinIcon,
+	Settings as SettingsIcon,
+} from "lucide-svelte";
+import { getContext } from "svelte";
+import type { KeyboardLayout, KeyboardSection } from "../interfaces/Interfaces";
+import type KeyboardAnalyzerPlugin from "../main";
+import type SettingsManager from "../managers/settingsManager";
+import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
+import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
+import KeyboardKey from "./KeyboardKey.svelte";
 
-  interface Props {
-    visibleCommands: commandEntry[]
-  }
+const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
+const visualKeyboardManager: VisualKeyboardManager = getContext(
+	"visualKeyboardManager",
+);
+const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
+const settingsManager: SettingsManager = plugin.settingsManager;
+let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout);
 
-  let { visibleCommands = [] }: Props = $props()
+// DEBUGGER
+let keyClicked = $state("");
 
-  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
-  const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager',
-  )
-  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
-  import type SettingsManager from '../managers/settingsManager'
-  const settingsManager: SettingsManager = plugin.settingsManager
-  const commandsManager: CommandsManager = plugin.commandsManager
-  let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
+function calculateSectionColumns(section: KeyboardSection) {
+	return (
+		section.rows.reduce((maxWidth, row) => {
+			const rowWidth = row.reduce((sum, key) => sum + (key.width || 1), 0);
+			return Math.max(maxWidth, rowWidth);
+		}, 0) * 4
+	); // Multiply by 4 to match the original scale
+}
 
-  // DEBUGGER
-  let keyClicked = $state('')
+let gridTemplateColumns = KeyboardObject.sections
+	.map((section) => `${section.gridRatio}fr`)
+	.join(" ");
+let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(" ")}'`;
 
-  function calculateSectionColumns(section: KeyboardSection) {
-    return (
-      section.rows.reduce((maxWidth, row) => {
-        const rowWidth = row.reduce((sum, key) => sum + (key.width || 1), 0)
-        return Math.max(maxWidth, rowWidth)
-      }, 0) * 4
-    ) // Multiply by 4 to match the original scale
-  }
+// Calculate max columns for each section
+let sectionColumns = KeyboardObject.sections.reduce(
+	(acc, section) => {
+		acc[section.name] = calculateSectionColumns(section);
+		return acc;
+	},
+	{} as Record<string, number>,
+);
 
-  $effect(() => {
-    const commands = heatmapScope === 'all'
-      ? commandsManager.getCommandsForGroup(GroupType.All)
-      : visibleCommands
-    visualKeyboardManager.calculateAndAssignWeights(commands)
-  })
-
-  let gridTemplateColumns = KeyboardObject.sections
-    .map((section) => `${section.gridRatio}fr`)
-    .join(' ')
-  let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(' ')}'`
-
-  // Calculate max columns for each section
-  let sectionColumns = KeyboardObject.sections.reduce(
-    (acc, section) => {
-      acc[section.name] = calculateSectionColumns(section)
-      return acc
-    },
-    {} as Record<string, number>,
-  )
-
-  // Local UI state for toolbar controls
-  let panelCollapsed = $state(false)
-  let isPinned = $state(Boolean(settingsManager.getSetting('pinKeyboardPanel')))
-  let heatmapScope: 'filtered' | 'all' = $state('filtered')
-  let devMenuOpen = $state(false)
-  let showInspector = $state(false)
-  // Reflect live settings values
-  const devOptionsEnabled = $derived(
-    Boolean(settingsManager.settings.enableDeveloperOptions)
-  )
-  let devLoggingEnabled = $derived(
-    Boolean(settingsManager.settings.devLoggingEnabled)
-  )
-  let emulatedOS = $derived(
-    (settingsManager.settings.emulatedOS || 'none') as 'none' | 'windows' | 'macos' | 'linux'
-  )
-  import { setDevLoggingEnabled, setEmulatedOS } from '../utils/runtimeConfig'
+// Local UI state for toolbar controls
+let panelCollapsed = $state(false);
+let isPinned = $state(Boolean(settingsManager.getSetting("pinKeyboardPanel")));
+const heatmapScope = $derived(
+	(settingsManager.settings.heatmapScope as "filtered" | "all") || "filtered",
+);
+let devMenuOpen = $state(false);
+let showInspector = $state(false);
+// Reflect live settings values
+const devOptionsEnabled = $derived(
+	Boolean(settingsManager.settings.enableDeveloperOptions),
+);
+let devLoggingEnabled = $derived(
+	Boolean(settingsManager.settings.devLoggingEnabled),
+);
+let emulatedOS = $derived(
+	(settingsManager.settings.emulatedOS || "none") as
+		| "none"
+		| "windows"
+		| "macos"
+		| "linux",
+);
+import { setDevLoggingEnabled, setEmulatedOS } from "../utils/runtimeConfig";
 </script>
 
 <div class="keyboard-panel {panelCollapsed ? 'collapsed' : ''} {isPinned ? 'pinned' : ''}">
@@ -95,18 +85,6 @@
         <span class={`chevron ${panelCollapsed ? 'is-collapsed' : ''}`}>⌄</span>
         <span class="toggle-label">Keyboard</span>
       </button>
-        {#if !panelCollapsed}
-          <button
-            class="scope-toggle"
-            aria-label="Toggle heatmap scope"
-            aria-pressed={heatmapScope === 'all'}
-            title={heatmapScope === 'filtered' ? 'Heatmap matches current filters/search' : 'Heatmap counts all commands'}
-            onclick={() => (heatmapScope = heatmapScope === 'filtered' ? 'all' : 'filtered')}
-          >
-            <span class="scope-label">Show:</span>
-            <span class="scope-value">{heatmapScope === 'filtered' ? 'Filtered' : 'All'}</span>
-          </button>
-        {/if}
     </div>
     <div class="toolbar-right">
       {#if devOptionsEnabled}
@@ -313,28 +291,6 @@
     font-weight: 600;
     margin-left: 6px;
   }
-
-  /* Single scope toggle button */
-  .scope-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 28px;
-    padding: 0 8px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    background: var(--background-modifier-form-field);
-    color: var(--text-muted);
-    cursor: pointer;
-    line-height: 1;
-  }
-  .scope-toggle:hover,
-  .scope-toggle:focus-visible {
-    border-color: var(--interactive-accent);
-    color: var(--text-normal);
-  }
-  .scope-toggle .scope-label { margin-right: 4px; color: var(--text-muted); }
-  .scope-toggle .scope-value { color: var(--text-normal); font-weight: 600; }
 
   .keyboard-surface { overflow-x: auto; overflow-y: hidden; width: 100%; }
   #keyboard-layout {

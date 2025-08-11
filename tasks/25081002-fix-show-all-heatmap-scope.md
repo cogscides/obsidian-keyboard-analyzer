@@ -1,8 +1,8 @@
 ---
 title: Fix "Show: all" heatmap scope in group view
-status: todo
+status: in_progress
 owner: "@agent"
-updated: 2025-08-10 03:45 UTC
+updated: 2025-08-11 13:00 UTC
 related:
   - [[25080914-hotkey-groups]]
 ---
@@ -47,4 +47,8 @@ When a user selects a manual group, the command list is scoped to that group. Ho
 
 ## Notes
 - Keep current focus on hotkey groups; this task is queued to refine heatmap behavior without blocking current work.
+
+## Progress Log
+- [2025-08-11 12:00 UTC] Persisted heatmap scope setting and filtered system shortcuts when hidden.
+- [2025-08-11 13:00 UTC] Moved heatmap scope toggle into View dropdown and centralized dataset calculation.
 
