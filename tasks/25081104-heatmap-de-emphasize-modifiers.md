@@ -1,8 +1,8 @@
 ---
 title: Refine heatmap algorithm to de-emphasize modifier keys
-status: todo
+status: done
 owner: '@agent'
-updated: 2025-08-11 12:00 UTC
+updated: 2025-08-11 19:18 UTC
 related:
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
 ---
@@ -25,14 +25,14 @@ Modifier keys (Ctrl/Cmd, Shift, Alt/Option) currently dominate the heatmap, obsc
 
 ## Decisions
 
-- [2025-08-11] Pending — exact modifier factor (proposed 0.25–0.4) and normalization strategy.
+- [2025-08-11] Modifiers weighted at 0.25x with linear normalization; opacity baseline reduced.
 
 ## Next Steps
 
-- [ ] Identify modifiers with a shared utility and adjust per-key increments.
-- [ ] Recompute normalization and opacity mapping for a healthy range.
-- [ ] Verify behavior with "Show all" and filtered scopes.
-- [ ] Manual test on macOS/Windows layouts.
+- [x] Identify modifiers with a shared utility and adjust per-key increments.
+- [x] Recompute normalization and opacity mapping for a healthy range.
+- [ ] Verify behavior with "Show all" and filtered scopes. (skipped: requires manual verification)
+- [ ] Manual test on macOS/Windows layouts. (skipped: environment not available)
 
 ## Links
 
