@@ -174,10 +174,11 @@ export class VisualKeyboardManager {
             bucket = 'shift'
           }
 
+          const increment = 0.25
           if (bucket) {
-            keyWeights[bucket] = (keyWeights[bucket] || 0) + 1
+            keyWeights[bucket] = (keyWeights[bucket] || 0) + increment
           } else {
-            keyWeights[modKey] = (keyWeights[modKey] || 0) + 1
+            keyWeights[modKey] = (keyWeights[modKey] || 0) + increment
           }
         }
       }

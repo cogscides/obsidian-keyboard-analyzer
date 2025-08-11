@@ -56,8 +56,9 @@
 
   function calculateOpacity(weight: number): number {
     if (!weight) return 0
-    const opacityStep = 100 / maxWeightSteps
-    return Math.min(Math.round(weight * opacityStep), 100)
+    const base = 10
+    const step = (100 - base) / Math.max(1, maxWeightSteps - 1)
+    return Math.min(Math.round(base + (weight - 1) * step), 100)
   }
 
   function handleClick(key: Key) {
