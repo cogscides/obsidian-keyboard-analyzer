@@ -2,7 +2,7 @@
 <script lang="ts">
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import {
     CircleDotIcon,
     FilterIcon,
@@ -24,7 +24,10 @@
   import type { Modifier } from 'obsidian'
   import { clickOutside } from '../utils/clickOutside'
   import logger from '../utils/logger'
-  import { getBakedModifierLabel, getBakedKeyLabel } from '../utils/normalizeKeyDisplay'
+  import {
+    getBakedModifierLabel,
+    getBakedKeyLabel,
+  } from '../utils/normalizeKeyDisplay'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -38,7 +41,7 @@
       search: string,
       activeModifiers: string[],
       activeKey: string,
-      selectedGroup: string,
+      selectedGroup: string
     ) => void
   }
 
@@ -107,7 +110,10 @@
   })
 
   // Quiet derived re-computations to avoid noisy consoles
-  $effect(() => { filterSettings; selectedGroup })
+  $effect(() => {
+    filterSettings
+    selectedGroup
+  })
 
   // Removed noisy $inspect to avoid dev console spam
   // logger.debug('GroupManager try to find', selectedGroup, groupManager.getGroup(selectedGroup))
@@ -155,7 +161,7 @@
   // TODO Unify this with the settingsManager
   function setFilterSetting(
     setting: keyof CGroupFilterSettings,
-    value: boolean,
+    value: boolean
   ) {
     logger.debug('SearchMenu setFilterSetting called', {
       selectedGroup,
@@ -197,7 +203,10 @@
         // fall through to allow clearing keys below if any are active
       }
       // Clear active key/modifiers if present
-      if (PressedKeysStore.activeKey || PressedKeysStore.activeModifiers.length) {
+      if (
+        PressedKeysStore.activeKey ||
+        PressedKeysStore.activeModifiers.length
+      ) {
         PressedKeysStore.reset()
         handleSearchInput()
         e.stopPropagation()
@@ -217,7 +226,7 @@
       search,
       convertModifiers(PressedKeysStore.activeModifiers),
       PressedKeysStore.activeKey,
-      selectedGroup,
+      selectedGroup
     )
   }
 
@@ -245,7 +254,7 @@
     selectedGroup
     handleSearchInput()
   })
-  import GroupSelector from '../components/GroupSelector.svelte'
+  import GroupSelector from './GroupSelector.svelte'
 </script>
 
 <GroupSelector bind:selectedGroup />
@@ -317,7 +326,7 @@
   <div
     class="menu-anchor"
     use:clickOutside
-    ononclick_outside={() => (filterIsOpen = false)}
+    onclick_outside={() => (filterIsOpen = false)}
   >
     <button
       id="hotkey-filter-button"
@@ -340,7 +349,7 @@
               onclick={() =>
                 setFilterSetting(
                   FilterSettingsKeys.StrictModifierMatch,
-                  !filterSettings.StrictModifierMatch,
+                  !filterSettings.StrictModifierMatch
                 )}
             >
               <input
@@ -368,7 +377,7 @@
               onclick={() =>
                 setFilterSetting(
                   FilterSettingsKeys.ViewWOhotkeys,
-                  !filterSettings.ViewWOhotkeys,
+                  !filterSettings.ViewWOhotkeys
                 )}
             >
               <input
@@ -393,7 +402,7 @@
               onclick={() =>
                 setFilterSetting(
                   FilterSettingsKeys.OnlyCustom,
-                  !filterSettings.OnlyCustom,
+                  !filterSettings.OnlyCustom
                 )}
             >
               <input
@@ -418,7 +427,7 @@
               onclick={() =>
                 setFilterSetting(
                   FilterSettingsKeys.OnlyDuplicates,
-                  !filterSettings.OnlyDuplicates,
+                  !filterSettings.OnlyDuplicates
                 )}
             >
               <input
@@ -443,7 +452,7 @@
               onclick={() =>
                 setFilterSetting(
                   FilterSettingsKeys.DisplaySystemShortcuts,
-                  !filterSettings.DisplaySystemShortcuts,
+                  !filterSettings.DisplaySystemShortcuts
                 )}
             >
               <input
@@ -474,7 +483,7 @@
   <div
     class="menu-anchor"
     use:clickOutside
-    ononclick_outside={() => (viewDropdownOpen = false)}
+    onclick_outside={() => (viewDropdownOpen = false)}
   >
     <button
       id="hotkey-view-button"
@@ -500,7 +509,7 @@
                     setting as unknown as keyof CGroupFilterSettings,
                     !(filterSettings[
                       setting as unknown as keyof FilterSettings
-                    ] as boolean),
+                    ] as boolean)
                   )}
               >
                 <input

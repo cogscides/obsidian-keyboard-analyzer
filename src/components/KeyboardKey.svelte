@@ -2,8 +2,8 @@
 <script lang="ts">
   import type { Key } from '../interfaces/Interfaces'
   import { getContext } from 'svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
 
   interface Props {
     key: Key
@@ -16,13 +16,13 @@
       unicode: '',
       width: 1,
       height: 1,
-      type: 'empty' as const,
-    },
+      type: 'empty',
+    } as Key,
     maxWeightSteps = 5,
   }: Props = $props()
 
   const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager',
+    'visualKeyboardManager'
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
@@ -46,8 +46,8 @@
   function spreadWeights(weight: number) {
     const maxWeight = Math.max(
       ...Object.values(visualKeyboardManager.keyStates).map(
-        (state) => state.weight || 0,
-      ),
+        (state) => state.weight || 0
+      )
     )
     const step = maxWeight / maxWeightSteps
     return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
@@ -71,7 +71,7 @@
     // Update visual state based on new active keys
     visualKeyboardManager.updateVisualState(
       activeKeysStore.activeKey,
-      activeKeysStore.activeModifiers,
+      activeKeysStore.activeModifiers
     )
   }
 
@@ -85,8 +85,9 @@
     if (!previewing) {
       storedKey = activeKeysStore.ActiveKey
       altReleaseListener = (e: KeyboardEvent) => {
-        if (e.key === 'Alt') {
-          stopPreview()
+        if (e.key === 'Alt' || e.key === 'AltGraph') {
+          // Match mouseleave behavior: restore previous active key
+          stopPreview(true)
         }
       }
       window.addEventListener('keyup', altReleaseListener)
@@ -95,8 +96,13 @@
     activeKeysStore.ActiveKey = key.code || key.label || ''
   }
 
-  function stopPreview() {
-    activeKeysStore.ActiveKey = storedKey
+  function stopPreview(restore = true) {
+    if (restore) {
+      activeKeysStore.ActiveKey = storedKey
+    } else {
+      activeKeysStore.clearActiveKey()
+      storedKey = ''
+    }
     previewing = false
     if (altReleaseListener) {
       window.removeEventListener('keyup', altReleaseListener)
@@ -107,29 +113,31 @@
   function handleMouseEnter(event: MouseEvent) {
     hovered = true
     const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
-      key.code || key.label || '',
+      key.code || key.label || ''
     )
 
     if (!isModifierKey) {
+      // Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
       if (event.altKey) {
         startPreview()
       }
       altKeydownListener = (e: KeyboardEvent) => {
-        if (hovered && e.key === 'Alt') {
+        if (hovered && (e.key === 'Alt' || e.key === 'AltGraph')) {
           startPreview()
         }
       }
-      window.addEventListener('keydown', altKeydownListener)
+      window.addEventListener('keydown', altKeydownListener, true)
     }
   }
 
   function handleMouseLeave() {
     hovered = false
     if (previewing) {
-      stopPreview()
+      // On mouse leave, restore previous active key
+      stopPreview(true)
     }
     if (altKeydownListener) {
-      window.removeEventListener('keydown', altKeydownListener)
+      window.removeEventListener('keydown', altKeydownListener, true)
       altKeydownListener = null
     }
   }

@@ -2,8 +2,7 @@ import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
 import type {
   hotkeyEntry,
   commandEntry,
-  UnsafeInternalPlugin,
-  UnsafeInternalPluginInstance,
+  UnsafeInternalPlugin
 } from '../../interfaces/Interfaces'
 import {
   convertModifiers,
@@ -11,7 +10,7 @@ import {
   modifiersToString,
   areModifiersEqual,
   isKeyMatch,
-  platformizeModifiers,
+  platformizeModifiers
 } from '../../utils/modifierUtils'
 
 export default class HotkeyManager {
@@ -109,9 +108,9 @@ export default class HotkeyManager {
     // Heuristic fallback: not a community plugin => internal
     const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
     if (isCommunity) return false
-    const enabledInternal = this.app.internalPlugins.getEnabledPlugins() as UnsafeInternalPlugin[]
+    const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
     const isInternal = enabledInternal.some(
-      (p) => (p.instance as UnsafeInternalPluginInstance).id === pluginId
+      (p) => p.instance.id === pluginId
     )
     return isInternal || !isCommunity
   }
@@ -120,11 +119,10 @@ export default class HotkeyManager {
     const plugin = this.app.plugins.plugins[pluginId]
     if (plugin) return plugin.manifest.name
 
-      const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
+    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
 
     const internalPlugin = internalPlugins.find(
-      (plugin) =>
-        (plugin.instance as UnsafeInternalPluginInstance).id === pluginId
+      (plugin) => plugin.instance.id === pluginId
     ) as UnsafeInternalPlugin | undefined
 
     if (internalPlugin?.instance) {
@@ -259,3 +257,4 @@ export default class HotkeyManager {
     })
   }
 }
+

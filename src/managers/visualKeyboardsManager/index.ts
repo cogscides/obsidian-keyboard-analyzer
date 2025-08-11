@@ -1,3 +1,3 @@
-export * from './visualKeyboardsManager.svelte'
+export * from './visualKeyboardsManager.svelte.ts'
 
-export { default } from './visualKeyboardsManager.svelte'
+export { default } from './visualKeyboardsManager.svelte.ts'

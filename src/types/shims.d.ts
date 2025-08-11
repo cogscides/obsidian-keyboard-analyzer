@@ -1,5 +1,5 @@
 declare namespace svelteHTML {
   interface HTMLAttributes<T> {
-    ononclick_outside?: (event: CustomEvent<any>) => void
+    onclick_outside?: (event: CustomEvent<any>) => void
   }
 }

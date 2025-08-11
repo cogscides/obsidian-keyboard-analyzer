@@ -25,6 +25,7 @@ Definition of done:
 - [2025-08-10] Hover preview is limited to the Alt modifier and clears on Alt release.
 - [2025-08-10] Command list hover now highlights modifiers even if they are active.
 - [2025-08-10] Alt preview also triggers when Alt is pressed while already hovering a key.
+- [2025-08-10] Alt-only hover preview clears the active key on Alt release without restoring previous selection.
 
 ## Next Steps
 - [ ] Correct Windows bottom-row mapping for `Win` and `Alt` in keyboard layout/config.

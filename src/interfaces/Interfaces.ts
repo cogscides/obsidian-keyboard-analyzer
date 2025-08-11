@@ -1,11 +1,5 @@
 // src/interfaces/Interfaces.ts
-import type {
-  Command,
-  Hotkey,
-  Modifier,
-  App,
-  KeymapInfo,
-} from 'obsidian'
+import type { Command, Hotkey, Modifier, App, KeymapInfo } from 'obsidian'
 
 export interface commandEntry {
   id: string
@@ -22,9 +16,8 @@ export type commandsArray = commandEntry[]
 
 // Plugin Data
 export interface hotkeyEntry extends Hotkey {
-  modifiers: Modifier[]
-  backedModifiers?: string
   isCustom: boolean
+  backedModifiers?: string
 }
 
 export interface hotkeyDict {
@@ -97,15 +90,15 @@ export interface UnsafeCommands {
   executeCommandById(id: string): boolean
 }
 
-export interface UnsafeInternalPlugin {
-  manifest?: { id: string }
-  instance: UnsafeInternalPluginInstance
-}
-
 export interface UnsafeInternalPluginInstance {
   id: string
   name: string
   commands?: Record<string, Command>
+}
+
+export interface UnsafeInternalPlugin {
+  manifest?: { id?: string; name?: string }
+  instance: UnsafeInternalPluginInstance
 }
 
 // Helper type to convert KeymapInfo to Hotkey

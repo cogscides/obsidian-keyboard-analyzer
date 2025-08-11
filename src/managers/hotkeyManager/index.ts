@@ -1,3 +1,2 @@
-export * from './hotkeyManager.svelte'
-
-export { default } from './hotkeyManager.svelte'
+export * from './hotkeyManager.svelte.ts'
+export { default } from './hotkeyManager.svelte.ts'

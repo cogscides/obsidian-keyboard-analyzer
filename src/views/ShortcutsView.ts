@@ -3,7 +3,7 @@ import { mount, unmount } from 'svelte'
 
 import type KeyboardAnalyzerPlugin from '../main'
 import KeyboardComponent from '../components/KeyboardComponent.svelte'
-import { ActiveKeysStore } from '../stores/activeKeysStore.svelte'
+import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from '../Constants'
 import { VisualKeyboardManager } from '../managers'
 

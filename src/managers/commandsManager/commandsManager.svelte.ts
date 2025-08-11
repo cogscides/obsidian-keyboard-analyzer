@@ -2,41 +2,9 @@ import type { App, Command, Plugin } from 'obsidian'
 import type {
   hotkeyEntry,
   UnsafeInternalPlugin,
-  UnsafeInternalPluginInstance,
   commandEntry,
 } from '../../interfaces/Interfaces'
-
-type InternalPluginName =
-  | 'audio-recorder'
-  | 'backlink'
-  | 'bookmarks'
-  | 'canvas'
-  | 'command-palette'
-  | 'daily-notes'
-  | 'editor-status'
-  | 'file-explorer'
-  | 'file-recovery'
-  | 'global-search'
-  | 'graph'
-  | 'markdown-importer'
-  | 'note-composer'
-  | 'outgoing-link'
-  | 'outline'
-  | 'page-preview'
-  | 'properties'
-  | 'publish'
-  | 'random-note'
-  | 'slash-command'
-  | 'slides'
-  | 'starred'
-  | 'switcher'
-  | 'sync'
-  | 'tag-pane'
-  | 'templates'
-  | 'word-count'
-  | 'workspaces'
-  | 'zk-prefixer'
-import HotkeyManager from '../hotkeyManager/hotkeyManager.svelte'
+import HotkeyManager from '../hotkeyManager'
 import SettingsManager, { GroupType, type CGroup } from '../settingsManager'
 import {
   convertModifiers,
@@ -46,7 +14,7 @@ import {
 import type groupManager from '../groupManager'
 import GroupManager, {
   DEFAULT_GROUP_NAMES,
-} from '../groupManager/groupManager.svelte'
+} from '../groupManager/groupManager.svelte.ts'
 import type KeyboardAnalyzerPlugin from '../../main'
 import { getSystemShortcutCommands } from '../../utils/systemShortcuts'
 
@@ -114,9 +82,9 @@ export default class CommandsManager {
    * @private
    * @returns Command[]
    */
-    private getCommands(): Command[] {
-      return Object.values(this.app.commands.commands)
-    }
+  private getCommands(): Command[] {
+    return Object.values(this.app.commands.commands)
+  }
 
   /**
    * Processes the commands into a more usable format
@@ -150,15 +118,13 @@ export default class CommandsManager {
    * @param pluginId - The ID of the plugin to get the name of
    * @returns string - The name of the plugin
    */
-    public getPluginName(pluginId: string): string {
-      const plugin = this.app.plugins.plugins[pluginId]
+  public getPluginName(pluginId: string): string {
+    const plugin = this.app.plugins.plugins[pluginId]
     if (plugin) return plugin.manifest.name
 
-      const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
-
+    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
     const internalPlugin = internalPlugins.find(
-      (plugin) =>
-        (plugin.instance as UnsafeInternalPluginInstance).id === pluginId
+      (plugin) => plugin.instance.id === pluginId
     ) as UnsafeInternalPlugin | undefined
 
     if (internalPlugin?.instance) {
@@ -169,41 +135,10 @@ export default class CommandsManager {
   }
 
   /**
-  * Returns a boolean value indicating if a command is an internal module
-  *
-  * @param commandId - The ID of the command to check
-  * @returns boolean
-  * @types of InternalPluginName from obsidian-typings
-  type InternalPluginName =
-		| "audio-recorder"
-		| "backlink"
-		| "bookmarks"
-		| "canvas"
-		| "command-palette"
-		| "daily-notes"
-		| "editor-status"
-		| "file-explorer"
-		| "file-recovery"
-		| "global-search"
-		| "graph"
-		| "markdown-importer"
-		| "note-composer"
-		| "outgoing-link"
-		| "outline"
-		| "page-preview"
-		| "properties"
-		| "publish"
-		| "random-note"
-		| "slash-command"
-		| "slides"
-		| "starred"
-		| "switcher"
-		| "sync"
-		| "tag-pane"
-		| "templates"
-		| "word-count"
-		| "workspaces"
-		| "zk-prefixer";
+   * Returns a boolean value indicating if a command is an internal module
+   *
+   * @param commandId - The ID of the command to check
+   * @returns boolean
    */
   public isInternalModule(commandId: string): boolean {
     const pluginId = (commandId || '').split(':')[0] || ''
@@ -239,7 +174,7 @@ export default class CommandsManager {
       'word-count',
       'workspaces',
       'zk-prefixer',
-    ] as InternalPluginName[]
+    ]
 
     // Additional core namespaces used by Obsidian for built-in commands
     const coreNamespaces = [
@@ -252,18 +187,18 @@ export default class CommandsManager {
       'workspace',
     ]
 
-    if (internalModules.includes(pluginId as InternalPluginName)) return true
+    if (internalModules.includes(pluginId)) return true
     if (coreNamespaces.includes(pluginId)) return true
 
-      // Heuristic fallback: if not a community plugin and not an internal plugin id, treat as internal
-      const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
-      if (isCommunity) return false
-      const enabledInternal = this.app.internalPlugins.getEnabledPlugins() as UnsafeInternalPlugin[]
-      const isInternal = enabledInternal.some(
-        (p) => (p.instance as UnsafeInternalPluginInstance).id === pluginId
-      )
-      return isInternal || !isCommunity
-    }
+    // Heuristic fallback: if not a community plugin and not an internal plugin id, treat as internal
+    const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
+    if (isCommunity) return false
+    const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
+    const isInternal = enabledInternal.some(
+      (p) => p.instance.id === pluginId
+    )
+    return isInternal || !isCommunity
+  }
 
   /**
    * Loads the featured commands from the settings
@@ -461,14 +396,14 @@ export default class CommandsManager {
    * @private
    * @returns {Plugin[]}
    */
-    public getInstalledPluginIDs(): string[] {
-      const internalPlugins = this.app.internalPlugins.getEnabledPlugins() as UnsafeInternalPlugin[]
+  public getInstalledPluginIDs(): string[] {
+    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
 
     const internalPluginIDs = internalPlugins.map(
       (plugin) => plugin.manifest?.id || ''
     )
 
-      const installedPlugins = Object.values(this.app.plugins.plugins)
+    const installedPlugins = Object.values(this.app.plugins.plugins)
 
     const installedPluginIDs = installedPlugins.map((plugin) => {
       return (plugin as Plugin).manifest?.id || ''
