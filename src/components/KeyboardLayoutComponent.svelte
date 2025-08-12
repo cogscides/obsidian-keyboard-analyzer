@@ -21,9 +21,14 @@
   interface Props {
     visibleCommands: commandEntry[]
     strictModifierMatch?: boolean
+    selectedGroupID?: string
   }
 
-  let { visibleCommands = [], strictModifierMatch = false }: Props = $props()
+  let {
+    visibleCommands = [],
+    strictModifierMatch = false,
+    selectedGroupID = '',
+  }: Props = $props()
 
   const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
   const visualKeyboardManager: VisualKeyboardManager = getContext(
@@ -120,7 +125,7 @@
         <span class={`chevron ${panelCollapsed ? 'is-collapsed' : ''}`}>⌄</span>
         <span class="toggle-label">Keyboard</span>
       </button>
-      {#if !panelCollapsed}
+      {#if !panelCollapsed && selectedGroupID !== GroupType.All}
         <button
           class="scope-toggle"
           aria-label="Toggle heatmap scope"

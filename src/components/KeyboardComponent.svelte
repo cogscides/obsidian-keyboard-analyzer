@@ -279,7 +279,11 @@
   bind:offsetWidth={viewWidth}
 >
   <div id="keyboard-preview-view">
-    <KeyboardLayoutComponent {visibleCommands} {strictModifierMatch} />
+    <KeyboardLayoutComponent
+      {visibleCommands}
+      {strictModifierMatch}
+      {selectedGroupID}
+    />
   </div>
   <div class="shortcuts-wrapper">
     <SearchMenu
