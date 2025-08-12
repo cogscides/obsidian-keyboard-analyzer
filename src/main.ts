@@ -62,6 +62,10 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 
   async onload() {
     await this.settingsManager.loadSettings()
+    try {
+      // Ensure persisted groups are hydrated with full filter shapes before use
+      this.groupManager.normalizeAllGroups()
+    } catch {}
     await this.hotkeyManager.initialize()
     this.commandsManager.initialize()
 
@@ -254,7 +258,11 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     this.registeredGroupCommandIds.clear()
 
     const groups = this.settingsManager.getSetting('commandGroups') || []
-    for (const g of groups as Array<{ id: string; name: string; registerCommand?: boolean }>) {
+    for (const g of groups as Array<{
+      id: string
+      name: string
+      registerCommand?: boolean
+    }>) {
       if (!g?.registerCommand) continue
       const localId = `open-group:${String(g.id)}`
       const fullId = `${this.manifest.id}:${localId}`

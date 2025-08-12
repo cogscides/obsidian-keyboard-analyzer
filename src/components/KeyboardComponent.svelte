@@ -138,19 +138,33 @@
   // Apply group's on-open behavior (defaults vs dynamic) when group changes.
   // For now, we apply only filter state since that's what's persisted.
   $effect(() => {
-    const gid = selectedGroupID
-    if (!gid || gid === GroupType.All) return
-    const mode = groupManager.getGroupBehavior(gid)
-    if (mode === 'default') {
-      groupManager.applyDefaultsToGroupFilters(gid)
-    } else {
-      // Dynamic: use last used if available, otherwise fall back to defaults
+    try {
+      const gid = selectedGroupID
+      if (!gid || gid === GroupType.All) return
       const g = groupManager.getGroup(gid) as any
-      if (g?.lastUsedState?.filters) {
-        groupManager.applyDynamicLastUsedToGroupFilters(gid)
-      } else {
-        groupManager.applyDefaultsToGroupFilters(gid)
+      if (!g) {
+        logger.warn(
+          '[groups] selected group not found; skipping behavior apply',
+          { gid }
+        )
+        return
       }
+      const mode = groupManager.getGroupBehavior(gid)
+      if (mode === 'default') {
+        groupManager.applyDefaultsToGroupFilters(gid)
+      } else {
+        // Dynamic: use last used if available, otherwise fall back to defaults
+        if (g?.lastUsedState?.filters) {
+          groupManager.applyDynamicLastUsedToGroupFilters(gid)
+        } else {
+          groupManager.applyDefaultsToGroupFilters(gid)
+        }
+      }
+    } catch (err) {
+      logger.error('[groups] error applying on-open behavior', {
+        err,
+        selectedGroupID,
+      })
     }
   })
 

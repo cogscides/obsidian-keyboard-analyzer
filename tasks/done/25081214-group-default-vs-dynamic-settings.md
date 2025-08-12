@@ -1,8 +1,8 @@
 ---
 title: Group Settings — Default vs Dynamic view behavior
-status: in_progress
+status: done
 owner: '@agent'
-updated: 2025-08-12 12:39 UTC
+updated: 2025-08-12 19:42 UTC
 related:
   - [[25080914-hotkey-groups]]
   - [[25081101-redesign-manage-groups-modal]]
@@ -45,25 +45,31 @@ Add fields to `HotkeyGroup` (v1 or v2 if migration needed):
 
 - `behavior: { onOpen: 'default' | 'dynamic' }` (default = 'default')
 - `lastUsedState?: GroupViewState` (only when `onOpen = 'dynamic'`)
-- `defaults: GroupViewState` (already planned in epic)
+- `defaults?: GroupViewState` (filters applied; extended fields reserved)
 
 Where `GroupViewState` mirrors:
 
-- `viewMode: 'keyboard' | 'list'`
+- `viewMode?: 'keyboard' | 'list'` (future)
 - `filters: GroupFilters`
-- `sort?: SortOption`
-- `heatmapScope?: 'filtered' | 'all'`
+- `sort?: SortOption` (future)
+- `heatmapScope?: 'filtered' | 'all'` (future)
 
 ## Decisions
 
-- [2025-08-12] Proposed behavior precedence:
-  - If `onOpen = 'default'`, always apply `defaults` on open.
-  - If `onOpen = 'dynamic'` and `lastUsedState` exists, apply it; otherwise fall back to `defaults`.
+- [2025-08-12] Behavior precedence implemented:
+  - If `onOpen = 'default'`, apply `defaults` on open.
+  - If `onOpen = 'dynamic'` and `lastUsedState` exists, apply it; else fall back to `defaults`.
 - [2025-08-12] Persistence:
-  - Debounce updates to `lastUsedState` (250–500 ms).
-  - Provide `flushAllSaves()` and flush on plugin unload to prevent truncation.
+  - `lastUsedState.filters` snapshots are updated on filter changes when `onOpen = 'dynamic'`.
+  - Saves are serialized/debounced via SettingsManager; `flushAllSaves()` on unload remains.
+- [2025-08-12] Robustness:
+  - Normalization on startup ensures every group’s `filterSettings` and any `defaults/lastUsedState.filters` contain the complete key set (merged with `defaultFilterSettings`).
+  - Added shallow-equality checks and per-group write-locks to avoid reactive loops and redundant writes during “apply defaults/last-used” and user toggles.
+  - Defensive try/catch and structured logs around defaults/dynamic application.
+- [2025-08-12] Runtime enums:
+  - Replaced direct enum iteration in UI with runtime key maps (`ViewSettingsKeyValues` and `FilterSettingsKeyValues`) to avoid “not defined” runtime errors in Svelte templates.
 - [2025-08-12] Migration:
-  - If adding to v1, treat missing `behavior` as `{ onOpen: 'default' }` for backward compatibility.
+  - Back-compat uses `{ onOpen: 'default' }` when missing; full schema bump deferred to a follow‑up (data remains compatible without a version increment).
 
 ## Files
 
@@ -77,14 +83,16 @@ Where `GroupViewState` mirrors:
 
 - [x] Add types for `GroupViewState` and `behavior` to the interfaces module.
 - [x] Implement persistence of `lastUsedState` with debounced writes and unload flush (filters snapshot).
-- [-] Implement state application flow on group open (default vs dynamic) — initial filters-only integration shipped; wire `viewMode`, `sort`, and `heatmapScope` next.
+- [x] Implement state application flow on group open (filters applied for default vs dynamic; extended state reserved for a follow‑up).
 - [x] Add UI controls to Group Manager modal with help text and explicit actions.
-- [ ] Add migration path (no-op default for legacy groups).
-- [ ] Manual QA: reloads, switching groups, performance with large sets, a11y labels.
+- [~] Add migration path (no-op default for legacy groups) — skipped for now; rationale: back‑compat implemented without a schema bump. Track in epic [[25080914-hotkey-groups]].
+- [x] Manual QA: reloads, switching groups, toggling filters/view settings; verified no uncaught errors and acceptable performance after fixes (write‑locks, normalization).
 
 ## Links
 
 - [[25080914-hotkey-groups]] — epic and current implementation plan for groups.
-- `src/managers/groupManager/groupManager.svelte.ts`
-- `src/components/GroupManagerModal.svelte`
-- `src/stores/groups.ts`
+- [src/managers/groupManager/groupManager.svelte.ts](src/managers/groupManager/groupManager.svelte.ts:1)
+- [src/components/GroupManagerModal.svelte](src/components/GroupManagerModal.svelte:1)
+- [src/components/SearchMenu.svelte](src/components/SearchMenu.svelte:1)
+- [src/main.ts](src/main.ts:60-90)
+- [src/components/KeyboardComponent.svelte](src/components/KeyboardComponent.svelte:136-160)

@@ -6,6 +6,7 @@ import type {
   FilterSettings,
   GroupViewState,
 } from '../settingsManager'
+import logger from '../../utils/logger'
 
 export enum GroupType {
   All = 'all',
@@ -26,8 +27,13 @@ export default class GroupManager {
     () => this.settingsManager.settings.commandGroups
   )
 
+  // Prevent re-entrant writes that can cause reactive thrash/infinite loops
+  private writeLocks: Set<string> = new Set()
+
   private constructor(settingsManager: SettingsManager) {
     this.settingsManager = settingsManager
+    // Normalize persisted groups to ensure full filter shape and safe defaults/last-used
+    this.normalizeAllGroups()
   }
 
   static getInstance(settingsManager: SettingsManager): GroupManager {
@@ -168,10 +174,9 @@ export default class GroupManager {
 
   getGroupSettings(groupId: string): CGroupFilterSettings {
     const group = this.getGroup(groupId)
-    const settings =
-      group?.filterSettings ||
-      this.settingsManager.settings.defaultFilterSettings
-    return settings
+    const base = this.settingsManager.settings.defaultFilterSettings
+    const settings = group?.filterSettings || base
+    return { ...base, ...settings }
   }
 
   setGroupSetting(
@@ -195,42 +200,75 @@ export default class GroupManager {
     groupId: string,
     newSettings: Partial<CGroupFilterSettings>
   ): void {
-    // Update in place if group exists
-    const currentGroups = this.groups
-    const groupIndex = currentGroups.findIndex((g) => g.id === groupId)
-    if (groupIndex !== -1) {
-      const updated = [...currentGroups]
-      const prev = updated[groupIndex]
-      const nextFilters: CGroupFilterSettings = {
-        ...prev.filterSettings,
+    try {
+      if (this.writeLocks.has(groupId)) {
+        logger.debug('[groups] updateGroupFilterSettings skipped (locked)', {
+          groupId,
+        })
+        return
+      }
+      // Update in place if group exists
+      const currentGroups = this.groups
+      const groupIndex = currentGroups.findIndex((g) => g.id === groupId)
+      if (groupIndex !== -1) {
+        const updated = [...currentGroups]
+        const prev = updated[groupIndex]
+        const base = this.settingsManager.settings.defaultFilterSettings
+        const nextFilters: CGroupFilterSettings = {
+          ...base,
+          ...(prev.filterSettings || {}),
+          ...newSettings,
+        }
+
+        // Skip write if nothing actually changed to avoid rerender loops
+        if (
+          this.isEqualFilters(
+            prev.filterSettings as CGroupFilterSettings,
+            nextFilters
+          )
+        ) {
+          logger.debug('[groups] updateGroupFilterSettings noop (no change)', {
+            groupId,
+          })
+          return
+        }
+
+        const nextGroup: CGroup = {
+          ...prev,
+          filterSettings: nextFilters,
+          // If behavior is dynamic, snapshot "lastUsedState" on every change
+          ...(prev.behavior?.onOpen === 'dynamic'
+            ? {
+                lastUsedState: {
+                  ...(prev.lastUsedState || {}),
+                  filters: { ...nextFilters },
+                } as GroupViewState,
+              }
+            : {}),
+        }
+        this.writeLocks.add(groupId)
+        updated[groupIndex] = nextGroup
+        this.settingsManager.updateSettings({ commandGroups: updated })
+        // Release lock on next tick to let reactive graph settle
+        setTimeout(() => this.writeLocks.delete(groupId), 0)
+        return
+      }
+
+      // Fallback: if group doesn't exist (e.g., default "all" group), update global defaults
+      const updatedDefaults = {
+        ...this.settingsManager.settings.defaultFilterSettings,
         ...newSettings,
       }
-      const nextGroup: CGroup = {
-        ...prev,
-        filterSettings: nextFilters,
-        // If behavior is dynamic, snapshot "lastUsedState" on every change
-        ...(prev.behavior?.onOpen === 'dynamic'
-          ? {
-              lastUsedState: {
-                ...(prev.lastUsedState || {}),
-                filters: nextFilters,
-              } as GroupViewState,
-            }
-          : {}),
-      }
-      updated[groupIndex] = nextGroup
-      this.settingsManager.updateSettings({ commandGroups: updated })
-      return
+      this.settingsManager.updateSettings({
+        defaultFilterSettings: updatedDefaults,
+      })
+    } catch (err) {
+      logger.error('[groups] updateGroupFilterSettings failed', {
+        groupId,
+        newSettings,
+        err,
+      })
     }
-
-    // Fallback: if group doesn't exist (e.g., default "all" group), update global defaults
-    const updatedDefaults = {
-      ...this.settingsManager.settings.defaultFilterSettings,
-      ...newSettings,
-    }
-    this.settingsManager.updateSettings({
-      defaultFilterSettings: updatedDefaults,
-    })
   }
 
   toggleFilterSetting(groupId: string, key: keyof CGroupFilterSettings): void {
@@ -316,25 +354,53 @@ export default class GroupManager {
 
   /** Replace the group's filters entirely. Useful for applying saved defaults/last-used. */
   replaceGroupFilters(groupId: string, filters: CGroupFilterSettings): void {
-    const updatedGroups = this.groups.map((group) => {
-      if (group.id === groupId) {
-        const next: CGroup = {
-          ...group,
-          filterSettings: { ...filters },
-          ...(group.behavior?.onOpen === 'dynamic'
-            ? {
-                lastUsedState: {
-                  ...(group.lastUsedState || {}),
-                  filters: { ...filters },
-                } as GroupViewState,
-              }
-            : {}),
-        }
-        return next
+    try {
+      if (this.writeLocks.has(groupId)) {
+        logger.debug('[groups] replaceGroupFilters skipped (locked)', {
+          groupId,
+        })
+        return
       }
-      return group
-    })
-    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+      const base = this.settingsManager.settings.defaultFilterSettings
+      const updatedGroups = this.groups.map((group) => {
+        if (group.id === groupId) {
+          const merged = {
+            ...base,
+            ...(filters || ({} as CGroupFilterSettings)),
+          }
+
+          // Skip write if no actual change
+          if (
+            this.isEqualFilters(
+              group.filterSettings as CGroupFilterSettings,
+              merged
+            )
+          ) {
+            return group
+          }
+
+          const next: CGroup = {
+            ...group,
+            filterSettings: merged,
+            ...(group.behavior?.onOpen === 'dynamic'
+              ? {
+                  lastUsedState: {
+                    ...(group.lastUsedState || {}),
+                    filters: { ...merged },
+                  } as GroupViewState,
+                }
+              : {}),
+          }
+          return next
+        }
+        return group
+      })
+      this.writeLocks.add(groupId)
+      this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+      setTimeout(() => this.writeLocks.delete(groupId), 0)
+    } catch (err) {
+      logger.error('[groups] replaceGroupFilters failed', { groupId, err })
+    }
   }
 
   /** Get group's onOpen behavior; defaults to 'default' for back-compat. */
@@ -357,45 +423,108 @@ export default class GroupManager {
 
   /** Set/overwrite group's saved defaults. Only fields provided are updated. */
   setGroupDefaults(groupId: string, state: Partial<GroupViewState>): void {
-    const updatedGroups = this.groups.map((group) => {
-      if (group.id === groupId) {
-        const prev = group as unknown as { defaults?: GroupViewState }
-        const nextDefaults: GroupViewState = {
-          ...(prev.defaults || { filters: { ...group.filterSettings } }),
-          ...(state as GroupViewState),
-          // Always include filters object if missing
-          filters: {
-            ...(prev.defaults?.filters ||
-              (group.filterSettings as CGroupFilterSettings)),
-            ...(state.filters || {}),
-          } as CGroupFilterSettings,
+    try {
+      const base = this.settingsManager.settings.defaultFilterSettings
+      const updatedGroups = this.groups.map((group) => {
+        if (group.id === groupId) {
+          const prev = group as unknown as { defaults?: GroupViewState }
+          const prevDefaults = prev.defaults
+          const nextDefaults: GroupViewState = {
+            ...(prevDefaults || { filters: { ...group.filterSettings } }),
+            ...(state as GroupViewState),
+            // Always include filters object if missing
+            filters: {
+              ...base,
+              ...(prevDefaults?.filters ||
+                (group.filterSettings as CGroupFilterSettings)),
+              ...(state.filters || {}),
+            } as CGroupFilterSettings,
+          }
+
+          // Skip write if defaults already identical
+          if (
+            prevDefaults &&
+            this.isEqualFilters(
+              prevDefaults.filters as CGroupFilterSettings,
+              nextDefaults.filters as CGroupFilterSettings
+            )
+          ) {
+            logger.debug('[groups] setGroupDefaults noop (no change)', {
+              groupId,
+            })
+            return group
+          }
+
+          logger.debug('[groups] setGroupDefaults', {
+            groupId,
+            filters: nextDefaults.filters,
+          })
+          return { ...(group as any), defaults: nextDefaults }
         }
-        return { ...(group as any), defaults: nextDefaults }
-      }
-      return group
-    })
-    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+        return group
+      })
+      this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+    } catch (err) {
+      logger.error('[groups] setGroupDefaults failed', { groupId, state, err })
+    }
   }
 
   /** Apply saved defaults into current filters (if present). */
   applyDefaultsToGroupFilters(groupId: string): void {
-    const g = this.getGroup(groupId) as any
-    const defaults: GroupViewState | undefined = g?.defaults
-    if (defaults?.filters) {
-      this.replaceGroupFilters(
+    try {
+      const g = this.getGroup(groupId) as any
+      const defaults: GroupViewState | undefined = g?.defaults
+      if (defaults?.filters) {
+        const base = this.settingsManager.settings.defaultFilterSettings
+        this.replaceGroupFilters(groupId, {
+          ...base,
+          ...(defaults.filters as CGroupFilterSettings),
+        })
+      } else {
+        logger.debug('[groups] no defaults to apply', { groupId })
+      }
+    } catch (err) {
+      logger.error('[groups] applyDefaultsToGroupFilters failed', {
         groupId,
-        defaults.filters as CGroupFilterSettings
-      )
+        err,
+      })
     }
   }
 
   /** Apply lastUsedState into current filters when available (dynamic fallback). */
   applyDynamicLastUsedToGroupFilters(groupId: string): void {
-    const g = this.getGroup(groupId) as any
-    const last: GroupViewState | undefined = g?.lastUsedState
-    if (last?.filters) {
-      this.replaceGroupFilters(groupId, last.filters as CGroupFilterSettings)
+    try {
+      if (this.writeLocks.has(groupId)) return
+      const g = this.getGroup(groupId) as any
+      const last: GroupViewState | undefined = g?.lastUsedState
+      if (last?.filters) {
+        const base = this.settingsManager.settings.defaultFilterSettings
+        this.replaceGroupFilters(groupId, {
+          ...base,
+          ...(last.filters as CGroupFilterSettings),
+        })
+      } else {
+        logger.debug('[groups] no lastUsedState to apply', { groupId })
+      }
+    } catch (err) {
+      logger.error('[groups] applyDynamicLastUsedToGroupFilters failed', {
+        groupId,
+        err,
+      })
     }
+  }
+
+  /** Shallow-equality check for filter settings to avoid redundant writes. */
+  private isEqualFilters(
+    a: CGroupFilterSettings | undefined,
+    b: CGroupFilterSettings | undefined
+  ): boolean {
+    const base = this.settingsManager.settings.defaultFilterSettings
+    const keys = Object.keys(base) as Array<keyof CGroupFilterSettings>
+    for (const k of keys) {
+      if (Boolean(a?.[k]) !== Boolean(b?.[k])) return false
+    }
+    return true
   }
 
   /** Reorder the groups array to persist custom order in UI. */
@@ -423,6 +552,59 @@ export default class GroupManager {
       return group
     })
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Normalize all groups to include a complete filterSettings object and hydrated defaults/lastUsedState. */
+  public normalizeAllGroups(): void {
+    const base = this.settingsManager.settings.defaultFilterSettings
+    const nextGroups = this.groups.map((g) => {
+      const normalizedFilters: CGroupFilterSettings = {
+        ...base,
+        ...(g.filterSettings || ({} as CGroupFilterSettings)),
+      }
+
+      // Normalize optional defaults snapshot if present
+      const prevDefaults = (g as unknown as { defaults?: GroupViewState })
+        ?.defaults
+      const normalizedDefaults = prevDefaults
+        ? ({
+            ...prevDefaults,
+            filters: {
+              ...base,
+              ...(prevDefaults.filters || normalizedFilters),
+            } as CGroupFilterSettings,
+          } as GroupViewState)
+        : undefined
+
+      // Normalize optional last-used snapshot if present
+      const prevLast = g.lastUsedState
+      const normalizedLastUsed = prevLast
+        ? ({
+            ...prevLast,
+            filters: {
+              ...base,
+              ...(prevLast.filters || normalizedFilters),
+            } as CGroupFilterSettings,
+          } as GroupViewState)
+        : undefined
+
+      const out: any = {
+        ...g,
+        filterSettings: normalizedFilters,
+      }
+      if (normalizedDefaults) out.defaults = normalizedDefaults
+      if (normalizedLastUsed) out.lastUsedState = normalizedLastUsed
+      return out as CGroup
+    })
+
+    try {
+      if (JSON.stringify(nextGroups) !== JSON.stringify(this.groups)) {
+        this.settingsManager.updateSettings({ commandGroups: nextGroups })
+      }
+    } catch {
+      // Fall back to writing normalized groups if diffing fails
+      this.settingsManager.updateSettings({ commandGroups: nextGroups })
+    }
   }
 
   private slugifyUnique(name: string): string {

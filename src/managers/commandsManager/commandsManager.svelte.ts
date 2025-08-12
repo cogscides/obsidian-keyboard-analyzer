@@ -5,7 +5,7 @@ import type {
   commandEntry,
 } from '../../interfaces/Interfaces'
 import HotkeyManager from '../hotkeyManager'
-import SettingsManager, { GroupType, type CGroup } from '../settingsManager'
+import SettingsManager, { type CGroup } from '../settingsManager'
 import {
   convertModifiers,
   areModifiersEqual,
@@ -14,6 +14,7 @@ import {
 import type groupManager from '../groupManager'
 import GroupManager, {
   DEFAULT_GROUP_NAMES,
+  GroupType,
 } from '../groupManager/groupManager.svelte.ts'
 import type KeyboardAnalyzerPlugin from '../../main'
 import { getSystemShortcutCommands } from '../../utils/systemShortcuts'
@@ -194,9 +195,7 @@ export default class CommandsManager {
     const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
     if (isCommunity) return false
     const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
-    const isInternal = enabledInternal.some(
-      (p) => p.instance.id === pluginId
-    )
+    const isInternal = enabledInternal.some((p) => p.instance.id === pluginId)
     return isInternal || !isCommunity
   }
 
@@ -311,7 +310,12 @@ export default class CommandsManager {
       !!filterSettings?.OnlyDuplicates ||
       // Exclude internal modules when DisplayInternalModules is false
       filterSettings?.DisplayInternalModules === false
-    if (!search && activeModifiers.length === 0 && !activeKey && !hasListAffectingFilters) {
+    if (
+      !search &&
+      activeModifiers.length === 0 &&
+      !activeKey &&
+      !hasListAffectingFilters
+    ) {
       // Still respect FeaturedFirst even when no other list-affecting filters are active
       return filterSettings?.FeaturedFirst
         ? this.sortByFeaturedFirst(commandsToFilter)
@@ -367,7 +371,9 @@ export default class CommandsManager {
 
       // Only commands that have at least one duplicate hotkey
       const onlyDuplicatesMatch = filterSettings.OnlyDuplicates
-        ? command.hotkeys.some((hk) => this.hotkeyManager.isHotkeyDuplicate(command.id, hk))
+        ? command.hotkeys.some((hk) =>
+            this.hotkeyManager.isHotkeyDuplicate(command.id, hk)
+          )
         : true
 
       return (

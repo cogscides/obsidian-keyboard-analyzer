@@ -12,14 +12,16 @@
     Info as InfoIcon,
   } from 'lucide-svelte'
   import { slide, fade } from 'svelte/transition'
-  import {
-    FilterSettingsKeys,
-    ViewSettingsKeys,
-    type CGroup,
-    type CGroupFilterSettings,
-    type CGroupSettingTitles,
+  import type {
+    CGroup,
+    CGroupFilterSettings,
+    CGroupSettingTitles,
+    FilterSettings,
   } from '../managers/settingsManager'
-  import type { FilterSettings } from '../managers/settingsManager'
+  import {
+    ViewSettingsKeyValues,
+    FilterSettingsKeyValues,
+  } from '../managers/settingsManager/keys'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import type { Modifier } from 'obsidian'
   import { clickOutside } from '../utils/clickOutside'
@@ -360,7 +362,7 @@
               class:is-enabled={filterSettings.StrictModifierMatch}
               onclick={() =>
                 setFilterSetting(
-                  FilterSettingsKeys.StrictModifierMatch,
+                  FilterSettingsKeyValues.StrictModifierMatch as keyof CGroupFilterSettings,
                   !filterSettings.StrictModifierMatch
                 )}
             >
@@ -388,7 +390,7 @@
               class:is-enabled={filterSettings.ViewWOhotkeys}
               onclick={() =>
                 setFilterSetting(
-                  FilterSettingsKeys.ViewWOhotkeys,
+                  FilterSettingsKeyValues.ViewWOhotkeys as keyof CGroupFilterSettings,
                   !filterSettings.ViewWOhotkeys
                 )}
             >
@@ -413,7 +415,7 @@
               class:is-enabled={filterSettings.OnlyCustom}
               onclick={() =>
                 setFilterSetting(
-                  FilterSettingsKeys.OnlyCustom,
+                  FilterSettingsKeyValues.OnlyCustom as keyof CGroupFilterSettings,
                   !filterSettings.OnlyCustom
                 )}
             >
@@ -438,7 +440,7 @@
               class:is-enabled={filterSettings.OnlyDuplicates}
               onclick={() =>
                 setFilterSetting(
-                  FilterSettingsKeys.OnlyDuplicates,
+                  FilterSettingsKeyValues.OnlyDuplicates as keyof CGroupFilterSettings,
                   !filterSettings.OnlyDuplicates
                 )}
             >
@@ -463,7 +465,7 @@
               class:is-enabled={filterSettings.DisplaySystemShortcuts}
               onclick={() =>
                 setFilterSetting(
-                  FilterSettingsKeys.DisplaySystemShortcuts,
+                  FilterSettingsKeyValues.DisplaySystemShortcuts as keyof CGroupFilterSettings,
                   !filterSettings.DisplaySystemShortcuts
                 )}
             >
@@ -508,7 +510,7 @@
     {#if viewDropdownOpen}
       <div class="popup-filter-menu-container is-open" transition:slide>
         <div class="popup-filter-menu">
-          {#each Object.values(ViewSettingsKeys) as setting}
+          {#each Object.values(ViewSettingsKeyValues) as setting}
             <div class="setting-item mod-toggle">
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <div

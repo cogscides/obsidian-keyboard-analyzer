@@ -1,6 +1,6 @@
 ---
 title: Bug: StrictModifiersSearch counts non-matching keys in heatmap
-status: in_progress
+status: done
 owner: '@agent'
 updated: 2025-08-11 23:34 UTC
 related:

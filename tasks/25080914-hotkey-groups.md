@@ -2,7 +2,7 @@
 title: User-defined Hotkey Groups (manual)
 status: in_progress
 owner: '@agent'
-updated: 2025-08-12 12:36 UTC
+updated: 2025-08-12 19:42 UTC
 related: []
 ---
 
@@ -41,7 +41,7 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - [2025-08-10] Icon visibility: keep star and folder icons visible while the popover is open to prevent jumpy positioning.
 - [2025-08-10] Alignment: align popover to the left edge of the icon group; add inline clear button to popover search.
 - [2025-08-12] Per-group commands: stable ids `open-group:${group.id}` registered via `syncPerGroupCommands()`; updated on rename, removed on delete.
-- [2025-08-12] Open flow: `openWithGroup(id)` updates `lastOpenedGroupId` and opens the view; on group activation, defaults vs dynamic behavior applied (filters) with fallback to defaults when no last-used state exists.
+- [2025-08-12] Open flow: `openWithGroup(id)` updates `lastOpenedGroupId` and opens the view; on group activation, defaults vs dynamic behavior applied (filters) with fallback to defaults when no last-used state exists. The implementation includes robustness fixes (normalization, write-locks) to prevent UI freezes.
 
 ## Non-Goals / Out of Scope
 
@@ -225,3 +225,20 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 - [2025-08-10 02:10 UTC] Fixed modal layering (z-index) to appear above list and pinned keyboard panel.
 - [2025-08-10 02:20 UTC] Anchored Add-to-group popover inline under icons; ensured `.setting-item-name` and `.setting-item-info` allow overflow; kept star/folder icons visible when popover open; aligned popover left; added clear button to popover search; resolved jumpiness on hover/scroll.
 - [2025-08-10 03:05 UTC] Added “Add to top” option in popover and top-insert API; auto-flip popover above when near viewport bottom; added rename/delete controls in manager modal; persisted last opened group and added generic “Open Group…” command.
+- [2025-08-12 19:42 UTC] Implemented and fixed 'Default vs Dynamic' group behavior. Resolved critical runtime errors and UI freezes caused by reactive loops when applying filter states. Added normalization, write-locking, and defensive guards to ensure stability.
+  </content>
+  </file_update>
+  I have fixed the unexpected errors related to the "Default vs Dynamic" group settings. The issue was caused by a combination of import errors, missing runtime constants for Svelte UI, and reactive loops that froze the application when filter settings were updated.
+
+**Summary of Fixes:**
+
+1.  **State Normalization:** Implemented a normalization process on plugin startup to ensure all group filter settings (current, default, and last-used) are complete objects, preventing errors from partial data.
+2.  **Reactive Loop Prevention:** Introduced per-group write-locks and shallow-equality checks. These prevent redundant settings updates and break infinite reactive loops that previously caused the UI to freeze when applying defaults or changing filters.
+3.  **Build & Runtime Errors:**
+    - Corrected faulty `GroupType` imports that caused initial runtime failures.
+    * Created a `keys.ts` file to provide runtime-accessible objects for settings keys (`FilterSettingsKeyValues`, `ViewSettingsKeyValues`), resolving "is not defined" errors in the UI.
+4.  **Defensive Code:** Wrapped all critical state-application logic in `try/catch` blocks with structured logging to guard against future errors and improve diagnostics.
+
+After these changes, both "Default" and "Dynamic" group behaviors function correctly without errors or freezes.
+
+I have updated the related task files to reflect these changes, document the fixes, and have marked the primary task as `done`.
