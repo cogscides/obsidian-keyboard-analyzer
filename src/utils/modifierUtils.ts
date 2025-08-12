@@ -97,13 +97,18 @@ export function getDisplayModifiers(modifiers: string[]): string[] {
 }
 
 export function sortModifiers(modifiers: string[]): string[] {
+  // Canonical sort order per platform (use canonical token names, not display labels)
+  // macOS: Meta (Cmd) first, then Ctrl, Alt, Shift
+  // Win/Linux: Ctrl, Alt, Shift, then Meta/Win
   const order = isMac()
-    ? ['Cmd', 'Ctrl', 'Alt', 'Shift']
-    : ['Ctrl', 'Alt', 'Shift', 'Win']
+    ? ['Meta', 'Ctrl', 'Alt', 'Shift']
+    : ['Ctrl', 'Alt', 'Shift', 'Meta', 'Win']
 
   return [...modifiers].sort((a, b) => {
-    const indexA = order.indexOf(convertModifier(a))
-    const indexB = order.indexOf(convertModifier(b))
+    const ca = convertModifier(a)
+    const cb = convertModifier(b)
+    const indexA = order.indexOf(ca)
+    const indexB = order.indexOf(cb)
     if (indexA === -1 && indexB === -1) return a.localeCompare(b)
     if (indexA === -1) return 1
     if (indexB === -1) return -1

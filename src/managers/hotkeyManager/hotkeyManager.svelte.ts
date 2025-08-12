@@ -2,7 +2,7 @@ import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
 import type {
   hotkeyEntry,
   commandEntry,
-  UnsafeInternalPlugin
+  UnsafeInternalPlugin,
 } from '../../interfaces/Interfaces'
 import {
   convertModifiers,
@@ -10,7 +10,7 @@ import {
   modifiersToString,
   areModifiersEqual,
   isKeyMatch,
-  platformizeModifiers
+  platformizeModifiers,
 } from '../../utils/modifierUtils'
 
 export default class HotkeyManager {
@@ -109,9 +109,7 @@ export default class HotkeyManager {
     const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
     if (isCommunity) return false
     const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
-    const isInternal = enabledInternal.some(
-      (p) => p.instance.id === pluginId
-    )
+    const isInternal = enabledInternal.some((p) => p.instance.id === pluginId)
     return isInternal || !isCommunity
   }
 
@@ -224,19 +222,23 @@ export default class HotkeyManager {
     activeKey: string
   ): boolean {
     // Normalize both sides so 'Mod' matches 'Ctrl' on Windows/Linux and 'Meta' on macOS
-    const normalizedActive = sortModifiers(platformizeModifiers(activeModifiers as unknown as string[]))
-    const normalizedHotkey = sortModifiers(platformizeModifiers(hotkey.modifiers as unknown as string[]))
-    const modifiersMatch = areModifiersEqual(
-      normalizedActive,
-      normalizedHotkey
+    const normalizedActive = sortModifiers(
+      platformizeModifiers(activeModifiers as unknown as string[])
     )
+    const normalizedHotkey = sortModifiers(
+      platformizeModifiers(hotkey.modifiers as unknown as string[])
+    )
+    const modifiersMatch = areModifiersEqual(normalizedActive, normalizedHotkey)
     const keyMatch = !activeKey || isKeyMatch(activeKey, hotkey.key)
     return modifiersMatch && keyMatch
   }
 
   public renderHotkey(hotkey: hotkeyEntry): string {
-    const bakedModifiers = platformizeModifiers(hotkey.modifiers)
-    return [...bakedModifiers, hotkey.key].join(' ')
+    // Ensure consistent display order across platforms
+    const mods = sortModifiers(
+      platformizeModifiers(hotkey.modifiers as unknown as string[])
+    )
+    return [...mods, hotkey.key].join(' ')
   }
 
   public searchHotkeys(
@@ -257,4 +259,3 @@ export default class HotkeyManager {
     })
   }
 }
-

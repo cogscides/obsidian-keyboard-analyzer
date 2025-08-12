@@ -1,5 +1,5 @@
 import { Platform, type Modifier } from 'obsidian'
-import { platformizeModifiers } from './modifierUtils'
+import { platformizeModifiers, sortModifiers } from './modifierUtils'
 import { getEmulatedOS } from './runtimeConfig'
 
 function isMac(): boolean {
@@ -117,7 +117,7 @@ export function getBakedKeyLabel(rawKey: string): string {
 }
 
 export function formatHotkeyBaked(hotkey: { modifiers: string[]; key: string }): string {
-  const mods = platformizeModifiers(hotkey.modifiers || []).map(getBakedModifierLabel)
+  const mods = sortModifiers(platformizeModifiers(hotkey.modifiers || [])).map(getBakedModifierLabel)
   const key = getBakedKeyLabel(hotkey.key || '')
   return [...mods, key].filter(Boolean).join(' ')
 }
