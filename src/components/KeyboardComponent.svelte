@@ -135,6 +135,25 @@
       GroupType.All
   )
 
+  // Apply group's on-open behavior (defaults vs dynamic) when group changes.
+  // For now, we apply only filter state since that's what's persisted.
+  $effect(() => {
+    const gid = selectedGroupID
+    if (!gid || gid === GroupType.All) return
+    const mode = groupManager.getGroupBehavior(gid)
+    if (mode === 'default') {
+      groupManager.applyDefaultsToGroupFilters(gid)
+    } else {
+      // Dynamic: use last used if available, otherwise fall back to defaults
+      const g = groupManager.getGroup(gid) as any
+      if (g?.lastUsedState?.filters) {
+        groupManager.applyDynamicLastUsedToGroupFilters(gid)
+      } else {
+        groupManager.applyDefaultsToGroupFilters(gid)
+      }
+    }
+  })
+
   // Strict modifier match flag derived from current group's filter settings
   let strictModifierMatch = $derived.by(() => {
     // Track groups to recompute when settings update

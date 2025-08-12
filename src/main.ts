@@ -32,6 +32,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   settingsManager: SettingsManager
   groupManager: GroupManager
 
+  // Track dynamically registered per-group commands so we can cleanly resync
+  private registeredGroupCommandIds: Set<string> = new Set()
+
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
     this.settingsManager = SettingsManager.getInstance(this)
@@ -75,6 +78,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 
     this.registerPluginHotkeys()
     this.registerGroupOpenCommand()
+    // Initialize any per-group "Open: <Group>" commands (opt-in via group.registerCommand)
+    this.syncPerGroupCommands()
     this.addStatusBarIndicator()
 
     this.registerView(
@@ -229,6 +234,38 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   public async openWithGroup(groupId: string) {
     this.settingsManager.updateSettings({ lastOpenedGroupId: groupId })
     await this.addShortcutsView(false)
+  }
+
+  /**
+   * Register or refresh per-group commands based on current settings.
+   * Only groups with registerCommand === true get a command.
+   * Ensures stable ids: "open-group:${group.id}"
+   */
+  public syncPerGroupCommands(): void {
+    // Remove previously registered commands
+    for (const fullId of this.registeredGroupCommandIds) {
+      try {
+        // Full id includes plugin manifest id prefix
+        this.app.commands.removeCommand(fullId)
+      } catch {
+        // ignore
+      }
+    }
+    this.registeredGroupCommandIds.clear()
+
+    const groups = this.settingsManager.getSetting('commandGroups') || []
+    for (const g of groups as Array<{ id: string; name: string; registerCommand?: boolean }>) {
+      if (!g?.registerCommand) continue
+      const localId = `open-group:${String(g.id)}`
+      const fullId = `${this.manifest.id}:${localId}`
+
+      this.addCommand({
+        id: localId,
+        name: `Open: ${g.name}`,
+        callback: () => this.openWithGroup(String(g.id)),
+      })
+      this.registeredGroupCommandIds.add(fullId)
+    }
   }
 
   // // Helper methods to access settings

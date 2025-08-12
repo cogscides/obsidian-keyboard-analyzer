@@ -4,6 +4,7 @@ import type {
   CGroup,
   CGroupFilterSettings,
   FilterSettings,
+  GroupViewState,
 } from '../settingsManager'
 
 export enum GroupType {
@@ -79,7 +80,9 @@ export default class GroupManager {
       excludedModules: [...(src.excludedModules || [])],
       filterSettings: { ...src.filterSettings },
     }
-    this.settingsManager.updateSettings({ commandGroups: [...this.groups, clone] })
+    this.settingsManager.updateSettings({
+      commandGroups: [...this.groups, clone],
+    })
     return id
   }
 
@@ -94,7 +97,11 @@ export default class GroupManager {
   }
 
   /** Insert a command at a specific index within a group (bounds clamped). */
-  insertCommandInGroup(groupId: string, commandId: string, index: number): void {
+  insertCommandInGroup(
+    groupId: string,
+    commandId: string,
+    index: number
+  ): void {
     const updatedGroups = this.groups.map((group) => {
       if (group.id === groupId && !group.commandIds.includes(commandId)) {
         const next = [...group.commandIds]
@@ -193,18 +200,30 @@ export default class GroupManager {
     const groupIndex = currentGroups.findIndex((g) => g.id === groupId)
     if (groupIndex !== -1) {
       const updated = [...currentGroups]
-      updated[groupIndex] = {
-        ...updated[groupIndex],
-        filterSettings: {
-          ...updated[groupIndex].filterSettings,
-          ...newSettings,
-        },
+      const prev = updated[groupIndex]
+      const nextFilters: CGroupFilterSettings = {
+        ...prev.filterSettings,
+        ...newSettings,
       }
+      const nextGroup: CGroup = {
+        ...prev,
+        filterSettings: nextFilters,
+        // If behavior is dynamic, snapshot "lastUsedState" on every change
+        ...(prev.behavior?.onOpen === 'dynamic'
+          ? {
+              lastUsedState: {
+                ...(prev.lastUsedState || {}),
+                filters: nextFilters,
+              } as GroupViewState,
+            }
+          : {}),
+      }
+      updated[groupIndex] = nextGroup
       this.settingsManager.updateSettings({ commandGroups: updated })
       return
     }
 
-    // Fallback: if group doesn't exist (e.g., default "all" group), update defaults
+    // Fallback: if group doesn't exist (e.g., default "all" group), update global defaults
     const updatedDefaults = {
       ...this.settingsManager.settings.defaultFilterSettings,
       ...newSettings,
@@ -254,7 +273,11 @@ export default class GroupManager {
    * Reorder commands within a manual group by moving an item from one index to another.
    * Persists the updated order to settings.
    */
-  moveCommandInGroup(groupId: string, fromIndex: number, toIndex: number): void {
+  moveCommandInGroup(
+    groupId: string,
+    fromIndex: number,
+    toIndex: number
+  ): void {
     const updatedGroups = this.groups.map((group) => {
       if (group.id === groupId) {
         const ids = [...group.commandIds]
@@ -291,6 +314,90 @@ export default class GroupManager {
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
   }
 
+  /** Replace the group's filters entirely. Useful for applying saved defaults/last-used. */
+  replaceGroupFilters(groupId: string, filters: CGroupFilterSettings): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        const next: CGroup = {
+          ...group,
+          filterSettings: { ...filters },
+          ...(group.behavior?.onOpen === 'dynamic'
+            ? {
+                lastUsedState: {
+                  ...(group.lastUsedState || {}),
+                  filters: { ...filters },
+                } as GroupViewState,
+              }
+            : {}),
+        }
+        return next
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Get group's onOpen behavior; defaults to 'default' for back-compat. */
+  getGroupBehavior(groupId: string): 'default' | 'dynamic' {
+    const g = this.getGroup(groupId)
+    return g?.behavior?.onOpen === 'dynamic' ? 'dynamic' : 'default'
+  }
+
+  /** Set group's onOpen behavior. */
+  setGroupBehavior(groupId: string, mode: 'default' | 'dynamic'): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        const behavior = { ...(group.behavior || {}), onOpen: mode }
+        return { ...group, behavior }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Set/overwrite group's saved defaults. Only fields provided are updated. */
+  setGroupDefaults(groupId: string, state: Partial<GroupViewState>): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        const prev = group as unknown as { defaults?: GroupViewState }
+        const nextDefaults: GroupViewState = {
+          ...(prev.defaults || { filters: { ...group.filterSettings } }),
+          ...(state as GroupViewState),
+          // Always include filters object if missing
+          filters: {
+            ...(prev.defaults?.filters ||
+              (group.filterSettings as CGroupFilterSettings)),
+            ...(state.filters || {}),
+          } as CGroupFilterSettings,
+        }
+        return { ...(group as any), defaults: nextDefaults }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
+  /** Apply saved defaults into current filters (if present). */
+  applyDefaultsToGroupFilters(groupId: string): void {
+    const g = this.getGroup(groupId) as any
+    const defaults: GroupViewState | undefined = g?.defaults
+    if (defaults?.filters) {
+      this.replaceGroupFilters(
+        groupId,
+        defaults.filters as CGroupFilterSettings
+      )
+    }
+  }
+
+  /** Apply lastUsedState into current filters when available (dynamic fallback). */
+  applyDynamicLastUsedToGroupFilters(groupId: string): void {
+    const g = this.getGroup(groupId) as any
+    const last: GroupViewState | undefined = g?.lastUsedState
+    if (last?.filters) {
+      this.replaceGroupFilters(groupId, last.filters as CGroupFilterSettings)
+    }
+  }
+
   /** Reorder the groups array to persist custom order in UI. */
   moveGroup(fromIndex: number, toIndex: number): void {
     const current = [...this.groups]
@@ -307,14 +414,25 @@ export default class GroupManager {
     this.settingsManager.updateSettings({ commandGroups: current })
   }
 
+  /** Enable or disable per-group dynamic command registration for a group. */
+  setGroupRegisterCommand(groupId: string, register: boolean): void {
+    const updatedGroups = this.groups.map((group) => {
+      if (group.id === groupId) {
+        return { ...group, registerCommand: !!register }
+      }
+      return group
+    })
+    this.settingsManager.updateSettings({ commandGroups: updatedGroups })
+  }
+
   private slugifyUnique(name: string): string {
-    const base = name
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9\-]/g, '')
-      .slice(0, 60)
-      || 'group'
+    const base =
+      name
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9\-]/g, '')
+        .slice(0, 60) || 'group'
     let id = base
     let i = 1
     const existing = new Set(this.groups.map((g) => String(g.id)))

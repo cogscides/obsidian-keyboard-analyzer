@@ -1,8 +1,8 @@
 ---
 title: Redesign 'Manage Groups' pop-up for small screens
-status: todo
+status: done
 owner: '@agent'
-updated: 2025-08-11 12:00 UTC
+updated: 2025-08-12 12:36 UTC
 related:
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
 ---
@@ -28,15 +28,16 @@ Definition of done: The modal is usable at narrow widths, the group selector is 
 
 ## Decisions
 
-- [2025-08-11] Pending — choose between drag-and-drop reordering vs. explicit "Reorder" mode with handles.
+- [2025-08-12] Chosen approach: a compact dropdown selector for groups plus a dedicated "Reorder" mode. Reorder mode shows a drag list with handles and explicit Up/Down controls to avoid accidental drags on small screens.
+- [2025-08-12] Modal layout switched to responsive vertical stack; fits in narrow sidebars without horizontal scrolling.
 
 ## Next Steps
 
-- [ ] Audit current modal structure and CSS constraints at 220–360px widths (sidebar).
-- [ ] Replace inline list of groups with a compact dropdown/select component.
-- [ ] Add a dedicated "Reorder" mode with drag handles or up/down controls.
-- [ ] Review and adjust events/props between `GroupSelector` and the modal.
-- [ ] Manual test in Obsidian sidebars and main pane for overflow and focus handling.
+- [x] Audit current modal structure and CSS constraints at 220–360px widths (sidebar).
+- [x] Replace inline list of groups with a compact dropdown/select component.
+- [x] Add a dedicated "Reorder" mode with drag handles or up/down controls.
+- [x] Review and adjust events/props between `GroupSelector` and the modal.
+- [x] Manual test in Obsidian sidebars and main pane for overflow and focus handling.
 - [ ] Update README screenshots if UI changes are user-visible.
 
 ## Links

@@ -1,8 +1,8 @@
 ---
 title: Group Settings — Default vs Dynamic view behavior
-status: todo
+status: in_progress
 owner: '@agent'
-updated: 2025-08-12 11:52 UTC
+updated: 2025-08-12 12:39 UTC
 related:
   - [[25080914-hotkey-groups]]
   - [[25081101-redesign-manage-groups-modal]]
@@ -75,10 +75,10 @@ Where `GroupViewState` mirrors:
 
 ## Next Steps
 
-- [ ] Add types for `GroupViewState` and `behavior` to the interfaces module.
-- [ ] Implement persistence of `lastUsedState` with debounced writes and unload flush.
-- [ ] Implement state application flow on group open (default vs dynamic).
-- [ ] Add UI controls to Group Manager modal with help text and explicit actions.
+- [x] Add types for `GroupViewState` and `behavior` to the interfaces module.
+- [x] Implement persistence of `lastUsedState` with debounced writes and unload flush (filters snapshot).
+- [-] Implement state application flow on group open (default vs dynamic) — initial filters-only integration shipped; wire `viewMode`, `sort`, and `heatmapScope` next.
+- [x] Add UI controls to Group Manager modal with help text and explicit actions.
 - [ ] Add migration path (no-op default for legacy groups).
 - [ ] Manual QA: reloads, switching groups, performance with large sets, a11y labels.
 

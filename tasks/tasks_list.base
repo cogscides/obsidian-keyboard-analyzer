@@ -1,6 +1,6 @@
 views:
   - type: table
-    name: Table
+    name: All
     order:
       - file.name
       - created

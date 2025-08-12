@@ -60,6 +60,12 @@ export interface CGroup {
   commandIds: string[]
   excludedModules: string[]
   filterSettings: CGroupFilterSettings
+  // Behavior on open: 'default' applies saved defaults; 'dynamic' restores last used state
+  behavior?: { onOpen: 'default' | 'dynamic' }
+  // Persisted per-group last used UI state (used when behavior.onOpen === 'dynamic')
+  lastUsedState?: GroupViewState
+  // Optional: register a per-group command (e.g., "Open: <GroupName>")
+  registerCommand?: boolean
 }
 
 export interface CGroupFilterSettings extends FilterSettings {}
@@ -68,4 +74,20 @@ export enum GroupType {
   All = 'all',
   Featured = 'featured',
   Recent = 'recent',
+}
+
+/**
+ * Sort options for list rendering. Kept minimal until full sort UI exists.
+ */
+export type SortOption = 'none' | 'alpha' | 'plugin'
+
+/**
+ * Snapshot of UI state for a group. Mirrors accepted fields for "Default vs Dynamic" behavior.
+ * Extend as additional view state becomes available (e.g., layout toggles).
+ */
+export interface GroupViewState {
+  viewMode?: 'keyboard' | 'list'
+  filters: CGroupFilterSettings
+  sort?: SortOption
+  heatmapScope?: 'filtered' | 'all'
 }
