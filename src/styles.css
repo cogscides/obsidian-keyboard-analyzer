@@ -303,7 +303,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   flex-shrink: 1;
-  align-items: center;
+  align-content: center;
 }
 
 kbd.modifier {
@@ -316,7 +316,16 @@ kbd.modifier {
 }
 
 kbd.modifier:hover {
-  background-color: var(--interactive-accent-hover);
+  background-color: var(--interactive-hover);
+}
+
+/* Align search modifier chips with command list hotkey chips */
+.modifiers-wrapper .setting-hotkey {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  margin-bottom: 2px; /* allow wrap with small vertical spacing */
+  cursor: pointer; /* keep clickable behavior in search bar */
 }
 
 .modifiers-wrapper kbd.modifier:last-child {
@@ -801,6 +810,11 @@ button#hotkey-refresh-button:hover {
   align-self: flex-end;
   position: relative;
   transition: background-color, color 0.5s ease;
+}
+
+.kbanalizer-setting-hotkey:hover {
+  background-color: var(--interactive-hover);
+  color: var(--text-normal);
 }
 
 .kbanalizer-setting-hotkey.is-customized {

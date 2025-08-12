@@ -2,7 +2,12 @@
   import { getContext } from 'svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
-  import { Star as StarIcon, ChevronDown, FolderPlus as FolderPlusIcon, Search as SearchIcon } from 'lucide-svelte'
+  import {
+    Star as StarIcon,
+    ChevronDown,
+    FolderPlus as FolderPlusIcon,
+    Search as SearchIcon,
+  } from 'lucide-svelte'
   import AddToGroupPopover from './AddToGroupPopover.svelte'
   import type SettingsManager from '../managers/settingsManager'
   import type GroupManager from '../managers/groupManager'
@@ -32,7 +37,9 @@
   const groupManager: GroupManager = plugin.groupManager
   const commandsManager = plugin.commandsManager
   const hotkeyManager = plugin.hotkeyManager
-  const visualKeyboardManager: VisualKeyboardManager = getContext('visualKeyboardManager')
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
+    'visualKeyboardManager'
+  )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
   // Using callback props instead of component events (Svelte 5)
@@ -56,7 +63,9 @@
     return hotkeyManager.renderHotkey(hotkey)
   }
 
-  let featuredIds = $derived.by(() => new Set(settingsManager.settings.featuredCommandIDs || []))
+  let featuredIds = $derived.by(
+    () => new Set(settingsManager.settings.featuredCommandIDs || [])
+  )
 
   function getDisplayCommandName(name: string, pluginName: string): string {
     const p = (pluginName || '').trim()
@@ -66,7 +75,8 @@
     const pref = p.toLowerCase() + ': '
     // In grouped view, always strip plugin prefix from title.
     // In flat view, strip only when showing plugin badges; otherwise keep full name for clarity.
-    const shouldStripPrefix = groupSettings?.GroupByPlugin || groupSettings?.ShowPluginBadges
+    const shouldStripPrefix =
+      groupSettings?.GroupByPlugin || groupSettings?.ShowPluginBadges
     if (shouldStripPrefix && lower.startsWith(pref)) {
       return n.slice(pref.length).trim()
     }
@@ -90,19 +100,23 @@
     const mods = convertModifiers(hk.modifiers)
     visualKeyboardManager.updateVisualState(
       activeKeysStore.ActiveKey,
-      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveModifiers
     )
     visualKeyboardManager.previewHoverState(hk.key, mods)
   }
   function handleHotkeyMouseLeave() {
     visualKeyboardManager.updateVisualState(
       activeKeysStore.ActiveKey,
-      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveModifiers
     )
   }
 
   // Grouped view state and helpers
-  const slugify = (s: string) => s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\-]/g, '')
   let collapsedPlugins = $state(new Set<string>())
   function togglePluginCollapse(pluginName: string) {
     const next = new Set(collapsedPlugins)
@@ -121,7 +135,11 @@
     openPopoverFor = openPopoverFor === commandId ? null : commandId
   }
 
-  type PluginGroup = { pluginName: string; commands: commandEntry[]; isBuiltIn: boolean }
+  type PluginGroup = {
+    pluginName: string
+    commands: commandEntry[]
+    isBuiltIn: boolean
+  }
   let groupedByPlugin: PluginGroup[] = $derived.by(() => {
     // Track changes
     groupSettings
@@ -171,10 +189,15 @@
         <div class="empty-icon"><SearchIcon size={28} /></div>
         {#if groupIsEmpty}
           <div class="empty-title">This group is empty</div>
-          <div class="empty-subtitle">Add commands from the “All Commands” list using the folder icon, or manage groups.</div>
+          <div class="empty-subtitle">
+            Add commands from the “All Commands” list using the folder icon, or
+            manage groups.
+          </div>
         {:else}
           <div class="empty-title">No matching commands</div>
-          <div class="empty-subtitle">Try a different term or adjust filters.</div>
+          <div class="empty-subtitle">
+            Try a different term or adjust filters.
+          </div>
         {/if}
         {#if !groupIsEmpty}
           <ul class="empty-hints">
@@ -184,143 +207,193 @@
           </ul>
         {/if}
       </div>
-    {:else}
-      {#if groupSettings?.GroupByPlugin}
-        <div class="plugin-groups-toolbar">
-          <button class="btn-filter" onclick={collapseAll}>Collapse all</button>
-          <button class="btn-filter" onclick={expandAll}>Expand all</button>
-        </div>
-        {#each groupedByPlugin as group (group.pluginName)}
-          <div class="plugin-group">
-            <!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-            <div
-              class="plugin-group-header {group.isBuiltIn && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}"
-              role="button"
-              aria-expanded={!isCollapsed(group.pluginName)}
-              aria-controls={`group-${slugify(group.pluginName)}`}
-              onclick={() => togglePluginCollapse(group.pluginName)}
+    {:else if groupSettings?.GroupByPlugin}
+      <div class="plugin-groups-toolbar">
+        <button class="btn-filter" onclick={collapseAll}>Collapse all</button>
+        <button class="btn-filter" onclick={expandAll}>Expand all</button>
+      </div>
+      {#each groupedByPlugin as group (group.pluginName)}
+        <div class="plugin-group">
+          <!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+          <div
+            class="plugin-group-header {group.isBuiltIn &&
+            groupSettings?.HighlightBuiltIns
+              ? 'is-builtin'
+              : ''}"
+            role="button"
+            aria-expanded={!isCollapsed(group.pluginName)}
+            aria-controls={`group-${slugify(group.pluginName)}`}
+            onclick={() => togglePluginCollapse(group.pluginName)}
+          >
+            <span
+              class="chevron {isCollapsed(group.pluginName)
+                ? 'is-collapsed'
+                : ''}"
             >
-              <span class="chevron {isCollapsed(group.pluginName) ? 'is-collapsed' : ''}">
-                <ChevronDown size={14} />
-              </span>
-              <span class="plugin-name">{group.pluginName}</span>
-              {#if group.isBuiltIn}
-                <span class="plugin-badge built-in">built-in</span>
-              {/if}
-              <span class="plugin-meta u-muted">{group.commands.length} cmds</span>
-            </div>
-            {#if !isCollapsed(group.pluginName)}
-              <div class="plugin-group-body" id={`group-${slugify(group.pluginName)}`}> 
-                {#each group.commands as cmdEntry (cmdEntry.id)}
-                  <div
-                    class="kbanalizer-setting-item setting-item compact"
-                    class:is-starred={featuredIds.has(cmdEntry.id)}
-                    class:show-actions={openPopoverFor === cmdEntry.id}
-                  >
-                    <div class="setting-item-info">
-                      <div class="setting-item-name">
-                        <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
-                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                        <div class="action-icons">
-                          <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
-                            <StarIcon size={16} />
-                          </div>
-                          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                          <div class="folder-plus-icon icon" title="Add to group" onclick={(e) => toggleAddToGroupPopover(e, cmdEntry.id)}>
-                            <FolderPlusIcon size={16} />
-                          </div>
-                          {#if openPopoverFor === cmdEntry.id}
-                            <span class="kb-popover-anchor">
-                              <AddToGroupPopover commandId={cmdEntry.id} onClose={() => (openPopoverFor = null)} />
-                            </span>
-                          {/if}
+              <ChevronDown size={14} />
+            </span>
+            <span class="plugin-name">{group.pluginName}</span>
+            {#if group.isBuiltIn}
+              <span class="plugin-badge built-in">built-in</span>
+            {/if}
+            <span class="plugin-meta u-muted">{group.commands.length} cmds</span
+            >
+          </div>
+          {#if !isCollapsed(group.pluginName)}
+            <div
+              class="plugin-group-body"
+              id={`group-${slugify(group.pluginName)}`}
+            >
+              {#each group.commands as cmdEntry (cmdEntry.id)}
+                <div
+                  class="kbanalizer-setting-item setting-item compact"
+                  class:is-starred={featuredIds.has(cmdEntry.id)}
+                  class:show-actions={openPopoverFor === cmdEntry.id}
+                >
+                  <div class="setting-item-info">
+                    <div class="setting-item-name">
+                      <span class="command-name"
+                        >{getDisplayCommandName(
+                          cmdEntry.name,
+                          cmdEntry.pluginName
+                        )}</span
+                      >
+                      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                      <div class="action-icons">
+                        <div
+                          class="star-icon icon"
+                          onclick={() => handleStarClick(cmdEntry.id)}
+                        >
+                          <StarIcon size={16} />
                         </div>
-                      </div>
-                      {#if groupSettings?.DisplayIDs}
-                        <small>{cmdEntry.id}</small>
-                      {/if}
-                    </div>
-                    <div class="kbanalizer-setting-item-control setting-item-control">
-                      <div class="setting-command-hotkeys">
-                        {#each cmdEntry.hotkeys as hotkey}
-                          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                          <span
-                            class="kbanalizer-setting-hotkey setting-hotkey"
-                            class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
-                            class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
-                            onclick={() => handleDuplicateHotkeyClick(hotkey)}
-                            onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
-                            onmouseleave={handleHotkeyMouseLeave}
-                          >
-                            {renderHotkey(hotkey)}
+                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                        <div
+                          class="folder-plus-icon icon"
+                          title="Add to group"
+                          onclick={(e) =>
+                            toggleAddToGroupPopover(e, cmdEntry.id)}
+                        >
+                          <FolderPlusIcon size={16} />
+                        </div>
+                        {#if openPopoverFor === cmdEntry.id}
+                          <span class="kb-popover-anchor">
+                            <AddToGroupPopover
+                              commandId={cmdEntry.id}
+                              onClose={() => (openPopoverFor = null)}
+                            />
                           </span>
-                        {/each}
+                        {/if}
                       </div>
+                    </div>
+                    {#if groupSettings?.DisplayIDs}
+                      <small>{cmdEntry.id}</small>
+                    {/if}
+                  </div>
+                  <div
+                    class="kbanalizer-setting-item-control setting-item-control"
+                  >
+                    <div class="setting-command-hotkeys">
+                      {#each cmdEntry.hotkeys as hotkey}
+                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                        <span
+                          class="kbanalizer-setting-hotkey setting-hotkey"
+                          class:is-duplicate={hotkeyManager.isHotkeyDuplicate(
+                            cmdEntry.id,
+                            hotkey
+                          ) && groupSettings?.HighlightDuplicates}
+                          class:is-customized={hotkey.isCustom &&
+                            groupSettings?.HighlightCustom}
+                          onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                          onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
+                          onmouseleave={handleHotkeyMouseLeave}
+                        >
+                          {renderHotkey(hotkey)}
+                        </span>
+                      {/each}
                     </div>
                   </div>
-                {/each}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/each}
+    {:else}
+      {#each filteredCommands as cmdEntry (cmdEntry.id)}
+        <div
+          class="kbanalizer-setting-item setting-item"
+          class:is-starred={featuredIds.has(cmdEntry.id)}
+          class:show-actions={openPopoverFor === cmdEntry.id}
+        >
+          <div class="setting-item-info">
+            <div class="setting-item-name">
+              {#if groupSettings?.ShowPluginBadges}
+                <button
+                  class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
+                  onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
+                >
+                  {cmdEntry.pluginName}
+                </button>
+              {/if}
+              <span class="command-name"
+                >{getDisplayCommandName(
+                  cmdEntry.name,
+                  cmdEntry.pluginName
+                )}</span
+              >
+              <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+              <div class="action-icons">
+                <div
+                  class="star-icon icon"
+                  onclick={() => handleStarClick(cmdEntry.id)}
+                >
+                  <StarIcon size={16} />
+                </div>
+                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                <div
+                  class="folder-plus-icon icon"
+                  title="Add to group"
+                  onclick={(e) => toggleAddToGroupPopover(e, cmdEntry.id)}
+                >
+                  <FolderPlusIcon size={16} />
+                </div>
+                {#if openPopoverFor === cmdEntry.id}
+                  <span class="kb-popover-anchor">
+                    <AddToGroupPopover
+                      commandId={cmdEntry.id}
+                      onClose={() => (openPopoverFor = null)}
+                    />
+                  </span>
+                {/if}
               </div>
+            </div>
+            {#if groupSettings?.DisplayIDs}
+              <small>{cmdEntry.id}</small>
             {/if}
           </div>
-        {/each}
-      {:else}
-        {#each filteredCommands as cmdEntry (cmdEntry.id)}
-                  <div
-                    class="kbanalizer-setting-item setting-item"
-                    class:is-starred={featuredIds.has(cmdEntry.id)}
-            class:show-actions={openPopoverFor === cmdEntry.id}
-          >
-            <div class="setting-item-info">
-              <div class="setting-item-name">
-                {#if groupSettings?.ShowPluginBadges}
-                  <button
-                    class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
-                    onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
-                  >
-                    {cmdEntry.pluginName}
-                  </button>
-                {/if}
-                <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
+          <div class="kbanalizer-setting-item-control setting-item-control">
+            <div class="setting-command-hotkeys">
+              {#each cmdEntry.hotkeys as hotkey}
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                <div class="action-icons">
-                  <div class="star-icon icon" onclick={() => handleStarClick(cmdEntry.id)}>
-                    <StarIcon size={16} />
-                  </div>
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                  <div class="folder-plus-icon icon" title="Add to group" onclick={(e) => toggleAddToGroupPopover(e, cmdEntry.id)}>
-                    <FolderPlusIcon size={16} />
-                  </div>
-                  {#if openPopoverFor === cmdEntry.id}
-                    <span class="kb-popover-anchor">
-                      <AddToGroupPopover commandId={cmdEntry.id} onClose={() => (openPopoverFor = null)} />
-                    </span>
-                  {/if}
-                </div>
-              </div>
-              {#if groupSettings?.DisplayIDs}
-                <small>{cmdEntry.id}</small>
-              {/if}
-            </div>
-            <div class="kbanalizer-setting-item-control setting-item-control">
-              <div class="setting-command-hotkeys">
-                {#each cmdEntry.hotkeys as hotkey}
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                  <span
-                    class="kbanalizer-setting-hotkey setting-hotkey"
-                    class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
-                    class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
-                    onclick={() => handleDuplicateHotkeyClick(hotkey)}
-                    onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
-                    onmouseleave={handleHotkeyMouseLeave}
-                  >
-                    {renderHotkey(hotkey)}
-                  </span>
-                {/each}
-              </div>
+                <span
+                  class="kbanalizer-setting-hotkey setting-hotkey"
+                  class:is-duplicate={hotkeyManager.isHotkeyDuplicate(
+                    cmdEntry.id,
+                    hotkey
+                  ) && groupSettings?.HighlightDuplicates}
+                  class:is-customized={hotkey.isCustom &&
+                    groupSettings?.HighlightCustom}
+                  onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                  onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
+                  onmouseleave={handleHotkeyMouseLeave}
+                >
+                  {renderHotkey(hotkey)}
+                </span>
+              {/each}
             </div>
           </div>
-        {/each}
-      {/if}
+        </div>
+      {/each}
     {/if}
   </div>
 </div>
@@ -336,19 +409,47 @@
     min-height: 220px;
     padding: 24px;
     margin: 24px auto;
-    max-width: 640px;
     border: 1px dashed var(--indentation-guide);
     border-radius: 12px;
     background: var(--background-secondary);
   }
-  .empty-icon { color: var(--text-muted); margin-bottom: 8px; }
-  .empty-title { font-weight: 600; margin-bottom: 4px; }
-  .empty-subtitle { color: var(--text-muted); margin-bottom: 12px; }
-  .empty-hints { color: var(--text-muted); text-align: left; margin: 0; padding-left: 18px; }
+  .empty-icon {
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .empty-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .empty-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .empty-hints {
+    color: var(--text-muted);
+    text-align: left;
+    margin: 0;
+    padding-left: 18px;
+  }
 
   /* Add-to-group popover anchored to icon group */
-  .action-icons { position: relative; display: inline-flex; align-items: center; overflow: visible; }
-  .kb-popover-anchor { position: relative; display: inline-block; overflow: visible; }
-  .folder-plus-icon { margin-left: 6px; cursor: pointer; opacity: 0.8; }
-  .folder-plus-icon:hover { opacity: 1; }
+  .action-icons {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    overflow: visible;
+  }
+  .kb-popover-anchor {
+    position: relative;
+    display: inline-block;
+    overflow: visible;
+  }
+  .folder-plus-icon {
+    margin-left: 6px;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .folder-plus-icon:hover {
+    opacity: 1;
+  }
 </style>

@@ -178,7 +178,10 @@
 
   function ActivateKeyboardListener() {
     const next = !keyboardListenerIsActive
-    logger.debug('[keys] toggle listener', { from: keyboardListenerIsActive, to: next })
+    logger.debug('[keys] toggle listener', {
+      from: keyboardListenerIsActive,
+      to: next,
+    })
     keyboardListenerIsActive = next
     inputHTML?.focus()
   }
@@ -275,7 +278,10 @@
     <div class="modifiers-wrapper">
       {#each PressedKeysStore.sortedModifiers as modifier}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <kbd class="modifier" onclick={() => handleModifierChipClick(modifier)}>
+        <kbd
+          class="modifier setting-hotkey"
+          onclick={() => handleModifierChipClick(modifier)}
+        >
           {settingsManager.settings.useBakedKeyNames
             ? getBakedModifierLabel(modifier)
             : modifier}
@@ -284,7 +290,7 @@
       {#if PressedKeysStore.activeKey}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <kbd
-          class="modifier"
+          class="modifier setting-hotkey"
           onclick={() =>
             PressedKeysStore.handleKeyClick(PressedKeysStore.activeKey)}
         >
