@@ -6,7 +6,7 @@ import {
   type PluginManifest,
   SuggestModal,
 } from 'obsidian'
-
+import { mount, unmount } from 'svelte'
 import ShortcutsView from './views/ShortcutsView'
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from './Constants'
 
@@ -14,6 +14,7 @@ import CommandsManager from './managers/commandsManager'
 import HotkeyManager from './managers/hotkeyManager'
 import SettingsManager from './managers/settingsManager'
 import GroupManager from './managers/groupManager'
+import QuickViewPopover from './components/QuickViewPopover.svelte'
 
 import type { PluginSettings } from './managers/settingsManager'
 
@@ -34,6 +35,12 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 
   // Track dynamically registered per-group commands so we can cleanly resync
   private registeredGroupCommandIds: Set<string> = new Set()
+
+  // Quick View Popover state
+  private quickViewComponent: ReturnType<typeof mount> | null = null
+  private quickViewAnchorEl: HTMLElement | null = null
+  private lastQuickViewInvoke = 0
+  private quickViewListenNonce = 0
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
@@ -85,6 +92,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     // Initialize any per-group "Open: <Group>" commands (opt-in via group.registerCommand)
     this.syncPerGroupCommands()
     this.addStatusBarIndicator()
+    this.addQuickViewCommand()
 
     this.registerView(
       VIEW_TYPE_SHORTCUTS_ANALYZER,
@@ -125,6 +133,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     statusBarIcon.style.order = '10'
     const icon = statusBarIcon.createSpan('icon')
     setIcon(icon, 'keyboard-glyph')
+    // Use the glyph span as an anchor for the Quick View popover
+    this.quickViewAnchorEl = icon
     icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
   }
 
@@ -197,6 +207,87 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       name: 'Open Keyboard Analyzer: Group…',
       callback: () => this.openGroupPicker(),
     })
+  }
+
+  /**
+   * Register "Open Quick View" command with double-run detection to enable listen mode.
+   * First run opens/targets the popover near the status bar keyboard icon.
+   * Second run within 500ms toggles key-listen mode inside the popover.
+   */
+  private addQuickViewCommand() {
+    this.addCommand({
+      id: 'open-quick-view',
+      name: 'Open Quick View',
+      callback: () => {
+        const now = Date.now()
+        const isDoubleRun = now - this.lastQuickViewInvoke <= 500
+        this.lastQuickViewInvoke = now
+
+        if (!this.quickViewComponent) {
+          this.openQuickView(isDoubleRun)
+          return
+        }
+
+        // Already open: double-run → enter listen mode, single-run → close
+        if (isDoubleRun) {
+          this.enterQuickViewListenMode()
+        } else {
+          this.closeQuickView()
+        }
+      },
+    })
+  }
+
+  private openQuickView(listenOnOpen = false) {
+    try {
+      // Ensure we have an anchor; fallback to status bar container if not set
+      const anchor = this.quickViewAnchorEl || (document.querySelector('.status-bar-item.plugin-keyboard-analyzer span.icon') as HTMLElement | null)
+      this.quickViewAnchorEl = anchor || this.quickViewAnchorEl
+
+      // Bump nonce if we want to enable listen mode on open
+      if (listenOnOpen) this.quickViewListenNonce++
+
+      this.quickViewComponent = mount(QuickViewPopover, {
+        target: document.body,
+        props: {
+          plugin: this,
+          anchorEl: this.quickViewAnchorEl,
+          onClose: () => this.closeQuickView(),
+          listenToggle: this.quickViewListenNonce,
+        },
+      })
+    } catch {
+      // If mount fails for any reason, clear ref to avoid stale state
+      this.quickViewComponent = null
+    }
+  }
+
+  private closeQuickView() {
+    if (this.quickViewComponent) {
+      try {
+        unmount(this.quickViewComponent)
+      } catch {}
+      this.quickViewComponent = null
+    }
+  }
+
+  private enterQuickViewListenMode() {
+    if (!this.quickViewComponent) {
+      this.openQuickView(true)
+      return
+    }
+    // Try to update the component's listenToggle prop to activate listening mode
+    this.quickViewListenNonce++
+    try {
+      // Svelte mount() instances support update(props)
+      ;(this.quickViewComponent as any).update?.({
+        listenToggle: this.quickViewListenNonce,
+      })
+    } catch {
+      // Fallback: remount with incremented nonce
+      this.closeQuickView()
+      this.openQuickView(true)
+    }
   }
 
   private async openGroupPicker() {
