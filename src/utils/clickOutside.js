@@ -31,3 +31,4 @@ export function clickOutside(node) {
     },
   }
 }
+export default clickOutside

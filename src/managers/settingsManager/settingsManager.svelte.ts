@@ -48,6 +48,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   useBakedKeyNames: true,
   // Persisted UI state
   quickViewHeight: 360,
+  quickViewWidth: 420,
   settingsSchemaVersion: 1,
 }
 

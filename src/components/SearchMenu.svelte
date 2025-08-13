@@ -24,7 +24,7 @@
   } from '../managers/settingsManager/keys'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import type { Modifier } from 'obsidian'
-  import { clickOutside } from '../utils/clickOutside'
+  import clickOutside from '../utils/clickOutside'
   import logger from '../utils/logger'
   import {
     getBakedModifierLabel,
@@ -133,6 +133,13 @@
   let inputDebounce: ReturnType<typeof setTimeout> | null = null
 
   // No local UI snapshot to avoid reactive loops; use derived filterSettings directly
+  // Idempotent guard to avoid re-entrant onSearch loops (stabilizes UI)
+  let lastSearchPayload: {
+    search: string
+    activeKey: string
+    selectedGroup: string
+    modifiersSig: string
+  } = $state({ search: '', activeKey: '', selectedGroup: '', modifiersSig: '' })
 
   // Groups
   let excludedModules = $derived.by(() => {
@@ -233,12 +240,28 @@
   }
 
   function handleSearchInput() {
-    onSearch(
-      search,
-      convertModifiers(PressedKeysStore.activeModifiers),
-      PressedKeysStore.activeKey,
-      selectedGroup
-    )
+    try {
+      // Normalize payload and short-circuit identical requests to avoid reactive loops
+      const mods = convertModifiers(PressedKeysStore.activeModifiers)
+      const next = {
+        search: String(search ?? ''),
+        activeKey: String(PressedKeysStore.activeKey ?? ''),
+        selectedGroup: String(selectedGroup ?? ''),
+        modifiersSig: mods.join('+'),
+      }
+      if (
+        next.search === lastSearchPayload.search &&
+        next.activeKey === lastSearchPayload.activeKey &&
+        next.selectedGroup === lastSearchPayload.selectedGroup &&
+        next.modifiersSig === lastSearchPayload.modifiersSig
+      ) {
+        return
+      }
+      lastSearchPayload = next
+      onSearch(next.search, mods, next.activeKey, next.selectedGroup)
+    } catch {
+      // Defensive: never throw from UI handler
+    }
   }
 
   function handleDebouncedInput() {

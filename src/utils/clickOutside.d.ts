@@ -1,4 +1,6 @@
-export function clickOutside(node: HTMLElement): { destroy(): void }
+declare function clickOutside(node: HTMLElement): { destroy(): void }
+export default clickOutside
+export { clickOutside }
 
 // Svelte JSX augmentation for custom events
 declare namespace svelteHTML {

@@ -2,7 +2,7 @@
 title: Quick View — Refactor to reuse existing logic and components
 status: in_progress
 owner: '@agent'
-updated: 2025-08-13 02:05 UTC
+updated: 2025-08-13 03:05 UTC
 related:
   - [[25081213-quick-view-popover-for-fast-shortcuts]]
   - [[25081301-quick-view-ui-fixes]]
@@ -64,3 +64,14 @@ Quick View now implements Mod+F/Esc parity, multiple hotkeys chips, and resizabl
 - A small search/listen store (query, debounce, listen toggle rules) consumable by both Quick View and full view.
 - Shared hotkey formatting helpers already exist; ensure duplicate/custom checks come from one place.
 - Evaluate parameterizing `CommandsList.svelte` with a compact prop or creating `CommandsListCompact.svelte` that reuses helpers.
+
+## Progress (2025-08-13)
+
+- Quick View now composes the existing `SearchMenu.svelte` instead of duplicating search/listen UI.
+- Contexts required by SearchMenu and GroupSelector are provided in the Quick View shell.
+
+## Still To Do
+
+- Extract a compact prop/variant in `SearchMenu.svelte` to hide non-essential controls in Quick View.
+- Consolidate filter/listen logic into a small shared store to avoid passing callback glue.
+- Optionally extract a compact `CommandsList` renderer to reduce duplication for chips/badges.

@@ -129,7 +129,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     statusBarIcon.setAttribute('aria-label', 'Keyboard Shortcuts')
     statusBarIcon.setAttribute(
       'title',
-      'Keyboard Shortcuts — Cmd/Ctrl+Click to open in a new pane. Right-click for Quick View.'
+      'Quick View — Click to open. Cmd/Ctrl+Click opens full view. Alt+Meta splits.'
     )
     statusBarIcon.style.order = '10'
     const icon = statusBarIcon.createSpan('icon')
@@ -137,10 +137,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     // Use the glyph span as an anchor for the Quick View popover
     this.quickViewAnchorEl = icon
     icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
-    // Right-click → open Quick View (suppress native menu on the icon only)
+    // Right-click also toggles Quick View (suppress native menu on the icon only)
     icon.addEventListener('contextmenu', (evt) => {
       evt.preventDefault()
-      // Toggle behavior: if already open, close; otherwise open
       if (this.quickViewComponent) this.closeQuickView()
       else this.openQuickView(false)
     })
@@ -150,14 +149,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     const isMeta = evt.ctrlKey === true || evt.metaKey === true
     const useSplit = evt.altKey === true
 
-    let leafBehavior: boolean | 'split' = false
-    if (isMeta && useSplit) {
-      leafBehavior = 'split'
-    } else if (isMeta) {
-      leafBehavior = true
+    // Meta/Ctrl click → open full view (Alt+Meta splits)
+    if (isMeta) {
+      let leafBehavior: boolean | 'split' = false
+      leafBehavior = useSplit ? 'split' : true
+      this.addShortcutsView(leafBehavior)
+      return
     }
 
-    this.addShortcutsView(leafBehavior)
+    // Default click → toggle Quick View
+    if (this.quickViewComponent) this.closeQuickView()
+    else this.openQuickView(false)
   }
 
   async addShortcutsView(leafBehavior: boolean | 'split' = false) {
@@ -274,10 +276,21 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
             : 0,
         },
       })
-    } catch {
+    } catch (err) {
       // If mount fails for any reason, clear ref to avoid stale state
       this.quickViewComponent = null
       this.quickViewListeningActive = false
+      // Log details in dev mode to surface the true error (helps diagnose "Uncaught" in console)
+      try {
+        const dev = !!this.settingsManager.getSetting('devLoggingEnabled')
+        if (dev) {
+          const msg =
+            err instanceof Error
+              ? `${err.message}\n${err.stack || ''}`
+              : String(err)
+          console.error('[Keyboard Analyzer] Quick View mount failed:', msg)
+        }
+      } catch {}
     }
   }
 
