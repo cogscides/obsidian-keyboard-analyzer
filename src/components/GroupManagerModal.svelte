@@ -3,6 +3,7 @@
   import { X } from 'lucide-svelte'
   import type KeyboardAnalyzerPlugin from '../main'
   import type { commandEntry } from '../interfaces/Interfaces'
+  import { clickOutside } from '../utils/clickOutside'
 
   interface Props {
     plugin?: KeyboardAnalyzerPlugin
@@ -35,6 +36,74 @@
   let commands: commandEntry[] = $derived.by(() =>
     commandsManager.getGroupCommands(selectedGroupId || '')
   )
+
+  // Inline "Add command" search (debounced)
+  let cmdSearch = $state('')
+  let cmdSearchOpen = $state(false)
+  let cmdSearchResults: commandEntry[] = $state([])
+  let cmdSearchLimit = 20
+  let cmdSearchInputEl: HTMLInputElement | null = null
+  let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null
+
+  function formatFirstHotkey(entry: commandEntry): string {
+    const hk = entry.hotkeys?.[0]
+    if (!hk) return ''
+    const mods = (
+      Array.isArray(hk.modifiers)
+        ? hk.modifiers
+        : String(hk.modifiers).split(',')
+    ) as string[]
+    const modsStr = mods.filter(Boolean).join('+')
+    return modsStr ? modsStr + '+' + (hk.key || '') : hk.key || ''
+  }
+
+  function runCommandSearch() {
+    const term = (cmdSearch || '').trim()
+    if (!term || !selectedGroupId || selectedGroupId === 'all') {
+      cmdSearchResults = []
+      cmdSearchOpen = !!term
+      return
+    }
+    const exclude = new Set<string>((commands || []).map((c) => c.id))
+    const results = commandsManager.searchCommandsByName(term, {
+      excludeIds: exclude,
+      limit: cmdSearchLimit,
+    })
+    cmdSearchResults = results
+    cmdSearchOpen = true
+  }
+
+  function onCmdSearchInput() {
+    if (cmdSearchDebounce) clearTimeout(cmdSearchDebounce)
+    cmdSearchDebounce = setTimeout(runCommandSearch, 180)
+  }
+
+  function clearCmdSearch() {
+    cmdSearch = ''
+    cmdSearchResults = []
+    cmdSearchOpen = false
+    cmdSearchInputEl?.focus()
+  }
+
+  function pickSearchResult(entry: commandEntry) {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    // Add to current group and remove from local results
+    groupManager.addCommandToGroup(selectedGroupId, entry.id)
+    cmdSearchResults = cmdSearchResults.filter((e) => e.id !== entry.id)
+    // keep dropdown open with remaining results
+  }
+
+  function handleCmdSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      e.preventDefault()
+      if (cmdSearchOpen) {
+        cmdSearchOpen = false
+        return
+      }
+      clearCmdSearch()
+    }
+  }
 
   // Behavior toggle (default vs dynamic)
   let behavior = $derived.by(() =>
@@ -345,6 +414,69 @@
             </div>
           </div>
 
+          <!-- Add-command inline search -->
+          <div
+            class="kb-cmd-search"
+            use:clickOutside
+            onclick_outside={() => (cmdSearchOpen = false)}
+          >
+            <label class="u-muted small" for="kb-cmd-search-input"
+              >Add commands</label
+            >
+            <div class="kb-cmd-search-input">
+              <input
+                id="kb-cmd-search-input"
+                class="kb-input"
+                type="text"
+                placeholder="Search commands to add..."
+                bind:value={cmdSearch}
+                bind:this={cmdSearchInputEl}
+                oninput={onCmdSearchInput}
+                onkeydown={handleCmdSearchKeydown}
+                aria-autocomplete="list"
+                aria-expanded={cmdSearchOpen}
+                aria-controls="kb-cmd-search-list"
+              />
+              {#if cmdSearch}
+                <button
+                  class="kb-icon clear"
+                  aria-label="Clear search"
+                  title="Clear"
+                  onclick={clearCmdSearch}
+                >
+                  <X size={14} />
+                </button>
+              {/if}
+            </div>
+
+            {#if cmdSearchOpen && cmdSearchResults.length > 0}
+              <ul
+                id="kb-cmd-search-list"
+                class="kb-cmd-dropdown"
+                role="listbox"
+              >
+                {#each cmdSearchResults as r (r.id)}
+                  <li
+                    class="kb-cmd-option"
+                    role="option"
+                    aria-selected="false"
+                    onclick={() => pickSearchResult(r)}
+                    title={`${r.pluginName}: ${r.name}`}
+                  >
+                    <span class="label">{r.pluginName}: {r.name}</span>
+                    {#if r.hotkeys && r.hotkeys.length > 0}
+                      <span class="hk">{formatFirstHotkey(r)}</span>
+                    {:else}
+                      <span class="hk u-muted">no hotkey</span>
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            {:else if cmdSearchOpen && cmdSearch.trim().length > 0}
+              <div class="kb-cmd-empty u-muted small">No matching commands</div>
+            {/if}
+          </div>
+
           {#if commands.length === 0}
             <div class="u-muted">No commands in this group yet.</div>
           {:else}
@@ -555,5 +687,75 @@
   }
   .small {
     font-size: 12px;
+  }
+
+  /* Add-command search styles */
+  .kb-cmd-search {
+    position: relative;
+    margin: 8px 0 12px;
+  }
+  .kb-cmd-search-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .kb-cmd-search-input .kb-input {
+    padding-right: 28px;
+  }
+  .kb-cmd-search-input .kb-icon.clear {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .kb-cmd-search-input .kb-icon.clear:hover {
+    opacity: 1;
+    color: var(--text-accent);
+  }
+  .kb-cmd-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 200010;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    margin: 6px 0 0;
+    padding: 4px;
+    max-height: 240px;
+    overflow: auto;
+    list-style: none;
+  }
+  .kb-cmd-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .kb-cmd-option:hover {
+    background: var(--background-secondary);
+  }
+  .kb-cmd-option .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+  .kb-cmd-option .hk {
+    flex: 0 0 auto;
+    font-family: var(--font-monospace);
+    font-size: 12px;
+    opacity: 0.9;
+  }
+  .kb-cmd-empty {
+    padding: 6px 2px 0;
   }
 </style>

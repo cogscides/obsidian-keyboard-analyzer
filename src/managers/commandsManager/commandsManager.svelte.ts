@@ -550,7 +550,34 @@ export default class CommandsManager {
   }
 
   // Refreshing  ------------------------ //
-
+ 
+  /**
+   * Simple name-based search across all commands.
+   * - Matches against pluginName, name, cmdName, and id (lowercased contains).
+   * - Excludes any ids present in options.excludeIds.
+   * - Limits results to options.limit (default 20).
+   */
+  public searchCommandsByName(
+    term: string,
+    options?: { excludeIds?: Set<string>; limit?: number }
+  ): commandEntry[] {
+    const q = (term || '').trim().toLowerCase()
+    if (!q) return []
+    const exclude = options?.excludeIds || new Set<string>()
+    const limit = options?.limit ?? 20
+ 
+    const results: commandEntry[] = []
+    for (const cmd of Object.values(this.commands)) {
+      if (exclude.has(cmd.id)) continue
+      const haystack = `${cmd.pluginName} ${cmd.name} ${cmd.cmdName} ${cmd.id}`.toLowerCase()
+      if (haystack.includes(q)) {
+        results.push(cmd)
+        if (results.length >= limit) break
+      }
+    }
+    return results
+  }
+ 
   /**
    * Refreshes the commands
    *
