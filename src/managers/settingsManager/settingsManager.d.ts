@@ -18,6 +18,11 @@ export interface PluginSettings {
   useBakedKeyNames?: boolean
 
   /**
+   * Persisted height for the Quick View popover (in px). Allows user-resizable popover.
+   */
+  quickViewHeight?: number
+
+  /**
    * Settings schema/migration version.
    * Undefined or 0 implies legacy data; current schema is 1+ when groups are present.
    */

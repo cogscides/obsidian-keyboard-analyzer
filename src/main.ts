@@ -128,7 +128,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     statusBarIcon.setAttribute('aria-label', 'Keyboard Shortcuts')
     statusBarIcon.setAttribute(
       'title',
-      'Keyboard Shortcuts — Cmd/Ctrl+Click to open in a new pane.'
+      'Keyboard Shortcuts — Cmd/Ctrl+Click to open in a new pane. Right-click for Quick View.'
     )
     statusBarIcon.style.order = '10'
     const icon = statusBarIcon.createSpan('icon')
@@ -136,6 +136,13 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     // Use the glyph span as an anchor for the Quick View popover
     this.quickViewAnchorEl = icon
     icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
+    // Right-click → open Quick View (suppress native menu on the icon only)
+    icon.addEventListener('contextmenu', (evt) => {
+      evt.preventDefault()
+      // Toggle behavior: if already open, close; otherwise open
+      if (this.quickViewComponent) this.closeQuickView()
+      else this.openQuickView(false)
+    })
   }
 
   async onStatusBarClick(evt: MouseEvent) {
@@ -241,7 +248,11 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   private openQuickView(listenOnOpen = false) {
     try {
       // Ensure we have an anchor; fallback to status bar container if not set
-      const anchor = this.quickViewAnchorEl || (document.querySelector('.status-bar-item.plugin-keyboard-analyzer span.icon') as HTMLElement | null)
+      const anchor =
+        this.quickViewAnchorEl ||
+        (document.querySelector(
+          '.status-bar-item.plugin-keyboard-analyzer span.icon'
+        ) as HTMLElement | null)
       this.quickViewAnchorEl = anchor || this.quickViewAnchorEl
 
       // Bump nonce if we want to enable listen mode on open

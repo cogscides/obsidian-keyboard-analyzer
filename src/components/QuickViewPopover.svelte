@@ -94,6 +94,9 @@
     refilter()
   })
 
+  // Keep a ref to the search input to implement Mod+F parity behavior
+  let searchInput: HTMLInputElement | null = null
+
   // Listen mode handlers
   function handleKeyDown(e: KeyboardEvent) {
     // Esc — either exit listen mode or close popover
@@ -108,10 +111,21 @@
       return
     }
 
-    // Mod+F toggles listen mode inside the popover
+    // Mod+F parity inside the popover
     const isMod = e.metaKey || e.ctrlKey
-    if (isMod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
-      keyboardListenerIsActive = !keyboardListenerIsActive
+    const isModF =
+      isMod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f'
+    if (isModF) {
+      const active = document.activeElement as HTMLElement | null
+      const isSearchFocused = active === searchInput
+      if (!isSearchFocused) {
+        // Focus search when not focused; do not toggle listen
+        searchInput?.focus()
+        searchInput?.select()
+      } else {
+        // Only when search is focused → toggle listen mode
+        keyboardListenerIsActive = !keyboardListenerIsActive
+      }
       e.preventDefault()
       e.stopPropagation()
       return
@@ -237,7 +251,14 @@
   // Positioning near anchorEl - fixed, clamped, flip above if needed
   let rootEl: HTMLDivElement | null = null
   let placeAbove = $state(false)
-  let coords = $state({ top: 0, left: 0, maxHeight: 360 })
+  let coords = $state({
+    top: 0,
+    left: 0,
+    maxHeight: Math.max(
+      240,
+      Math.min(540, Number(settingsManager.settings.quickViewHeight || 360))
+    ),
+  })
 
   function recomputePosition() {
     try {
@@ -269,6 +290,39 @@
 
       coords = { top, left, maxHeight: estimatedHeight }
     } catch {}
+  }
+
+  // Resize handle logic (persist height)
+  let resizing = false
+  let startY = 0
+  let startH = 0
+  function onResizePointerDown(e: PointerEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    resizing = true
+    startY = e.clientY
+    startH = coords.maxHeight
+    window.addEventListener('pointermove', onResizeMove, true)
+    window.addEventListener('pointerup', onResizeUp, true)
+  }
+  function onResizeMove(e: PointerEvent) {
+    if (!resizing) return
+    const dy = e.clientY - startY
+    let next = startH + (placeAbove ? -dy : dy)
+    // clamp
+    if (next < 240) next = 240
+    if (next > 640) next = 640
+    coords = { ...coords, maxHeight: next }
+    // Persist last size
+    settingsManager.updateSettings({ quickViewHeight: next })
+    // Keep position stable within viewport
+    recomputePosition()
+  }
+  function onResizeUp() {
+    if (!resizing) return
+    resizing = false
+    window.removeEventListener('pointermove', onResizeMove, true)
+    window.removeEventListener('pointerup', onResizeUp, true)
   }
 
   let ro: ResizeObserver | null = null
@@ -330,6 +384,7 @@
       const inp = rootEl?.querySelector(
         'input[type="text"]'
       ) as HTMLInputElement | null
+      searchInput = inp
       inp?.focus()
       inp?.select()
     }, 0)
@@ -343,6 +398,9 @@
     rootEl?.removeEventListener('keydown', trapTab, true)
     ro?.disconnect()
     ro = null
+    // Cleanup potential resize listeners
+    window.removeEventListener('pointermove', onResizeMove, true)
+    window.removeEventListener('pointerup', onResizeUp, true)
   })
 </script>
 
@@ -364,6 +422,7 @@
         bind:value={search}
         oninput={() => scheduleRefilter()}
         aria-label="Search commands"
+        bind:this={searchInput}
       />
       {#if search}
         <button
@@ -372,7 +431,7 @@
           aria-label="Clear search"
           onclick={clearChipsOrSearch}
         >
-          <XIcon size={14} />
+          <XIcon size={16} />
         </button>
       {/if}
     </div>
@@ -399,7 +458,15 @@
         <kbd
           class="chip"
           title="Remove modifier"
+          role="button"
+          tabindex="0"
           onclick={() => toggleModifierChip(mod)}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              toggleModifierChip(mod)
+            }
+          }}
         >
           {settingsManager.settings.useBakedKeyNames
             ? getBakedModifierLabel(unconvertModifier(mod as any) as any)
@@ -479,8 +546,24 @@
           <div class="qv-title" title={cmd.name}>
             {getDisplayCommandName(cmd.name, cmd.pluginName)}
           </div>
-          <div class="qv-hotkey" aria-label="Primary hotkey">
-            {renderPrimaryHotkey(cmd)}
+          <div class="qv-hotkeys" aria-label="Hotkeys">
+            {#each cmd.hotkeys || [] as hk}
+              <span
+                class="qv-hotkey-chip {hotkeyManager.isHotkeyDuplicate(
+                  cmd.id,
+                  hk
+                )
+                  ? 'is-duplicate'
+                  : ''} {hk.isCustom ? 'is-customized' : ''}"
+                title={settingsManager.settings.useBakedKeyNames
+                  ? formatHotkeyBaked(hk)
+                  : hotkeyManager.renderHotkey(hk)}
+              >
+                {settingsManager.settings.useBakedKeyNames
+                  ? formatHotkeyBaked(hk)
+                  : hotkeyManager.renderHotkey(hk)}
+              </span>
+            {/each}
           </div>
         </div>
       {/each}
@@ -492,12 +575,21 @@
       {/if}
     {/if}
   </div>
+
+  <div
+    class="qv-resize-handle"
+    role="separator"
+    aria-orientation="vertical"
+    title="Resize"
+    onpointerdown={onResizePointerDown}
+  ></div>
 </div>
 
 <style>
   .qv-popover {
     min-width: 360px;
     max-width: 600px;
+    min-height: 240px;
     overflow: hidden;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
@@ -523,22 +615,22 @@
     height: 34px;
     border: 1px solid var(--background-modifier-border);
     border-radius: 6px;
-    padding: 0 28px 0 10px;
+    padding: 0 36px 0 10px;
     background: var(--background-modifier-form-field);
     color: var(--text-normal);
   }
   .qv-input-wrap .qv-clear {
     position: absolute;
-    right: 6px;
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
+    border-radius: 6px;
     background: transparent;
     color: var(--text-muted);
   }
@@ -642,6 +734,7 @@
   .qv-list {
     overflow: auto;
     padding: 6px 4px 8px 4px;
+    flex: 1 1 auto;
   }
   .qv-empty {
     color: var(--text-muted);
@@ -684,14 +777,43 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .qv-hotkey {
+  .qv-hotkeys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .qv-hotkey-chip {
+    padding: 0 6px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 18px;
     color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
+    background: var(--background-secondary);
+  }
+  .qv-hotkey-chip.is-duplicate {
+    outline: 1px dashed var(--color-orange);
+  }
+  .qv-hotkey-chip.is-customized {
+    color: var(--text-normal);
+    border-color: var(--interactive-accent);
   }
   .qv-more {
     color: var(--text-muted);
     font-size: 12px;
     text-align: center;
     padding: 4px 0 2px 0;
+  }
+
+  .qv-resize-handle {
+    height: 10px;
+    cursor: ns-resize;
+    border-top: 1px solid var(--background-modifier-border);
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in oklab, var(--background-modifier-border), transparent 80%)
+    );
   }
 </style>

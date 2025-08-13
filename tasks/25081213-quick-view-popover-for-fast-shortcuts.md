@@ -2,7 +2,7 @@
 title: Quick View — Popover for fast shortcuts and command access
 status: in_progress
 owner: '@agent'
-updated: 2025-08-13 01:10 UTC
+updated: 2025-08-13 02:05 UTC
 related:
   - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
   - [[25080914-hotkey-groups]]
@@ -90,3 +90,17 @@ Provide a lightweight, fast-access popover to quickly view and filter keyboard s
 - [`src/managers/hotkeyManager/hotkeyManager.svelte.ts`](src/managers/hotkeyManager/hotkeyManager.svelte.ts)
 - [[25081103-fix-popover-overflow]]
 - [[25080913-SPRINT-list-of-bugs-and-new-feature-requests]]
+
+## Decisions
+
+- [2025-08-13] Implemented — Right-click on status bar keyboard icon opens Quick View (suppresses native context menu on icon only).
+- [2025-08-13] Implemented — Mod+F behavior parity in Quick View: when search not focused, Mod+F focuses search; when focused, toggles listen. Esc stops listening or closes popover. Events are stopped to avoid leaking.
+- [2025-08-13] Implemented — Action icons normalized: 16×16 icons in 28×28 buttons.
+- [2025-08-13] Implemented — Multiple hotkeys per command rendered as chips with duplicate/custom styling consistent with main list.
+- [2025-08-13] Implemented — Popover resizable by drag handle; height persisted to settings as `quickViewHeight`; min-height enforced.
+
+## Next Steps
+
+- [ ] Positioning utility alignment with [[25081103-fix-popover-overflow]]: evaluate adopting `@floating-ui/dom` or consolidate custom clamp/flip utility.
+- [ ] Refactor to reuse existing logic/components (see related task).
+- [ ] A11y verification pass and screenshots across themes.

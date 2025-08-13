@@ -46,6 +46,8 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   devLoggingEnabled: false,
   emulatedOS: 'none',
   useBakedKeyNames: true,
+  // Persisted UI state
+  quickViewHeight: 360,
   settingsSchemaVersion: 1,
 }
 
