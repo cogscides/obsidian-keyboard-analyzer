@@ -97,6 +97,9 @@
   // Keep a ref to the search input to implement Mod+F parity behavior
   let searchInput: HTMLInputElement | null = null
 
+  // Track suppression of outside-close during resize
+  let suppressOutsideCloseUntil = 0
+
   // Listen mode handlers
   function handleKeyDown(e: KeyboardEvent) {
     // Esc — either exit listen mode or close popover
@@ -117,7 +120,10 @@
       isMod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f'
     if (isModF) {
       const active = document.activeElement as HTMLElement | null
-      const isSearchFocused = active === searchInput
+      // Fallback: treat any focused text input inside the popover as the search
+      const isSearchFocused =
+        active === searchInput ||
+        (!!active && rootEl?.contains(active) && active.tagName === 'INPUT')
       if (!isSearchFocused) {
         // Focus search when not focused; do not toggle listen
         searchInput?.focus()
@@ -299,28 +305,36 @@
   function onResizePointerDown(e: PointerEvent) {
     e.preventDefault()
     e.stopPropagation()
+    try {
+      ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    } catch {}
     resizing = true
     startY = e.clientY
     startH = coords.maxHeight
+    // While resizing, suppress outside-close (click) that fires on pointerup outside
+    suppressOutsideCloseUntil = Date.now() + 300
     window.addEventListener('pointermove', onResizeMove, true)
     window.addEventListener('pointerup', onResizeUp, true)
   }
   function onResizeMove(e: PointerEvent) {
     if (!resizing) return
     const dy = e.clientY - startY
-    let next = startH + (placeAbove ? -dy : dy)
-    // clamp
+    // Top-edge handle: dragging up (negative dy) increases height
+    let next = startH - dy
+    // clamp to viewport height minus margins
+    const viewportH =
+      window.innerHeight || document.documentElement.clientHeight
+    const maxViewport = Math.max(240, viewportH - 16)
     if (next < 240) next = 240
-    if (next > 640) next = 640
+    if (next > maxViewport) next = maxViewport
     coords = { ...coords, maxHeight: next }
-    // Persist last size
     settingsManager.updateSettings({ quickViewHeight: next })
-    // Keep position stable within viewport
     recomputePosition()
   }
   function onResizeUp() {
     if (!resizing) return
     resizing = false
+    suppressOutsideCloseUntil = Date.now() + 150
     window.removeEventListener('pointermove', onResizeMove, true)
     window.removeEventListener('pointerup', onResizeUp, true)
   }
@@ -388,6 +402,9 @@
       inp?.focus()
       inp?.select()
     }, 0)
+
+    // Also capture keydown on the popover root to improve reliability
+    rootEl?.addEventListener('keydown', handleKeyDown, true)
   })
 
   onDestroy(() => {
@@ -396,6 +413,7 @@
     window.removeEventListener('keydown', handleKeyDown, true)
     window.removeEventListener('keyup', handleKeyUp, true)
     rootEl?.removeEventListener('keydown', trapTab, true)
+    rootEl?.removeEventListener('keydown', handleKeyDown, true)
     ro?.disconnect()
     ro = null
     // Cleanup potential resize listeners
@@ -409,11 +427,22 @@
   class:is-above={placeAbove}
   style="position: fixed; top: {coords.top}px; left: {coords.left}px; max-height:{coords.maxHeight}px;"
   use:clickOutside
-  onclick_outside={onClose}
+  onclick_outside={() => {
+    if (resizing) return
+    if (Date.now() < suppressOutsideCloseUntil) return
+    onClose?.()
+  }}
   role="dialog"
   aria-label="Quick View — Commands"
   bind:this={rootEl}
 >
+  <div
+    class="qv-resize-handle"
+    role="separator"
+    aria-orientation="vertical"
+    title="Resize"
+    onpointerdown={onResizePointerDown}
+  ></div>
   <div class="qv-header">
     <div class="qv-input-wrap">
       <input
@@ -587,9 +616,12 @@
 
 <style>
   .qv-popover {
-    min-width: 360px;
+    min-width: 320px;
+    width: 100%;
     max-width: 600px;
     min-height: 240px;
+    height: 100%;
+    /* Allow the container to grow but respect inline max-height from script */
     overflow: hidden;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
@@ -807,13 +839,13 @@
   }
 
   .qv-resize-handle {
-    height: 10px;
+    min-height: 8px;
     cursor: ns-resize;
-    border-top: 1px solid var(--background-modifier-border);
+    border-bottom: 1px solid var(--background-modifier-border);
     background: linear-gradient(
       to bottom,
-      transparent,
-      color-mix(in oklab, var(--background-modifier-border), transparent 80%)
+      color-mix(in oklab, var(--background-modifier-border), transparent 70%),
+      transparent
     );
   }
 </style>

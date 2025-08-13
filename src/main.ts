@@ -41,6 +41,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   private quickViewAnchorEl: HTMLElement | null = null
   private lastQuickViewInvoke = 0
   private quickViewListenNonce = 0
+  private quickViewListeningActive = false
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
@@ -255,8 +256,12 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         ) as HTMLElement | null)
       this.quickViewAnchorEl = anchor || this.quickViewAnchorEl
 
-      // Bump nonce if we want to enable listen mode on open
-      if (listenOnOpen) this.quickViewListenNonce++
+      if (listenOnOpen) {
+        this.quickViewListenNonce++
+        this.quickViewListeningActive = true
+      } else {
+        this.quickViewListeningActive = false
+      }
 
       this.quickViewComponent = mount(QuickViewPopover, {
         target: document.body,
@@ -264,12 +269,15 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
           plugin: this,
           anchorEl: this.quickViewAnchorEl,
           onClose: () => this.closeQuickView(),
-          listenToggle: this.quickViewListenNonce,
+          listenToggle: this.quickViewListeningActive
+            ? this.quickViewListenNonce
+            : 0,
         },
       })
     } catch {
       // If mount fails for any reason, clear ref to avoid stale state
       this.quickViewComponent = null
+      this.quickViewListeningActive = false
     }
   }
 
@@ -280,6 +288,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       } catch {}
       this.quickViewComponent = null
     }
+    // Always reset listen flags when closing (Esc, outside click, command toggle, etc.)
+    this.quickViewListeningActive = false
   }
 
   private enterQuickViewListenMode() {
@@ -287,15 +297,14 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       this.openQuickView(true)
       return
     }
-    // Try to update the component's listenToggle prop to activate listening mode
+    // Activate listening mode and bump nonce
+    this.quickViewListeningActive = true
     this.quickViewListenNonce++
     try {
-      // Svelte mount() instances support update(props)
       ;(this.quickViewComponent as any).update?.({
         listenToggle: this.quickViewListenNonce,
       })
     } catch {
-      // Fallback: remount with incremented nonce
       this.closeQuickView()
       this.openQuickView(true)
     }
