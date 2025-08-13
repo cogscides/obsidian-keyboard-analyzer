@@ -2,7 +2,7 @@
 title: User-defined Hotkey Groups (manual)
 status: in_progress
 owner: '@agent'
-updated: 2025-08-12 19:42 UTC
+updated: 2025-08-13 00:09 UTC
 related: []
 ---
 
@@ -148,8 +148,8 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 
 - Data & Stores
 
-  - [ ] Add `interfaces/groups.ts` with `HotkeyGroup`, `GroupFilters`, `SortOption` types.
-  - [ ] Add `stores/groups.ts` (Svelte store) with CRUD, ordering, and persistence hooks.
+  - [x] Add `interfaces/groups.ts` with `HotkeyGroup`, `GroupFilters`, `SortOption` types.
+  - [x] Add `stores/groups.svelte.ts` (Svelte store) with CRUD, ordering, and persistence hooks.
   - [x] Add `managers/groupManager` ordering + helpers (create unique id, rename, add/remove, move).
 
 - UI Components
@@ -173,8 +173,8 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 
 - Settings & Migrations
 
-  - [ ] Extend settings schema; add `settingsSchemaVersion` and migration code.
-  - [ ] Autosave on changes (debounced) and flush on unload.
+  - [x] Extend settings schema; add `settingsSchemaVersion` and migration code.
+  - [x] Autosave on changes (debounced) and flush on unload.
 
 - Polish & QA
   - [ ] A11y pass (focus order, labels, tooltips, ARIA)
@@ -206,14 +206,14 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 
 ## Links
 
-- [[src/stores/groups.ts]] [[src/managers/groupManager.ts]] [[src/components/GroupSelector.svelte]]
+- [[src/stores/groups.svelte.ts]] [[src/managers/groupManager/groupManager.svelte.ts]] [[src/components/GroupSelector.svelte]]
 - [[src/components/GroupManagerModal.svelte]] [[src/components/AddToGroupPopover.svelte]] [[src/interfaces/groups.ts]]
 
 ## Next Steps
 
 - [x] Confirm reorder UX (manager only vs also in main list)
 - [x] Approve UI pattern (tabs + combobox + popover)
-- [ ] Implement data model + store scaffolding (owner: @agent)
+- [x] Implement data model + store scaffolding (owner: @agent)
 - [x] Wire selector and generic “Open Group…” command (owner: @agent)
 - [x] Add list integration + popover (owner: @agent)
 - [ ] Validate in `test-vault/` across platforms
@@ -242,3 +242,5 @@ Users want to curate their own command groups (e.g., Daily, Writing, Refactor) a
 After these changes, both "Default" and "Dynamic" group behaviors function correctly without errors or freezes.
 
 I have updated the related task files to reflect these changes, document the fixes, and have marked the primary task as `done`.
+
+- [2025-08-13 00:09 UTC] Added data/store scaffolding and migrations: created interfaces and groups store, extended settings schema with versioning and migration to v1, and ensured autosave flush on unload. See files: [[src/interfaces/groups.ts]], [[src/stores/groups.svelte.ts]], [[src/managers/settingsManager/settingsManager.svelte.ts]].

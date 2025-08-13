@@ -16,6 +16,12 @@ export interface PluginSettings {
   emulatedOS?: 'none' | 'windows' | 'macos' | 'linux'
   // Debuggable presentation toggle for key display names
   useBakedKeyNames?: boolean
+
+  /**
+   * Settings schema/migration version.
+   * Undefined or 0 implies legacy data; current schema is 1+ when groups are present.
+   */
+  settingsSchemaVersion?: number
 }
 
 export enum FilterSettingsKeys {

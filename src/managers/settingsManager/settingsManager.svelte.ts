@@ -6,7 +6,11 @@ import {
   type CGroupFilterSettings,
   GroupType,
 } from './settingsManager.d'
-import { setDevLoggingEnabled, setEmulatedOS, setLogLevel } from '../../utils/runtimeConfig'
+import {
+  setDevLoggingEnabled,
+  setEmulatedOS,
+  setLogLevel,
+} from '../../utils/runtimeConfig'
 import logger from '../../utils/logger'
 
 const DEFAULT_FILTER_SETTINGS: FilterSettings = {
@@ -42,6 +46,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
   devLoggingEnabled: false,
   emulatedOS: 'none',
   useBakedKeyNames: true,
+  settingsSchemaVersion: 1,
 }
 
 export default class SettingsManager {
@@ -82,9 +87,30 @@ export default class SettingsManager {
         this.settings = { ...DEFAULT_PLUGIN_SETTINGS }
         await this.plugin.saveData(this.settings)
       }
+
+      // Migration: ensure settingsSchemaVersion exists and upgrade to v1
+      const schemaVersion = Number(
+        (this.settings as any).settingsSchemaVersion || 0
+      )
+      if (!schemaVersion || schemaVersion < 1) {
+        if (!Array.isArray(this.settings.commandGroups)) {
+          this.settings.commandGroups = []
+        }
+        ;(this.settings as any).settingsSchemaVersion = 1
+        try {
+          await this.plugin.saveData(this.settings)
+        } catch {}
+      }
+
       // Apply runtime flags from settings
       setDevLoggingEnabled(!!this.settings.devLoggingEnabled)
-      setEmulatedOS((this.settings.emulatedOS || 'none') as 'none' | 'windows' | 'macos' | 'linux')
+      setEmulatedOS(
+        (this.settings.emulatedOS || 'none') as
+          | 'none'
+          | 'windows'
+          | 'macos'
+          | 'linux'
+      )
       setLogLevel('debug')
     } catch (error) {
       logger.error('Failed to Plugin load settings:', error)
@@ -92,9 +118,14 @@ export default class SettingsManager {
       try {
         this.settings = { ...DEFAULT_PLUGIN_SETTINGS }
         await this.plugin.saveData(this.settings)
-        logger.warn('Settings file was invalid; wrote defaults to repair data.json')
+        logger.warn(
+          'Settings file was invalid; wrote defaults to repair data.json'
+        )
       } catch (saveErr) {
-        logger.error('Failed to write default settings after load error:', saveErr)
+        logger.error(
+          'Failed to write default settings after load error:',
+          saveErr
+        )
       }
     }
   }
@@ -169,7 +200,10 @@ export default class SettingsManager {
     // Shallow equality check to avoid redundant writes/rerenders
     let changed = false
     const next = { ...this.settings }
-    for (const [k, v] of Object.entries(newSettings) as [keyof PluginSettings, unknown][]) {
+    for (const [k, v] of Object.entries(newSettings) as [
+      keyof PluginSettings,
+      unknown
+    ][]) {
       if (next[k] !== v) {
         // @ts-expect-error generic write into settings shape
         next[k] = v
@@ -181,10 +215,19 @@ export default class SettingsManager {
     // Update runtime flags when relevant settings change
     if ('devLoggingEnabled' in newSettings) {
       setDevLoggingEnabled(!!this.settings.devLoggingEnabled)
-      logger.info('Dev logging', this.settings.devLoggingEnabled ? 'enabled' : 'disabled')
+      logger.info(
+        'Dev logging',
+        this.settings.devLoggingEnabled ? 'enabled' : 'disabled'
+      )
     }
     if ('emulatedOS' in newSettings) {
-      setEmulatedOS((this.settings.emulatedOS || 'none') as 'none' | 'windows' | 'macos' | 'linux')
+      setEmulatedOS(
+        (this.settings.emulatedOS || 'none') as
+          | 'none'
+          | 'windows'
+          | 'macos'
+          | 'linux'
+      )
       logger.info('Emulated OS set to', this.settings.emulatedOS || 'none')
     }
     this.scheduleSave()
