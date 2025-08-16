@@ -1,5 +1,8 @@
 <script lang="ts">
 import { onDestroy, onMount, setContext } from "svelte";
+import clickOutside from "../utils/clickOutside.js";
+import SearchMenu from "./SearchMenu.svelte";
+import CommandsList from "./CommandsList.svelte";
 import type { commandEntry } from "../interfaces/Interfaces";
 import type KeyboardAnalyzerPlugin from "../main";
 import { VisualKeyboardManager } from "../managers";
