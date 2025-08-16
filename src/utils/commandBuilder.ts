@@ -42,8 +42,10 @@ export function buildCommandEntry(
     // Prefer authoritative CommandsManager index when available (defensive require)
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../managers/commandsManager/commandsManager.svelte.ts')
-      const CommandsManagerClass = CommandsManagerModule.default
+      // Prefer the manager index package entry (avoids referencing implementation filename)
+      const CommandsManagerModule = require('../managers/commandsManager')
+      const CommandsManagerClass =
+        CommandsManagerModule?.default || CommandsManagerModule
       if (
         CommandsManagerClass &&
         typeof CommandsManagerClass.getInstance === 'function'
@@ -52,7 +54,11 @@ export function buildCommandEntry(
         if (cm && typeof cm.getCommandsIndex === 'function') {
           const index = cm.getCommandsIndex() as Record<string, any>
           const entry = index[id]
-          if (entry && Array.isArray(entry.hotkeys) && entry.hotkeys.length > 0) {
+          if (
+            entry &&
+            Array.isArray(entry.hotkeys) &&
+            entry.hotkeys.length > 0
+          ) {
             hotkeyResult = {
               all: entry.hotkeys,
               default: entry.defaultHotkeys || [],
@@ -64,11 +70,15 @@ export function buildCommandEntry(
     } catch {
       // ignore and fall through to hotkeyManager-based retrieval
     }
-  
+
     // If a CommandsManager-provided authoritative result exists, keep it.
     // Otherwise use the modern hotkeyManager.getHotkeysForCommand API if available,
     // or fall back to legacy getAllHotkeysForCommand.
-    if (hotkeyResult && Array.isArray(hotkeyResult.all) && hotkeyResult.all.length > 0) {
+    if (
+      hotkeyResult &&
+      Array.isArray(hotkeyResult.all) &&
+      hotkeyResult.all.length > 0
+    ) {
       // authoritative result already present from CommandsManager — do nothing
     } else if (
       hotkeyManager &&

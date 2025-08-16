@@ -44,16 +44,18 @@ export default class HotkeyManager {
    */
   private getCommandsIndex(): Record<string, commandEntry> {
     try {
-      // Lazy require to avoid circular import at module evaluation time
+      // Lazy require to avoid circular import at module evaluation time.
+      // Prefer requiring the manager index (safer resolution) instead of the concrete .svelte.ts file.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager/commandsManager.svelte.ts')
-      const CommandsManagerClass = CommandsManagerModule.default
+      const CommandsManagerModule = require('../commandsManager')
+      const CommandsManagerClass =
+        CommandsManagerModule?.default || CommandsManagerModule
       if (
         CommandsManagerClass &&
         typeof CommandsManagerClass.getInstance === 'function'
       ) {
-        // CommandsManager.getInstance requires (app, plugin) — call with app and undefined plugin
-        // implementation is defensive and will still construct the instance.
+        // CommandsManager.getInstance requires (app, plugin) — call with app and undefined plugin.
+        // Implementation is defensive and will still construct the instance if needed.
         const cm = CommandsManagerClass.getInstance(this.app, undefined)
         if (cm && typeof cm.getCommandsIndex === 'function') {
           return cm.getCommandsIndex()
