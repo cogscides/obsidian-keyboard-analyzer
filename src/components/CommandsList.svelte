@@ -8,6 +8,13 @@ import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/v
 import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import { convertModifiers } from "../utils/modifierUtils";
 import { formatHotkeyBaked } from "../utils/normalizeKeyDisplay";
+import AddToGroupPopover from "./AddToGroupPopover.svelte";
+import {
+  ChevronDown,
+  Star as StarIcon,
+  FolderPlus as FolderPlusIcon,
+  Search as SearchIcon,
+} from "lucide-svelte";
 
 interface Props {
 	filteredCommands: commandEntry[];

@@ -12,6 +12,10 @@ import { convertModifiers } from "../utils/modifierUtils";
 import type ShortcutsView from "../views/ShortcutsView";
 
 import type CommandsManager from "../managers/commandsManager";
+// Component imports
+import KeyboardLayoutComponent from "./KeyboardLayoutComponent.svelte";
+import SearchMenu from "./SearchMenu.svelte";
+import CommandsList from "./CommandsList.svelte";
 import { GroupType } from "../managers/groupManager/groupManager.svelte.ts";
 
 function isModF(e: KeyboardEvent) {

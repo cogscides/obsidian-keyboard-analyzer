@@ -7,6 +7,22 @@ import type { CGroupFilterSettings } from "../managers/settingsManager";
 import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import logger from "../utils/logger";
 import { convertModifiers, unconvertModifier } from "../utils/modifierUtils";
+import clickOutside from "../utils/clickOutside.js";
+import GroupSelector from "./GroupSelector.svelte";
+import { fade, slide } from "svelte/transition";
+import {
+  CircleDot as CircleDotIcon,
+  X,
+  Filter as FilterIcon,
+  Info as InfoIcon,
+  RefreshCw,
+} from "lucide-svelte";
+import type { FilterSettings } from "../managers/settingsManager/settingsManager.d";
+import {
+  FilterSettingsKeyValues,
+  ViewSettingsKeyValues,
+} from "../managers/settingsManager/keys";
+import { getBakedKeyLabel, getBakedModifierLabel } from "../utils/normalizeKeyDisplay";
 
 interface Props {
 	plugin: KeyboardAnalyzerPlugin;
