@@ -2,7 +2,7 @@
 title: Cleanup — Remove hotkey normalization and update call sites
 status: in_progress
 owner: "@agent"
-updated: 2025-08-16 21:44 UTC
+updated: 2025-08-16 23:20 UTC
 related:
   - [[20250815-centralize-command-hotkey-logic]]
 ---
@@ -31,6 +31,8 @@ Goal: remove the `hotkeysObj` normalization, converge on a single canonical shap
   - Expose `makeHotkeyKey` in `CommandsManager.d.ts` for external consumers.
   - Note: We opted not to keep a `toHotkeysObj` helper since code uses arrays directly; removing an unused helper keeps the API surface minimal.
 
+- [2025-08-16] Regression triage — after this cleanup (and Biome fixes), the main view failed to open with `ReferenceError: KeyboardLayoutComponent is not defined`. Root cause: missing explicit imports in Svelte components after refactors. Resolution: add imports in `src/components/KeyboardComponent.svelte` for `KeyboardLayoutComponent`, `SearchMenu`, and `CommandsList`. Build verified; no changes needed to hotkey normalization work.
+
 ## Next Steps
 
 - [x] Update `HotkeyManager.getHotkeysForCommand()` to use arrays and drop `hotkeysObj` dependency.
@@ -47,6 +49,10 @@ Goal: remove the `hotkeysObj` normalization, converge on a single canonical shap
   - [ ] Confirm StrictModifierMatch parity between list and search.
 - [ ] Documentation:
   - [ ] Update developer docs stating canonical arrays and recommended `toHotkeysObj` helper for object view.
+
+## Progress Log
+
+- [2025-08-16 23:18 UTC] Fixed main view runtime error by adding missing component imports in `KeyboardComponent.svelte` (commit 91878a9). Built and manually verified view opens.
 
 ## Links
 

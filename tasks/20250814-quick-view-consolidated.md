@@ -2,7 +2,7 @@
 title: Quick View — Consolidated: Popover, UI/UX fixes, and Refactor
 status: in_progress
 owner: "@agent"
-updated: 2025-08-14 08:33 UTC
+updated: 2025-08-16 23:20 UTC
 related:
   - [[25081103-fix-popover-overflow]]
   - [[25080914-hotkey-groups]]
@@ -37,6 +37,10 @@ Known issues/gaps:
 - Positioning utility not unified with overflow work; evaluate adopting @floating-ui/dom for consistency with [[25081103-fix-popover-overflow]].
 - Virtualization not implemented; result cap of 100 used today.
 - Cross-theme visual QA pending.
+
+Recent fix (2025-08-16):
+
+- Resolved mount failure "SearchMenu is not defined" in Quick View by adding missing imports (`SearchMenu`, `CommandsList`, and `clickOutside`) to `src/components/QuickViewPopover.svelte`. Build succeeded and Quick View verified to open. (commit 507675e)
 
 ## Definition of Done
 
@@ -134,6 +138,10 @@ Refactor:
 - [ ] Compact commands list variant or component
 - [ ] Evaluate need for virtualization
 - [ ] Cross-theme QA sweep
+
+## Progress Log
+
+- [2025-08-16 23:19 UTC] Quick View mount error fixed by importing `SearchMenu` and `CommandsList` in `QuickViewPopover.svelte`; added `clickOutside` import for outside-click handling. Built and smoke-tested.
 
 ## Links
 

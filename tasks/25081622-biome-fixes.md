@@ -2,7 +2,7 @@
 title: Apply Biome fixes reported by `biome check`
 status: done
 owner: "@agent"
-updated: 2025-08-16 22:55 UTC
+updated: 2025-08-16 23:20 UTC
 related: []
 ---
 
@@ -57,3 +57,7 @@ Run Biome across the repo and resolve all reported issues to keep the codebase c
 ## Links
 
 - Biome CLI: https://biomejs.dev/reference/cli/#biome-check
+
+## Progress Log
+
+- [2025-08-16 23:18 UTC] Post-lint runtime regressions surfaced due to missing explicit imports in Svelte files. Addressed by adding imports in `KeyboardComponent.svelte` (commit 91878a9) and `QuickViewPopover.svelte` (commit 507675e). Rebuilt and verified both main view and Quick View mount correctly.
