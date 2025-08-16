@@ -260,6 +260,19 @@ let emulatedOS = $derived(
               : '—'}</span
           >
         </div>
+        {#key activeKeysStore}
+          {@const _raw = activeKeysStore.getDevRawInputs()}
+          <div class="dev-row">
+            <span class="k">Raw VK key:</span>
+            <span class="v">{_raw.vk || '—'}</span>
+          </div>
+          <div class="dev-row">
+            <span class="k">Raw physical:</span>
+            <span class="v">
+              {_raw.physical ? `${_raw.physical.code || '—'} (${_raw.physical.key || ''})` : '—'}
+            </span>
+          </div>
+        {/key}
       </div>
     {/if}
 
@@ -284,6 +297,23 @@ let emulatedOS = $derived(
             </div>
           {/each}
         </div>
+        {#key activeKeysStore}
+          {@const _last = activeKeysStore.getDevLastCommand()}
+          {#if _last}
+            <div class="dev-row">
+              <span class="k">Last cmd:</span>
+              <span class="v">{_last.id}</span>
+            </div>
+            {#each _last.raw.slice(0, 3) as hk, i}
+              <div class="dev-row">
+                <span class="k">Hotkey {i + 1}:</span>
+                <span class="v">
+                  {(hk.modifiers || []).join(' + ')} {hk.key}
+                </span>
+              </div>
+            {/each}
+          {/if}
+        {/key}
       </div>
     {/if}
   </div>

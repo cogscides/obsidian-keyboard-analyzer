@@ -25,6 +25,10 @@ export class ActiveKeysStore {
 	activeKey = $state("");
 	activeModifiers: Modifier[] = $state([]);
 
+	// Dev: capture raw inputs prior to normalization/baking
+	lastVKClickRaw: string = $state("");
+	lastPhysicalRaw: { key: string; code: string } | null = $state(null);
+
 	constructor(app: App, visualKeyboardManager: VisualKeyboardManager) {
 		this.hotkeyManager = HotkeyManager.getInstance(app);
 		this.visualKeyboardManager = visualKeyboardManager;
@@ -73,6 +77,8 @@ export class ActiveKeysStore {
 	}
 
 	public handleKeyClick(keyIdentifier: string) {
+		// Dev capture: raw visual keyboard identifier (usually event.code or label)
+		this.lastVKClickRaw = keyIdentifier || "";
 		// First, try OS-aware modifier mapping by code
 		const obsidianModifier =
 			this.visualKeyboardManager.mapCodeToObsidianModifier(keyIdentifier);
@@ -110,6 +116,8 @@ export class ActiveKeysStore {
 			key: e.key,
 			code: e.code,
 		});
+		// Dev capture: raw physical input
+		this.lastPhysicalRaw = { key: e.key || "", code: e.code || "" };
 		// Toggle semantics per key click, ignore auto-repeat
 		if (e.repeat) {
 			logger.debug("[keys] ignored repeat keydown");
@@ -189,19 +197,10 @@ export class ActiveKeysStore {
 			AltRight: "Alt",
 			ShiftLeft: "Shift",
 			ShiftRight: "Shift",
-			// OS-specific mapping for Meta: on Windows/Linux treat as 'Win' (not an Obsidian modifier)
-			MetaLeft: (() => {
-				const emu = getEmulatedOS();
-				const isMac =
-					emu === "macos" ? true : emu === "none" ? Platform.isMacOS : false;
-				return isMac ? "Meta" : "Win";
-			})(),
-			MetaRight: (() => {
-				const emu = getEmulatedOS();
-				const isMac =
-					emu === "macos" ? true : emu === "none" ? Platform.isMacOS : false;
-				return isMac ? "Meta" : "Win";
-			})(),
+			// Map MetaLeft/Right to abstract 'Meta' so it is treated as a modifier across OSes.
+			// Platform-specific baking happens later when rendering/matching.
+			MetaLeft: "Meta",
+			MetaRight: "Meta",
 		};
 		return keyMap[keyIdentifier] || keyIdentifier;
 	}
@@ -215,6 +214,54 @@ export class ActiveKeysStore {
 		return this.activeKey.length === 1
 			? this.activeKey.toUpperCase()
 			: this.activeKey;
+	}
+
+	// Dev helpers for inspector
+	public getDevRawInputs() {
+		return {
+			vk: this.lastVKClickRaw,
+			physical: this.lastPhysicalRaw,
+			normalizedActiveKey: this.activeKey,
+			normalizedActiveModifiers: this.activeModifiers,
+		};
+	}
+
+	// Dev-only: capture physical key events without toggling selection
+	public recordPhysicalRaw(e: KeyboardEvent) {
+		this.lastPhysicalRaw = { key: e.key || "", code: e.code || "" };
+	}
+
+	// Dev: track last clicked command and its hotkeys for inspector
+	private _devLastCmd: {
+		id: string;
+		name: string;
+		raw: { modifiers: string[]; key: string }[];
+		normalized: { modifiers: string[]; key: string }[];
+	} | null = $state(null);
+
+	public devSetLastCommand(cmd: commandEntry) {
+		try {
+			const raw = (cmd.hotkeys || []).map((hk) => ({
+				modifiers: (hk.modifiers as unknown as string[]) || [],
+				key: hk.key || "",
+			}));
+			const normalized = raw.map((hk) => ({
+				modifiers: sortModifiers(hk.modifiers),
+				key: (hk.key || "").toLowerCase(),
+			}));
+			this._devLastCmd = { id: cmd.id, name: cmd.name, raw, normalized };
+		} catch {
+			this._devLastCmd = {
+				id: cmd.id,
+				name: cmd.name,
+				raw: [],
+				normalized: [],
+			};
+		}
+	}
+
+	public getDevLastCommand() {
+		return this._devLastCmd;
 	}
 
 	public filterCommands(search: string): commandEntry[] {

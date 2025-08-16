@@ -371,6 +371,24 @@ export default class CommandsManager {
 		const hasActiveHotkeyQuery =
 			(activeModifiers && activeModifiers.length > 0) || !!activeKey;
 
+		// If StrictModifierMatch is enabled and there is a precise hotkey query,
+		// leverage the fast reverse index to preselect matching commands.
+		if (hasActiveHotkeyQuery && filterSettings?.StrictModifierMatch) {
+			try {
+				const hkKey = CommandsManager.makeHotkeyKey({
+					modifiers: activeModifiers as unknown as string[],
+					key: activeKey,
+				});
+				const fast = this.getCommandsByHotkeyKey(hkKey);
+				if (fast.length) {
+					const fastIds = new Set(fast.map((c) => c.id));
+					commandsToFilter = commandsToFilter.filter((c) => fastIds.has(c.id));
+				}
+			} catch {
+				// fall back to full scan
+			}
+		}
+
 		const filteredCommands = commandsToFilter.filter((command) => {
 			if (!filterSettings) return true;
 

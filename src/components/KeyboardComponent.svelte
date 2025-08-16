@@ -45,6 +45,8 @@ setContext("isPhysicalListenerActive", () => keyboardListenerIsActive);
 
 // Always attach listeners; handlers no-op unless listener is active
 const down = (e: KeyboardEvent) => {
+	// Always record raw input for dev inspector
+	activeKeysStore.recordPhysicalRaw(e);
 	// Global UX shortcuts for this view
 	if (isModF(e)) {
 		e.preventDefault();

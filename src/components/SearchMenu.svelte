@@ -11,18 +11,21 @@ import clickOutside from "../utils/clickOutside.js";
 import GroupSelector from "./GroupSelector.svelte";
 import { fade, slide } from "svelte/transition";
 import {
-  CircleDot as CircleDotIcon,
-  X,
-  Filter as FilterIcon,
-  Info as InfoIcon,
-  RefreshCw,
+	CircleDot as CircleDotIcon,
+	X,
+	Filter as FilterIcon,
+	Info as InfoIcon,
+	RefreshCw,
 } from "lucide-svelte";
 import type { FilterSettings } from "../managers/settingsManager/settingsManager.d";
 import {
-  FilterSettingsKeyValues,
-  ViewSettingsKeyValues,
+	FilterSettingsKeyValues,
+	ViewSettingsKeyValues,
 } from "../managers/settingsManager/keys";
-import { getBakedKeyLabel, getBakedModifierLabel } from "../utils/normalizeKeyDisplay";
+import {
+	getBakedKeyLabel,
+	getBakedModifierLabel,
+} from "../utils/normalizeKeyDisplay";
 
 interface Props {
 	plugin: KeyboardAnalyzerPlugin;

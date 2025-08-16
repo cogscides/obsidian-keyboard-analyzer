@@ -1,182 +1,184 @@
 <script lang="ts">
-import { getContext } from "svelte";
-import type { commandEntry, hotkeyEntry } from "../interfaces/Interfaces";
-import type KeyboardAnalyzerPlugin from "../main";
-import type GroupManager from "../managers/groupManager";
-import type SettingsManager from "../managers/settingsManager";
-import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
-import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
-import { convertModifiers } from "../utils/modifierUtils";
-import { formatHotkeyBaked } from "../utils/normalizeKeyDisplay";
-import AddToGroupPopover from "./AddToGroupPopover.svelte";
-import {
-  ChevronDown,
-  Star as StarIcon,
-  FolderPlus as FolderPlusIcon,
-  Search as SearchIcon,
-} from "lucide-svelte";
+  import { getContext } from 'svelte'
+  import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
+  import type KeyboardAnalyzerPlugin from '../main'
+  import type GroupManager from '../managers/groupManager'
+  import type SettingsManager from '../managers/settingsManager'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
+  import { convertModifiers } from '../utils/modifierUtils'
+  import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
+  import AddToGroupPopover from './AddToGroupPopover.svelte'
+  import {
+    ChevronDown,
+    Star as StarIcon,
+    FolderPlus as FolderPlusIcon,
+    Search as SearchIcon,
+  } from 'lucide-svelte'
 
-interface Props {
-	filteredCommands: commandEntry[];
-	selectedGroup: string;
-	onStarClick?: (commandId: string) => void;
-	onDuplicateHotkeyClick?: (hotkey: hotkeyEntry) => void;
-	onPluginNameClick?: (pluginName: string) => void;
-}
+  interface Props {
+    filteredCommands: commandEntry[]
+    selectedGroup: string
+    onStarClick?: (commandId: string) => void
+    onDuplicateHotkeyClick?: (hotkey: hotkeyEntry) => void
+    onPluginNameClick?: (pluginName: string) => void
+  }
 
-let {
-	filteredCommands = $bindable([]),
-	selectedGroup = $bindable("all"),
-	onStarClick,
-	onDuplicateHotkeyClick,
-	onPluginNameClick,
-}: Props = $props();
+  let {
+    filteredCommands = $bindable([]),
+    selectedGroup = $bindable('all'),
+    onStarClick,
+    onDuplicateHotkeyClick,
+    onPluginNameClick,
+  }: Props = $props()
 
-const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
-const settingsManager: SettingsManager = plugin.settingsManager;
-const groupManager: GroupManager = plugin.groupManager;
-const commandsManager = plugin.commandsManager;
-const hotkeyManager = plugin.hotkeyManager;
-const visualKeyboardManager: VisualKeyboardManager = getContext(
-	"visualKeyboardManager",
-);
-const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
+  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
+  const settingsManager: SettingsManager = plugin.settingsManager
+  const groupManager: GroupManager = plugin.groupManager
+  const commandsManager = plugin.commandsManager
+  const hotkeyManager = plugin.hotkeyManager
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
+    'visualKeyboardManager'
+  )
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
 
-// Using callback props instead of component events (Svelte 5)
+  // Using callback props instead of component events (Svelte 5)
 
-let groupSettings = $derived.by(() => {
-	groupManager.groups;
-	const settings = groupManager.getGroupSettings(selectedGroup);
-	return settings;
-});
+  let groupSettings = $derived.by(() => {
+    groupManager.groups
+    const settings = groupManager.getGroupSettings(selectedGroup)
+    return settings
+  })
 
-let groupIsEmpty = $derived.by(() => {
-	if (!selectedGroup || selectedGroup === "all") return false;
-	const g = groupManager.getGroup(selectedGroup);
-	return !g || (g.commandIds?.length || 0) === 0;
-});
+  let groupIsEmpty = $derived.by(() => {
+    if (!selectedGroup || selectedGroup === 'all') return false
+    const g = groupManager.getGroup(selectedGroup)
+    return !g || (g.commandIds?.length || 0) === 0
+  })
 
-function renderHotkey(hotkey: hotkeyEntry) {
-	if (settingsManager.settings.useBakedKeyNames) {
-		return formatHotkeyBaked(hotkey);
-	}
-	return hotkeyManager.renderHotkey(hotkey);
-}
+  function renderHotkey(hotkey: hotkeyEntry) {
+    if (settingsManager.settings.useBakedKeyNames) {
+      return formatHotkeyBaked(hotkey)
+    }
+    return hotkeyManager.renderHotkey(hotkey)
+  }
 
-let featuredIds = $derived.by(
-	() => new Set(settingsManager.settings.featuredCommandIDs || []),
-);
+  let featuredIds = $derived.by(
+    () => new Set(settingsManager.settings.featuredCommandIDs || [])
+  )
 
-function getDisplayCommandName(name: string, pluginName: string): string {
-	const p = (pluginName || "").trim();
-	const n = name || "";
-	if (!p) return n;
-	const lower = n.toLowerCase();
-	const pref = `${p.toLowerCase()}: `;
-	// In grouped view, always strip plugin prefix from title.
-	// In flat view, strip only when showing plugin badges; otherwise keep full name for clarity.
-	const shouldStripPrefix =
-		groupSettings?.GroupByPlugin || groupSettings?.ShowPluginBadges;
-	if (shouldStripPrefix && lower.startsWith(pref)) {
-		return n.slice(pref.length).trim();
-	}
-	return n;
-}
+  function getDisplayCommandName(name: string, pluginName: string): string {
+    const p = (pluginName || '').trim()
+    const n = name || ''
+    if (!p) return n
+    const lower = n.toLowerCase()
+    const pref = `${p.toLowerCase()}: `
+    // In grouped view, always strip plugin prefix from title.
+    // In flat view, strip only when showing plugin badges; otherwise keep full name for clarity.
+    const shouldStripPrefix =
+      groupSettings?.GroupByPlugin || groupSettings?.ShowPluginBadges
+    if (shouldStripPrefix && lower.startsWith(pref)) {
+      return n.slice(pref.length).trim()
+    }
+    return n
+  }
 
-function handleStarClick(commandId: string) {
-	onStarClick?.(commandId);
-}
+  function handleStarClick(commandId: string) {
+    onStarClick?.(commandId)
+  }
 
-function handlePluginNameClick(pluginName: string) {
-	onPluginNameClick?.(pluginName);
-}
+  function handlePluginNameClick(pluginName: string) {
+    onPluginNameClick?.(pluginName)
+  }
 
-function handleDuplicateHotkeyClick(hotkey: hotkeyEntry) {
-	onDuplicateHotkeyClick?.(hotkey);
-}
+  function handleDuplicateHotkeyClick(hotkey: hotkeyEntry, cmd?: commandEntry) {
+    // Dev: record the clicked command and its hotkeys for inspector
+    if (cmd) activeKeysStore.devSetLastCommand(cmd)
+    onDuplicateHotkeyClick?.(hotkey)
+  }
 
-// Hover preview for hotkeys on the visual keyboard
-function handleHotkeyMouseEnter(hk: hotkeyEntry) {
-	const mods = convertModifiers(hk.modifiers);
-	visualKeyboardManager.updateVisualState(
-		activeKeysStore.ActiveKey,
-		activeKeysStore.ActiveModifiers,
-	);
-	visualKeyboardManager.previewHoverState(hk.key, mods);
-}
-function handleHotkeyMouseLeave() {
-	visualKeyboardManager.updateVisualState(
-		activeKeysStore.ActiveKey,
-		activeKeysStore.ActiveModifiers,
-	);
-}
+  // Hover preview for hotkeys on the visual keyboard
+  function handleHotkeyMouseEnter(hk: hotkeyEntry) {
+    const mods = convertModifiers(hk.modifiers)
+    visualKeyboardManager.updateVisualState(
+      activeKeysStore.ActiveKey,
+      activeKeysStore.ActiveModifiers
+    )
+    visualKeyboardManager.previewHoverState(hk.key, mods)
+  }
+  function handleHotkeyMouseLeave() {
+    visualKeyboardManager.updateVisualState(
+      activeKeysStore.ActiveKey,
+      activeKeysStore.ActiveModifiers
+    )
+  }
 
-// Grouped view state and helpers
-const slugify = (s: string) =>
-	s
-		.toLowerCase()
-		.replace(/\s+/g, "-")
-		.replace(/[^a-z0-9-]/g, "");
-let collapsedPlugins = $state(new Set<string>());
-function togglePluginCollapse(pluginName: string) {
-	const next = new Set(collapsedPlugins);
-	if (next.has(pluginName)) next.delete(pluginName);
-	else next.add(pluginName);
-	collapsedPlugins = next;
-}
-function isCollapsed(pluginName: string): boolean {
-	return collapsedPlugins.has(pluginName);
-}
+  // Grouped view state and helpers
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+  let collapsedPlugins = $state(new Set<string>())
+  function togglePluginCollapse(pluginName: string) {
+    const next = new Set(collapsedPlugins)
+    if (next.has(pluginName)) next.delete(pluginName)
+    else next.add(pluginName)
+    collapsedPlugins = next
+  }
+  function isCollapsed(pluginName: string): boolean {
+    return collapsedPlugins.has(pluginName)
+  }
 
-// Add-to-group popover state
-let openPopoverFor: string | null = $state(null);
-function toggleAddToGroupPopover(event: MouseEvent, commandId: string) {
-	event.stopPropagation();
-	openPopoverFor = openPopoverFor === commandId ? null : commandId;
-}
+  // Add-to-group popover state
+  let openPopoverFor: string | null = $state(null)
+  function toggleAddToGroupPopover(event: MouseEvent, commandId: string) {
+    event.stopPropagation()
+    openPopoverFor = openPopoverFor === commandId ? null : commandId
+  }
 
-type PluginGroup = {
-	pluginName: string;
-	commands: commandEntry[];
-	isBuiltIn: boolean;
-};
-let groupedByPlugin: PluginGroup[] = $derived.by(() => {
-	// Track changes
-	groupSettings;
-	const map = new Map<string, commandEntry[]>();
-	for (const cmd of filteredCommands) {
-		const key = cmd.pluginName || "Unknown";
-		const arr = map.get(key) || [];
-		arr.push(cmd);
-		map.set(key, arr);
-	}
-	const groups = Array.from(map.entries()).map(([pluginName, commands]) => {
-		// If FeaturedFirst is enabled, bring featured commands to the top within the group
-		if (groupSettings?.FeaturedFirst) {
-			commands = [...commands].sort((a, b) => {
-				const aF = commandsManager.featuredCommandIds.has(a.id);
-				const bF = commandsManager.featuredCommandIds.has(b.id);
-				if (aF && !bF) return -1;
-				if (!aF && bF) return 1;
-				return 0;
-			});
-		}
-		const isBuiltIn = commands.some((c) => c.isInternalModule);
-		return { pluginName, commands, isBuiltIn };
-	});
-	groups.sort((a, b) => a.pluginName.localeCompare(b.pluginName));
-	return groups;
-});
+  type PluginGroup = {
+    pluginName: string
+    commands: commandEntry[]
+    isBuiltIn: boolean
+  }
+  let groupedByPlugin: PluginGroup[] = $derived.by(() => {
+    // Track changes
+    groupSettings
+    const map = new Map<string, commandEntry[]>()
+    for (const cmd of filteredCommands) {
+      const key = cmd.pluginName || 'Unknown'
+      const arr = map.get(key) || []
+      arr.push(cmd)
+      map.set(key, arr)
+    }
+    const groups = Array.from(map.entries()).map(([pluginName, commands]) => {
+      // If FeaturedFirst is enabled, bring featured commands to the top within the group
+      if (groupSettings?.FeaturedFirst) {
+        commands = [...commands].sort((a, b) => {
+          const aF = commandsManager.featuredCommandIds.has(a.id)
+          const bF = commandsManager.featuredCommandIds.has(b.id)
+          if (aF && !bF) return -1
+          if (!aF && bF) return 1
+          return 0
+        })
+      }
+      const isBuiltIn = commands.some((c) => c.isInternalModule)
+      return { pluginName, commands, isBuiltIn }
+    })
+    groups.sort((a, b) => a.pluginName.localeCompare(b.pluginName))
+    return groups
+  })
 
-function collapseAll() {
-	const next = new Set<string>();
-	for (const g of groupedByPlugin) next.add(g.pluginName);
-	collapsedPlugins = next;
-}
+  function collapseAll() {
+    const next = new Set<string>()
+    for (const g of groupedByPlugin) next.add(g.pluginName)
+    collapsedPlugins = next
+  }
 
-function expandAll() {
-	collapsedPlugins = new Set<string>();
-}
+  function expandAll() {
+    collapsedPlugins = new Set<string>()
+  }
 </script>
 
 <div
@@ -270,7 +272,7 @@ function expandAll() {
                         <div
                           class="folder-plus-icon icon"
                           title="Add to group"
-                          onclick={(e) =>
+                          onclick={(e: MouseEvent) =>
                             toggleAddToGroupPopover(e, cmdEntry.id)}
                         >
                           <FolderPlusIcon size={16} />
@@ -303,7 +305,8 @@ function expandAll() {
                           ) && groupSettings?.HighlightDuplicates}
                           class:is-customized={hotkey.isCustom &&
                             groupSettings?.HighlightCustom}
-                          onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                          onclick={() =>
+                            handleDuplicateHotkeyClick(hotkey, cmdEntry)}
                           onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
                           onmouseleave={handleHotkeyMouseLeave}
                         >
@@ -353,7 +356,8 @@ function expandAll() {
                 <div
                   class="folder-plus-icon icon"
                   title="Add to group"
-                  onclick={(e) => toggleAddToGroupPopover(e, cmdEntry.id)}
+                  onclick={(e: MouseEvent) =>
+                    toggleAddToGroupPopover(e, cmdEntry.id)}
                 >
                   <FolderPlusIcon size={16} />
                 </div>
@@ -383,7 +387,7 @@ function expandAll() {
                   ) && groupSettings?.HighlightDuplicates}
                   class:is-customized={hotkey.isCustom &&
                     groupSettings?.HighlightCustom}
-                  onclick={() => handleDuplicateHotkeyClick(hotkey)}
+                  onclick={() => handleDuplicateHotkeyClick(hotkey, cmdEntry)}
                   onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
                   onmouseleave={handleHotkeyMouseLeave}
                 >

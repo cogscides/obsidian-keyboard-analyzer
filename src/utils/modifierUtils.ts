@@ -166,8 +166,21 @@ export function normalizeKey(key: string): string {
 		period: ".",
 		slash: "/",
 		backslash: "\\",
+		// Numpad operators and common numpad keys
+		numpaddivide: "/",
+		numpadmultiply: "*",
+		numpadsubtract: "-",
+		numpadadd: "+",
+		numpaddecimal: ".",
+		numpadenter: "enter",
 	};
-	return keyMap[n_key] || n_key.replace("key", "").replace("digit", "");
+	// Apply simple code → symbol/label mapping
+	if (keyMap[n_key]) return keyMap[n_key];
+	// Normalize event.code-style identifiers
+	// KeyA → a, Digit1 → 1
+	if (n_key.startsWith("key")) return n_key.slice(3);
+	if (n_key.startsWith("digit")) return n_key.slice(5);
+	return n_key;
 }
 
 export function isKeyMatch(activeKey: string, hotkeyKey: string): boolean {
@@ -214,17 +227,20 @@ export function matchHotkey(
 	const sortedLeft = sortModifiers(leftMods);
 	const sortedRight = sortModifiers(rightMods);
 
-	const modifiersMatch = strictModifierMatch
-		? areModifiersEqual(sortedLeft, sortedRight)
-		: // non-strict: require that all active modifiers are present in hotkey (subset)
-			(sortedLeft.length === 0 && sortedRight.length === 0) ||
-			(sortedLeft.length > 0 &&
-				sortedLeft.every((m) => sortedRight.includes(m)));
-
-	const keyMatch =
-		!activeKey || (allowKeyOnly && !activeKey)
+	// If no active modifiers and allowKeyOnly is true, accept any hotkey modifiers.
+	// This enables "key-only" filtering to show all commands that use that key, regardless of modifiers.
+	const modifiersMatch =
+		allowKeyOnly && sortedLeft.length === 0
 			? true
-			: isKeyMatch(activeKey, hotkey.key);
+			: strictModifierMatch
+				? areModifiersEqual(sortedLeft, sortedRight)
+				: // non-strict: require that all active modifiers are present in hotkey (subset)
+					(sortedLeft.length === 0 && sortedRight.length === 0) ||
+					(sortedLeft.length > 0 &&
+						sortedLeft.every((m) => sortedRight.includes(m)));
+
+	// Key must match when provided; if no active key, match passes.
+	const keyMatch = activeKey ? isKeyMatch(activeKey, hotkey.key) : true;
 
 	return modifiersMatch && keyMatch;
 }
