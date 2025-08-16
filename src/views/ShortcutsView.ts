@@ -1,11 +1,11 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 import { mount, unmount } from "svelte";
 
-import type KeyboardAnalyzerPlugin from "../main";
-import KeyboardComponent from "../components/KeyboardComponent.svelte";
-import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from "../Constants";
+import KeyboardComponent from "../components/KeyboardComponent.svelte";
+import type KeyboardAnalyzerPlugin from "../main";
 import { VisualKeyboardManager } from "../managers";
+import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 
 export default class ShortcutsView extends ItemView {
 	plugin: KeyboardAnalyzerPlugin;
@@ -54,7 +54,7 @@ export default class ShortcutsView extends ItemView {
 	}
 
 	async draw(): Promise<void> {
-		const { app, contentEl } = this;
+		const { contentEl } = this;
 
 		contentEl.empty();
 		contentEl.setAttribute("id", "KB-view");

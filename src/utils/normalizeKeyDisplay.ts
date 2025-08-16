@@ -1,4 +1,4 @@
-import { Platform, type Modifier } from "obsidian";
+import { type Modifier, Platform } from "obsidian";
 import { platformizeModifiers, sortModifiers } from "./modifierUtils";
 import { getEmulatedOS } from "./runtimeConfig";
 
@@ -49,7 +49,7 @@ function normalizeCodeOrKey(k: string): string {
 // Text-first, platform-aware key names
 export function getBakedKeyLabel(rawKey: string): string {
 	const key = normalizeCodeOrKey(rawKey);
-	const mac = isMac();
+	const _mac = isMac();
 	const lower = key.toLowerCase();
 
 	const map: Record<string, string> = {

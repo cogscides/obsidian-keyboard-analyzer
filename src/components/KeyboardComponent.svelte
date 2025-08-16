@@ -1,21 +1,17 @@
 <!-- src/components/KeyboardComponent.svelte -->
 
 <script lang="ts">
-import { setContext, onMount } from "svelte";
 import type { Modifier } from "obsidian";
-import type KeyboardAnalyzerPlugin from "../main";
-import type ShortcutsView from "../views/ShortcutsView";
-import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
+import { onMount, setContext } from "svelte";
 import type { commandEntry, hotkeyEntry } from "../interfaces/Interfaces";
+import type KeyboardAnalyzerPlugin from "../main";
 import { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
-import { convertModifiers } from "../utils/modifierUtils";
+import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import logger from "../utils/logger";
+import { convertModifiers } from "../utils/modifierUtils";
+import type ShortcutsView from "../views/ShortcutsView";
 
 import type CommandsManager from "../managers/commandsManager";
-
-import KeyboardLayoutComponent from "./KeyboardLayoutComponent.svelte";
-import SearchMenu from "./SearchMenu.svelte";
-import CommandsList from "./CommandsList.svelte";
 import { GroupType } from "../managers/groupManager/groupManager.svelte.ts";
 
 function isModF(e: KeyboardEvent) {
@@ -92,8 +88,13 @@ const up = (e: KeyboardEvent) => {
 	activeKeysStore.handlePhysicalKeyUp(e);
 	logger.debug("[keys] state after keyup", activeKeysStore.state);
 };
+type WindowWithKb = Window & {
+	__kb_analyzer_keys_down?: (e: KeyboardEvent) => void;
+	__kb_analyzer_keys_up?: (e: KeyboardEvent) => void;
+};
+
 onMount(() => {
-	const w = window as unknown as Record<string, unknown>;
+	const w = window as WindowWithKb;
 	// Remove any stale listeners from previous mounts/reloads
 	const prevDown = w.__kb_analyzer_keys_down as
 		| ((e: KeyboardEvent) => void)
@@ -110,16 +111,15 @@ onMount(() => {
 	// Attach fresh listeners and stash them on window for future cleanup
 	window.addEventListener("keydown", down, true);
 	window.addEventListener("keyup", up, true);
-	(w as any).__kb_analyzer_keys_down = down;
-	(w as any).__kb_analyzer_keys_up = up;
+	w.__kb_analyzer_keys_down = down;
+	w.__kb_analyzer_keys_up = up;
 	logger.debug("[keys] global listeners attached");
 	return () => {
 		window.removeEventListener("keydown", down, true);
 		window.removeEventListener("keyup", up, true);
-		if ((w as any).__kb_analyzer_keys_down === down)
-			(w as any).__kb_analyzer_keys_down = undefined;
-		if ((w as any).__kb_analyzer_keys_up === up)
-			(w as any).__kb_analyzer_keys_up = undefined;
+		if (w.__kb_analyzer_keys_down === down)
+			w.__kb_analyzer_keys_down = undefined;
+		if (w.__kb_analyzer_keys_up === up) w.__kb_analyzer_keys_up = undefined;
 	};
 });
 
@@ -141,7 +141,7 @@ $effect(() => {
 	try {
 		const gid = selectedGroupID;
 		if (!gid || gid === GroupType.All) return;
-		const g = groupManager.getGroup(gid) as any;
+		const g = groupManager.getGroup(gid);
 		if (!g) {
 			logger.warn(
 				"[groups] selected group not found; skipping behavior apply",

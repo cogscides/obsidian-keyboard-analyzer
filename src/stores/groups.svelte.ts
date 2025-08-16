@@ -62,7 +62,7 @@ export interface GroupsStore {
  */
 export function createGroupsStore(groupManager: GroupManager): GroupsStore {
 	// Keep a reactive reference to groups. The $derived.by rune is available in .svelte.ts files.
-	const groups = $derived.by(() => groupManager.getGroups());
+	const _groups = $derived.by(() => groupManager.getGroups());
 
 	return {
 		get groups() {

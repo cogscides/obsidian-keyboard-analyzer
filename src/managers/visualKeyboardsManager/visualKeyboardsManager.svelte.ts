@@ -1,22 +1,20 @@
-import { Platform, type Modifier } from "obsidian";
-import { getEmulatedOS } from "../../utils/runtimeConfig";
+import { type Modifier, Platform } from "obsidian";
 import { UNIFIED_KEYBOARD_LAYOUT } from "../../Constants";
 import type {
-	KeyboardLayout,
 	Key,
 	KeyboardKeyState,
-	KeyboardSection,
+	KeyboardLayout,
 	commandEntry,
 } from "../../interfaces/Interfaces";
-import {
-	convertModifier,
-	getDisplayModifier,
-	unconvertModifiers,
-	convertModifiers,
-	areModifiersEqual,
-	isKeyMatch,
-} from "../../utils/modifierUtils";
 import logger from "../../utils/logger";
+import {
+	areModifiersEqual,
+	convertModifier,
+	convertModifiers,
+	isKeyMatch,
+	unconvertModifiers,
+} from "../../utils/modifierUtils";
+import { getEmulatedOS } from "../../utils/runtimeConfig";
 
 /**
  * The VisualKeyboardManager class is responsible for managing and processing the visual keyboard layout.
@@ -85,7 +83,7 @@ export class VisualKeyboardManager {
 						if (stateKey) {
 							const keyState: KeyboardKeyState = {
 								displayValue: this.getUnicodeForKey(key),
-								code: key.code || key.label!,
+								code: key.code || key.label || "",
 								state: "inactive",
 								smallText: key.smallText,
 								weight: 0,
@@ -150,7 +148,7 @@ export class VisualKeyboardManager {
 	public calculateAndAssignWeights(
 		visibleCommands: commandEntry[] | undefined | null,
 		activeModifiers: string[] = [],
-		activeKey: string = "",
+		activeKey = "",
 		strictModifierMatch = false,
 	) {
 		const cmds = Array.isArray(visibleCommands) ? visibleCommands : [];
@@ -236,13 +234,13 @@ export class VisualKeyboardManager {
 			const code = this.keyStates[key].code?.toLowerCase() || "";
 			// Map left/right modifier keys to their shared bucket
 			if (code.startsWith("control")) {
-				this.keyStates[key].weight = keyWeights["control"] || 0;
+				this.keyStates[key].weight = keyWeights.control || 0;
 			} else if (code.startsWith("alt")) {
-				this.keyStates[key].weight = keyWeights["alt"] || 0;
+				this.keyStates[key].weight = keyWeights.alt || 0;
 			} else if (code.startsWith("shift")) {
-				this.keyStates[key].weight = keyWeights["shift"] || 0;
+				this.keyStates[key].weight = keyWeights.shift || 0;
 			} else if (code.startsWith("meta")) {
-				this.keyStates[key].weight = keyWeights["meta"] || 0;
+				this.keyStates[key].weight = keyWeights.meta || 0;
 			} else {
 				this.keyStates[key].weight = keyWeights[lowerKey] || 0;
 			}
@@ -296,7 +294,7 @@ export class VisualKeyboardManager {
 				state: "empty",
 			};
 		}
-		const stateKey = (key.code || key.label!).toLowerCase();
+		const stateKey = (key.code || key.label || "").toLowerCase();
 		if (this.keyStates[stateKey]) {
 			return this.keyStates[stateKey];
 		}
@@ -305,7 +303,7 @@ export class VisualKeyboardManager {
 			`Key state for ${stateKey} is undefined. Check initialization.`,
 		);
 		return {
-			displayValue: key.label!,
+			displayValue: key.label || "",
 			code: "",
 			state: "inactive",
 		};

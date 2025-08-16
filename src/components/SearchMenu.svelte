@@ -1,35 +1,12 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <script lang="ts">
+import type { Modifier } from "obsidian";
 import { getContext } from "svelte";
 import type KeyboardAnalyzerPlugin from "../main";
+import type { CGroupFilterSettings } from "../managers/settingsManager";
 import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
-import {
-	CircleDotIcon,
-	FilterIcon,
-	X,
-	RefreshCw,
-	ChevronDown,
-	Info as InfoIcon,
-} from "lucide-svelte";
-import { slide, fade } from "svelte/transition";
-import type {
-	CGroup,
-	CGroupFilterSettings,
-	CGroupSettingTitles,
-	FilterSettings,
-} from "../managers/settingsManager";
-import {
-	ViewSettingsKeyValues,
-	FilterSettingsKeyValues,
-} from "../managers/settingsManager/keys";
-import { convertModifiers, unconvertModifier } from "../utils/modifierUtils";
-import type { Modifier } from "obsidian";
-import clickOutside from "../utils/clickOutside";
 import logger from "../utils/logger";
-import {
-	getBakedModifierLabel,
-	getBakedKeyLabel,
-} from "../utils/normalizeKeyDisplay";
+import { convertModifiers, unconvertModifier } from "../utils/modifierUtils";
 
 interface Props {
 	plugin: KeyboardAnalyzerPlugin;
@@ -281,7 +258,6 @@ $effect(() => {
 	selectedGroup;
 	handleSearchInput();
 });
-import GroupSelector from "./GroupSelector.svelte";
 </script>
 
 <GroupSelector bind:selectedGroup />

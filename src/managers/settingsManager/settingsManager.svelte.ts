@@ -1,17 +1,11 @@
 import type KeyboardAnalyzerPlugin from "../../main";
-import {
-	type PluginSettings,
-	type FilterSettings,
-	type CGroup,
-	type CGroupFilterSettings,
-	GroupType,
-} from "./settingsManager.d";
+import logger from "../../utils/logger";
 import {
 	setDevLoggingEnabled,
 	setEmulatedOS,
 	setLogLevel,
 } from "../../utils/runtimeConfig";
-import logger from "../../utils/logger";
+import type { FilterSettings, PluginSettings } from "./settingsManager.d";
 
 const DEFAULT_FILTER_SETTINGS: FilterSettings = {
 	StrictModifierMatch: true,

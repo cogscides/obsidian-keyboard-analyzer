@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { PluginSettingTab, Setting } from "obsidian";
 import type KeyboardAnalyzerPlugin from "./main";
 import { setDevLoggingEnabled, setEmulatedOS } from "./utils/runtimeConfig";
 

@@ -1,31 +1,29 @@
 import {
-	setIcon,
-	Plugin,
 	type App,
-	type WorkspaceLeaf,
+	Plugin,
 	type PluginManifest,
 	SuggestModal,
+	type WorkspaceLeaf,
+	setIcon,
 } from "obsidian";
 import { mount, unmount } from "svelte";
-import ShortcutsView from "./views/ShortcutsView";
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from "./Constants";
+import ShortcutsView from "./views/ShortcutsView";
 
+import QuickViewPopover from "./components/QuickViewPopover.svelte";
 import CommandsManager from "./managers/commandsManager";
+import GroupManager from "./managers/groupManager";
 import HotkeyManager from "./managers/hotkeyManager";
 import SettingsManager from "./managers/settingsManager";
-import GroupManager from "./managers/groupManager";
-import QuickViewPopover from "./components/QuickViewPopover.svelte";
-
-import type { PluginSettings } from "./managers/settingsManager";
 
 import "virtual:uno.css";
 import "./styles.css";
+import KeyboardAnalyzerSettingTab from "./settingsTab";
 import {
 	setDevLoggingEnabled,
 	setEmulatedOS,
 	setLogLevel,
 } from "./utils/runtimeConfig";
-import KeyboardAnalyzerSettingTab from "./settingsTab";
 
 export default class KeyboardAnalyzerPlugin extends Plugin {
 	commandsManager: CommandsManager;
@@ -62,7 +60,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		return leaf?.view instanceof ShortcutsView ? leaf.view : null;
 	}
 
-	async focusView(type: string) {
+	async focusView(_type: string) {
 		const leafView = this.full;
 		if (leafView) {
 			this.app.workspace.revealLeaf(leafView.leaf);
@@ -318,7 +316,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		this.quickViewListeningActive = true;
 		this.quickViewListenNonce++;
 		try {
-			(this.quickViewComponent as any).update?.({
+			this.quickViewComponent?.update?.({
 				listenToggle: this.quickViewListenNonce,
 			});
 		} catch {
@@ -356,8 +354,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		const modal = new GroupSuggest(
 			this.app,
 			groups.map((g) => ({
-				id: String((g as any).id || g.id),
-				name: (g as any).name || g.name,
+				id: String(g.id),
+				name: g.name,
 			})),
 		);
 		modal.open();

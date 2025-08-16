@@ -1,12 +1,11 @@
+import logger from "../../utils/logger";
 // groupManager.ts
 import type SettingsManager from "../settingsManager";
 import type {
 	CGroup,
 	CGroupFilterSettings,
-	FilterSettings,
 	GroupViewState,
 } from "../settingsManager";
-import logger from "../../utils/logger";
 
 export enum GroupType {
 	All = "all",
@@ -77,7 +76,7 @@ export default class GroupManager {
 	duplicateGroup(sourceGroupId: string, newName?: string): string | undefined {
 		const src = this.getGroup(sourceGroupId);
 		if (!src) return undefined;
-		const name = (newName && newName.trim()) || `${src.name} Copy`;
+		const name = newName?.trim() || `${src.name} Copy`;
 		const id = this.slugifyUnique(name);
 		const clone: CGroup = {
 			id,
@@ -587,13 +586,13 @@ export default class GroupManager {
 					} as GroupViewState)
 				: undefined;
 
-				const groupOut: CGroup = {
-					...g,
-					filterSettings: normalizedFilters,
-				};
-				const withDefaults = normalizedDefaults
-					? { ...groupOut, defaults: normalizedDefaults }
-					: groupOut;
+			const groupOut: CGroup = {
+				...g,
+				filterSettings: normalizedFilters,
+			};
+			const withDefaults = normalizedDefaults
+				? { ...groupOut, defaults: normalizedDefaults }
+				: groupOut;
 			const withLastUsed = normalizedLastUsed
 				? { ...withDefaults, lastUsedState: normalizedLastUsed }
 				: withDefaults;
@@ -616,7 +615,7 @@ export default class GroupManager {
 				.toLowerCase()
 				.trim()
 				.replace(/\s+/g, "-")
-				.replace(/[^a-z0-9\-]/g, "")
+				.replace(/[^a-z0-9-]/g, "")
 				.slice(0, 60) || "group";
 		let id = base;
 		let i = 1;

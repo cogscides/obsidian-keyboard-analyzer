@@ -1,13 +1,10 @@
 <script lang="ts">
-import { onMount, onDestroy, setContext } from "svelte";
-import type KeyboardAnalyzerPlugin from "../main";
+import { onDestroy, onMount, setContext } from "svelte";
 import type { commandEntry } from "../interfaces/Interfaces";
-import { clickOutside } from "../utils/clickOutside";
-import { convertModifiers } from "../utils/modifierUtils";
-import SearchMenu from "./SearchMenu.svelte";
-import CommandsList from "./CommandsList.svelte";
+import type KeyboardAnalyzerPlugin from "../main";
 import { VisualKeyboardManager } from "../managers";
 import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
+import { convertModifiers } from "../utils/modifierUtils";
 
 interface Props {
 	plugin: KeyboardAnalyzerPlugin;

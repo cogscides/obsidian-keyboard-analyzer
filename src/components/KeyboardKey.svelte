@@ -1,155 +1,155 @@
 <!-- src/components/KeyboardKey.svelte -->
 <script lang="ts">
-  import type { Key } from '../interfaces/Interfaces'
-  import { getContext } from 'svelte'
-  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
+import { getContext } from "svelte";
+import type { Key } from "../interfaces/Interfaces";
+import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
+import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 
-  interface Props {
-    key: Key
-    maxWeightSteps?: number
-  }
+interface Props {
+	key: Key;
+	maxWeightSteps?: number;
+}
 
-  let {
-    key = {
-      label: '',
-      unicode: '',
-      width: 1,
-      height: 1,
-      type: 'empty',
-    } as Key,
-    maxWeightSteps = 5,
-  }: Props = $props()
+let {
+	key = {
+		label: "",
+		unicode: "",
+		width: 1,
+		height: 1,
+		type: "empty",
+	} as Key,
+	maxWeightSteps = 5,
+}: Props = $props();
 
-  const visualKeyboardManager: VisualKeyboardManager = getContext(
-    'visualKeyboardManager'
-  )
-  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
-  const isListenerActive: (() => boolean) | undefined = getContext(
-    'isPhysicalListenerActive'
-  )
+const visualKeyboardManager: VisualKeyboardManager = getContext(
+	"visualKeyboardManager",
+);
+const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
+const isListenerActive: (() => boolean) | undefined = getContext(
+	"isPhysicalListenerActive",
+);
 
-  let keyState = $derived(visualKeyboardManager.getKeyState(key))
-  let _displayLabel = $derived(keyState.displayValue)
+let keyState = $derived(visualKeyboardManager.getKeyState(key));
+let _displayLabel = $derived(keyState.displayValue);
 
-  // let keyOutput = $derived(key.unicode || key.label)
-  let _smallText = $derived(key.smallText || false)
+// let keyOutput = $derived(key.unicode || key.label)
+let _smallText = $derived(key.smallText || false);
 
-  let _width = $derived(key.width || 1)
-  let _height = $derived(key.height || 1)
+let _width = $derived(key.width || 1);
+let _height = $derived(key.height || 1);
 
-  function _getColumnSpan(w: number) {
-    return `span ${Math.max(1, Math.round(w * 4))}`
-  }
+function _getColumnSpan(w: number) {
+	return `span ${Math.max(1, Math.round(w * 4))}`;
+}
 
-  function _getRowSpan(h: number) {
-    return `span ${Math.max(1, Math.round(h))}`
-  }
+function _getRowSpan(h: number) {
+	return `span ${Math.max(1, Math.round(h))}`;
+}
 
-  function _spreadWeights(weight: number) {
-    const maxWeight = Math.max(
-      ...Object.values(visualKeyboardManager.keyStates).map(
-        (state) => state.weight || 0
-      )
-    )
-    const step = maxWeight / maxWeightSteps
-    return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
-  }
+function _spreadWeights(weight: number) {
+	const maxWeight = Math.max(
+		...Object.values(visualKeyboardManager.keyStates).map(
+			(state) => state.weight || 0,
+		),
+	);
+	const step = maxWeight / maxWeightSteps;
+	return Math.min(Math.floor(weight / step) + 1, maxWeightSteps);
+}
 
-  function _calculateOpacity(weight: number): number {
-    if (!weight) return 0
-    const base = 10
-    const step = (100 - base) / Math.max(1, maxWeightSteps - 1)
-    return Math.min(Math.round(base + (weight - 1) * step), 100)
-  }
+function _calculateOpacity(weight: number): number {
+	if (!weight) return 0;
+	const base = 10;
+	const step = (100 - base) / Math.max(1, maxWeightSteps - 1);
+	return Math.min(Math.round(base + (weight - 1) * step), 100);
+}
 
-  function _handleClick(key: Key) {
-    const keyIdentifier = key.code || key.label || ''
-    ;(async () => {
-      const { default: logger } = await import('../utils/logger')
-      logger.debug('Clicked key:', keyIdentifier)
-    })()
+function _handleClick(key: Key) {
+	const keyIdentifier = key.code || key.label || "";
+	(async () => {
+		const { default: logger } = await import("../utils/logger");
+		logger.debug("Clicked key:", keyIdentifier);
+	})();
 
-    activeKeysStore.handleKeyClick(keyIdentifier)
+	activeKeysStore.handleKeyClick(keyIdentifier);
 
-    // Update visual state based on new active keys
-    visualKeyboardManager.updateVisualState(
-      activeKeysStore.activeKey,
-      activeKeysStore.activeModifiers
-    )
-  }
+	// Update visual state based on new active keys
+	visualKeyboardManager.updateVisualState(
+		activeKeysStore.activeKey,
+		activeKeysStore.activeModifiers,
+	);
+}
 
-  let previewing = false
-  let hovered = false
-  let storedKey = ''
-  let altKeydownListener: ((e: KeyboardEvent) => void) | null = null
-  let altReleaseListener: ((e: KeyboardEvent) => void) | null = null
+let previewing = false;
+let hovered = false;
+let storedKey = "";
+let altKeydownListener: ((e: KeyboardEvent) => void) | null = null;
+let altReleaseListener: ((e: KeyboardEvent) => void) | null = null;
 
-  function _startPreview() {
-    if (!previewing) {
-      storedKey = activeKeysStore.ActiveKey
-      altReleaseListener = (e: KeyboardEvent) => {
-        if (e.key === 'Alt' || e.key === 'AltGraph') {
-          // Match mouseleave behavior: restore previous active key
-          _stopPreview(true)
-        }
-      }
-      window.addEventListener('keyup', altReleaseListener)
-    }
-    previewing = true
-    activeKeysStore.ActiveKey = key.code || key.label || ''
-  }
+function _startPreview() {
+	if (!previewing) {
+		storedKey = activeKeysStore.ActiveKey;
+		altReleaseListener = (e: KeyboardEvent) => {
+			if (e.key === "Alt" || e.key === "AltGraph") {
+				// Match mouseleave behavior: restore previous active key
+				_stopPreview(true);
+			}
+		};
+		window.addEventListener("keyup", altReleaseListener);
+	}
+	previewing = true;
+	activeKeysStore.ActiveKey = key.code || key.label || "";
+}
 
-  function _stopPreview(restore = true) {
-    if (restore) {
-      activeKeysStore.ActiveKey = storedKey
-    } else {
-      activeKeysStore.clearActiveKey()
-      storedKey = ''
-    }
-    previewing = false
-    if (altReleaseListener) {
-      window.removeEventListener('keyup', altReleaseListener)
-      altReleaseListener = null
-    }
-  }
+function _stopPreview(restore = true) {
+	if (restore) {
+		activeKeysStore.ActiveKey = storedKey;
+	} else {
+		activeKeysStore.clearActiveKey();
+		storedKey = "";
+	}
+	previewing = false;
+	if (altReleaseListener) {
+		window.removeEventListener("keyup", altReleaseListener);
+		altReleaseListener = null;
+	}
+}
 
-  function _handleMouseEnter(event: MouseEvent) {
-    hovered = true
-    const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
-      key.code || key.label || ''
-    )
+function _handleMouseEnter(event: MouseEvent) {
+	hovered = true;
+	const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
+		key.code || key.label || "",
+	);
 
-    if (!isModifierKey) {
-      // If physical listener is active, disable Alt-hover preview to avoid UX conflicts
-      if (isListenerActive?.()) {
-        return
-      }
-      // Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
-      if (event.altKey) {
-        _startPreview()
-      }
-      altKeydownListener = (e: KeyboardEvent) => {
-        if (isListenerActive?.()) return
-        if (hovered && (e.key === 'Alt' || e.key === 'AltGraph')) {
-          _startPreview()
-        }
-      }
-      window.addEventListener('keydown', altKeydownListener, true)
-    }
-  }
+	if (!isModifierKey) {
+		// If physical listener is active, disable Alt-hover preview to avoid UX conflicts
+		if (isListenerActive?.()) {
+			return;
+		}
+		// Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
+		if (event.altKey) {
+			_startPreview();
+		}
+		altKeydownListener = (e: KeyboardEvent) => {
+			if (isListenerActive?.()) return;
+			if (hovered && (e.key === "Alt" || e.key === "AltGraph")) {
+				_startPreview();
+			}
+		};
+		window.addEventListener("keydown", altKeydownListener, true);
+	}
+}
 
-  function _handleMouseLeave() {
-    hovered = false
-    if (previewing) {
-      // On mouse leave, restore previous active key
-      _stopPreview(true)
-    }
-    if (altKeydownListener) {
-      window.removeEventListener('keydown', altKeydownListener, true)
-      altKeydownListener = null
-    }
-  }
+function _handleMouseLeave() {
+	hovered = false;
+	if (previewing) {
+		// On mouse leave, restore previous active key
+		_stopPreview(true);
+	}
+	if (altKeydownListener) {
+		window.removeEventListener("keydown", altKeydownListener, true);
+		altKeydownListener = null;
+	}
+}
 </script>
 
 {#if _displayLabel === 'empty'}

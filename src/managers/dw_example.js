@@ -130,7 +130,7 @@ dv.table(
 			(cmd) =>
 				(showDefaultKeys && cmd.defKeys.length > 0) ||
 				(showCustomKeys && cmd.custKeys.length > 0) ||
-				(showCommandsWithoutKeys && cmd.keyCount == 0),
+				(showCommandsWithoutKeys && cmd.keyCount === 0),
 		)
 		.filter((cmd) => {
 			if (showAllModules) return !excludeModules.includes(cmd.moduleId);
@@ -138,10 +138,10 @@ dv.table(
 		})
 		.sort(
 			(cmd) => {
-				if (sort == "fullname") return cmd.name;
-				if (sort == "cmdname") return cmd.moduleCmdName;
-				if (sort == "keycount") return cmd.keyCount;
-				if (sort == "keys")
+				if (sort === "fullname") return cmd.name;
+				if (sort === "cmdname") return cmd.moduleCmdName;
+				if (sort === "keycount") return cmd.keyCount;
+				if (sort === "keys")
 					return sortkeys(cmds[cmd.id].defKeys, cmds[cmd.id].custKeys);
 
 				return cmd.id;
@@ -214,7 +214,7 @@ function hotkeys(defKeys, custKeys) {
 	if (showDefaultKeys)
 		for (let aKey of defKeys)
 			keys.push(
-				joinModifiers(aKey.modifiers) + (aKey.key == " " ? "Space" : aKey.key),
+				joinModifiers(aKey.modifiers) + (aKey.key === " " ? "Space" : aKey.key),
 			);
 
 	if (showCustomKeys)
@@ -222,7 +222,7 @@ function hotkeys(defKeys, custKeys) {
 			keys.push(
 				(highlightCustomKeys ? "==" : "") +
 					joinModifiers(aKey.modifiers) +
-					(aKey.key == " " ? "Space" : aKey.key) +
+					(aKey.key === " " ? "Space" : aKey.key) +
 					(highlightCustomKeys ? "==" : ""),
 			);
 

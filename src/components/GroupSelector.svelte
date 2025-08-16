@@ -1,25 +1,25 @@
 <script lang="ts">
-  import GroupManagerModal from './GroupManagerModal.svelte'
-  import { getContext } from 'svelte'
-  import type KeyboardAnalyzerPlugin from '../main'
+import { getContext } from "svelte";
+import GroupManagerModal from "./GroupManagerModal.svelte";
+import type KeyboardAnalyzerPlugin from "../main";
 
-  interface Props {
-    selectedGroup: string
-  }
+interface Props {
+	selectedGroup: string;
+}
 
-  let { selectedGroup = $bindable('all') }: Props = $props()
+let { selectedGroup = $bindable("all") }: Props = $props();
 
-  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
-  const _groupManager = plugin.groupManager
+const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
+const _groupManager = plugin.groupManager;
 
-  let _isManagerOpen = $state(false)
+let _isManagerOpen = $state(false);
 
-  function _openManager() {
-    _isManagerOpen = true
-  }
-  function _closeManager() {
-    _isManagerOpen = false
-  }
+function _openManager() {
+	_isManagerOpen = true;
+}
+function _closeManager() {
+	_isManagerOpen = false;
+}
 </script>
 
 <div class="kb-group-selector">

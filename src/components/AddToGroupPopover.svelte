@@ -1,8 +1,8 @@
 <script lang="ts">
-import { getContext, onMount, onDestroy } from "svelte";
+import { getContext, onDestroy, onMount } from "svelte";
 import { X } from "lucide-svelte";
+import clickOutside from "../utils/clickOutside.js";
 import type KeyboardAnalyzerPlugin from "../main";
-import { clickOutside } from "../utils/clickOutside";
 
 interface Props {
 	commandId: string;

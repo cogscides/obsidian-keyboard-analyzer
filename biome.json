@@ -19,8 +19,25 @@
 				"noUselessElse": { "level": "off" }
 			},
 			"complexity": {
-				"noForEach": { "level": "off" }
+				"noForEach": { "level": "off" },
+				"noImportantStyles": { "level": "warn" }
 			}
 		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.svelte"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": { "level": "off" },
+						"noUnusedImports": { "level": "off" }
+					}
+				}
+			}
+		}
+	],
+	"css": {
+		"linter": { "enabled": false }
 	}
 }

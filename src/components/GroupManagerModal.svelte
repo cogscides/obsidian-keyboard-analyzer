@@ -1,9 +1,10 @@
 <script lang="ts">
 import { getContext } from "svelte";
 import { X } from "lucide-svelte";
-import type KeyboardAnalyzerPlugin from "../main";
+import clickOutside from "../utils/clickOutside.js";
 import type { commandEntry } from "../interfaces/Interfaces";
-import { clickOutside } from "../utils/clickOutside";
+import type { CGroupFilterSettings } from "../managers/settingsManager";
+import type KeyboardAnalyzerPlugin from "../main";
 
 interface Props {
 	plugin?: KeyboardAnalyzerPlugin;
@@ -18,11 +19,11 @@ let {
 }: Props = $props();
 
 if (!plugin) {
-	plugin = getContext("keyboard-analyzer-plugin");
+	plugin = getContext("keyboard-analyzer-plugin") as KeyboardAnalyzerPlugin;
 }
 
-const groupManager = plugin!.groupManager;
-const commandsManager = plugin!.commandsManager;
+const groupManager = (plugin as KeyboardAnalyzerPlugin).groupManager;
+const commandsManager = (plugin as KeyboardAnalyzerPlugin).commandsManager;
 
 let groups = $derived.by(() => groupManager.getGroups());
 
@@ -52,7 +53,7 @@ function formatFirstHotkey(entry: commandEntry): string {
 		Array.isArray(hk.modifiers) ? hk.modifiers : String(hk.modifiers).split(",")
 	) as string[];
 	const modsStr = mods.filter(Boolean).join("+");
-	return modsStr ? modsStr + "+" + (hk.key || "") : hk.key || "";
+	return modsStr ? `${modsStr}+${hk.key || ""}` : hk.key || "";
 }
 
 function runCommandSearch() {
@@ -120,7 +121,7 @@ function useCurrentFiltersAsDefaults() {
 	const g = groupManager.getGroup(selectedGroupId);
 	if (!g) return;
 	groupManager.setGroupDefaults(selectedGroupId, {
-		filters: g.filterSettings as any,
+		filters: g.filterSettings as CGroupFilterSettings,
 	});
 }
 function resetFiltersToDefaults() {
@@ -136,7 +137,9 @@ let registerCommand = $derived.by(() => {
 function setRegisterCommand(val: boolean) {
 	if (!selectedGroupId || selectedGroupId === "all") return;
 	groupManager.setGroupRegisterCommand(selectedGroupId, !!val);
-	(plugin as any)?.syncPerGroupCommands?.();
+	(
+		plugin as unknown as { syncPerGroupCommands?: () => void }
+	).syncPerGroupCommands?.();
 }
 
 // Drag & drop state for commands
@@ -211,7 +214,9 @@ function handleRename() {
 	if (!next) return;
 	if (next !== groupName) {
 		groupManager.renameGroup(selectedGroupId, next);
-		(plugin as any)?.syncPerGroupCommands?.();
+		(
+			plugin as unknown as { syncPerGroupCommands?: () => void }
+		).syncPerGroupCommands?.();
 	}
 }
 
@@ -220,7 +225,9 @@ function handleDelete() {
 	const ok = confirm("Delete this group? This cannot be undone.");
 	if (!ok) return;
 	groupManager.removeGroup(selectedGroupId);
-	(plugin as any)?.syncPerGroupCommands?.();
+	(
+		plugin as unknown as { syncPerGroupCommands?: () => void }
+	).syncPerGroupCommands?.();
 	onClose();
 }
 
@@ -229,7 +236,9 @@ function handleCreate() {
 	if (id) {
 		selectedGroupId = id;
 	}
-	(plugin as any)?.syncPerGroupCommands?.();
+	(
+		plugin as unknown as { syncPerGroupCommands?: () => void }
+	).syncPerGroupCommands?.();
 }
 
 function handleDuplicate() {
@@ -238,7 +247,9 @@ function handleDuplicate() {
 	if (id) {
 		selectedGroupId = id;
 	}
-	(plugin as any)?.syncPerGroupCommands?.();
+	(
+		plugin as unknown as { syncPerGroupCommands?: () => void }
+	).syncPerGroupCommands?.();
 }
 </script>
 

@@ -1,5 +1,5 @@
 // src/interfaces/Interfaces.ts
-import type { Command, Hotkey, Modifier, App, KeymapInfo } from "obsidian";
+import type { App, Command, Hotkey, KeymapInfo, Modifier } from "obsidian";
 
 export interface commandEntry {
 	id: string;

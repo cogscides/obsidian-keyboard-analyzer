@@ -1,16 +1,9 @@
 <script lang="ts">
 import { getContext } from "svelte";
-import type KeyboardAnalyzerPlugin from "../main";
 import type { commandEntry, hotkeyEntry } from "../interfaces/Interfaces";
-import {
-	Star as StarIcon,
-	ChevronDown,
-	FolderPlus as FolderPlusIcon,
-	Search as SearchIcon,
-} from "lucide-svelte";
-import AddToGroupPopover from "./AddToGroupPopover.svelte";
-import type SettingsManager from "../managers/settingsManager";
+import type KeyboardAnalyzerPlugin from "../main";
 import type GroupManager from "../managers/groupManager";
+import type SettingsManager from "../managers/settingsManager";
 import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
 import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import { convertModifiers } from "../utils/modifierUtils";
@@ -72,7 +65,7 @@ function getDisplayCommandName(name: string, pluginName: string): string {
 	const n = name || "";
 	if (!p) return n;
 	const lower = n.toLowerCase();
-	const pref = p.toLowerCase() + ": ";
+	const pref = `${p.toLowerCase()}: `;
 	// In grouped view, always strip plugin prefix from title.
 	// In flat view, strip only when showing plugin badges; otherwise keep full name for clarity.
 	const shouldStripPrefix =
@@ -116,7 +109,7 @@ const slugify = (s: string) =>
 	s
 		.toLowerCase()
 		.replace(/\s+/g, "-")
-		.replace(/[^a-z0-9\-]/g, "");
+		.replace(/[^a-z0-9-]/g, "");
 let collapsedPlugins = $state(new Set<string>());
 function togglePluginCollapse(pluginName: string) {
 	const next = new Set(collapsedPlugins);

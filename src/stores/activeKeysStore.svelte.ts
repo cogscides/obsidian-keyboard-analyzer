@@ -1,18 +1,17 @@
-import type { Modifier, App } from "obsidian";
+import type { App, Modifier } from "obsidian";
 import { Platform } from "obsidian";
-import { getEmulatedOS } from "../utils/runtimeConfig";
-import {
-	convertModifier,
-	type ModifierKey,
-	sortModifiers,
-} from "../utils/modifierUtils";
+import type { commandEntry } from "../interfaces/Interfaces";
+import HotkeyManager from "../managers/hotkeyManager";
 import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte";
 import logger from "../utils/logger";
-import HotkeyManager from "../managers/hotkeyManager";
-import type { commandEntry } from "../interfaces/Interfaces";
+import {
+	type ModifierKey,
+	convertModifier,
+	sortModifiers,
+} from "../utils/modifierUtils";
+import { getEmulatedOS } from "../utils/runtimeConfig";
 
 export class ActiveKeysStore {
-	private app: App;
 	private hotkeyManager: HotkeyManager;
 	private visualKeyboardManager: VisualKeyboardManager;
 	private recognizedModifiers: Set<ModifierKey> = new Set([
@@ -27,7 +26,6 @@ export class ActiveKeysStore {
 	activeModifiers: Modifier[] = $state([]);
 
 	constructor(app: App, visualKeyboardManager: VisualKeyboardManager) {
-		this.app = app;
 		this.hotkeyManager = HotkeyManager.getInstance(app);
 		this.visualKeyboardManager = visualKeyboardManager;
 	}

@@ -57,9 +57,9 @@ export type HotkeyGroupsRecord = Record<string, HotkeyGroup>;
  */
 export function isHotkeyGroup(value: unknown): value is HotkeyGroup {
 	if (!value || typeof value !== "object") return false;
-	const v = value as any;
+	const v = value as Partial<Record<string, unknown>>;
 	const hasId = typeof v.id === "string" || typeof v.id === "number";
 	const hasName = typeof v.name === "string";
-	const hasCommands = Array.isArray(v.commandIds);
+	const hasCommands = Array.isArray(v.commandIds as unknown[]);
 	return hasId && hasName && hasCommands;
 }
