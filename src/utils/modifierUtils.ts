@@ -185,6 +185,8 @@ export function isKeyMatch(activeKey: string, hotkeyKey: string): boolean {
  *   - allowKeyOnly?: boolean (default true) -> if activeKey empty, key match passes
  *   - platformize?: boolean (default true) -> normalize modifiers per platform
  */
+// No memoization: keep matcher simple and allocation-free per call.
+
 export function matchHotkey(
   hotkey: { modifiers: string[]; key: string },
   activeMods: string[] | Modifier[],
@@ -201,6 +203,7 @@ export function matchHotkey(
     platformize = true,
   } = opts || {}
 
+  // Normalize modifiers according to platform option (cheap operations)
   const leftMods = platformize
     ? platformizeModifiers(activeMods as unknown as string[])
     : (activeMods as unknown as string[])
@@ -214,8 +217,8 @@ export function matchHotkey(
   const modifiersMatch = strictModifierMatch
     ? areModifiersEqual(sortedLeft, sortedRight)
     : // non-strict: require that all active modifiers are present in hotkey (subset)
-      (activeMods.length === 0 && rightMods.length === 0) ||
-      (activeMods.length > 0 &&
+      (sortedLeft.length === 0 && sortedRight.length === 0) ||
+      (sortedLeft.length > 0 &&
         sortedLeft.every((m) => sortedRight.includes(m)))
 
   const keyMatch =

@@ -70,17 +70,19 @@ type CGroupSettingTitles = {
 };
 
 export interface CGroup {
-	id: string | GroupType; // This is the sanitized group name
-	name: string; // This is the original group name
-	commandIds: string[];
-	excludedModules: string[];
-	filterSettings: CGroupFilterSettings;
-	// Behavior on open: 'default' applies saved defaults; 'dynamic' restores last used state
-	behavior?: { onOpen: "default" | "dynamic" };
-	// Persisted per-group last used UI state (used when behavior.onOpen === 'dynamic')
-	lastUsedState?: GroupViewState;
-	// Optional: register a per-group command (e.g., "Open: <GroupName>")
-	registerCommand?: boolean;
+  id: string | GroupType; // This is the sanitized group name
+  name: string; // This is the original group name
+  commandIds: string[];
+  excludedModules: string[];
+  filterSettings: CGroupFilterSettings;
+  // Behavior on open: 'default' applies saved defaults; 'dynamic' restores last used state
+  behavior?: { onOpen: "default" | "dynamic" };
+  // Persisted per-group last used UI state (used when behavior.onOpen === 'dynamic')
+  lastUsedState?: GroupViewState;
+  // Optional: saved defaults snapshot applied when behavior.onOpen === 'default'
+  defaults?: GroupViewState;
+  // Optional: register a per-group command (e.g., "Open: <GroupName>")
+  registerCommand?: boolean;
 }
 
 export interface CGroupFilterSettings extends FilterSettings {}

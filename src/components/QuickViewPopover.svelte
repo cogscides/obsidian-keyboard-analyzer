@@ -215,22 +215,13 @@ function onBottomResizeUp() {
 let selectedIndex = $state(0);
 let pendingSelectionFocus = false;
 let listContainer: HTMLDivElement | null = null;
-let cachedRowNodes: HTMLDivElement[] = [];
-
-function refreshRowNodes() {
-	if (!listContainer) {
-		cachedRowNodes = [];
-		return;
-	}
-	cachedRowNodes = Array.from(
+function getRowNodes(): HTMLDivElement[] {
+	if (!listContainer) return [];
+	return Array.from(
 		listContainer.querySelectorAll<HTMLDivElement>(
 			".kbanalizer-setting-item.setting-item",
 		),
 	);
-}
-
-function getRowNodes(): HTMLDivElement[] {
-	return cachedRowNodes;
 }
 
 function clampIndex(n: number): number {
@@ -257,7 +248,6 @@ function queueUpdateSelection(focus: boolean) {
 	pendingSelectionFocus = focus;
 	// Wait for DOM to update after list changes
 	queueMicrotask(() => {
-		refreshRowNodes();
 		applyRovingTabindex(pendingSelectionFocus);
 		pendingSelectionFocus = false;
 	});

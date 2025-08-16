@@ -4,6 +4,7 @@ import type { Command, Hotkey, Modifier, App, KeymapInfo } from "obsidian";
 export interface commandEntry {
 	id: string;
 	name: string;
+	// Primary hotkeys array (backwards compatible)
 	hotkeys: hotkeyEntry[];
 	defaultHotkeys: hotkeyEntry[];
 	customHotkeys: hotkeyEntry[];

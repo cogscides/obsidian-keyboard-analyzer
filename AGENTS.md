@@ -85,6 +85,7 @@ related:
 
 - Keep Next Steps strictly scoped to the task’s Context and Decisions. Do not propose unrelated enhancements.
 - Prefer creating a new focused task for ideas not essential to the current task’s DoD.
+- Update todos in the Next Steps section as you progress.
 - When closing a task, mark incomplete items as either:
   - done — implemented and verified, or
   - skipped — with a brief rationale and a link to a follow-up task if needed.

@@ -39,77 +39,20 @@ export function buildCommandEntry(
     custom: [],
   }
   try {
-    // Prefer authoritative CommandsManager index when available (defensive require)
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      // Prefer the manager index package entry (avoids referencing implementation filename)
-      const CommandsManagerModule = require('../managers/commandsManager')
-      const CommandsManagerClass =
-        CommandsManagerModule?.default || CommandsManagerModule
-      if (
-        CommandsManagerClass &&
-        typeof CommandsManagerClass.getInstance === 'function'
-      ) {
-        const cm = CommandsManagerClass.getInstance(app, undefined)
-        if (cm && typeof cm.getCommandsIndex === 'function') {
-          const index = cm.getCommandsIndex() as Record<string, any>
-          const entry = index[id]
-          if (entry) {
-            // CommandsManager may expose hotkeys in two shapes:
-            // 1) legacy: entry.hotkeys === hotkeyEntry[] (array) — use as `all`
-            // 2) authoritative: entry.hotkeys === { all: hotkeyEntry[], default: [], custom: [] }
-            if (
-              entry.hotkeys &&
-              typeof entry.hotkeys === 'object' &&
-              Array.isArray((entry.hotkeys as any).all)
-            ) {
-              // authoritative shaped object
-              hotkeyResult = {
-                all: (entry.hotkeys as any).all,
-                default: (entry.hotkeys as any).default || [],
-                custom: (entry.hotkeys as any).custom || [],
-              }
-            } else if (
-              Array.isArray(entry.hotkeys) &&
-              entry.hotkeys.length > 0
-            ) {
-              // legacy array shape — treat as `all`
-              hotkeyResult = {
-                all: entry.hotkeys,
-                default: entry.defaultHotkeys || [],
-                custom: entry.customHotkeys || [],
-              }
-            }
-          }
-        }
-      }
-    } catch {
-      // ignore and fall through to hotkeyManager-based retrieval
-    }
-
-    // If a CommandsManager-provided authoritative result exists, keep it.
-    // Otherwise use the modern hotkeyManager.getHotkeysForCommand API if available,
+    // Use the modern hotkeyManager.getHotkeysForCommand API if available,
     // or fall back to legacy getAllHotkeysForCommand.
     if (
-      hotkeyResult &&
-      Array.isArray(hotkeyResult.all) &&
-      hotkeyResult.all.length > 0
-    ) {
-      // authoritative result already present from CommandsManager — do nothing
-    } else if (
       hotkeyManager &&
       typeof hotkeyManager.getHotkeysForCommand === 'function'
     ) {
-      hotkeyResult = hotkeyManager.getHotkeysForCommand(id) || hotkeyResult
-    } else if (
-      // Legacy fallback: some older managers expose getAllHotkeysForCommand(id)
-      typeof (hotkeyManager as any).getAllHotkeysForCommand === 'function'
-    ) {
-      const all =
-        (hotkeyManager as any).getAllHotkeysForCommand?.(id) ||
-        (hotkeyManager as any).getAllHotkeysForCommand ||
-        []
-      hotkeyResult = { all, default: [], custom: [] }
+      const res = hotkeyManager.getHotkeysForCommand(id)
+      if (res && Array.isArray(res.all)) {
+        hotkeyResult = {
+          all: res.all,
+          default: res.default || [],
+          custom: res.custom || [],
+        }
+      }
     }
   } catch {
     // keep defaults

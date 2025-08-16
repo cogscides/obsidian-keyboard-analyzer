@@ -49,6 +49,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		this.groupManager = GroupManager.getInstance(this.settingsManager);
 		this.commandsManager = CommandsManager.getInstance(this.app, this);
 		this.hotkeyManager = HotkeyManager.getInstance(this.app);
+		// Wire managers to avoid runtime require() lookups on hot paths
+		this.hotkeyManager.attachCommandsManager(this.commandsManager);
 	}
 
 	get full() {

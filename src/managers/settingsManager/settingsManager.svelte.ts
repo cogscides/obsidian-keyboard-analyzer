@@ -92,14 +92,12 @@ export default class SettingsManager {
 			}
 
 			// Migration: ensure settingsSchemaVersion exists and upgrade to v1
-			const schemaVersion = Number(
-				(this.settings as any).settingsSchemaVersion || 0,
-			);
+			const schemaVersion = Number(this.settings.settingsSchemaVersion ?? 0);
 			if (!schemaVersion || schemaVersion < 1) {
 				if (!Array.isArray(this.settings.commandGroups)) {
 					this.settings.commandGroups = [];
 				}
-				(this.settings as any).settingsSchemaVersion = 1;
+				this.settings.settingsSchemaVersion = 1;
 				try {
 					await this.plugin.saveData(this.settings);
 				} catch {}

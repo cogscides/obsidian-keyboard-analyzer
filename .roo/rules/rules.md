@@ -1,64 +1,94 @@
-# Overlay: obsidian-keyboard-analyzer
+# Repository Guidelines
 
-# scope_condition
+## Project Structure & Module Organization
 
-Apply ONLY if inputs.repo.name == "obsidian-keyboard-analyzer" OR the project matches:
+- Source: `src/` (Svelte + TypeScript). Notable folders: `components/`, `managers/`, `views/`, `utils/`, `stores/`, `interfaces/`.
+- Build output: configured in `vite.config.mts` to `../obsidian-keyboard-analyzer-dev/`.
+- Config: `tsconfig.json`, `uno.config.ts`, `biome.json`.
+- Assets: `public/`, styles in `src/styles.css` and UnoCSS utilities.
+- Local vault for manual testing: `test-vault/`.
 
-- Svelte 5 + TS strict in `src/`
-- Vite outDir `../obsidian-keyboard-analyzer-dev/` in `vite.config.mts`
+## Build, Test, and Development Commands
 
-# merge_policy
+- `npm ci`: install dependencies exactly from `package-lock.json`.
+- `npm run build`: build plugin with Vite; outputs `main.js` and `styles.css` to the configured outDir.
+- Development tip: build in watch is not wired; use repeated `npm run build` during local changes, or run `vite build --mode development --watch` if desired.
+- Manual load in Obsidian: copy/symlink the build output plus `manifest.json` into `[Vault]/.obsidian/plugins/obsidian-keyboard-analyzer/` and reload plugins.
 
-- AUGMENTS: builder, qa. Designer/orchestrator read repo_facts.
-- Precedence: bundle.supersede_note > overlay > mode defaults.
-- Default gate: inputs.allow_external=false
-- Default io_policy: no_diff_emission
+## Coding Style & Naming Conventions
 
-# repo_facts (read-only)
+- Language: TypeScript (strict) + Svelte 5.
+- Obsidian API typings: import from the official `obsidian` package; internal members are declared via `src/types/obsidian-augmentations.d.ts`.
+- Components: PascalCase (e.g., `KeyboardLayoutComponent.svelte`). Utilities/managers: camelCase filenames (e.g., `hotkeyManager`).
+- Indentation: 2 spaces; prefer explicit types and `const` where possible.
+- Formatting/Linting: Biome config present (`biome.json`). Example: `npx @biomejs/biome check .` and `npx @biomejs/biome format .`.
 
-- Source: `src/`; Dirs: components/, managers/, views/, utils/, stores/, interfaces/, types/
-- Build: Vite → `../obsidian-keyboard-analyzer-dev/`
-- Styling: UnoCSS + `src/styles.css`; Lint/format: Biome
-- Externals: Obsidian API external (do not vendor)
-- Manual verification vault: `test-vault/`
+## Testing Guidelines
 
-# task_contract
+- No automated tests yet. Validate in Obsidian using `test-vault/` or your own vault.
+- Verify: opening the view, status bar icon behavior, command palette entries, hotkey detection, and layout rendering across OS themes.
+- Include screenshots or short clips for UI changes.
 
-- tasks/YYYYMMDD-<kebab-slug>.md (UTC); frontmatter keys as specified
-- On any action: dated bullet to **Decisions**; update **Next Steps** & `status`; refresh `updated`; split follow-ups if needed
+## Commit & Pull Request Guidelines
 
-# designer.overlay
+- Commits: Conventional Commits (project uses `standard-version`). Examples: `feat(view): add search menu`, `fix(hotkeys): normalize Mac modifiers`.
+- PRs: clear description, linked issues, reproduction steps, before/after screenshots, and notes on platform testing (Windows/macOS/Linux).
+- Keep changes focused; update `README.md` when user-facing behavior or setup changes.
 
-- Deliver explicit interfaces and file paths (e.g., `src/utils/commandMeta.ts`) to enable low-IO building.
+## Security & Configuration Tips
 
-# builder.overlay
+- Do not commit vault contents or personal data. Keep changes within `src/` and configuration files.
+- Be careful modifying `vite.config.mts` `outDir` and externals; Obsidian APIs should remain external.
 
-- io_policy: no_diff_emission (override=true)
-- Evidence set required in attempt_completion:
-  - commits[], diffstat, patch_manifest[], interfaces_delta[], checks, snippets? (≤20 lines total if io_mode="manifest")
-- Manual tests checklist (suggested):
-  - [ ] open plugin view in test vault
-  - [ ] status bar icon click behavior
-  - [ ] command palette entries present & functional
-  - [ ] hotkey detection (incl. modifiers, long press)
-  - [ ] layout across themes (dark/light) & OS (Win/macOS/Linux)
-  - [ ] no console errors
-- Safety rails:
-  - Don’t change Vite `outDir` or externals unless explicitly allowed (override=true).
-  - Don’t alter unrelated `public/manifest.json` keys.
-  - For risky edits, gate behind a flag or propose a safer alternative.
-- Push gating:
-  - Push only if: build succeeds AND Biome passes AND working tree clean between chunks.
-- Docs/Tasks:
-  - Prefer updating `tasks/` per contract; keep doc content deltas minimal (anchors or short fenced blocks).
+## Active Tasks Documentation
 
-# qa.overlay
+- Purpose: Track ongoing work in `tasks//` so engineers and the AI agent keep a shared, searchable history of progress and decisions.
+- Location & naming: `tasks/25080812-<id>.md` (one file per task).
+- Frontmatter: Use YAML props at the top of each task file.
 
-- Test scope: smoke + functional for keyboard detection & UI entry points.
-- Matrix: cover at least one OS (Win/macOS/Linux) and theme (dark/light) or note gaps.
-- Review rails:
-  - Enforce Biome, Svelte a11y basics, TS strict (no `any`), Obsidian API external.
-  - No Vite `outDir` changes; UnoCSS classes valid; store usage keeps reactivity minimal.
-- Low-IO stance:
-  - Use Builder receipts; request at most one focused snippet if necessary (≤20 lines total).
-- attempt_completion: {results_summary, key_issues, verdict}
+```markdown
+---
+title: Status bar Cmd/Ctrl+Click should open new pane
+status: in_progress # todo|in_progress|blocked|done
+owner: "@you" | "@agent"
+updated: 2025-08-08 12:00 UTC
+related:
+  - [[ISSUE-123]]
+  - [[PR-456]]
+  - [[design-note]]
+---
+
+## Context
+
+1–3 lines describing the why, scope, and definition of done.
+
+## Decisions
+
+- [2025-08-08] Decision made — brief rationale.
+
+## Next Steps
+
+- [ ] Action 1 (owner)
+
+## Links
+
+- [[ISSUE-123]] [[PR-456]] [[design-note]]
+```
+
+- Linking: Prefer Obsidian wiki links `[[...]]` for cross-references to tasks, notes, and PR/issue stubs; use full URLs for external sites.
+- Workflow:
+  - Create/append updates during development and after notable changes.
+  - Commit with messages like: `chore(tasks): update ISSUE-123 decisions`.
+  - The AI coding agent may append progress, decisions, and timestamps after each implementation step to keep everyone in the loop.
+
+## Task Hygiene Rules for Agents
+
+- Keep Next Steps strictly scoped to the task’s Context and Decisions. Do not propose unrelated enhancements.
+- Prefer creating a new focused task for ideas not essential to the current task’s DoD.
+- Update todos in the Next Steps section as you progress.
+- When closing a task, mark incomplete items as either:
+  - done — implemented and verified, or
+  - skipped — with a brief rationale and a link to a follow-up task if needed.
+- When closing a task, move it to the `done` folder and update the status in the frontmatter.
+- If a task is split into multiple follow-ups, link them in the `related` section and in relavant parts of the task.
+- Update the `related` list when splitting or linking follow-ups to keep navigation clear.

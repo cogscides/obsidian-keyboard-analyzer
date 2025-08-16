@@ -1,17 +1,14 @@
-import type { App, KeymapInfo, Hotkey, Modifier, Command } from 'obsidian'
-import type {
-  hotkeyEntry,
-  commandEntry,
-  UnsafeInternalPlugin,
-} from '../../interfaces/Interfaces'
+import type { App, Hotkey, Modifier, KeymapInfo } from 'obsidian'
+import type { hotkeyEntry, commandEntry } from '../../interfaces/Interfaces'
 import {
   sortModifiers,
-  modifiersToString,
-  areModifiersEqual,
   platformizeModifiers,
   matchHotkey,
 } from '../../utils/modifierUtils'
 import { buildCommandEntry } from '../../utils/commandBuilder'
+import logger from '../../utils/logger'
+
+import CommandsManager from '../commandsManager'
 
 export default class HotkeyManager {
   private static instance: HotkeyManager | null = null
@@ -20,8 +17,16 @@ export default class HotkeyManager {
   // the authoritative CommandsManager.getCommandsIndex() when available and
   // fall back to building entries from app.commands when necessary.
   // When command data is required we will attempt to query CommandsManager's authoritative index.
+  private cmRef: CommandsManager | undefined = undefined
   private constructor(app: App) {
     this.app = app
+  }
+
+  /**
+   * Called by plugin/main to wire the authoritative CommandsManager instance.
+   */
+  public attachCommandsManager(cm: CommandsManager) {
+    this.cmRef = cm
   }
 
   static getInstance(app: App): HotkeyManager {
@@ -43,109 +48,12 @@ export default class HotkeyManager {
    * (defensive for initialization order).
    */
   private getCommandsIndex(): Record<string, commandEntry> {
-    try {
-      // Lazy require to avoid circular import at module evaluation time.
-      // Prefer requiring the manager index (safer resolution) instead of the concrete .svelte.ts file.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager')
-      const CommandsManagerClass =
-        CommandsManagerModule?.default || CommandsManagerModule
-      if (
-        CommandsManagerClass &&
-        typeof CommandsManagerClass.getInstance === 'function'
-      ) {
-        // CommandsManager.getInstance requires (app, plugin) — call with app and undefined plugin.
-        // Implementation is defensive and will still construct the instance if needed.
-        const cm = CommandsManagerClass.getInstance(this.app, undefined)
-        if (cm && typeof cm.getCommandsIndex === 'function') {
-          return cm.getCommandsIndex()
-        }
-      }
-    } catch {
-      // ignore and fallback
-    }
-
-    // Fallback: build entries locally using the centralized builder (keeps runtime shape)
-    try {
-      const commandsObj = this.app.commands.commands || {}
-      const commands = Object.values(commandsObj) as Command[]
-      return commands.reduce((acc, command) => {
-        acc[command.id] = buildCommandEntry(this.app, this, command)
-        return acc
-      }, {} as Record<string, commandEntry>)
-    } catch {
-      return {}
-    }
+    if (this.cmRef) return this.cmRef.getCommandsIndex()
+    // No fallback: return empty until CommandsManager is available
+    return {}
   }
 
-  private isInternalModule(commandId: string): boolean {
-    const pluginId = (commandId || '').split(':')[0] || ''
-    const internalModules = [
-      'audio-recorder',
-      'backlink',
-      'bookmarks',
-      'canvas',
-      'command-palette',
-      'daily-notes',
-      'editor-status',
-      'file-explorer',
-      'file-recovery',
-      'global-search',
-      'graph',
-      'markdown-importer',
-      'note-composer',
-      'outgoing-link',
-      'outline',
-      'page-preview',
-      'properties',
-      'publish',
-      'random-note',
-      'slash-command',
-      'slides',
-      'starred',
-      'switcher',
-      'sync',
-      'tag-pane',
-      'templates',
-      'word-count',
-      'workspaces',
-      'zk-prefixer',
-    ]
-    const coreNamespaces = [
-      'app',
-      'editor',
-      'markdown',
-      'open-with-default-app',
-      'theme',
-      'window',
-      'workspace',
-    ]
-    if (internalModules.includes(pluginId)) return true
-    if (coreNamespaces.includes(pluginId)) return true
-    // Heuristic fallback: not a community plugin => internal
-    const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
-    if (isCommunity) return false
-    const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
-    const isInternal = enabledInternal.some((p) => p.instance.id === pluginId)
-    return isInternal || !isCommunity
-  }
-
-  private getPluginName(pluginId: string): string {
-    const plugin = this.app.plugins.plugins[pluginId]
-    if (plugin) return plugin.manifest.name
-
-    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
-
-    const internalPlugin = internalPlugins.find(
-      (plugin) => plugin.instance.id === pluginId
-    ) as UnsafeInternalPlugin | undefined
-
-    if (internalPlugin?.instance) {
-      return internalPlugin.instance.name || pluginId
-    }
-
-    return pluginId
-  }
+  // Duplicated metadata helpers removed; use centralized utils in commandBuilder.
 
   public getHotkeysForCommand(id: string): {
     all: hotkeyEntry[]
@@ -153,37 +61,21 @@ export default class HotkeyManager {
     custom: hotkeyEntry[]
   } {
     // Prefer authoritative CommandsManager index when available (sync access).
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager')
-      const CommandsManagerClass =
-        CommandsManagerModule?.default || CommandsManagerModule
-      if (
-        CommandsManagerClass &&
-        typeof CommandsManagerClass.getInstance === 'function'
-      ) {
-        const cm = CommandsManagerClass.getInstance(this.app, undefined)
-        if (cm && typeof cm.getCommandsIndex === 'function') {
-          const index = cm.getCommandsIndex() as Record<string, commandEntry>
-          const entry = index[id]
-          if (
-            entry &&
-            Array.isArray(entry.hotkeys) &&
-            entry.hotkeys.length >= 0
-          ) {
-            return {
-              all: entry.hotkeys || [],
-              default: (entry as any).defaultHotkeys || [],
-              custom: (entry as any).customHotkeys || [],
-            }
-          }
+    logger.timeStart('HotkeyManager.getHotkeysForCommand')
+    const cm = this.cmRef
+    if (cm) {
+      const index = cm.getCommandsIndex()
+      const entry = index[id]
+      if (entry) {
+        return {
+          all: entry.hotkeys || [],
+          default: entry.defaultHotkeys || [],
+          custom: entry.customHotkeys || [],
         }
       }
-    } catch {
-      // ignore and fallback
     }
 
-    // Fallback: use app.hotkeyManager data
+    // Fallback: use Obsidian app.hotkeyManager only
     const defaultHotkeys = this.app.hotkeyManager.getDefaultHotkeys(id) || []
     const customHotkeys = this.app.hotkeyManager.customKeys[id] || []
 
@@ -224,7 +116,7 @@ export default class HotkeyManager {
 
     // Convert the map back to an array
     const allHotkeys = Array.from(hotkeyMap.values())
-
+    logger.timeEnd('HotkeyManager.getHotkeysForCommand')
     return {
       all: allHotkeys,
       default: defaultEntries,
@@ -238,53 +130,18 @@ export default class HotkeyManager {
   }
 
   public isHotkeyDuplicate(id: string, hotkey: Hotkey): boolean {
-    // Prefer authoritative CommandsManager index when available (sync access)
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager')
-      const CommandsManagerClass =
-        CommandsManagerModule?.default || CommandsManagerModule
-      if (
-        CommandsManagerClass &&
-        typeof CommandsManagerClass.getInstance === 'function'
-      ) {
-        const cm = CommandsManagerClass.getInstance(this.app, undefined)
-        if (cm && typeof cm.getCommandsIndex === 'function') {
-          const index = cm.getCommandsIndex() as Record<string, commandEntry>
-          return Object.values(index).some(
-            (command) =>
-              command.id !== id &&
-              command.hotkeys.some(
-                (existingHotkey) =>
-                  areModifiersEqual(
-                    existingHotkey.modifiers,
-                    hotkey.modifiers
-                  ) && existingHotkey.key === hotkey.key
-              )
-          )
-        }
-      }
-    } catch {
-      // ignore and fallback to local build below
+    // Query CommandsManager's hotkeyIndex using a normalized key
+    const cm = this.cmRef
+    if (!cm) return false
+    const hkKey = CommandsManager.makeHotkeyKey({
+      modifiers: (hotkey.modifiers as unknown as string[]) || [],
+      key: hotkey.key || '',
+    })
+    const matches = cm.getCommandsByHotkeyKey(hkKey)
+    if (matches && matches.length > 0) {
+      return matches.some((cmd) => cmd.id !== id)
     }
-
-    // Fallback: build a local view of commands from app.commands (defensive, sync)
-    try {
-      const commandsObj = this.app.commands.commands || {}
-      return Object.values(commandsObj).some((cmd: any) => {
-        const entry = buildCommandEntry(this.app, this, cmd as any)
-        return (
-          entry.id !== id &&
-          entry.hotkeys.some(
-            (existingHotkey: hotkeyEntry) =>
-              areModifiersEqual(existingHotkey.modifiers, hotkey.modifiers) &&
-              existingHotkey.key === hotkey.key
-          )
-        )
-      })
-    } catch {
-      return false
-    }
+    return false
   }
 
   public commandMatchesHotkey(
@@ -326,53 +183,33 @@ export default class HotkeyManager {
     activeKey: string
   ): commandEntry[] {
     // Prefer authoritative CommandsManager index when available (sync access)
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager')
-      const CommandsManagerClass =
-        CommandsManagerModule?.default || CommandsManagerModule
-      if (
-        CommandsManagerClass &&
-        typeof CommandsManagerClass.getInstance === 'function'
-      ) {
-        const cm = CommandsManagerClass.getInstance(this.app, undefined)
-        if (cm && typeof cm.getCommandsIndex === 'function') {
-          const index = cm.getCommandsIndex() as Record<string, commandEntry>
-          return Object.values(index).filter((command) => {
-            const hotkeyMatch = this.commandMatchesHotkey(
-              command.id,
-              activeModifiers,
-              activeKey
-            )
-            const searchMatch =
-              command.name.toLowerCase().includes(search.toLowerCase()) ||
-              command.id.toLowerCase().includes(search.toLowerCase())
-            return hotkeyMatch && searchMatch
-          })
-        }
-      }
-    } catch {
-      // ignore and fallback
-    }
-
-    // Fallback: build synchronously from app.commands
-    try {
-      const commandsObj = this.app.commands.commands || {}
-      return Object.values(commandsObj)
-        .map((cmd: any) => buildCommandEntry(this.app, this, cmd as any))
-        .filter((command) => {
-          const hotkeyMatch = this.commandMatchesHotkey(
-            command.id,
-            activeModifiers,
-            activeKey
-          )
-          const searchMatch =
-            command.name.toLowerCase().includes(search.toLowerCase()) ||
-            command.id.toLowerCase().includes(search.toLowerCase())
-          return hotkeyMatch && searchMatch
+    const cm = this.cmRef
+    if (cm) {
+      const q = (search || '').toLowerCase()
+      // If a hotkey query is present, use fast index-based lookup
+      if (activeKey || (activeModifiers && activeModifiers.length)) {
+        const hkKey = CommandsManager.makeHotkeyKey({
+          modifiers: activeModifiers as unknown as string[],
+          key: activeKey,
         })
-    } catch {
-      return []
+        const byHotkey = cm.getCommandsByHotkeyKey(hkKey)
+        return byHotkey.filter((cmd) =>
+          q
+            ? cmd.name.toLowerCase().includes(q) ||
+              cmd.id.toLowerCase().includes(q)
+            : true
+        )
+      }
+      // Name/id only search over all commands
+      const index = cm.getCommandsIndex()
+      return Object.values(index).filter((cmd) =>
+        q
+          ? cmd.name.toLowerCase().includes(q) ||
+            cmd.id.toLowerCase().includes(q)
+          : true
+      )
     }
+    // No safe fallback
+    return []
   }
 }

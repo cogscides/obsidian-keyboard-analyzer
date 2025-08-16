@@ -8,6 +8,8 @@ import type { commandEntry } from './Interfaces'
  */
 export interface CommandsManagerAPI {
   getCommandsIndex(): Record<string, commandEntry>
+  /** Fast reverse lookup for a normalized hotkey key. */
+  getCommandsByHotkeyKey(key: string): commandEntry[]
   getCommandsList(): commandEntry[]
   ensureSystemShortcutsLoaded(): void
   refreshIndex(): void
@@ -16,7 +18,11 @@ export interface CommandsManagerAPI {
 
 declare class CommandsManager implements CommandsManagerAPI {
   static getInstance(app: App, plugin?: unknown): CommandsManager
+  /** Build a normalized key string for a given hotkey entry. */
+  static makeHotkeyKey(hotkey: { modifiers: string[]; key: string }): string
   getCommandsIndex(): Record<string, commandEntry>
+  /** Fast reverse lookup for a normalized hotkey key. */
+  getCommandsByHotkeyKey(key: string): commandEntry[]
   getCommandsList(): commandEntry[]
   ensureSystemShortcutsLoaded(): void
   refreshIndex(): void

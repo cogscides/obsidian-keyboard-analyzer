@@ -459,7 +459,7 @@ export default class GroupManager {
 						groupId,
 						filters: nextDefaults.filters,
 					});
-					return { ...(group as any), defaults: nextDefaults };
+					return { ...group, defaults: nextDefaults };
 				}
 				return group;
 			});
@@ -472,7 +472,7 @@ export default class GroupManager {
 	/** Apply saved defaults into current filters (if present). */
 	applyDefaultsToGroupFilters(groupId: string): void {
 		try {
-			const g = this.getGroup(groupId) as any;
+			const g = this.getGroup(groupId);
 			const defaults: GroupViewState | undefined = g?.defaults;
 			if (defaults?.filters) {
 				const base = this.settingsManager.settings.defaultFilterSettings;
@@ -495,7 +495,7 @@ export default class GroupManager {
 	applyDynamicLastUsedToGroupFilters(groupId: string): void {
 		try {
 			if (this.writeLocks.has(groupId)) return;
-			const g = this.getGroup(groupId) as any;
+			const g = this.getGroup(groupId);
 			const last: GroupViewState | undefined = g?.lastUsedState;
 			if (last?.filters) {
 				const base = this.settingsManager.settings.defaultFilterSettings;
@@ -564,8 +564,7 @@ export default class GroupManager {
 			};
 
 			// Normalize optional defaults snapshot if present
-			const prevDefaults = (g as unknown as { defaults?: GroupViewState })
-				?.defaults;
+			const prevDefaults = g.defaults;
 			const normalizedDefaults = prevDefaults
 				? ({
 						...prevDefaults,
@@ -588,13 +587,17 @@ export default class GroupManager {
 					} as GroupViewState)
 				: undefined;
 
-			const out: any = {
-				...g,
-				filterSettings: normalizedFilters,
-			};
-			if (normalizedDefaults) out.defaults = normalizedDefaults;
-			if (normalizedLastUsed) out.lastUsedState = normalizedLastUsed;
-			return out as CGroup;
+				const groupOut: CGroup = {
+					...g,
+					filterSettings: normalizedFilters,
+				};
+				const withDefaults = normalizedDefaults
+					? { ...groupOut, defaults: normalizedDefaults }
+					: groupOut;
+			const withLastUsed = normalizedLastUsed
+				? { ...withDefaults, lastUsedState: normalizedLastUsed }
+				: withDefaults;
+			return withLastUsed;
 		});
 
 		try {

@@ -11,6 +11,9 @@ import {
   areModifiersEqual,
   isKeyMatch,
   matchHotkey,
+  sortModifiers,
+  platformizeModifiers,
+  normalizeKey,
 } from '../../utils/modifierUtils'
 import { buildCommandEntry } from '../../utils/commandBuilder'
 import type groupManager from '../groupManager'
@@ -20,6 +23,7 @@ import GroupManager, {
 } from '../groupManager/groupManager.svelte.ts'
 import type KeyboardAnalyzerPlugin from '../../main'
 import { getSystemShortcutCommands } from '../../utils/systemShortcuts'
+import logger from '../../utils/logger'
 
 /**
  * The CommandsManager class is responsible for managing and processing commands.
@@ -33,6 +37,8 @@ export default class CommandsManager {
   private plugin: KeyboardAnalyzerPlugin
   private hotkeyManager: HotkeyManager
   private commands: Record<string, commandEntry> = {}
+  // Hotkey index: normalized key -> array of command ids (for fast lookups)
+  private hotkeyIndex: Record<string, string[]> = {}
   // private commandGroups: Map<string, CommandGroup> = $state(new Map())
   private settingsManager: SettingsManager
   private groupManager: GroupManager
@@ -74,19 +80,32 @@ export default class CommandsManager {
    * @returns void
    */
   private loadCommands() {
-    const allCommands = this.getCommands()
-    this.commands = this.processCommands(allCommands)
-    // Append virtual system/editor default shortcuts so they can be filtered/displayed
-    const systemEntries = getSystemShortcutCommands()
-    for (const entry of systemEntries) {
-      this.commands[entry.id] = entry
+    // Defer heavy index construction to avoid blocking the main thread during app/plugin startup.
+    // This yields control to the event loop and runs the same logic asynchronously.
+    const doWork = () => {
+      logger.timeStart('CommandsManager.loadCommands')
+      const enableProfiling = Boolean((globalThis as any).__KBA_PROFILING__)
+      if (enableProfiling) console.time('CommandsManager.loadCommands')
+      const allCommands = this.getCommands()
+      this.commands = this.rebuildIndex(allCommands)
+      // Append virtual system/editor default shortcuts so they can be filtered/displayed
+      const systemEntries = getSystemShortcutCommands()
+      for (const entry of systemEntries) {
+        this.commands[entry.id] = entry
+      }
+      // Notify any subscribers that the authoritative index changed
+      try {
+        this.notifySubscribers()
+      } catch {
+        // swallow notification errors
+      }
+      if (enableProfiling) console.timeEnd('CommandsManager.loadCommands')
+      logger.timeEnd('CommandsManager.loadCommands')
     }
-    // Notify any subscribers that the authoritative index changed
-    try {
-      this.notifySubscribers()
-    } catch {
-      // swallow notification errors
-    }
+
+    // Yield to the event loop to avoid main-thread jank. This keeps behavior identical
+    // but makes initialization non-blocking for large command sets.
+    setTimeout(doWork, 0)
   }
 
   /**
@@ -106,16 +125,40 @@ export default class CommandsManager {
    * @param commands - The commands to process
    * @returns Record<string, commandEntry>
    */
-  private processCommands(commands: Command[]): Record<string, commandEntry> {
-    // Use the centralized builder (static ES import) to ensure it's bundled and available at runtime
-    return commands.reduce((acc, command) => {
-      acc[command.id] = buildCommandEntry(
-        this.app,
-        this.hotkeyManager,
-        command as any
-      )
+  /**
+   * Rebuilds the authoritative commands index from Obsidian's app.commands.
+   * - Uses buildCommandEntry() to construct each commandEntry.
+   * - Arrays are canonical (hotkeys/default/custom). No extra normalized shapes stored.
+   * - Recomputes the reverse hotkey index for fast lookup.
+   */
+  private rebuildIndex(commands: Command[]): Record<string, commandEntry> {
+    const enableProfiling = Boolean((globalThis as any).__KBA_PROFILING__)
+    logger.timeStart('CommandsManager.rebuildIndex')
+    if (enableProfiling) console.time('CommandsManager.rebuildIndex')
+    const hotkeyIndex: Record<string, string[]> = {}
+    const result = commands.reduce((acc, command) => {
+      const built = buildCommandEntry(this.app, this.hotkeyManager, command)
+      acc[built.id] = built
+      try {
+        const allHotkeys = built.hotkeys || []
+        for (const hk of allHotkeys) {
+          const normMods = sortModifiers(
+            platformizeModifiers(hk.modifiers as unknown as string[])
+          )
+          const key = `${normMods.join(',')}|${normalizeKey(hk.key || '')}`
+          if (!hotkeyIndex[key]) hotkeyIndex[key] = []
+          hotkeyIndex[key].push(built.id)
+        }
+      } catch {
+        // ignore hotkey index errors
+      }
       return acc
     }, {} as Record<string, commandEntry>)
+
+    this.hotkeyIndex = hotkeyIndex
+    if (enableProfiling) console.timeEnd('CommandsManager.rebuildIndex')
+    logger.timeEnd('CommandsManager.rebuildIndex')
+    return result
   }
 
   /**
@@ -131,6 +174,27 @@ export default class CommandsManager {
    */
   public getCommandsList(): commandEntry[] {
     return Object.values(this.commands)
+  }
+
+  /**
+   * Return commands matching a normalized hotkey key (fast lookup).
+   */
+  public getCommandsByHotkeyKey(key: string): commandEntry[] {
+    const ids = this.hotkeyIndex[key] || []
+    return ids.map((id) => this.commands[id]).filter(Boolean)
+  }
+
+  /**
+   * Helper: create normalized key for a hotkey entry (same normalization as index)
+   */
+  public static makeHotkeyKey(hotkey: {
+    modifiers: string[]
+    key: string
+  }): string {
+    const normMods = sortModifiers(
+      platformizeModifiers(hotkey.modifiers as unknown as string[])
+    )
+    return `${normMods.join(',')}|${normalizeKey(hotkey.key || '')}`
   }
 
   /**
@@ -179,92 +243,7 @@ export default class CommandsManager {
     }
   }
 
-  /**
-   * Returns the name of the plugin for a given plugin ID
-   *
-   * @private
-   * @param pluginId - The ID of the plugin to get the name of
-   * @returns string - The name of the plugin
-   */
-  public getPluginName(pluginId: string): string {
-    const plugin = this.app.plugins.plugins[pluginId]
-    if (plugin) return plugin.manifest.name
-
-    const internalPlugins = this.app.internalPlugins.getEnabledPlugins()
-    const internalPlugin = internalPlugins.find(
-      (plugin) => plugin.instance.id === pluginId
-    ) as UnsafeInternalPlugin | undefined
-
-    if (internalPlugin?.instance) {
-      return internalPlugin.instance.name || pluginId
-    }
-
-    return pluginId
-  }
-
-  /**
-   * Returns a boolean value indicating if a command is an internal module
-   *
-   * @param commandId - The ID of the command to check
-   * @returns boolean
-   */
-  public isInternalModule(commandId: string): boolean {
-    const pluginId = (commandId || '').split(':')[0] || ''
-
-    // Known internal plugin IDs (core plugins)
-    const internalModules = [
-      'audio-recorder',
-      'backlink',
-      'bookmarks',
-      'canvas',
-      'command-palette',
-      'daily-notes',
-      'editor-status',
-      'file-explorer',
-      'file-recovery',
-      'global-search',
-      'graph',
-      'markdown-importer',
-      'note-composer',
-      'outgoing-link',
-      'outline',
-      'page-preview',
-      'properties',
-      'publish',
-      'random-note',
-      'slash-command',
-      'slides',
-      'starred',
-      'switcher',
-      'sync',
-      'tag-pane',
-      'templates',
-      'word-count',
-      'workspaces',
-      'zk-prefixer',
-    ]
-
-    // Additional core namespaces used by Obsidian for built-in commands
-    const coreNamespaces = [
-      'app',
-      'editor',
-      'markdown',
-      'open-with-default-app',
-      'theme',
-      'window',
-      'workspace',
-    ]
-
-    if (internalModules.includes(pluginId)) return true
-    if (coreNamespaces.includes(pluginId)) return true
-
-    // Heuristic fallback: if not a community plugin and not an internal plugin id, treat as internal
-    const isCommunity = Boolean(this.app.plugins.plugins[pluginId])
-    if (isCommunity) return false
-    const enabledInternal = this.app.internalPlugins.getEnabledPlugins()
-    const isInternal = enabledInternal.some((p) => p.instance.id === pluginId)
-    return isInternal || !isCommunity
-  }
+  // Removed duplicated metadata helpers; rely on centralized utils used by commandBuilder.
 
   /**
    * Loads the featured commands from the settings
