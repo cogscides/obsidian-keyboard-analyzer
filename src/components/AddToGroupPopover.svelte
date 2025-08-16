@@ -12,34 +12,34 @@ interface Props {
 let { commandId, onClose = $bindable(() => {}) }: Props = $props();
 
 const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
-const groupManager = plugin.groupManager;
+const _groupManager = plugin.groupManager;
 
 let search = $state("");
 let newGroupName = $state("");
-let placeAbove = $state(false);
+let _placeAbove = $state(false);
 let offsetX = $state(0);
 let rootEl: HTMLDivElement | null = null;
 
-function filteredGroups() {
+function _filteredGroups() {
 	const term = search.trim().toLowerCase();
-	const all = groupManager.getGroups();
+	const all = _groupManager.getGroups();
 	if (!term) return all;
 	return all.filter((g: { name: string }) =>
 		g.name.toLowerCase().includes(term),
 	);
 }
 
-function toggleMembership(groupId: string) {
-	const inGroup = groupManager.isCommandInGroup(groupId, commandId);
-	if (inGroup) groupManager.removeCommandFromGroup(groupId, commandId);
-	else groupManager.addCommandToGroup(groupId, commandId);
+function _toggleMembership(groupId: string) {
+	const inGroup = _groupManager.isCommandInGroup(groupId, commandId);
+	if (inGroup) _groupManager.removeCommandFromGroup(groupId, commandId);
+	else _groupManager.addCommandToGroup(groupId, commandId);
 }
 
-function createGroupAndAdd() {
+function _createGroupAndAdd() {
 	const name = newGroupName.trim();
 	if (!name) return;
-	const id = groupManager.createGroup(name);
-	if (id) groupManager.addCommandToGroup(String(id), commandId);
+	const id = _groupManager.createGroup(name);
+	if (id) _groupManager.addCommandToGroup(String(id), commandId);
 	newGroupName = "";
 	search = "";
 }
@@ -58,7 +58,7 @@ function recomputePosition() {
 		const spaceBelow = viewportH - rect.bottom;
 		const spaceAbove = rect.top;
 		// threshold ~ popover height
-		placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
+		_placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
 
 		// Horizontal clamping relative to viewport
 		// Compute the popover's projected left/right if left:0 on anchor plus current offsetX
@@ -97,7 +97,7 @@ onDestroy(() => {
 </script>
 
 <div
-  class="kb-popover {placeAbove ? 'is-above' : 'is-below'}"
+  class="kb-popover {_placeAbove ? 'is-above' : 'is-below'}"
   style="transform: translateX({offsetX}px);"
   use:clickOutside
   onclick_outside={onClose}
@@ -126,26 +126,26 @@ onDestroy(() => {
     </div>
   </div>
   <div class="kb-popover-body">
-    {#each filteredGroups() as g (g.id)}
-      <label class="kb-row">
-        <input
-          type="checkbox"
-          checked={groupManager.isCommandInGroup(String(g.id), commandId)}
-          onchange={() => toggleMembership(String(g.id))}
-        />
-        <span>{g.name}</span>
-      </label>
-    {/each}
+    {#each _filteredGroups() as g (g.id)}
+        <label class="kb-row">
+          <input
+            type="checkbox"
+            checked={_groupManager.isCommandInGroup(String(g.id), commandId)}
+            onchange={() => _toggleMembership(String(g.id))}
+          />
+          <span>{g.name}</span>
+        </label>
+      {/each}
   </div>
   <div class="kb-popover-footer">
     <input
-      type="text"
-      placeholder="New group name"
-      bind:value={newGroupName}
-      class="kb-input"
-      onkeydown={(e) => e.key === 'Enter' && createGroupAndAdd()}
-    />
-    <button class="kb-btn" onclick={createGroupAndAdd}>Create & Add</button>
+    type="text"
+    placeholder="New group name"
+    bind:value={newGroupName}
+    class="kb-input"
+    onkeydown={(e) => e.key === 'Enter' && _createGroupAndAdd()}
+  />
+  <button class="kb-btn" onclick={_createGroupAndAdd}>Create & Add</button>
   </div>
 </div>
 

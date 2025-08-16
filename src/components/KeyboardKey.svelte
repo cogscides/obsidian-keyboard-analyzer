@@ -122,7 +122,7 @@ function handleMouseEnter(event: MouseEvent) {
 
 	if (!isModifierKey) {
 		// If physical listener is active, disable Alt-hover preview to avoid UX conflicts
-		if (isListenerActive && isListenerActive()) {
+		if (isListenerActive?.()) {
 			return;
 		}
 		// Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
@@ -130,7 +130,7 @@ function handleMouseEnter(event: MouseEvent) {
 			startPreview();
 		}
 		altKeydownListener = (e: KeyboardEvent) => {
-			if (isListenerActive && isListenerActive()) return;
+			if (isListenerActive?.()) return;
 			if (hovered && (e.key === "Alt" || e.key === "AltGraph")) {
 				startPreview();
 			}

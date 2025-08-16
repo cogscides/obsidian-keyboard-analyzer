@@ -1,108 +1,108 @@
 <!-- src/components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
-import { setContext, getContext } from "svelte";
-import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
-import type KeyboardAnalyzerPlugin from "../main";
-import type {
-	KeyboardLayout,
-	commandEntry,
-	KeyboardSection,
-} from "../interfaces/Interfaces";
-import KeyboardKey from "./KeyboardKey.svelte";
-import {
-	Coffee as CoffeeIcon,
-	Pin as PinIcon,
-	Settings as SettingsIcon,
-} from "lucide-svelte";
-import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
-import type CommandsManager from "../managers/commandsManager";
-import { GroupType } from "../managers/groupManager/groupManager.svelte.ts";
+  import { getContext } from 'svelte'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
+  import type KeyboardAnalyzerPlugin from '../main'
+  import type {
+    KeyboardLayout,
+    commandEntry,
+    KeyboardSection,
+  } from '../interfaces/Interfaces'
+  import KeyboardKey from './KeyboardKey.svelte'
+  import {
+    Coffee as CoffeeIcon,
+    Pin as PinIcon,
+    Settings as SettingsIcon,
+  } from 'lucide-svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type CommandsManager from '../managers/commandsManager'
+  import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
 
-interface Props {
-	visibleCommands: commandEntry[];
-	strictModifierMatch?: boolean;
-	selectedGroupID?: string;
-}
+  interface Props {
+    visibleCommands: commandEntry[]
+    strictModifierMatch?: boolean
+    selectedGroupID?: string
+  }
 
-let {
-	visibleCommands = [],
-	strictModifierMatch = false,
-	selectedGroupID = "",
-}: Props = $props();
+  let {
+    visibleCommands = [],
+    strictModifierMatch = false,
+    selectedGroupID = '',
+  }: Props = $props()
 
-const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
-const visualKeyboardManager: VisualKeyboardManager = getContext(
-	"visualKeyboardManager",
-);
-const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
-import type SettingsManager from "../managers/settingsManager";
-const settingsManager: SettingsManager = plugin.settingsManager;
-const commandsManager: CommandsManager = plugin.commandsManager;
-let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout);
+  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
+    'visualKeyboardManager'
+  )
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  import type SettingsManager from '../managers/settingsManager'
+  const settingsManager: SettingsManager = plugin.settingsManager
+  const commandsManager: CommandsManager = plugin.commandsManager
+  let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
 
-// DEBUGGER
-let keyClicked = $state("");
+  // DEBUGGER
+  let _keyClicked = $state('')
 
-function calculateSectionColumns(section: KeyboardSection) {
-	return (
-		section.rows.reduce((maxWidth, row) => {
-			const rowWidth = row.reduce((sum, key) => sum + (key.width || 1), 0);
-			return Math.max(maxWidth, rowWidth);
-		}, 0) * 4
-	); // Multiply by 4 to match the original scale
-}
+  function calculateSectionColumns(section: KeyboardSection) {
+    return (
+      section.rows.reduce((maxWidth, row) => {
+        const rowWidth = row.reduce((sum, key) => sum + (key.width || 1), 0)
+        return Math.max(maxWidth, rowWidth)
+      }, 0) * 4
+    ) // Multiply by 4 to match the original scale
+  }
 
-$effect(() => {
-	const commands =
-		heatmapScope === "all"
-			? commandsManager.getCommandsForGroup(GroupType.All)
-			: visibleCommands;
-	// Pass active search context and strict flag so non-matching shortcuts don't affect weights
-	visualKeyboardManager.calculateAndAssignWeights(
-		commands,
-		activeKeysStore.ActiveModifiers,
-		activeKeysStore.ActiveKey,
-		strictModifierMatch,
-	);
-});
+  $effect(() => {
+    const commands =
+      heatmapScope === 'all'
+        ? commandsManager.getCommandsForGroup(GroupType.All)
+        : visibleCommands
+    // Pass active search context and strict flag so non-matching shortcuts don't affect weights
+    visualKeyboardManager.calculateAndAssignWeights(
+      commands,
+      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveKey,
+      strictModifierMatch
+    )
+  })
 
-let gridTemplateColumns = KeyboardObject.sections
-	.map((section) => `${section.gridRatio}fr`)
-	.join(" ");
-let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(" ")}'`;
+  let gridTemplateColumns = KeyboardObject.sections
+    .map((section) => `${section.gridRatio}fr`)
+    .join(' ')
+  let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(' ')}'`
 
-// Calculate max columns for each section
-let sectionColumns = KeyboardObject.sections.reduce(
-	(acc, section) => {
-		acc[section.name] = calculateSectionColumns(section);
-		return acc;
-	},
-	{} as Record<string, number>,
-);
+  // Calculate max columns for each section
+  let sectionColumns = KeyboardObject.sections.reduce(
+    (acc, section) => {
+      acc[section.name] = calculateSectionColumns(section)
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
-// Local UI state for toolbar controls
-let panelCollapsed = $state(
-	Boolean(settingsManager.getSetting("keyboardCollapsed")),
-);
-let isPinned = $state(Boolean(settingsManager.getSetting("pinKeyboardPanel")));
-let heatmapScope: "filtered" | "all" = $state("filtered");
-let devMenuOpen = $state(false);
-let showInspector = $state(false);
-// Reflect live settings values
-const devOptionsEnabled = $derived(
-	Boolean(settingsManager.settings.enableDeveloperOptions),
-);
-let devLoggingEnabled = $derived(
-	Boolean(settingsManager.settings.devLoggingEnabled),
-);
-let emulatedOS = $derived(
-	(settingsManager.settings.emulatedOS || "none") as
-		| "none"
-		| "windows"
-		| "macos"
-		| "linux",
-);
-import { setDevLoggingEnabled, setEmulatedOS } from "../utils/runtimeConfig";
+  // Local UI state for toolbar controls
+  let panelCollapsed = $state(
+    Boolean(settingsManager.getSetting('keyboardCollapsed'))
+  )
+  let isPinned = $state(Boolean(settingsManager.getSetting('pinKeyboardPanel')))
+  let heatmapScope: 'filtered' | 'all' = $state('filtered')
+  let devMenuOpen = $state(false)
+  let showInspector = $state(false)
+  // Reflect live settings values
+  const devOptionsEnabled = $derived(
+    Boolean(settingsManager.settings.enableDeveloperOptions)
+  )
+  let devLoggingEnabled = $derived(
+    Boolean(settingsManager.settings.devLoggingEnabled)
+  )
+  let emulatedOS = $derived(
+    (settingsManager.settings.emulatedOS || 'none') as
+      | 'none'
+      | 'windows'
+      | 'macos'
+      | 'linux'
+  )
+  import { setDevLoggingEnabled, setEmulatedOS } from '../utils/runtimeConfig'
 </script>
 
 <div
