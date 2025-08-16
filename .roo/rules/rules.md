@@ -2,77 +2,63 @@
 
 # scope_condition
 
-Apply ONLY if inputs.repo.name == "obsidian-keyboard-analyzer"
-OR the project matches:
+Apply ONLY if inputs.repo.name == "obsidian-keyboard-analyzer" OR the project matches:
 
-- Svelte 5 + TypeScript strict in `src/`
-- Vite config (`vite.config.mts`) with outDir `../obsidian-keyboard-analyzer-dev/`
+- Svelte 5 + TS strict in `src/`
+- Vite outDir `../obsidian-keyboard-analyzer-dev/` in `vite.config.mts`
 
 # merge_policy
 
-- This overlay AUGMENTS mode defaults for: developer, reviewer, tester, docs.
-- It does NOT affect planner/architect/quick-fix (except read-only facts).
-- Delegation Bundle's `supersede_note` > overlay > mode defaults.
-- If a field in overlay says `override=true`, it may supersede mode defaults.
+- AUGMENTS: builder, qa. Designer/orchestrator read repo_facts.
+- Precedence: bundle.supersede_note > overlay > mode defaults.
+- Default gate: inputs.allow_external=false
+- Default io_policy: no_diff_emission
 
-# repo_facts (read-only, for all modes)
+# repo_facts (read-only)
 
-- Source: `src/` (Svelte 5 + TS(strict))
-- Key dirs: `components/`, `managers/`, `views/`, `utils/`, `stores/`, `interfaces/`, `types/`
-- Build: Vite (`vite.config.mts`) → `../obsidian-keyboard-analyzer-dev/`
-- Styling: UnoCSS + `src/styles.css`; Lint/format: Biome (`biome.json`)
-- Externals: Obsidian API remains external (do not vendor)
+- Source: `src/`; Dirs: components/, managers/, views/, utils/, stores/, interfaces/, types/
+- Build: Vite → `../obsidian-keyboard-analyzer-dev/`
+- Styling: UnoCSS + `src/styles.css`; Lint/format: Biome
+- Externals: Obsidian API external (do not vendor)
 - Manual verification vault: `test-vault/`
 
-# task_contract (docs + tasks files)
+# task_contract
 
-- Task files in `tasks/`, one per task.
-- Naming: `tasks/YYYYMMDD-<kebab-slug>.md` (UTC date).
-- Frontmatter:
-  title: string
-  status: todo|in_progress|blocked|done
-  owner: "@you" | "@agent"
-  updated: "YYYY-MM-DD HH:MM UTC"
-  related: [ [ [ISSUE-123] ], [ [PR-456] ] ]
-- On any action: append dated bullet to **Decisions**; update **Next Steps** & `status`; refresh `updated`; create follow-ups if scope splits.
+- tasks/YYYYMMDD-<kebab-slug>.md (UTC); frontmatter keys as specified
+- On any action: dated bullet to **Decisions**; update **Next Steps** & `status`; refresh `updated`; split follow-ups if needed
 
-# developer.overlay
+# designer.overlay
 
-- defaults: reasoning_effort=medium; verbosity prose=low, code=high
-- preamble (compatible): restate goal (1 sentence) → short numbered plan → edits → "What changed" summary
-- context budget: max 2 passes (identify → refine)
-- action rule: once you can NAME exact files/functions, ACT
-- io formats: unified diffs per changed file; new files with full content (path included)
-- manual tests (suggested checklist):
+- Deliver explicit interfaces and file paths (e.g., `src/utils/commandMeta.ts`) to enable low-IO building.
+
+# builder.overlay
+
+- io_policy: no_diff_emission (override=true)
+- Evidence set required in attempt_completion:
+  - commits[], diffstat, patch_manifest[], interfaces_delta[], checks, snippets? (≤20 lines total if io_mode="manifest")
+- Manual tests checklist (suggested):
   - [ ] open plugin view in test vault
   - [ ] status bar icon click behavior
   - [ ] command palette entries present & functional
   - [ ] hotkey detection (incl. modifiers, long press)
   - [ ] layout across themes (dark/light) & OS (Win/macOS/Linux)
   - [ ] no console errors
-- safety rails:
-  - Do NOT modify Vite `outDir` or externals unless explicitly requested.
-  - Do NOT change unrelated keys in `public/manifest.json`.
-  - For risky edits, propose safer alt or gate behind a flag.
-- stop conditions (align to mode): edits done and + manual tests passed + task file updated; else emit **blocker** with next step.
+- Safety rails:
+  - Don’t change Vite `outDir` or externals unless explicitly allowed (override=true).
+  - Don’t alter unrelated `public/manifest.json` keys.
+  - For risky edits, gate behind a flag or propose a safer alternative.
+- Push gating:
+  - Push only if: build succeeds AND Biome passes AND working tree clean between chunks.
+- Docs/Tasks:
+  - Prefer updating `tasks/` per contract; keep doc content deltas minimal (anchors or short fenced blocks).
 
-# reviewer.overlay
+# qa.overlay
 
-- Enforce: Biome style, Svelte a11y basics, TypeScript strict (no `any`), check Obsidian API usage stays external.
-- Add checks: no changes to Vite `outDir`; UnoCSS classes valid; stores usage keeps reactivity minimal.
-- verdict format: unchanged (approve/request_changes/comment_only).
-
-# tester.overlay
-
-- Scope: smoke + functional for keyboard detection & UI entry points.
-- Include matrix note: OS (Win/macOS/Linux) and theme (dark/light) at least once.
-- Failures must include minimal repro using `test-vault/`.
-
-# docs.overlay
-
-- Prefer task-file updates in `tasks/` (per contract); otherwise emit structured JSON.
-- Versioning: bump = patch unless API/contracts changed; record Biome and build notes if relevant.
-
-# persistence (optional)
-
-- If platform supports it, include `previous_response_id` to persist plans and cut re-planning; otherwise ignore silently.
+- Test scope: smoke + functional for keyboard detection & UI entry points.
+- Matrix: cover at least one OS (Win/macOS/Linux) and theme (dark/light) or note gaps.
+- Review rails:
+  - Enforce Biome, Svelte a11y basics, TS strict (no `any`), Obsidian API external.
+  - No Vite `outDir` changes; UnoCSS classes valid; store usage keeps reactivity minimal.
+- Low-IO stance:
+  - Use Builder receipts; request at most one focused snippet if necessary (≤20 lines total).
+- attempt_completion: {results_summary, key_issues, verdict}

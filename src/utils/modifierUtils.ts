@@ -1,35 +1,35 @@
 // modifierUtils.ts
 
-import { Platform } from "obsidian";
-import { getEmulatedOS } from "./runtimeConfig";
-import type { Modifier } from "obsidian";
+import { Platform } from 'obsidian'
+import { getEmulatedOS } from './runtimeConfig'
+import type { Modifier } from 'obsidian'
 
-export type ModifierMap = { [key: string]: Modifier };
+export type ModifierMap = { [key: string]: Modifier }
 
-export type ModifierKey = "Control" | "Shift" | "Alt" | "Meta" | "Mod";
+export type ModifierKey = 'Control' | 'Shift' | 'Alt' | 'Meta' | 'Mod'
 
 function isMac(): boolean {
-	const emu = getEmulatedOS();
-	if (emu === "macos") return true;
-	if (emu === "windows" || emu === "linux") return false;
-	return Platform.isMacOS;
+  const emu = getEmulatedOS()
+  if (emu === 'macos') return true
+  if (emu === 'windows' || emu === 'linux') return false
+  return Platform.isMacOS
 }
 
 export const modifierMap: Record<ModifierKey, Modifier> = {
-	Control: "Ctrl",
-	Shift: "Shift",
-	Alt: "Alt",
-	Meta: "Meta",
-	Mod: isMac() ? "Meta" : "Ctrl",
-};
+  Control: 'Ctrl',
+  Shift: 'Shift',
+  Alt: 'Alt',
+  Meta: 'Meta',
+  Mod: isMac() ? 'Meta' : 'Ctrl',
+}
 
 export const displayModifierMap: Record<ModifierKey, string> = {
-	Control: isMac() ? "⌃" : "Control",
-	Shift: "⇧",
-	Alt: isMac() ? "⌥" : "Alt",
-	Meta: isMac() ? "⌘" : "Meta",
-	Mod: isMac() ? "⌘" : "Ctrl",
-};
+  Control: isMac() ? '⌃' : 'Control',
+  Shift: '⇧',
+  Alt: isMac() ? '⌥' : 'Alt',
+  Meta: isMac() ? '⌘' : 'Meta',
+  Mod: isMac() ? '⌘' : 'Ctrl',
+}
 
 // export function getModifierInfo(): {
 //   recognized: Set<string>
@@ -45,131 +45,183 @@ export const displayModifierMap: Record<ModifierKey, string> = {
 // }
 
 export function convertModifier(modifier: string): Modifier {
-	return (modifierMap[modifier as ModifierKey] || modifier) as Modifier;
+  return (modifierMap[modifier as ModifierKey] || modifier) as Modifier
 }
 
 export function getDisplayModifier(modifier: string): string {
-	return displayModifierMap[modifier as ModifierKey] || modifier;
+  return displayModifierMap[modifier as ModifierKey] || modifier
 }
 
 export function unconvertModifier(modifier: Modifier): string {
-	const entry = Object.entries(modifierMap).find(
-		([_, value]) => value === modifier,
-	);
-	return entry ? entry[0] : modifier;
+  const entry = Object.entries(modifierMap).find(
+    ([_, value]) => value === modifier
+  )
+  return entry ? entry[0] : modifier
 }
 
 export function convertModifiers(modifiers: string[]): Modifier[] {
-	return modifiers.map(convertModifier);
+  return modifiers.map(convertModifier)
 }
 
 // Canonicalize modifiers for the current OS (emulation-aware)
 // - On macOS: keep Meta; on Windows/Linux: treat Meta/Cmd as Ctrl; Option→Alt.
 export function platformizeModifier(mod: string): Modifier {
-	const m = String(mod);
-	if (isMac()) {
-		if (m === "Mod") return "Meta";
-		if (m === "Control" || m === "Ctrl") return "Ctrl";
-		if (m === "Alt" || m === "Option") return "Alt";
-		if (m === "Meta" || m === "Cmd" || m === "Win") return "Meta";
-		if (m === "Shift") return "Shift";
-		return m as Modifier;
-	}
-	// Windows/Linux
-	if (m === "Mod") return "Ctrl";
-	if (m === "Meta" || m === "Cmd") return "Ctrl";
-	if (m === "Option") return "Alt";
-	if (m === "Control") return "Ctrl";
-	if (m === "Win") return "Meta"; // keep distinct bucket name if needed
-	return m as Modifier;
+  const m = String(mod)
+  if (isMac()) {
+    if (m === 'Mod') return 'Meta'
+    if (m === 'Control' || m === 'Ctrl') return 'Ctrl'
+    if (m === 'Alt' || m === 'Option') return 'Alt'
+    if (m === 'Meta' || m === 'Cmd' || m === 'Win') return 'Meta'
+    if (m === 'Shift') return 'Shift'
+    return m as Modifier
+  }
+  // Windows/Linux
+  if (m === 'Mod') return 'Ctrl'
+  if (m === 'Meta' || m === 'Cmd') return 'Ctrl'
+  if (m === 'Option') return 'Alt'
+  if (m === 'Control') return 'Ctrl'
+  if (m === 'Win') return 'Meta' // keep distinct bucket name if needed
+  return m as Modifier
 }
 
 export function platformizeModifiers(mods: string[] | Modifier[]): Modifier[] {
-	return (mods as string[]).map(platformizeModifier);
+  return (mods as string[]).map(platformizeModifier)
 }
 
 export function unconvertModifiers(modifiers: Modifier[]): string[] {
-	return modifiers.map(unconvertModifier);
+  return modifiers.map(unconvertModifier)
 }
 
 export function getDisplayModifiers(modifiers: string[]): string[] {
-	return modifiers.map(getDisplayModifier);
+  return modifiers.map(getDisplayModifier)
 }
 
 export function sortModifiers(modifiers: string[]): string[] {
-	// Canonical sort order per platform (use canonical token names, not display labels)
-	// macOS: Meta (Cmd) first, then Ctrl, Alt, Shift
-	// Win/Linux: Ctrl, Alt, Shift, then Meta/Win
-	const order = isMac()
-		? ["Meta", "Ctrl", "Alt", "Shift"]
-		: ["Ctrl", "Alt", "Shift", "Meta", "Win"];
+  // Canonical sort order per platform (use canonical token names, not display labels)
+  // macOS: Meta (Cmd) first, then Ctrl, Alt, Shift
+  // Win/Linux: Ctrl, Alt, Shift, then Meta/Win
+  const order = isMac()
+    ? ['Meta', 'Ctrl', 'Alt', 'Shift']
+    : ['Ctrl', 'Alt', 'Shift', 'Meta', 'Win']
 
-	return [...modifiers].sort((a, b) => {
-		const ca = convertModifier(a);
-		const cb = convertModifier(b);
-		const indexA = order.indexOf(ca);
-		const indexB = order.indexOf(cb);
-		if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-		if (indexA === -1) return 1;
-		if (indexB === -1) return -1;
-		return indexA - indexB;
-	});
+  return [...modifiers].sort((a, b) => {
+    const ca = convertModifier(a)
+    const cb = convertModifier(b)
+    const indexA = order.indexOf(ca)
+    const indexB = order.indexOf(cb)
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b)
+    if (indexA === -1) return 1
+    if (indexB === -1) return -1
+    return indexA - indexB
+  })
 }
 
 export function modifiersToString(modifiers: string[], sort = true): string {
-	const mods = sort ? sortModifiers(modifiers) : modifiers;
-	return mods.map(convertModifier).join(" + ");
+  const mods = sort ? sortModifiers(modifiers) : modifiers
+  return mods.map(convertModifier).join(' + ')
 }
 
 export function stringToModifiers(
-	modifiers: string,
-	delimiter = ",",
+  modifiers: string,
+  delimiter = ','
 ): string[] {
-	return modifiers.split(delimiter);
+  return modifiers.split(delimiter)
 }
 
 export function prepareModifiersString(modifiers: string[]): string {
-	return modifiers.length ? `${modifiersToString(modifiers)} + ` : "";
+  return modifiers.length ? `${modifiersToString(modifiers)} + ` : ''
 }
 
 export function areModifiersEqual(
-	modifiers1?: string[],
-	modifiers2?: string[],
+  modifiers1?: string[],
+  modifiers2?: string[]
 ): boolean {
-	if (!modifiers1 || !modifiers2) return modifiers1 === modifiers2;
-	if (modifiers1.length !== modifiers2.length) return false;
+  if (!modifiers1 || !modifiers2) return modifiers1 === modifiers2
+  if (modifiers1.length !== modifiers2.length) return false
 
-	const set1 = new Set(modifiers1);
-	for (const modifier of modifiers2) {
-		if (!set1.has(modifier)) {
-			return false;
-		}
-	}
+  const set1 = new Set(modifiers1)
+  for (const modifier of modifiers2) {
+    if (!set1.has(modifier)) {
+      return false
+    }
+  }
 
-	return true;
+  return true
 }
 
 export function normalizeKey(key: string): string {
-	// Handle both key codes and key labels
-	let n_key = key.toLowerCase();
-	// Map common key codes to their corresponding key labels
-	const keyMap: { [n_key: string]: string } = {
-		space: " ",
-		minus: "-",
-		equal: "=",
-		bracketleft: "[",
-		bracketright: "]",
-		semicolon: ";",
-		quote: "'",
-		backquote: "`",
-		comma: ",",
-		period: ".",
-		slash: "/",
-		backslash: "\\",
-	};
-	return keyMap[n_key] || n_key.replace("key", "").replace("digit", "");
+  // Handle both key codes and key labels
+  let n_key = key.toLowerCase()
+  // Map common key codes to their corresponding key labels
+  const keyMap: { [n_key: string]: string } = {
+    space: ' ',
+    minus: '-',
+    equal: '=',
+    bracketleft: '[',
+    bracketright: ']',
+    semicolon: ';',
+    quote: "'",
+    backquote: '`',
+    comma: ',',
+    period: '.',
+    slash: '/',
+    backslash: '\\',
+  }
+  return keyMap[n_key] || n_key.replace('key', '').replace('digit', '')
 }
 
 export function isKeyMatch(activeKey: string, hotkeyKey: string): boolean {
-	return normalizeKey(activeKey) === normalizeKey(hotkeyKey);
+  return normalizeKey(activeKey) === normalizeKey(hotkeyKey)
+}
+
+/**
+ * matchHotkey - central hotkey matching helper
+ *
+ * @param hotkey - hotkey entry with { modifiers: string[]; key: string }
+ * @param activeMods - active modifiers (string[] or Modifier[])
+ * @param activeKey - active key string (may be empty)
+ * @param opts - options:
+ *   - strictModifierMatch?: boolean (default true) -> modifiers must exactly match
+ *   - allowKeyOnly?: boolean (default true) -> if activeKey empty, key match passes
+ *   - platformize?: boolean (default true) -> normalize modifiers per platform
+ */
+export function matchHotkey(
+  hotkey: { modifiers: string[]; key: string },
+  activeMods: string[] | Modifier[],
+  activeKey: string,
+  opts?: {
+    strictModifierMatch?: boolean
+    allowKeyOnly?: boolean
+    platformize?: boolean
+  }
+): boolean {
+  const {
+    strictModifierMatch = true,
+    allowKeyOnly = true,
+    platformize = true,
+  } = opts || {}
+
+  const leftMods = platformize
+    ? platformizeModifiers(activeMods as unknown as string[])
+    : (activeMods as unknown as string[])
+  const rightMods = platformize
+    ? platformizeModifiers(hotkey.modifiers as unknown as string[])
+    : (hotkey.modifiers as unknown as string[])
+
+  const sortedLeft = sortModifiers(leftMods)
+  const sortedRight = sortModifiers(rightMods)
+
+  const modifiersMatch = strictModifierMatch
+    ? areModifiersEqual(sortedLeft, sortedRight)
+    : // non-strict: require that all active modifiers are present in hotkey (subset)
+      (activeMods.length === 0 && rightMods.length === 0) ||
+      (activeMods.length > 0 &&
+        sortedLeft.every((m) => sortedRight.includes(m)))
+
+  const keyMatch =
+    !activeKey || (allowKeyOnly && !activeKey)
+      ? true
+      : isKeyMatch(activeKey, hotkey.key)
+
+  return modifiersMatch && keyMatch
 }

@@ -42,7 +42,7 @@ export default class HotkeyManager {
    * Falls back to computing a local index only if CommandsManager is not available
    * (defensive for initialization order).
    */
-  private async getCommandsIndex(): Promise<Record<string, commandEntry>> {
+  private getCommandsIndex(): Record<string, commandEntry> {
     try {
       // Lazy require to avoid circular import at module evaluation time
       // eslint-disable-next-line @typescript-eslint/no-var-requires

@@ -65,9 +65,12 @@ export function buildCommandEntry(
       // ignore and fall through to hotkeyManager-based retrieval
     }
   
-    // Prefer the authoritative CommandsManager-backed hotkeys when present (handled above).
-    // Otherwise use the modern hotkeyManager.getHotkeysForCommand API if available.
-    if (
+    // If a CommandsManager-provided authoritative result exists, keep it.
+    // Otherwise use the modern hotkeyManager.getHotkeysForCommand API if available,
+    // or fall back to legacy getAllHotkeysForCommand.
+    if (hotkeyResult && Array.isArray(hotkeyResult.all) && hotkeyResult.all.length > 0) {
+      // authoritative result already present from CommandsManager — do nothing
+    } else if (
       hotkeyManager &&
       typeof hotkeyManager.getHotkeysForCommand === 'function'
     ) {

@@ -1,162 +1,162 @@
 <!-- src/components/KeyboardKey.svelte -->
 <script lang="ts">
-import type { Key } from "../interfaces/Interfaces";
-import { getContext } from "svelte";
-import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
-import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
+  import type { Key } from '../interfaces/Interfaces'
+  import { getContext } from 'svelte'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
 
-interface Props {
-	key: Key;
-	maxWeightSteps?: number;
-}
+  interface Props {
+    key: Key
+    maxWeightSteps?: number
+  }
 
-let {
-	key = {
-		label: "",
-		unicode: "",
-		width: 1,
-		height: 1,
-		type: "empty",
-	} as Key,
-	maxWeightSteps = 5,
-}: Props = $props();
+  let {
+    key = {
+      label: '',
+      unicode: '',
+      width: 1,
+      height: 1,
+      type: 'empty',
+    } as Key,
+    maxWeightSteps = 5,
+  }: Props = $props()
 
-const visualKeyboardManager: VisualKeyboardManager = getContext(
-	"visualKeyboardManager",
-);
-const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
-const isListenerActive: (() => boolean) | undefined = getContext(
-	"isPhysicalListenerActive",
-);
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
+    'visualKeyboardManager'
+  )
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  const isListenerActive: (() => boolean) | undefined = getContext(
+    'isPhysicalListenerActive'
+  )
 
-let keyState = $derived(visualKeyboardManager.getKeyState(key));
-let displayLabel = $derived(keyState.displayValue);
+  let keyState = $derived(visualKeyboardManager.getKeyState(key))
+  let _displayLabel = $derived(keyState.displayValue)
 
-// let keyOutput = $derived(key.unicode || key.label)
-let smallText = $derived(key.smallText || false);
+  // let keyOutput = $derived(key.unicode || key.label)
+  let _smallText = $derived(key.smallText || false)
 
-let width = $derived(key.width || 1);
-let height = $derived(key.height || 1);
+  let _width = $derived(key.width || 1)
+  let _height = $derived(key.height || 1)
 
-function getColumnSpan(w: number) {
-	return `span ${Math.max(1, Math.round(w * 4))}`;
-}
+  function _getColumnSpan(w: number) {
+    return `span ${Math.max(1, Math.round(w * 4))}`
+  }
 
-function getRowSpan(h: number) {
-	return `span ${Math.max(1, Math.round(h))}`;
-}
+  function _getRowSpan(h: number) {
+    return `span ${Math.max(1, Math.round(h))}`
+  }
 
-function spreadWeights(weight: number) {
-	const maxWeight = Math.max(
-		...Object.values(visualKeyboardManager.keyStates).map(
-			(state) => state.weight || 0,
-		),
-	);
-	const step = maxWeight / maxWeightSteps;
-	return Math.min(Math.floor(weight / step) + 1, maxWeightSteps);
-}
+  function _spreadWeights(weight: number) {
+    const maxWeight = Math.max(
+      ...Object.values(visualKeyboardManager.keyStates).map(
+        (state) => state.weight || 0
+      )
+    )
+    const step = maxWeight / maxWeightSteps
+    return Math.min(Math.floor(weight / step) + 1, maxWeightSteps)
+  }
 
-function calculateOpacity(weight: number): number {
-	if (!weight) return 0;
-	const base = 10;
-	const step = (100 - base) / Math.max(1, maxWeightSteps - 1);
-	return Math.min(Math.round(base + (weight - 1) * step), 100);
-}
+  function _calculateOpacity(weight: number): number {
+    if (!weight) return 0
+    const base = 10
+    const step = (100 - base) / Math.max(1, maxWeightSteps - 1)
+    return Math.min(Math.round(base + (weight - 1) * step), 100)
+  }
 
-function handleClick(key: Key) {
-	const keyIdentifier = key.code || key.label || "";
-	(async () => {
-		const { default: logger } = await import("../utils/logger");
-		logger.debug("Clicked key:", keyIdentifier);
-	})();
+  function _handleClick(key: Key) {
+    const keyIdentifier = key.code || key.label || ''
+    ;(async () => {
+      const { default: logger } = await import('../utils/logger')
+      logger.debug('Clicked key:', keyIdentifier)
+    })()
 
-	activeKeysStore.handleKeyClick(keyIdentifier);
+    activeKeysStore.handleKeyClick(keyIdentifier)
 
-	// Update visual state based on new active keys
-	visualKeyboardManager.updateVisualState(
-		activeKeysStore.activeKey,
-		activeKeysStore.activeModifiers,
-	);
-}
+    // Update visual state based on new active keys
+    visualKeyboardManager.updateVisualState(
+      activeKeysStore.activeKey,
+      activeKeysStore.activeModifiers
+    )
+  }
 
-let previewing = false;
-let hovered = false;
-let storedKey = "";
-let altKeydownListener: ((e: KeyboardEvent) => void) | null = null;
-let altReleaseListener: ((e: KeyboardEvent) => void) | null = null;
+  let previewing = false
+  let hovered = false
+  let storedKey = ''
+  let altKeydownListener: ((e: KeyboardEvent) => void) | null = null
+  let altReleaseListener: ((e: KeyboardEvent) => void) | null = null
 
-function startPreview() {
-	if (!previewing) {
-		storedKey = activeKeysStore.ActiveKey;
-		altReleaseListener = (e: KeyboardEvent) => {
-			if (e.key === "Alt" || e.key === "AltGraph") {
-				// Match mouseleave behavior: restore previous active key
-				stopPreview(true);
-			}
-		};
-		window.addEventListener("keyup", altReleaseListener);
-	}
-	previewing = true;
-	activeKeysStore.ActiveKey = key.code || key.label || "";
-}
+  function _startPreview() {
+    if (!previewing) {
+      storedKey = activeKeysStore.ActiveKey
+      altReleaseListener = (e: KeyboardEvent) => {
+        if (e.key === 'Alt' || e.key === 'AltGraph') {
+          // Match mouseleave behavior: restore previous active key
+          _stopPreview(true)
+        }
+      }
+      window.addEventListener('keyup', altReleaseListener)
+    }
+    previewing = true
+    activeKeysStore.ActiveKey = key.code || key.label || ''
+  }
 
-function stopPreview(restore = true) {
-	if (restore) {
-		activeKeysStore.ActiveKey = storedKey;
-	} else {
-		activeKeysStore.clearActiveKey();
-		storedKey = "";
-	}
-	previewing = false;
-	if (altReleaseListener) {
-		window.removeEventListener("keyup", altReleaseListener);
-		altReleaseListener = null;
-	}
-}
+  function _stopPreview(restore = true) {
+    if (restore) {
+      activeKeysStore.ActiveKey = storedKey
+    } else {
+      activeKeysStore.clearActiveKey()
+      storedKey = ''
+    }
+    previewing = false
+    if (altReleaseListener) {
+      window.removeEventListener('keyup', altReleaseListener)
+      altReleaseListener = null
+    }
+  }
 
-function handleMouseEnter(event: MouseEvent) {
-	hovered = true;
-	const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
-		key.code || key.label || "",
-	);
+  function _handleMouseEnter(event: MouseEvent) {
+    hovered = true
+    const isModifierKey = visualKeyboardManager.mapCodeToObsidianModifier(
+      key.code || key.label || ''
+    )
 
-	if (!isModifierKey) {
-		// If physical listener is active, disable Alt-hover preview to avoid UX conflicts
-		if (isListenerActive?.()) {
-			return;
-		}
-		// Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
-		if (event.altKey) {
-			startPreview();
-		}
-		altKeydownListener = (e: KeyboardEvent) => {
-			if (isListenerActive?.()) return;
-			if (hovered && (e.key === "Alt" || e.key === "AltGraph")) {
-				startPreview();
-			}
-		};
-		window.addEventListener("keydown", altKeydownListener, true);
-	}
-}
+    if (!isModifierKey) {
+      // If physical listener is active, disable Alt-hover preview to avoid UX conflicts
+      if (isListenerActive?.()) {
+        return
+      }
+      // Only Alt should trigger dynamic hovering; allow Alt combined with other modifiers
+      if (event.altKey) {
+        _startPreview()
+      }
+      altKeydownListener = (e: KeyboardEvent) => {
+        if (isListenerActive?.()) return
+        if (hovered && (e.key === 'Alt' || e.key === 'AltGraph')) {
+          _startPreview()
+        }
+      }
+      window.addEventListener('keydown', altKeydownListener, true)
+    }
+  }
 
-function handleMouseLeave() {
-	hovered = false;
-	if (previewing) {
-		// On mouse leave, restore previous active key
-		stopPreview(true);
-	}
-	if (altKeydownListener) {
-		window.removeEventListener("keydown", altKeydownListener, true);
-		altKeydownListener = null;
-	}
-}
+  function _handleMouseLeave() {
+    hovered = false
+    if (previewing) {
+      // On mouse leave, restore previous active key
+      _stopPreview(true)
+    }
+    if (altKeydownListener) {
+      window.removeEventListener('keydown', altKeydownListener, true)
+      altKeydownListener = null
+    }
+  }
 </script>
 
-{#if displayLabel === 'empty'}
+{#if _displayLabel === 'empty'}
   <!-- svelte-ignore element_invalid_self_closing_tag -->
   <button
     class="kb-layout-key"
-    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)};`}
+    style={`grid-row: ${_getRowSpan(_height)}; grid-column: ${_getColumnSpan(_width)};`}
     class:empty={keyState.state === 'empty'}
     aria-label="Empty key"
     disabled
@@ -164,20 +164,20 @@ function handleMouseLeave() {
 {:else}
   <button
     class="kb-layout-key"
-    data-key-id={key.code || displayLabel}
-    data-weight={keyState.weight && spreadWeights(keyState.weight)
-      ? spreadWeights(keyState.weight)
+    data-key-id={key.code || _displayLabel}
+    data-weight={keyState.weight && _spreadWeights(keyState.weight)
+      ? _spreadWeights(keyState.weight)
       : 0}
     class:is-active={keyState.state === 'active'}
     class:is-hover={keyState.state === 'hover'}
     class:has-hotkey={keyState.state === 'possible'}
     class:small-text={key.smallText}
-    style={`grid-row: ${getRowSpan(height)}; grid-column: ${getColumnSpan(width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : (keyState.state === 'inactive' || keyState.state === 'possible') && keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${calculateOpacity(spreadWeights(keyState.weight))}%);` : ''}`}
-    onclick={() => handleClick(key)}
-    onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}
+    style={`grid-row: ${_getRowSpan(_height)}; grid-column: ${_getColumnSpan(_width)}; ${keyState.state === 'active' ? `background-color: var(--interactive-accent);` : (keyState.state === 'inactive' || keyState.state === 'possible') && keyState.weight ? `background-color: rgb(from var(--color-red) r g b / ${_calculateOpacity(_spreadWeights(keyState.weight))}%);` : ''}`}
+    onclick={() => _handleClick(key)}
+    onmouseenter={_handleMouseEnter}
+    onmouseleave={_handleMouseLeave}
   >
-    {displayLabel}
+    {_displayLabel}
     <!-- <span class="debug-weight font-300 text-[10px]">{keyState.weight}</span> --var(--interactive-accent); -->
   </button>
 {/if}
