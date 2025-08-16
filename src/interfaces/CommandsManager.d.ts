@@ -3,7 +3,7 @@ import type { App } from 'obsidian'
 import type { commandEntry } from './Interfaces'
 
 declare class CommandsManager {
-  static getInstance(app: App, plugin?: any): CommandsManager
+  static getInstance(app: App, plugin?: unknown): CommandsManager
   getCommandsIndex(): Record<string, commandEntry>
   getCommandsList(): commandEntry[]
   ensureSystemShortcutsLoaded(): void
