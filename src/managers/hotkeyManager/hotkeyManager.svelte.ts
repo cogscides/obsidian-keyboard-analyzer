@@ -155,8 +155,9 @@ export default class HotkeyManager {
     // Prefer authoritative CommandsManager index when available (sync access).
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager/commandsManager.svelte.ts')
-      const CommandsManagerClass = CommandsManagerModule.default
+      const CommandsManagerModule = require('../commandsManager')
+      const CommandsManagerClass =
+        CommandsManagerModule?.default || CommandsManagerModule
       if (
         CommandsManagerClass &&
         typeof CommandsManagerClass.getInstance === 'function'
@@ -240,8 +241,9 @@ export default class HotkeyManager {
     // Prefer authoritative CommandsManager index when available (sync access)
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager/commandsManager.svelte.ts')
-      const CommandsManagerClass = CommandsManagerModule.default
+      const CommandsManagerModule = require('../commandsManager')
+      const CommandsManagerClass =
+        CommandsManagerModule?.default || CommandsManagerModule
       if (
         CommandsManagerClass &&
         typeof CommandsManagerClass.getInstance === 'function'
@@ -326,8 +328,9 @@ export default class HotkeyManager {
     // Prefer authoritative CommandsManager index when available (sync access)
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const CommandsManagerModule = require('../commandsManager/commandsManager.svelte.ts')
-      const CommandsManagerClass = CommandsManagerModule.default
+      const CommandsManagerModule = require('../commandsManager')
+      const CommandsManagerClass =
+        CommandsManagerModule?.default || CommandsManagerModule
       if (
         CommandsManagerClass &&
         typeof CommandsManagerClass.getInstance === 'function'
