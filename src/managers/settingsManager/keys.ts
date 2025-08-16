@@ -5,34 +5,34 @@
  */
 
 export const FilterSettingsKeyValues = {
-  StrictModifierMatch: 'StrictModifierMatch',
-  ViewWOhotkeys: 'ViewWOhotkeys',
-  OnlyCustom: 'OnlyCustom',
-  OnlyDuplicates: 'OnlyDuplicates',
-  FeaturedFirst: 'FeaturedFirst',
-  HighlightCustom: 'HighlightCustom',
-  HighlightDuplicates: 'HighlightDuplicates',
-  HighlightBuiltIns: 'HighlightBuiltIns',
-  DisplayIDs: 'DisplayIDs',
-  ShowPluginBadges: 'ShowPluginBadges',
-  GroupByPlugin: 'GroupByPlugin',
-  DisplayGroupAssignment: 'DisplayGroupAssignment',
-  DisplayInternalModules: 'DisplayInternalModules',
-  DisplaySystemShortcuts: 'DisplaySystemShortcuts',
-} as const
+	StrictModifierMatch: "StrictModifierMatch",
+	ViewWOhotkeys: "ViewWOhotkeys",
+	OnlyCustom: "OnlyCustom",
+	OnlyDuplicates: "OnlyDuplicates",
+	FeaturedFirst: "FeaturedFirst",
+	HighlightCustom: "HighlightCustom",
+	HighlightDuplicates: "HighlightDuplicates",
+	HighlightBuiltIns: "HighlightBuiltIns",
+	DisplayIDs: "DisplayIDs",
+	ShowPluginBadges: "ShowPluginBadges",
+	GroupByPlugin: "GroupByPlugin",
+	DisplayGroupAssignment: "DisplayGroupAssignment",
+	DisplayInternalModules: "DisplayInternalModules",
+	DisplaySystemShortcuts: "DisplaySystemShortcuts",
+} as const;
 
 export type FilterSettingsKey =
-  (typeof FilterSettingsKeyValues)[keyof typeof FilterSettingsKeyValues]
+	(typeof FilterSettingsKeyValues)[keyof typeof FilterSettingsKeyValues];
 
 export const ViewSettingsKeyValues = {
-  FeaturedFirst: 'FeaturedFirst',
-  GroupByPlugin: 'GroupByPlugin',
-  HighlightCustom: 'HighlightCustom',
-  HighlightDuplicates: 'HighlightDuplicates',
-  DisplayIDs: 'DisplayIDs',
-  HighlightBuiltIns: 'HighlightBuiltIns',
-  ShowPluginBadges: 'ShowPluginBadges',
-} as const
+	FeaturedFirst: "FeaturedFirst",
+	GroupByPlugin: "GroupByPlugin",
+	HighlightCustom: "HighlightCustom",
+	HighlightDuplicates: "HighlightDuplicates",
+	DisplayIDs: "DisplayIDs",
+	HighlightBuiltIns: "HighlightBuiltIns",
+	ShowPluginBadges: "ShowPluginBadges",
+} as const;
 
 export type ViewSettingsKey =
-  (typeof ViewSettingsKeyValues)[keyof typeof ViewSettingsKeyValues]
+	(typeof ViewSettingsKeyValues)[keyof typeof ViewSettingsKeyValues];

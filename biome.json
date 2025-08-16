@@ -1,25 +1,26 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.2.2/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "style": {
-        "useConst": {
-          "level": "off"
-        },
-        "noUselessElse": {
-          "level": "off"
-        }
-      },
-      "complexity": {
-        "noForEach": {
-          "level": "off"
-        }
-      }
-    }
-  }
+	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+	"files": {
+		"includes": ["src/**/*", "vite.config.mts", "uno.config.ts", "biome.json"]
+	},
+	"assist": {
+		"enabled": false
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": { "level": "warn" },
+				"noUnusedImports": { "level": "warn" }
+			},
+			"style": {
+				"useConst": { "level": "off" },
+				"noUselessElse": { "level": "off" }
+			},
+			"complexity": {
+				"noForEach": { "level": "off" }
+			}
+		}
+	}
 }

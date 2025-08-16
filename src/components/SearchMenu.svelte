@@ -1,294 +1,287 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <script lang="ts">
-  import { getContext } from 'svelte'
-  import type KeyboardAnalyzerPlugin from '../main'
-  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
-  import {
-    CircleDotIcon,
-    FilterIcon,
-    X,
-    RefreshCw,
-    ChevronDown,
-    Info as InfoIcon,
-  } from 'lucide-svelte'
-  import { slide, fade } from 'svelte/transition'
-  import type {
-    CGroup,
-    CGroupFilterSettings,
-    CGroupSettingTitles,
-    FilterSettings,
-  } from '../managers/settingsManager'
-  import {
-    ViewSettingsKeyValues,
-    FilterSettingsKeyValues,
-  } from '../managers/settingsManager/keys'
-  import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
-  import type { Modifier } from 'obsidian'
-  import clickOutside from '../utils/clickOutside'
-  import logger from '../utils/logger'
-  import {
-    getBakedModifierLabel,
-    getBakedKeyLabel,
-  } from '../utils/normalizeKeyDisplay'
+import { getContext } from "svelte";
+import type KeyboardAnalyzerPlugin from "../main";
+import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
+import {
+	CircleDotIcon,
+	FilterIcon,
+	X,
+	RefreshCw,
+	ChevronDown,
+	Info as InfoIcon,
+} from "lucide-svelte";
+import { slide, fade } from "svelte/transition";
+import type {
+	CGroup,
+	CGroupFilterSettings,
+	CGroupSettingTitles,
+	FilterSettings,
+} from "../managers/settingsManager";
+import {
+	ViewSettingsKeyValues,
+	FilterSettingsKeyValues,
+} from "../managers/settingsManager/keys";
+import { convertModifiers, unconvertModifier } from "../utils/modifierUtils";
+import type { Modifier } from "obsidian";
+import clickOutside from "../utils/clickOutside";
+import logger from "../utils/logger";
+import {
+	getBakedModifierLabel,
+	getBakedKeyLabel,
+} from "../utils/normalizeKeyDisplay";
 
-  interface Props {
-    plugin: KeyboardAnalyzerPlugin
-    inputHTML?: HTMLInputElement
-    search?: string
-    searchCommandsCount?: number
-    searchHotkeysCount?: number
-    keyboardListenerIsActive?: boolean
-    selectedGroup: string
-    onSearch?: (
-      search: string,
-      activeModifiers: string[],
-      activeKey: string,
-      selectedGroup: string
-    ) => void
-  }
+interface Props {
+	plugin: KeyboardAnalyzerPlugin;
+	inputHTML?: HTMLInputElement;
+	search?: string;
+	searchCommandsCount?: number;
+	searchHotkeysCount?: number;
+	keyboardListenerIsActive?: boolean;
+	selectedGroup: string;
+	onSearch?: (
+		search: string,
+		activeModifiers: string[],
+		activeKey: string,
+		selectedGroup: string,
+	) => void;
+}
 
-  let {
-    plugin = $bindable(),
-    inputHTML = $bindable(),
-    searchCommandsCount = $bindable(0),
-    searchHotkeysCount = $bindable(0),
-    keyboardListenerIsActive = $bindable(false),
-    selectedGroup = $bindable(''),
-    onSearch = $bindable(() => {}),
-    search = $bindable(''),
-  }: Props = $props()
+let {
+	plugin = $bindable(),
+	inputHTML = $bindable(),
+	searchCommandsCount = $bindable(0),
+	searchHotkeysCount = $bindable(0),
+	keyboardListenerIsActive = $bindable(false),
+	selectedGroup = $bindable(""),
+	onSearch = $bindable(() => {}),
+	search = $bindable(""),
+}: Props = $props();
 
-  const settingsManager = plugin.settingsManager
-  const commandsManager = plugin.commandsManager
-  const groupManager = plugin.groupManager
+const settingsManager = plugin.settingsManager;
+const commandsManager = plugin.commandsManager;
+const groupManager = plugin.groupManager;
 
-  // Friendly labels and tooltips for filter settings
-  const settingTitles: Record<string, string> = {
-    StrictModifierMatch: 'Strict modifiers filtration',
-    ViewWOhotkeys: 'Only with hotkeys',
-    OnlyCustom: 'Only custom hotkeys',
-    OnlyDuplicates: 'Only duplicates',
-    FeaturedFirst: 'Featured first',
-    HighlightCustom: 'Highlight custom keys',
-    HighlightDuplicates: 'Highlight duplicates',
-    HighlightBuiltIns: 'Highlight built-in modules',
-    DisplayIDs: 'Display command IDs',
-    ShowPluginBadges: 'Show plugin badges',
-    GroupByPlugin: 'Group by plugin',
-    DisplayGroupAssignment: 'Show group assignment',
-    DisplayInternalModules: 'Display internal modules',
-    DisplaySystemShortcuts: 'Include system shortcuts',
-  }
+// Friendly labels and tooltips for filter settings
+const settingTitles: Record<string, string> = {
+	StrictModifierMatch: "Strict modifiers filtration",
+	ViewWOhotkeys: "Only with hotkeys",
+	OnlyCustom: "Only custom hotkeys",
+	OnlyDuplicates: "Only duplicates",
+	FeaturedFirst: "Featured first",
+	HighlightCustom: "Highlight custom keys",
+	HighlightDuplicates: "Highlight duplicates",
+	HighlightBuiltIns: "Highlight built-in modules",
+	DisplayIDs: "Display command IDs",
+	ShowPluginBadges: "Show plugin badges",
+	GroupByPlugin: "Group by plugin",
+	DisplayGroupAssignment: "Show group assignment",
+	DisplayInternalModules: "Display internal modules",
+	DisplaySystemShortcuts: "Include system shortcuts",
+};
 
-  const settingTooltips: Record<string, string> = {
-    StrictModifierMatch:
-      "Match modifiers exactly. Example: Ctrl+K won't match Ctrl+Shift+K.",
-    ViewWOhotkeys: 'Show only commands that have at least one hotkey assigned.',
-    OnlyCustom: 'Show only commands that have at least one user-set hotkey.',
-    OnlyDuplicates:
-      'Show only commands where at least one hotkey is duplicated.',
-    FeaturedFirst: 'Pin featured commands to the top of results.',
-    HighlightCustom: 'Visually mark hotkeys customized by you.',
-    HighlightDuplicates:
-      'Highlight when the same hotkey is used by multiple commands.',
-    HighlightBuiltIns:
-      'Subtly mark built-in (internal) plugin groups in commands list.',
-    DisplayIDs: 'Show internal command IDs and allow searching by ID.',
-    ShowPluginBadges:
-      'Show a compact plugin label before each command (flat list).',
-    GroupByPlugin: 'Group commands by their plugin.',
-    DisplayGroupAssignment: 'Display which group a command belongs to.',
-    DisplayInternalModules:
-      'Include commands from Obsidian’s built-in modules (e.g., File Explorer).',
-    DisplaySystemShortcuts:
-      'List common OS/editor defaults like Copy/Paste, Undo/Redo, Zoom.',
-  }
+const settingTooltips: Record<string, string> = {
+	StrictModifierMatch:
+		"Match modifiers exactly. Example: Ctrl+K won't match Ctrl+Shift+K.",
+	ViewWOhotkeys: "Show only commands that have at least one hotkey assigned.",
+	OnlyCustom: "Show only commands that have at least one user-set hotkey.",
+	OnlyDuplicates: "Show only commands where at least one hotkey is duplicated.",
+	FeaturedFirst: "Pin featured commands to the top of results.",
+	HighlightCustom: "Visually mark hotkeys customized by you.",
+	HighlightDuplicates:
+		"Highlight when the same hotkey is used by multiple commands.",
+	HighlightBuiltIns:
+		"Subtly mark built-in (internal) plugin groups in commands list.",
+	DisplayIDs: "Show internal command IDs and allow searching by ID.",
+	ShowPluginBadges:
+		"Show a compact plugin label before each command (flat list).",
+	GroupByPlugin: "Group commands by their plugin.",
+	DisplayGroupAssignment: "Display which group a command belongs to.",
+	DisplayInternalModules:
+		"Include commands from Obsidian’s built-in modules (e.g., File Explorer).",
+	DisplaySystemShortcuts:
+		"List common OS/editor defaults like Copy/Paste, Undo/Redo, Zoom.",
+};
 
-  const filterSettings: CGroupFilterSettings = $derived.by(() => {
-    // Track group and default settings changes so this recomputes when settings update
-    groupManager.groups
-    settingsManager.settings.defaultFilterSettings
-    return groupManager.getGroupSettings(selectedGroup)
-  })
+const filterSettings: CGroupFilterSettings = $derived.by(() => {
+	// Track group and default settings changes so this recomputes when settings update
+	groupManager.groups;
+	settingsManager.settings.defaultFilterSettings;
+	return groupManager.getGroupSettings(selectedGroup);
+});
 
-  // Quiet derived re-computations to avoid noisy consoles
-  $effect(() => {
-    filterSettings
-    selectedGroup
-  })
+// Quiet derived re-computations to avoid noisy consoles
+$effect(() => {
+	filterSettings;
+	selectedGroup;
+});
 
-  // Removed noisy $inspect to avoid dev console spam
-  // logger.debug('GroupManager try to find', selectedGroup, groupManager.getGroup(selectedGroup))
+// Removed noisy $inspect to avoid dev console spam
+// logger.debug('GroupManager try to find', selectedGroup, groupManager.getGroup(selectedGroup))
 
-  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
 
-  let viewDropdownOpen = $state(false)
-  // let modulesDropdownOpen = $state(false) // removed
-  let inputIsFocused = $state(false)
-  let filterIsOpen = $state(false)
-  let refreshIsActive = $state(false)
-  let PressedKeysStore = $derived(activeKeysStore)
+let viewDropdownOpen = $state(false);
+// let modulesDropdownOpen = $state(false) // removed
+let inputIsFocused = $state(false);
+let filterIsOpen = $state(false);
+let refreshIsActive = $state(false);
+let PressedKeysStore = $derived(activeKeysStore);
 
-  // Debounce for text input
-  let inputDebounce: ReturnType<typeof setTimeout> | null = null
+// Debounce for text input
+let inputDebounce: ReturnType<typeof setTimeout> | null = null;
 
-  // No local UI snapshot to avoid reactive loops; use derived filterSettings directly
-  // Idempotent guard to avoid re-entrant onSearch loops (stabilizes UI)
-  let lastSearchPayload: {
-    search: string
-    activeKey: string
-    selectedGroup: string
-    modifiersSig: string
-  } = $state({ search: '', activeKey: '', selectedGroup: '', modifiersSig: '' })
+// No local UI snapshot to avoid reactive loops; use derived filterSettings directly
+// Idempotent guard to avoid re-entrant onSearch loops (stabilizes UI)
+let lastSearchPayload: {
+	search: string;
+	activeKey: string;
+	selectedGroup: string;
+	modifiersSig: string;
+} = $state({ search: "", activeKey: "", selectedGroup: "", modifiersSig: "" });
 
-  // Groups
-  let excludedModules = $derived.by(() => {
-    // Track group changes to recompute excluded modules
-    groupManager.groups
-    return groupManager.getExcludedModulesForGroup(selectedGroup)
-  })
+// Groups
+let excludedModules = $derived.by(() => {
+	// Track group changes to recompute excluded modules
+	groupManager.groups;
+	return groupManager.getExcludedModulesForGroup(selectedGroup);
+});
 
-  function ClearSearch() {
-    if (search === '') {
-      PressedKeysStore.reset()
-    } else {
-      search = ''
-    }
-    inputHTML?.focus()
-  }
+function ClearSearch() {
+	if (search === "") {
+		PressedKeysStore.reset();
+	} else {
+		search = "";
+	}
+	inputHTML?.focus();
+}
 
-  function ToggleViewDropdown() {
-    const next = !viewDropdownOpen
-    viewDropdownOpen = next
-    if (next) {
-      filterIsOpen = false
-    }
-  }
+function ToggleViewDropdown() {
+	const next = !viewDropdownOpen;
+	viewDropdownOpen = next;
+	if (next) {
+		filterIsOpen = false;
+	}
+}
 
-  // function ToggleModulesDropdown() {} // removed
+// function ToggleModulesDropdown() {} // removed
 
-  // TODO Unify this with the settingsManager
-  function setFilterSetting(
-    setting: keyof CGroupFilterSettings,
-    value: boolean
-  ) {
-    logger.debug('SearchMenu setFilterSetting called', {
-      selectedGroup,
-      setting,
-      value,
-    })
-    groupManager.updateGroupFilterSettings(selectedGroup, { [setting]: value })
-    logger.debug('SearchMenu after updateGroupFilterSettings', {
-      selectedGroup,
-      persisted: groupManager.getGroupSettings(selectedGroup),
-    })
-    handleSearchInput()
-  }
+// TODO Unify this with the settingsManager
+function setFilterSetting(setting: keyof CGroupFilterSettings, value: boolean) {
+	logger.debug("SearchMenu setFilterSetting called", {
+		selectedGroup,
+		setting,
+		value,
+	});
+	groupManager.updateGroupFilterSettings(selectedGroup, { [setting]: value });
+	logger.debug("SearchMenu after updateGroupFilterSettings", {
+		selectedGroup,
+		persisted: groupManager.getGroupSettings(selectedGroup),
+	});
+	handleSearchInput();
+}
 
-  function ActivateKeyboardListener() {
-    const next = !keyboardListenerIsActive
-    logger.debug('[keys] toggle listener', {
-      from: keyboardListenerIsActive,
-      to: next,
-    })
-    keyboardListenerIsActive = next
-    inputHTML?.focus()
-  }
+function ActivateKeyboardListener() {
+	const next = !keyboardListenerIsActive;
+	logger.debug("[keys] toggle listener", {
+		from: keyboardListenerIsActive,
+		to: next,
+	});
+	keyboardListenerIsActive = next;
+	inputHTML?.focus();
+}
 
-  function RefreshCommands() {
-    refreshIsActive = true
-    commandsManager.refreshCommands()
-    setTimeout(() => {
-      refreshIsActive = false
-    }, 1000)
-  }
+function RefreshCommands() {
+	refreshIsActive = true;
+	commandsManager.refreshCommands();
+	setTimeout(() => {
+		refreshIsActive = false;
+	}, 1000);
+}
 
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      // Close any open menus and deactivate keyboard listener
-      if (viewDropdownOpen || filterIsOpen) {
-        viewDropdownOpen = false
-        filterIsOpen = false
-        e.stopPropagation()
-        return
-      }
-      if (keyboardListenerIsActive) {
-        keyboardListenerIsActive = false
-        // fall through to allow clearing keys below if any are active
-      }
-      // Clear active key/modifiers if present
-      if (
-        PressedKeysStore.activeKey ||
-        PressedKeysStore.activeModifiers.length
-      ) {
-        PressedKeysStore.reset()
-        handleSearchInput()
-        e.stopPropagation()
-        e.preventDefault()
-        return
-      }
-    }
-    if (keyboardListenerIsActive) {
-      // Let the global listener handle physical keys; avoid double-processing
-      e.stopPropagation()
-      e.preventDefault()
-      return
-    }
-    // Fallback: when listener is off, local handler can still process keys if needed
-    // Re-apply search when hotkey listeners mutate active keys
-    handleSearchInput()
-  }
+function handleKeyDown(e: KeyboardEvent) {
+	if (e.key === "Escape") {
+		// Close any open menus and deactivate keyboard listener
+		if (viewDropdownOpen || filterIsOpen) {
+			viewDropdownOpen = false;
+			filterIsOpen = false;
+			e.stopPropagation();
+			return;
+		}
+		if (keyboardListenerIsActive) {
+			keyboardListenerIsActive = false;
+			// fall through to allow clearing keys below if any are active
+		}
+		// Clear active key/modifiers if present
+		if (PressedKeysStore.activeKey || PressedKeysStore.activeModifiers.length) {
+			PressedKeysStore.reset();
+			handleSearchInput();
+			e.stopPropagation();
+			e.preventDefault();
+			return;
+		}
+	}
+	if (keyboardListenerIsActive) {
+		// Let the global listener handle physical keys; avoid double-processing
+		e.stopPropagation();
+		e.preventDefault();
+		return;
+	}
+	// Fallback: when listener is off, local handler can still process keys if needed
+	// Re-apply search when hotkey listeners mutate active keys
+	handleSearchInput();
+}
 
-  function handleSearchInput() {
-    try {
-      // Normalize payload and short-circuit identical requests to avoid reactive loops
-      const mods = convertModifiers(PressedKeysStore.activeModifiers)
-      const next = {
-        search: String(search ?? ''),
-        activeKey: String(PressedKeysStore.activeKey ?? ''),
-        selectedGroup: String(selectedGroup ?? ''),
-        modifiersSig: mods.join('+'),
-      }
-      if (
-        next.search === lastSearchPayload.search &&
-        next.activeKey === lastSearchPayload.activeKey &&
-        next.selectedGroup === lastSearchPayload.selectedGroup &&
-        next.modifiersSig === lastSearchPayload.modifiersSig
-      ) {
-        return
-      }
-      lastSearchPayload = next
-      onSearch(next.search, mods, next.activeKey, next.selectedGroup)
-    } catch {
-      // Defensive: never throw from UI handler
-    }
-  }
+function handleSearchInput() {
+	try {
+		// Normalize payload and short-circuit identical requests to avoid reactive loops
+		const mods = convertModifiers(PressedKeysStore.activeModifiers);
+		const next = {
+			search: String(search ?? ""),
+			activeKey: String(PressedKeysStore.activeKey ?? ""),
+			selectedGroup: String(selectedGroup ?? ""),
+			modifiersSig: mods.join("+"),
+		};
+		if (
+			next.search === lastSearchPayload.search &&
+			next.activeKey === lastSearchPayload.activeKey &&
+			next.selectedGroup === lastSearchPayload.selectedGroup &&
+			next.modifiersSig === lastSearchPayload.modifiersSig
+		) {
+			return;
+		}
+		lastSearchPayload = next;
+		onSearch(next.search, mods, next.activeKey, next.selectedGroup);
+	} catch {
+		// Defensive: never throw from UI handler
+	}
+}
 
-  function handleDebouncedInput() {
-    if (inputDebounce) clearTimeout(inputDebounce)
-    inputDebounce = setTimeout(() => {
-      handleSearchInput()
-    }, 200)
-  }
+function handleDebouncedInput() {
+	if (inputDebounce) clearTimeout(inputDebounce);
+	inputDebounce = setTimeout(() => {
+		handleSearchInput();
+	}, 200);
+}
 
-  function handleModifierChipClick(modifier: string) {
-    // Convert displayed modifier (e.g., 'Ctrl') back to abstract ('Control') so it's recognized as a modifier
-    const abstractModifier = unconvertModifier(modifier as Modifier)
-    PressedKeysStore.handleKeyClick(abstractModifier)
-    // Ensure current text query is applied alongside modifier changes
-    handleSearchInput()
-  }
+function handleModifierChipClick(modifier: string) {
+	// Convert displayed modifier (e.g., 'Ctrl') back to abstract ('Control') so it's recognized as a modifier
+	const abstractModifier = unconvertModifier(modifier as Modifier);
+	PressedKeysStore.handleKeyClick(abstractModifier);
+	// Ensure current text query is applied alongside modifier changes
+	handleSearchInput();
+}
 
-  // $effect(() => {
-  //   handleSearchInput()
-  // })
+// $effect(() => {
+//   handleSearchInput()
+// })
 
-  // Re-filter when the selected group changes so existing search text applies
-  $effect(() => {
-    selectedGroup
-    handleSearchInput()
-  })
-  import GroupSelector from './GroupSelector.svelte'
+// Re-filter when the selected group changes so existing search text applies
+$effect(() => {
+	selectedGroup;
+	handleSearchInput();
+});
+import GroupSelector from "./GroupSelector.svelte";
 </script>
 
 <GroupSelector bind:selectedGroup />

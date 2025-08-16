@@ -1,100 +1,99 @@
 <script lang="ts">
-  import { getContext, onMount, onDestroy } from 'svelte'
-  import { X } from 'lucide-svelte'
-  import type KeyboardAnalyzerPlugin from '../main'
-  import { clickOutside } from '../utils/clickOutside'
+import { getContext, onMount, onDestroy } from "svelte";
+import { X } from "lucide-svelte";
+import type KeyboardAnalyzerPlugin from "../main";
+import { clickOutside } from "../utils/clickOutside";
 
-  interface Props {
-    commandId: string
-    onClose?: () => void
-  }
+interface Props {
+	commandId: string;
+	onClose?: () => void;
+}
 
-  let { commandId, onClose = $bindable(() => {}) }: Props = $props()
+let { commandId, onClose = $bindable(() => {}) }: Props = $props();
 
-  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
-  const groupManager = plugin.groupManager
+const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
+const groupManager = plugin.groupManager;
 
-  let search = $state('')
-  let newGroupName = $state('')
-  let placeAbove = $state(false)
-  let offsetX = $state(0)
-  let rootEl: HTMLDivElement | null = null
+let search = $state("");
+let newGroupName = $state("");
+let placeAbove = $state(false);
+let offsetX = $state(0);
+let rootEl: HTMLDivElement | null = null;
 
-  function filteredGroups() {
-    const term = search.trim().toLowerCase()
-    const all = groupManager.getGroups()
-    if (!term) return all
-    return all.filter((g: { name: string }) =>
-      g.name.toLowerCase().includes(term)
-    )
-  }
+function filteredGroups() {
+	const term = search.trim().toLowerCase();
+	const all = groupManager.getGroups();
+	if (!term) return all;
+	return all.filter((g: { name: string }) =>
+		g.name.toLowerCase().includes(term),
+	);
+}
 
-  function toggleMembership(groupId: string) {
-    const inGroup = groupManager.isCommandInGroup(groupId, commandId)
-    if (inGroup) groupManager.removeCommandFromGroup(groupId, commandId)
-    else groupManager.addCommandToGroup(groupId, commandId)
-  }
+function toggleMembership(groupId: string) {
+	const inGroup = groupManager.isCommandInGroup(groupId, commandId);
+	if (inGroup) groupManager.removeCommandFromGroup(groupId, commandId);
+	else groupManager.addCommandToGroup(groupId, commandId);
+}
 
-  function createGroupAndAdd() {
-    const name = newGroupName.trim()
-    if (!name) return
-    const id = groupManager.createGroup(name)
-    if (id) groupManager.addCommandToGroup(String(id), commandId)
-    newGroupName = ''
-    search = ''
-  }
+function createGroupAndAdd() {
+	const name = newGroupName.trim();
+	if (!name) return;
+	const id = groupManager.createGroup(name);
+	if (id) groupManager.addCommandToGroup(String(id), commandId);
+	newGroupName = "";
+	search = "";
+}
 
-  function recomputePosition() {
-    try {
-      const el = rootEl
-      if (!el) return
-      const anchor = el.parentElement || el
-      const rect = anchor.getBoundingClientRect()
-      const viewportH =
-        window.innerHeight || document.documentElement.clientHeight
-      const viewportW =
-        window.innerWidth || document.documentElement.clientWidth
+function recomputePosition() {
+	try {
+		const el = rootEl;
+		if (!el) return;
+		const anchor = el.parentElement || el;
+		const rect = anchor.getBoundingClientRect();
+		const viewportH =
+			window.innerHeight || document.documentElement.clientHeight;
+		const viewportW = window.innerWidth || document.documentElement.clientWidth;
 
-      // Vertical flip if not enough space below the anchor
-      const spaceBelow = viewportH - rect.bottom
-      const spaceAbove = rect.top
-      // threshold ~ popover height
-      placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow
+		// Vertical flip if not enough space below the anchor
+		const spaceBelow = viewportH - rect.bottom;
+		const spaceAbove = rect.top;
+		// threshold ~ popover height
+		placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
 
-      // Horizontal clamping relative to viewport
-      // Compute the popover's projected left/right if left:0 on anchor plus current offsetX
-      const projectedLeft = rect.left + 0 + offsetX
-      const projectedRight = projectedLeft + (rootEl?.offsetWidth || 260)
+		// Horizontal clamping relative to viewport
+		// Compute the popover's projected left/right if left:0 on anchor plus current offsetX
+		const projectedLeft = rect.left + 0 + offsetX;
+		const projectedRight = projectedLeft + (rootEl?.offsetWidth || 260);
 
-      let dx = 0
-      if (projectedRight > viewportW) dx -= projectedRight - viewportW + 8
-      if (projectedLeft + dx < 0) dx += -(projectedLeft + dx) + 8
+		let dx = 0;
+		if (projectedRight > viewportW) dx -= projectedRight - viewportW + 8;
+		if (projectedLeft + dx < 0) dx += -(projectedLeft + dx) + 8;
 
-      offsetX += dx
-    } catch {}
-  }
+		offsetX += dx;
+	} catch {}
+}
 
-  let ro: ResizeObserver | null = null
-  const onScroll = () => recomputePosition()
+let ro: ResizeObserver | null = null;
+const onScroll = () => recomputePosition();
 
-  onMount(() => {
-    recomputePosition()
-    window.addEventListener('resize', recomputePosition)
-    // Capture-phase scroll to react to any scrolling ancestor
-    document.addEventListener('scroll', onScroll, true)
+onMount(() => {
+	recomputePosition();
+	window.addEventListener("resize", recomputePosition);
+	// Capture-phase scroll to react to any scrolling ancestor
+	document.addEventListener("scroll", onScroll, true);
 
-    if ('ResizeObserver' in window && rootEl) {
-      ro = new ResizeObserver(() => recomputePosition())
-      ro.observe(rootEl)
-    }
-  })
+	if ("ResizeObserver" in window && rootEl) {
+		ro = new ResizeObserver(() => recomputePosition());
+		ro.observe(rootEl);
+	}
+});
 
-  onDestroy(() => {
-    window.removeEventListener('resize', recomputePosition)
-    document.removeEventListener('scroll', onScroll, true)
-    ro?.disconnect()
-    ro = null
-  })
+onDestroy(() => {
+	window.removeEventListener("resize", recomputePosition);
+	document.removeEventListener("scroll", onScroll, true);
+	ro?.disconnect();
+	ro = null;
+});
 </script>
 
 <div

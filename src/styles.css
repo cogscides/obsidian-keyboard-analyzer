@@ -5,80 +5,80 @@
   align-items: flex-start;
 } */
 .status-bar-item.plugin-keyboard-analyzer span.icon {
-  display: flex;
-  align-items: center;
-  line-height: 1;
+	display: flex;
+	align-items: center;
+	line-height: 1;
 }
 
 .status-bar-item.plugin-keyboard-analyzer {
-  display: flex;
-  align-items: center;
-  line-height: 1;
+	display: flex;
+	align-items: center;
+	line-height: 1;
 }
 
 /* // Extra Small devices (landscape phones, 576px and up) */
 #keyboard-component.xs {
-  /* background-color: #f5f5f5; */
+	/* background-color: #f5f5f5; */
 }
 
 /* // Small devices (landscape phones, 576px and up) */
 #keyboard-component.sm {
-  /* background-color: aqua; */
+	/* background-color: aqua; */
 }
 
 /* // Medium devices (tablets, 768px and up) */
 #keyboard-component.md {
-  /* background-color: blueviolet; */
+	/* background-color: blueviolet; */
 }
 
 /* // Large devices (desktops, 992px and up) */
 #keyboard-component.lg {
-  /* background-color: chartreuse; */
+	/* background-color: chartreuse; */
 }
 
 /* // X-Large devices (large desktops, 1200px and up) */
 #keyboard-component.xl {
-  /* background-color: darkcyan; */
+	/* background-color: darkcyan; */
 }
 
 /* // XX-Large devices (larger desktops, 1400px and up) */
 #keyboard-component.xxl {
-  /* background-color: darkgoldenrod; */
+	/* background-color: darkgoldenrod; */
 }
 
 #keyboard-component {
-  /* Allow the component to grow with content so sticky can remain pinned
+	/* Allow the component to grow with content so sticky can remain pinned
      across the entire scroll; avoid forcing it to viewport height. */
-  height: auto;
-  min-height: 100%;
+	height: auto;
+	min-height: 100%;
 }
 
 .keyboard-wrapper {
-  max-width: 700px;
+	max-width: 700px;
 }
 
 #KB-view {
-  padding: 0px !important;
-  overflow-y: scroll;
+	padding: 0px !important;
+	overflow-y: scroll;
 }
 
 /* Center the keyboard panel and allow inner horizontal scroll */
 #keyboard-preview-view {
-  display: flex;
-  justify-content: center;
-  /* allow child sticky (.keyboard-panel.pinned) to work across full scroll */
-  overflow: visible;
-  width: 100%;
+	display: flex;
+	justify-content: center;
+	/* allow child sticky (.keyboard-panel.pinned) to work across full scroll */
+	overflow: visible;
+	width: 100%;
 }
 
 /* removed wrapper-level sticky; use panel-level sticky instead */
 /* When keyboard panel is pinned, make the wrapper sticky so it
    remains at the top while the command list scrolls underneath. */
 #keyboard-preview-view:has(.keyboard-panel.pinned) {
-  position: sticky;
-  top: 0;
-  z-index: 15;
-  background: var(--background-primary);
+	position: sticky;
+	top: 0;
+	z-index: 15;
+	background: var(--background-primary);
 }
 
 /* #keyboard-component .hotkey-setting-container {
@@ -90,59 +90,59 @@
 } */
 
 #keyboard-component .hotkey-settings-container {
-  height: fit-content;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 10px;
-  overflow: visible;
-  position: relative;
+	height: fit-content;
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 10px;
+	overflow: visible;
+	position: relative;
 }
 
 /* Anchor wrapper to position dropdowns under their triggering buttons */
 .menu-anchor {
-  position: relative;
-  display: inline-block;
+	position: relative;
+	display: inline-block;
 }
 
 #keyboard-component .setting-item-name {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  overflow: visible; /* ensure inline popovers are not clipped */
-  position: relative; /* safe anchor context for children */
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	overflow: visible; /* ensure inline popovers are not clipped */
+	position: relative; /* safe anchor context for children */
 }
 
 /* Ensure info container doesn't clip anchored popovers */
 #keyboard-component .setting-item-info {
-  overflow: visible;
+	overflow: visible;
 }
 
 /* Inline info icon styles for filter items */
 .setting-item-name .info-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  min-width: 16px; /* reserve space to prevent layout shift */
-  height: 16px;
-  margin-left: 6px; /* spacing between text and icon */
-  color: var(--text-muted);
-  opacity: 0; /* hidden by default */
-  visibility: hidden;
-  transition: color 80ms ease; /* show instantly; only color animates */
-  position: relative;
-  z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	min-width: 16px; /* reserve space to prevent layout shift */
+	height: 16px;
+	margin-left: 6px; /* spacing between text and icon */
+	color: var(--text-muted);
+	opacity: 0; /* hidden by default */
+	visibility: hidden;
+	transition: color 80ms ease; /* show instantly; only color animates */
+	position: relative;
+	z-index: 1;
 }
 
 /* Show the icon only when hovering the setting row; avoid width jump via min-width */
 .popup-filter-menu .setting-item:hover .info-icon,
 .popup-filter-menu .setting-item:focus-within .info-icon {
-  opacity: 1;
-  visibility: visible;
+	opacity: 1;
+	visibility: visible;
 }
 
 /* Active/hover state of the info icon */
@@ -150,98 +150,98 @@
 .setting-item-name .info-icon:focus-visible,
 .setting-item-name .info-icon:focus,
 .setting-item-name .info-icon:active {
-  color: var(--text-accent);
+	color: var(--text-accent);
 }
 
 /* (Using native title tooltips for icons to match Obsidian) */
 
 #keyboard-component .setting-item-name .command-name {
-  padding-right: 8px;
+	padding-right: 8px;
 }
 
 /* Keep legacy styling for span prefix (if used elsewhere) */
 #keyboard-component .setting-item-name span.suggestion-prefix {
-  color: var(--text-accent);
-  font-size: 90%;
-  font-style: italic;
-  text-transform: uppercase;
-  margin-right: 6px; /* space before command title */
+	color: var(--text-accent);
+	font-size: 90%;
+	font-style: italic;
+	text-transform: uppercase;
+	margin-right: 6px; /* space before command title */
 }
 
 #keyboard-component .setting-item-name span.suggestion-prefix:hover {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 /* Commands list uses a button for the plugin name. Keep style neutral, only add spacing. */
 #keyboard-component .setting-item-name button.suggestion-prefix {
-  margin-right: 6px; /* space before command title */
+	margin-right: 6px; /* space before command title */
 }
 
 #keyboard-component
-  .setting-item-name
-  button.suggestion-prefix.is-builtin::before,
+	.setting-item-name
+	button.suggestion-prefix.is-builtin::before,
 #keyboard-component
-  .setting-item-name
-  span.suggestion-prefix.is-builtin::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--interactive-accent);
-  margin-right: 6px;
-  vertical-align: middle;
+	.setting-item-name
+	span.suggestion-prefix.is-builtin::before {
+	content: "";
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	margin-right: 6px;
+	vertical-align: middle;
 }
 
 #keyboard-component .setting-item .star-icon {
-  display: none;
-  line-height: 0;
+	display: none;
+	line-height: 0;
 }
 
 #keyboard-component .setting-item:hover .star-icon {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
 }
 
 /* Keep action icons visible when row has active popover */
 #keyboard-component .setting-item.show-actions .star-icon,
 #keyboard-component .setting-item.show-actions .folder-plus-icon {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 #keyboard-component .setting-item .star-icon:hover {
-  color: var(--text-accent);
+	color: var(--text-accent);
 }
 
 #keyboard-component .setting-item.is-starred .star-icon {
-  color: var(--text-accent);
-  display: flex;
+	color: var(--text-accent);
+	display: flex;
 }
 
 /* Add-to-group icon mirrors star behavior: hidden until hover */
 #keyboard-component .setting-item .folder-plus-icon {
-  display: none;
-  margin-left: 6px;
-  line-height: 0;
+	display: none;
+	margin-left: 6px;
+	line-height: 0;
 }
 
 #keyboard-component .setting-item:hover .folder-plus-icon {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
 }
 
 #keyboard-component .setting-item .folder-plus-icon:hover {
-  color: var(--text-accent);
+	color: var(--text-accent);
 }
 
 .shortcuts-wrapper {
-  max-width: 768px;
-  padding-left: 24px;
-  padding-right: 24px;
-  margin: 0px auto;
+	max-width: 768px;
+	padding-left: 24px;
+	padding-right: 24px;
+	margin: 0px auto;
 }
 
 /* .hotkey-search-menu {
@@ -253,12 +253,12 @@
 } */
 
 #keyboard-component .hotkey-search-container {
-  display: block;
-  padding: 0px;
-  margin-top: 0px;
-  margin-bottom: 0px;
-  position: relative;
-  flex-grow: 2;
+	display: block;
+	padding: 0px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	position: relative;
+	flex-grow: 2;
 }
 
 /* #keyboard-component.xs .hotkey-search-container { */
@@ -268,260 +268,260 @@
 /* } */
 
 .search-wrapper {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  /* background: var(--background-modifier-form-field); */
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
-  color: var(--text-normal);
-  border-radius: 4px;
-  padding: 8px 14px;
-  margin-bottom: 12px;
-  margin-top: 20px;
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	/* background: var(--background-modifier-form-field); */
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	border-radius: 4px;
+	padding: 8px 14px;
+	margin-bottom: 12px;
+	margin-top: 20px;
 }
 
 .search-wrapper.is-focused {
-  /* background: var(--color-d-blacker); */
-  border: 1px solid var(--interactive-accent);
-  box-shadow: 0px 0px 0px 3px var(--color-d-gray-60);
+	/* background: var(--color-d-blacker); */
+	border: 1px solid var(--interactive-accent);
+	box-shadow: 0px 0px 0px 3px var(--color-d-gray-60);
 }
 
 .meta-search-wrapper {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	gap: 6px;
 }
 
 .modifiers-wrapper {
-  display: flex;
-  width: fit-content;
-  flex-direction: row;
-  flex-wrap: wrap;
-  flex-shrink: 1;
-  align-content: center;
+	display: flex;
+	width: fit-content;
+	flex-direction: row;
+	flex-wrap: wrap;
+	flex-shrink: 1;
+	align-content: center;
 }
 
 kbd.modifier {
-  padding: 2px 6px;
-  margin-right: 4px;
-  border: 1px solid var(--indentation-guide);
-  background-color: var(--background-secondary-alt);
-  cursor: pointer;
-  transition: background-color 0.5s ease;
+	padding: 2px 6px;
+	margin-right: 4px;
+	border: 1px solid var(--indentation-guide);
+	background-color: var(--background-secondary-alt);
+	cursor: pointer;
+	transition: background-color 0.5s ease;
 }
 
 kbd.modifier:hover {
-  background-color: var(--interactive-hover);
+	background-color: var(--interactive-hover);
 }
 
 /* Align search modifier chips with command list hotkey chips */
 .modifiers-wrapper .setting-hotkey {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 4px;
-  margin-bottom: 2px; /* allow wrap with small vertical spacing */
-  cursor: pointer; /* keep clickable behavior in search bar */
+	display: inline-flex;
+	align-items: center;
+	margin-right: 4px;
+	margin-bottom: 2px; /* allow wrap with small vertical spacing */
+	cursor: pointer; /* keep clickable behavior in search bar */
 }
 
 .modifiers-wrapper kbd.modifier:last-child {
-  margin-right: 12px;
+	margin-right: 12px;
 }
 
 #keyboard-component .hotkey-search-container input {
-  height: 40px;
-  width: 100%;
-  font-size: 16px;
-  padding: unset;
-  margin-top: 0px;
-  margin-bottom: 0px;
-  /* padding-bottom: 2px; */
-  padding-right: 48px;
-  border: none !important;
-  border-radius: unset;
-  background: unset;
-  color: var(--text-normal);
-  box-shadow: unset;
+	height: 40px;
+	width: 100%;
+	font-size: 16px;
+	padding: unset;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	/* padding-bottom: 2px; */
+	padding-right: 48px;
+	border: none !important;
+	border-radius: unset;
+	background: unset;
+	color: var(--text-normal);
+	box-shadow: unset;
 }
 
 /* Group by plugin view */
 .plugin-group {
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  margin-bottom: 10px;
-  background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	margin-bottom: 10px;
+	background: var(--background-secondary);
 }
 
 .plugin-group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  font-weight: 600;
-  cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	font-weight: 600;
+	cursor: pointer;
 }
 
 .plugin-group-header .plugin-name {
-  flex: 1 1 auto;
+	flex: 1 1 auto;
 }
 
 .plugin-group-header .plugin-meta {
-  font-weight: 400;
+	font-weight: 400;
 }
 
 /* Generic chevron rotation helper */
 .chevron {
-  display: inline-flex;
-  transform: rotate(0deg); /* base: down */
-  transition: transform 120ms ease;
+	display: inline-flex;
+	transform: rotate(0deg); /* base: down */
+	transition: transform 120ms ease;
 }
 .chevron.is-collapsed {
-  /* closed: point right */
-  transform: rotate(270deg);
+	/* closed: point right */
+	transform: rotate(270deg);
 }
 .chevron.is-open-up {
-  /* open: rotate 270deg CW to point up */
-  transform: rotate(540deg);
+	/* open: rotate 270deg CW to point up */
+	transform: rotate(540deg);
 }
 
 /* Keep explicit scope for plugin groups for clarity (same values) */
 .plugin-group-header .chevron {
-  display: inline-flex;
-  transform: rotate(0deg);
-  transition: transform 120ms ease;
+	display: inline-flex;
+	transform: rotate(0deg);
+	transition: transform 120ms ease;
 }
 .plugin-group-header .chevron.is-collapsed {
-  transform: rotate(-90deg);
+	transform: rotate(-90deg);
 }
 
 .plugin-group-header.is-builtin .plugin-name::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--interactive-accent);
-  margin-right: 6px;
-  vertical-align: middle;
+	content: "";
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	margin-right: 6px;
+	vertical-align: middle;
 }
 
 .plugin-badge.built-in {
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
-  color: var(--text-muted);
-  border-radius: 4px;
-  font-size: 10px;
-  padding: 0 4px;
-  text-transform: uppercase;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	border-radius: 4px;
+	font-size: 10px;
+	padding: 0 4px;
+	text-transform: uppercase;
 }
 
 .plugin-group-body {
-  padding: 0 10px 0 26px;
+	padding: 0 10px 0 26px;
 }
 
 /* Reduce left padding on extra-small/mobile to save space */
 #keyboard-component.is-mobile .plugin-group-body {
-  padding-left: 10px;
+	padding-left: 10px;
 }
 
 /* Slightly smaller command text on extra-small panes */
 #keyboard-component.is-mobile
-  .hotkey-list-container
-  .setting-item
-  .setting-item-name {
-  font-size: 13px;
+	.hotkey-list-container
+	.setting-item
+	.setting-item-name {
+	font-size: 13px;
 }
 #keyboard-component.is-mobile .hotkey-list-container .setting-item-info {
-  font-size: 12px;
+	font-size: 12px;
 }
 
 /* Mobile: keyboard surface takes full width; grid scrolls horizontally */
 #keyboard-component.is-mobile .keyboard-panel .keyboard-surface {
-  max-width: 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
+	max-width: 100% !important;
+	width: 100% !important;
+	min-width: 0 !important;
 }
 #keyboard-component.is-mobile #keyboard-layout {
-  width: 100%;
+	width: 100%;
 }
 
 /* Compact rows inside groups */
 .setting-item.compact {
-  padding: 6px 0;
-  margin: 0;
-  border: none;
+	padding: 6px 0;
+	margin: 0;
+	border: none;
 }
 
 .plugin-group-body .setting-item.compact + .setting-item.compact {
-  border-top: 1px solid var(--background-modifier-border);
+	border-top: 1px solid var(--background-modifier-border);
 }
 
 .plugin-groups-toolbar {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin: 6px 0 10px;
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin: 6px 0 10px;
 }
 
 .plugin-groups-toolbar .btn-filter {
-  height: 32px;
-  padding: 2px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-modifier-form-field);
-  color: var(--text-muted);
+	height: 32px;
+	padding: 2px 10px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-modifier-form-field);
+	color: var(--text-muted);
 }
 
 .plugin-groups-toolbar .btn-filter:hover,
 .plugin-groups-toolbar .btn-filter:focus-visible {
-  color: var(--text-normal);
-  border-color: var(--interactive-accent);
+	color: var(--text-normal);
+	border-color: var(--interactive-accent);
 }
 
 #keyboard-component .hotkey-search-container div.icon {
-  display: flex;
-  align-content: center;
-  justify-content: center;
+	display: flex;
+	align-content: center;
+	justify-content: center;
 }
 
 /* Normalize meta search action buttons (keyboard listener, clear) */
 .meta-search-wrapper .icon {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: var(--background-modifier-form-field);
-  color: var(--text-faint);
+	width: 28px;
+	height: 28px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-modifier-form-field);
+	color: var(--text-faint);
 }
 .meta-search-wrapper .icon:hover,
 .meta-search-wrapper .icon:focus-visible {
-  border-color: var(--interactive-accent);
-  color: var(--text-normal);
+	border-color: var(--interactive-accent);
+	color: var(--text-normal);
 }
 
 .keyboard-icon {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 .keyboard-icon:hover {
-  opacity: 1;
+	opacity: 1;
 }
 
 .keyboard-icon:pressed {
-  opacity: 1;
+	opacity: 1;
 }
 
 .keyboard-icon.pulse {
-  color: var(--text-error);
-  box-shadow: 0 0 0 0 rgba(10, 228, 112, 0.5);
+	color: var(--text-error);
+	box-shadow: 0 0 0 0 rgba(10, 228, 112, 0.5);
 }
 
 /* .meta-search-indicator .inner-circle {
@@ -536,36 +536,36 @@ kbd.modifier:hover {
 } */
 
 .pulse {
-  animation: pulse-animation 1s infinite;
+	animation: pulse-animation 1s infinite;
 }
 
 @keyframes pulse-animation {
-  0% {
-    box-shadow: 0 0 0 0px rgba(10, 228, 112, 0.5);
-  }
-  100% {
-    box-shadow: 0 0 0 10px rgba(183, 38, 38, 0);
-  }
+	0% {
+		box-shadow: 0 0 0 0px rgba(10, 228, 112, 0.5);
+	}
+	100% {
+		box-shadow: 0 0 0 10px rgba(183, 38, 38, 0);
+	}
 }
 
 #keyboard-component .hotkey-search-container .search-input-clear-button {
-  position: absolute;
-  right: 0px;
-  top: -50% !important;
-  transform: translate(-50%, -50%);
-  top: 18px;
-  color: var(--text-faint);
-  cursor: var(--cursor);
-  background-color: transparent;
+	position: absolute;
+	right: 0px;
+	top: -50% !important;
+	transform: translate(-50%, -50%);
+	top: 18px;
+	color: var(--text-faint);
+	cursor: var(--cursor);
+	background-color: transparent;
 }
 
 .clear-icon {
-  color: var(--text-faint);
-  cursor: var(--cursor);
+	color: var(--text-faint);
+	cursor: var(--cursor);
 }
 
 .clear-icon:hover {
-  color: var(--text-error);
+	color: var(--text-error);
 }
 
 /* #keyboard-component .hotkey-search-container .search-input-clear-button:hover {
@@ -580,70 +580,73 @@ kbd.modifier:hover {
 } */
 
 #hotkey-filter-button {
-  width: fit-content;
-  margin-top: 0px;
-  margin-right: 8px;
-  margin-bottom: 0px;
-  height: 32px;
+	width: fit-content;
+	margin-top: 0px;
+	margin-right: 8px;
+	margin-bottom: 0px;
+	height: 32px;
 }
 
 #hotkey-filter-button:hover {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 #hotkey-filter-button.is-active {
-  color: var(--text-primary);
-  background-color: var(--interactive-accent);
+	color: var(--text-primary);
+	background-color: var(--interactive-accent);
 }
 
 /* Mirror active state for other dropdown buttons */
 #hotkey-view-button.is-active,
 #hotkey-modules-button.is-active {
-  color: var(--text-primary);
-  background-color: var(--interactive-accent);
+	color: var(--text-primary);
+	background-color: var(--interactive-accent);
 }
 
 /* Spacing and sizing for view and modules buttons */
 #hotkey-view-button,
 #hotkey-modules-button {
-  height: 32px;
-  margin-right: 8px;
+	height: 32px;
+	margin-right: 8px;
 }
 
 /* A bit more space before the summary */
 #keyboard-component .community-plugin-search-summary.u-muted {
-  margin-left: 8px;
+	margin-left: 8px;
 }
 
 .hotkey-search-container button {
-  /* height: 40px; */
-  height: fit-content;
-  width: fit-content;
-  flex-shrink: 0;
+	/* height: 40px; */
+	height: fit-content;
+	width: fit-content;
+	flex-shrink: 0;
 }
 
 .popup-filter-menu-container:not(.is-open) {
-  display: none;
+	display: none;
 }
 
 .popup-filter-menu-container {
-  position: absolute;
-  background-color: var(--background-primary-alt);
-  top: calc(100% + 8px);
-  left: 0;
-  outline: 2px solid var(--background-modifier-form-field-highlighted);
-  width: max-content;
-  min-width: 220px;
-  z-index: 150000;
-  border-radius: 6px;
-  border: 1px solid var(--background-modifier-border);
-  padding-left: 16px;
-  padding-top: 12px;
-  padding-right: 16px;
-  padding-bottom: 12px;
-  box-shadow: 0px 45px 18px rgba(5, 5, 5, 0.01),
-    0px 25px 15px rgba(5, 5, 5, 0.03), 0px 11px 11px rgba(5, 5, 5, 0.04),
-    0px 3px 6px rgba(5, 5, 5, 0.05), 0px 0px 0px rgba(5, 5, 5, 0.05);
+	position: absolute;
+	background-color: var(--background-primary-alt);
+	top: calc(100% + 8px);
+	left: 0;
+	outline: 2px solid var(--background-modifier-form-field-highlighted);
+	width: max-content;
+	min-width: 220px;
+	z-index: 150000;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	padding-left: 16px;
+	padding-top: 12px;
+	padding-right: 16px;
+	padding-bottom: 12px;
+	box-shadow:
+		0px 45px 18px rgba(5, 5, 5, 0.01),
+		0px 25px 15px rgba(5, 5, 5, 0.03),
+		0px 11px 11px rgba(5, 5, 5, 0.04),
+		0px 3px 6px rgba(5, 5, 5, 0.05),
+		0px 0px 0px rgba(5, 5, 5, 0.05);
 }
 
 /* .is-mobile .popup-filter-menu-container { */
@@ -663,71 +666,71 @@ kbd.modifier:hover {
 } */
 
 #keyboard-component .community-plugin-search-summary.u-muted {
-  padding-left: 0px;
-  padding-right: 0px;
-  /* width: 100%; */
-  flex-grow: 1;
-  padding-bottom: 0px;
-  border-bottom: none;
-  flex-shrink: 2;
+	padding-left: 0px;
+	padding-right: 0px;
+	/* width: 100%; */
+	flex-grow: 1;
+	padding-bottom: 0px;
+	border-bottom: none;
+	flex-shrink: 2;
 }
 #keyboard-component .community-plugin-search-summary.u-muted span {
-  text-align: center;
+	text-align: center;
 }
 
 /* On extra-small/mobile screens, hide the labels ("keys"/"cmds") to save space */
 #keyboard-component.xs .community-plugin-search-summary .label,
 #keyboard-component.is-mobile .community-plugin-search-summary .label {
-  display: none;
+	display: none;
 }
 
 button#hotkey-refresh-button {
-  background-color: transparent;
-  border: none;
-  margin-right: unset;
-  width: fit-content;
-  box-shadow: none;
-  flex-grow: 0;
-  flex-shrink: 0;
-  padding: 4px;
+	background-color: transparent;
+	border: none;
+	margin-right: unset;
+	width: fit-content;
+	box-shadow: none;
+	flex-grow: 0;
+	flex-shrink: 0;
+	padding: 4px;
 }
 
 button#hotkey-refresh-button.animation-is-active .lucide-refresh-cw {
-  animation-name: rotation;
-  animation-duration: 0.8s;
-  /* ease-in animation timing */
-  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  animation-fill-mode: both;
+	animation-name: rotation;
+	animation-duration: 0.8s;
+	/* ease-in animation timing */
+	animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	animation-fill-mode: both;
 }
 
 button#hotkey-refresh-button:hover {
-  cursor: pointer;
-  color: var(--text-accent);
+	cursor: pointer;
+	color: var(--text-accent);
 }
 
 @keyframes rotation {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 .search-results {
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  padding-bottom: 20px;
-  padding-top: 8px;
-  border-bottom: none;
+	color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	padding-bottom: 20px;
+	padding-top: 8px;
+	border-bottom: none;
 }
 
 #keyboard-component .hotkey-list-container {
-  user-select: text;
-  padding: 0px 0px 64px 0px;
-  width: 100%;
-  overflow: unset;
+	user-select: text;
+	padding: 0px 0px 64px 0px;
+	width: 100%;
+	overflow: unset;
 }
 
 /* .KB-view > .setting-item {
@@ -742,15 +745,15 @@ button#hotkey-refresh-button:hover {
 /* -------------------------------------------------------------- */
 
 #keyboard-component .hotkey-list-container .setting-item {
-  background-color: var(--background-primary);
-  padding-left: 6px;
-  transition: background-color 0.2s ease-in-out;
+	background-color: var(--background-primary);
+	padding-left: 6px;
+	transition: background-color 0.2s ease-in-out;
 }
 
 #keyboard-component .hotkey-list-container .setting-item.is-starred {
-  /* background-color: var(--background-secondary, --color-d-gray-60); */
-  border-left: 3px solid var(--interactive-accent);
-  padding-left: 12px;
+	/* background-color: var(--background-secondary, --color-d-gray-60); */
+	border-left: 3px solid var(--interactive-accent);
+	padding-left: 12px;
 }
 
 /* #keyboard-component .hotkey-list-container .setting-item:hover {
@@ -758,79 +761,81 @@ button#hotkey-refresh-button:hover {
 } */
 
 #keyboard-component.is-mobile .setting-item {
-  flex-direction: column;
-  align-items: flex-start;
+	flex-direction: column;
+	align-items: flex-start;
 }
 
 #keyboard-component .setting-item-info small {
-  color: var(--text-muted);
-  font-size: small;
+	color: var(--text-muted);
+	font-size: small;
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
-  padding-top: 18px;
-  border-top: 1px solid var(--background-modifier-border);
+	padding-top: 18px;
+	border-top: 1px solid var(--background-modifier-border);
 }
 
 #keyboard-component .hotkey-list-container .setting-item:last-child {
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--background-modifier-border);
+	padding-bottom: 18px;
+	border-bottom: 1px solid var(--background-modifier-border);
 }
 
 #keyboard-component.is-mobile .popup-filter-menu-container .setting-item {
-  flex-direction: row;
+	flex-direction: row;
 }
 
 .kbanalizer-setting-item {
-  display: flex;
-  align-items: center;
-  border-top: 1px solid var(--background-modifier-border);
-  padding: 18px 0px 18px 0px;
+	display: flex;
+	align-items: center;
+	border-top: 1px solid var(--background-modifier-border);
+	padding: 18px 0px 18px 0px;
 }
 
 .kbanalizer-setting-item-control {
-  flex: 1 0 auto !important;
-  flex-shrink: 0 !important;
+	flex: 1 0 auto !important;
+	flex-shrink: 0 !important;
 }
 
 .KB-view > .setting-command-hotkeys {
-  flex-shrink: 0 !important;
-  flex: 1 0 auto !important;
+	flex-shrink: 0 !important;
+	flex: 1 0 auto !important;
 }
 
 .kbanalizer-setting-hotkey {
-  min-height: 24px !important;
-  position: relative;
-  font-size: 14px;
-  background-color: var(--background-secondary-alt);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
-  padding: 4px 10px;
-  min-height: 24px;
-  align-self: flex-end;
-  position: relative;
-  transition: background-color, color 0.5s ease;
+	min-height: 24px !important;
+	position: relative;
+	font-size: 14px;
+	background-color: var(--background-secondary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 4px 10px;
+	min-height: 24px;
+	align-self: flex-end;
+	position: relative;
+	transition:
+		background-color,
+		color 0.5s ease;
 }
 
 .kbanalizer-setting-hotkey:hover {
-  background-color: var(--interactive-hover);
-  color: var(--text-normal);
+	background-color: var(--interactive-hover);
+	color: var(--text-normal);
 }
 
 .kbanalizer-setting-hotkey.is-customized {
-  /* background-color: var(--background-secondary-alt); */
-  /* color: var(--text-accent); */
-  border: 1px solid var(--interactive-accent);
+	/* background-color: var(--background-secondary-alt); */
+	/* color: var(--text-accent); */
+	border: 1px solid var(--interactive-accent);
 }
 
 .kbanalizer-setting-hotkey.is-duplicate {
-  cursor: pointer;
-  color: var(--text-normal);
-  background-color: var(--background-modifier-error);
+	cursor: pointer;
+	color: var(--text-normal);
+	background-color: var(--background-modifier-error);
 }
 
 .kb-analizer-hotkey-list-container {
-  padding-right: 0px !important;
+	padding-right: 0px !important;
 }
 
 /* ----------- */
@@ -840,9 +845,9 @@ button#hotkey-refresh-button:hover {
 /* ----------- */
 
 .svelte-keyboard {
-  width: 100%;
-  height: 100%;
-  /* transform: scale(0.5); */
+	width: 100%;
+	height: 100%;
+	/* transform: scale(0.5); */
 }
 
 /* :global(.svelte-keyboard:nth-last-child(1)) {
@@ -850,40 +855,40 @@ button#hotkey-refresh-button:hover {
 } */
 
 .svelte-keyboard button.key-- {
-  background: transparent !important;
-  background-color: transparent;
-  user-select: none;
-  background-color: unset !important;
-  color: unset !important;
-  -moz-user-select: none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -o-user-select: none;
+	background: transparent !important;
+	background-color: transparent;
+	user-select: none;
+	background-color: unset !important;
+	color: unset !important;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
 }
 
 .svelte-keyboard button.key--.active {
-  background: transparent;
+	background: transparent;
 }
 
 .svelte-keyboard button.key {
-  padding: 4px 16px;
-  border-radius: 4px;
-  box-sizing: border-box;
-  font-size: 12px;
-  text-align: center;
-  color: var(--text-normal);
-  margin: 0px 2px;
-  background-color: var(--background-secondary-alt);
+	padding: 4px 16px;
+	border-radius: 4px;
+	box-sizing: border-box;
+	font-size: 12px;
+	text-align: center;
+	color: var(--text-normal);
+	margin: 0px 2px;
+	background-color: var(--background-secondary-alt);
 }
 .svelte-keyboard button.key:hover {
-  background-color: var(--interactive-accent);
+	background-color: var(--interactive-accent);
 }
 .svelte-keyboard button.key:active {
-  background-color: red;
+	background-color: red;
 }
 
 #keyboard {
-  width: 100%;
+	width: 100%;
 }
 
 /* -------------------------------------------------------------- */
@@ -891,40 +896,40 @@ button#hotkey-refresh-button:hover {
 /* -------------------------------------------------------------- */
 
 #keyboard-preview-view {
-  display: flex;
-  justify-content: center;
-  width: 100%;
+	display: flex;
+	justify-content: center;
+	width: 100%;
 }
 
 /* On small widths, allow inner horizontal scrolling and left-align */
 #keyboard-component.xs #keyboard-preview-view,
 #keyboard-component.sm #keyboard-preview-view {
-  justify-content: flex-start;
-  overflow-x: visible;
-  -webkit-overflow-scrolling: touch;
+	justify-content: flex-start;
+	overflow-x: visible;
+	-webkit-overflow-scrolling: touch;
 }
 
 /* grid-template-columns: 3.75fr 0.75fr 1fr; */
 #keyboard-layout {
-  display: grid;
-  position: relative;
-  grid-template-rows: 1fr;
-  gap: 0px 10px;
-  grid-template-areas: 'main other num';
-  background-color: var(--background-modifier-border);
-  border-radius: 0px 0px 12px 12px;
-  border: 1px solid var(--indentation-guide);
-  min-width: 720px;
-  height: 280px;
-  /* margin-top: 16px; */
-  padding: 24px;
+	display: grid;
+	position: relative;
+	grid-template-rows: 1fr;
+	gap: 0px 10px;
+	grid-template-areas: "main other num";
+	background-color: var(--background-modifier-border);
+	border-radius: 0px 0px 12px 12px;
+	border: 1px solid var(--indentation-guide);
+	min-width: 720px;
+	height: 280px;
+	/* margin-top: 16px; */
+	padding: 24px;
 }
 
 .sm #keyboard-layout,
 .xs #keyboard-layout {
-  /* Keep intrinsic min width for horizontal scroll inside preview view */
-  border-radius: 0px;
-  margin-top: 0px;
+	/* Keep intrinsic min width for horizontal scroll inside preview view */
+	border-radius: 0px;
+	margin-top: 0px;
 }
 
 /* #keyboard-layout .main {
@@ -974,11 +979,11 @@ button#hotkey-refresh-button:hover {
 } */
 
 :root {
-  --font-scale-0: 12px;
-  --font-scale-0-5: 14px;
-  --font-scale-1: 16px;
-  --font-scale-2: 18px;
-  --font-scale-3: 20px;
+	--font-scale-0: 12px;
+	--font-scale-0-5: 14px;
+	--font-scale-1: 16px;
+	--font-scale-2: 18px;
+	--font-scale-3: 20px;
 }
 
 /* 

@@ -1,247 +1,245 @@
 <script lang="ts">
-  import { getContext } from 'svelte'
-  import { X } from 'lucide-svelte'
-  import type KeyboardAnalyzerPlugin from '../main'
-  import type { commandEntry } from '../interfaces/Interfaces'
-  import { clickOutside } from '../utils/clickOutside'
+import { getContext } from "svelte";
+import { X } from "lucide-svelte";
+import type KeyboardAnalyzerPlugin from "../main";
+import type { commandEntry } from "../interfaces/Interfaces";
+import { clickOutside } from "../utils/clickOutside";
 
-  interface Props {
-    plugin?: KeyboardAnalyzerPlugin
-    selectedGroupId?: string
-    onClose?: () => void
-  }
+interface Props {
+	plugin?: KeyboardAnalyzerPlugin;
+	selectedGroupId?: string;
+	onClose?: () => void;
+}
 
-  let {
-    plugin = $bindable(),
-    selectedGroupId = $bindable('all'),
-    onClose = $bindable(() => {}),
-  }: Props = $props()
+let {
+	plugin = $bindable(),
+	selectedGroupId = $bindable("all"),
+	onClose = $bindable(() => {}),
+}: Props = $props();
 
-  if (!plugin) {
-    plugin = getContext('keyboard-analyzer-plugin')
-  }
+if (!plugin) {
+	plugin = getContext("keyboard-analyzer-plugin");
+}
 
-  const groupManager = plugin!.groupManager
-  const commandsManager = plugin!.commandsManager
+const groupManager = plugin!.groupManager;
+const commandsManager = plugin!.commandsManager;
 
-  let groups = $derived.by(() => groupManager.getGroups())
+let groups = $derived.by(() => groupManager.getGroups());
 
-  let groupName = $derived.by(
-    () => groupManager.getGroup(selectedGroupId || '')?.name || ''
-  )
-  let editableName = $state('')
-  $effect(() => {
-    editableName = groupName
-  })
-  let commands: commandEntry[] = $derived.by(() =>
-    commandsManager.getGroupCommands(selectedGroupId || '')
-  )
+let groupName = $derived.by(
+	() => groupManager.getGroup(selectedGroupId || "")?.name || "",
+);
+let editableName = $state("");
+$effect(() => {
+	editableName = groupName;
+});
+let commands: commandEntry[] = $derived.by(() =>
+	commandsManager.getGroupCommands(selectedGroupId || ""),
+);
 
-  // Inline "Add command" search (debounced)
-  let cmdSearch = $state('')
-  let cmdSearchOpen = $state(false)
-  let cmdSearchResults: commandEntry[] = $state([])
-  let cmdSearchLimit = 20
-  let cmdSearchInputEl: HTMLInputElement | null = null
-  let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null
+// Inline "Add command" search (debounced)
+let cmdSearch = $state("");
+let cmdSearchOpen = $state(false);
+let cmdSearchResults: commandEntry[] = $state([]);
+let cmdSearchLimit = 20;
+let cmdSearchInputEl: HTMLInputElement | null = null;
+let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null;
 
-  function formatFirstHotkey(entry: commandEntry): string {
-    const hk = entry.hotkeys?.[0]
-    if (!hk) return ''
-    const mods = (
-      Array.isArray(hk.modifiers)
-        ? hk.modifiers
-        : String(hk.modifiers).split(',')
-    ) as string[]
-    const modsStr = mods.filter(Boolean).join('+')
-    return modsStr ? modsStr + '+' + (hk.key || '') : hk.key || ''
-  }
+function formatFirstHotkey(entry: commandEntry): string {
+	const hk = entry.hotkeys?.[0];
+	if (!hk) return "";
+	const mods = (
+		Array.isArray(hk.modifiers) ? hk.modifiers : String(hk.modifiers).split(",")
+	) as string[];
+	const modsStr = mods.filter(Boolean).join("+");
+	return modsStr ? modsStr + "+" + (hk.key || "") : hk.key || "";
+}
 
-  function runCommandSearch() {
-    const term = (cmdSearch || '').trim()
-    if (!term || !selectedGroupId || selectedGroupId === 'all') {
-      cmdSearchResults = []
-      cmdSearchOpen = !!term
-      return
-    }
-    const exclude = new Set<string>((commands || []).map((c) => c.id))
-    const results = commandsManager.searchCommandsByName(term, {
-      excludeIds: exclude,
-      limit: cmdSearchLimit,
-    })
-    cmdSearchResults = results
-    cmdSearchOpen = true
-  }
+function runCommandSearch() {
+	const term = (cmdSearch || "").trim();
+	if (!term || !selectedGroupId || selectedGroupId === "all") {
+		cmdSearchResults = [];
+		cmdSearchOpen = !!term;
+		return;
+	}
+	const exclude = new Set<string>((commands || []).map((c) => c.id));
+	const results = commandsManager.searchCommandsByName(term, {
+		excludeIds: exclude,
+		limit: cmdSearchLimit,
+	});
+	cmdSearchResults = results;
+	cmdSearchOpen = true;
+}
 
-  function onCmdSearchInput() {
-    if (cmdSearchDebounce) clearTimeout(cmdSearchDebounce)
-    cmdSearchDebounce = setTimeout(runCommandSearch, 180)
-  }
+function onCmdSearchInput() {
+	if (cmdSearchDebounce) clearTimeout(cmdSearchDebounce);
+	cmdSearchDebounce = setTimeout(runCommandSearch, 180);
+}
 
-  function clearCmdSearch() {
-    cmdSearch = ''
-    cmdSearchResults = []
-    cmdSearchOpen = false
-    cmdSearchInputEl?.focus()
-  }
+function clearCmdSearch() {
+	cmdSearch = "";
+	cmdSearchResults = [];
+	cmdSearchOpen = false;
+	cmdSearchInputEl?.focus();
+}
 
-  function pickSearchResult(entry: commandEntry) {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    // Add to current group and remove from local results
-    groupManager.addCommandToGroup(selectedGroupId, entry.id)
-    cmdSearchResults = cmdSearchResults.filter((e) => e.id !== entry.id)
-    // keep dropdown open with remaining results
-  }
+function pickSearchResult(entry: commandEntry) {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	// Add to current group and remove from local results
+	groupManager.addCommandToGroup(selectedGroupId, entry.id);
+	cmdSearchResults = cmdSearchResults.filter((e) => e.id !== entry.id);
+	// keep dropdown open with remaining results
+}
 
-  function handleCmdSearchKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      e.stopPropagation()
-      e.preventDefault()
-      if (cmdSearchOpen) {
-        cmdSearchOpen = false
-        return
-      }
-      clearCmdSearch()
-    }
-  }
+function handleCmdSearchKeydown(e: KeyboardEvent) {
+	if (e.key === "Escape") {
+		e.stopPropagation();
+		e.preventDefault();
+		if (cmdSearchOpen) {
+			cmdSearchOpen = false;
+			return;
+		}
+		clearCmdSearch();
+	}
+}
 
-  // Behavior toggle (default vs dynamic)
-  let behavior = $derived.by(() =>
-    !selectedGroupId || selectedGroupId === 'all'
-      ? 'default'
-      : groupManager.getGroupBehavior(selectedGroupId) || 'default'
-  )
-  function setBehavior(mode: 'default' | 'dynamic') {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    groupManager.setGroupBehavior(selectedGroupId, mode)
-  }
+// Behavior toggle (default vs dynamic)
+let behavior = $derived.by(() =>
+	!selectedGroupId || selectedGroupId === "all"
+		? "default"
+		: groupManager.getGroupBehavior(selectedGroupId) || "default",
+);
+function setBehavior(mode: "default" | "dynamic") {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	groupManager.setGroupBehavior(selectedGroupId, mode);
+}
 
-  // Actions for defaults vs current
-  function useCurrentFiltersAsDefaults() {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    const g = groupManager.getGroup(selectedGroupId)
-    if (!g) return
-    groupManager.setGroupDefaults(selectedGroupId, {
-      filters: g.filterSettings as any,
-    })
-  }
-  function resetFiltersToDefaults() {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    groupManager.applyDefaultsToGroupFilters(selectedGroupId)
-  }
-  // Register per-group command toggle
-  let registerCommand = $derived.by(() => {
-    if (!selectedGroupId || selectedGroupId === 'all') return false
-    const g = groupManager.getGroup(selectedGroupId)
-    return !!g?.registerCommand
-  })
-  function setRegisterCommand(val: boolean) {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    groupManager.setGroupRegisterCommand(selectedGroupId, !!val)
-    ;(plugin as any)?.syncPerGroupCommands?.()
-  }
+// Actions for defaults vs current
+function useCurrentFiltersAsDefaults() {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	const g = groupManager.getGroup(selectedGroupId);
+	if (!g) return;
+	groupManager.setGroupDefaults(selectedGroupId, {
+		filters: g.filterSettings as any,
+	});
+}
+function resetFiltersToDefaults() {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	groupManager.applyDefaultsToGroupFilters(selectedGroupId);
+}
+// Register per-group command toggle
+let registerCommand = $derived.by(() => {
+	if (!selectedGroupId || selectedGroupId === "all") return false;
+	const g = groupManager.getGroup(selectedGroupId);
+	return !!g?.registerCommand;
+});
+function setRegisterCommand(val: boolean) {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	groupManager.setGroupRegisterCommand(selectedGroupId, !!val);
+	(plugin as any)?.syncPerGroupCommands?.();
+}
 
-  // Drag & drop state for commands
-  let dragIndex: number | null = $state(null)
-  let hoverIndex: number | null = $state(null)
-  let hoverAfter: boolean = $state(false)
+// Drag & drop state for commands
+let dragIndex: number | null = $state(null);
+let hoverIndex: number | null = $state(null);
+let hoverAfter: boolean = $state(false);
 
-  function handleDragStart(index: number) {
-    dragIndex = index
-  }
-  function handleDragOver(event: DragEvent, index: number) {
-    event.preventDefault()
-    const target = event.currentTarget as HTMLElement
-    const rect = target.getBoundingClientRect()
-    const after = event.clientY > rect.top + rect.height / 2
-    hoverIndex = index
-    hoverAfter = after
-  }
-  function handleDragLeave() {
-    hoverIndex = null
-  }
-  function handleDrop() {
-    if (dragIndex === null || selectedGroupId === 'all' || !selectedGroupId)
-      return
-    if (hoverIndex === null) {
-      dragIndex = null
-      return
-    }
-    let toIndex = hoverIndex + (hoverAfter ? 1 : 0)
-    if (dragIndex < toIndex) toIndex -= 1 // adjust for removal
-    if (toIndex < 0) toIndex = 0
-    groupManager.moveCommandInGroup(selectedGroupId, dragIndex, toIndex)
-    dragIndex = null
-    hoverIndex = null
-  }
+function handleDragStart(index: number) {
+	dragIndex = index;
+}
+function handleDragOver(event: DragEvent, index: number) {
+	event.preventDefault();
+	const target = event.currentTarget as HTMLElement;
+	const rect = target.getBoundingClientRect();
+	const after = event.clientY > rect.top + rect.height / 2;
+	hoverIndex = index;
+	hoverAfter = after;
+}
+function handleDragLeave() {
+	hoverIndex = null;
+}
+function handleDrop() {
+	if (dragIndex === null || selectedGroupId === "all" || !selectedGroupId)
+		return;
+	if (hoverIndex === null) {
+		dragIndex = null;
+		return;
+	}
+	let toIndex = hoverIndex + (hoverAfter ? 1 : 0);
+	if (dragIndex < toIndex) toIndex -= 1; // adjust for removal
+	if (toIndex < 0) toIndex = 0;
+	groupManager.moveCommandInGroup(selectedGroupId, dragIndex, toIndex);
+	dragIndex = null;
+	hoverIndex = null;
+}
 
-  // Drag & drop state for groups + reorder mode
-  let gDragIndex: number | null = $state(null)
-  let gHoverIndex: number | null = $state(null)
-  let gHoverAfter: boolean = $state(false)
-  let reorderMode: boolean = $state(false)
-  function handleGroupDragStart(index: number) {
-    gDragIndex = index
-  }
-  function handleGroupDragOver(event: DragEvent, index: number) {
-    event.preventDefault()
-    const target = event.currentTarget as HTMLElement
-    const rect = target.getBoundingClientRect()
-    gHoverIndex = index
-    gHoverAfter = event.clientY > rect.top + rect.height / 2
-  }
-  function handleGroupDragLeave() {
-    gHoverIndex = null
-  }
-  function handleGroupDrop() {
-    if (gDragIndex === null || gHoverIndex === null) {
-      gDragIndex = null
-      gHoverIndex = null
-      return
-    }
-    let toIndex = gHoverIndex + (gHoverAfter ? 1 : 0)
-    if (gDragIndex < toIndex) toIndex -= 1
-    if (toIndex < 0) toIndex = 0
-    if (toIndex !== gDragIndex) groupManager.moveGroup(gDragIndex, toIndex)
-    gDragIndex = null
-    gHoverIndex = null
-  }
+// Drag & drop state for groups + reorder mode
+let gDragIndex: number | null = $state(null);
+let gHoverIndex: number | null = $state(null);
+let gHoverAfter: boolean = $state(false);
+let reorderMode: boolean = $state(false);
+function handleGroupDragStart(index: number) {
+	gDragIndex = index;
+}
+function handleGroupDragOver(event: DragEvent, index: number) {
+	event.preventDefault();
+	const target = event.currentTarget as HTMLElement;
+	const rect = target.getBoundingClientRect();
+	gHoverIndex = index;
+	gHoverAfter = event.clientY > rect.top + rect.height / 2;
+}
+function handleGroupDragLeave() {
+	gHoverIndex = null;
+}
+function handleGroupDrop() {
+	if (gDragIndex === null || gHoverIndex === null) {
+		gDragIndex = null;
+		gHoverIndex = null;
+		return;
+	}
+	let toIndex = gHoverIndex + (gHoverAfter ? 1 : 0);
+	if (gDragIndex < toIndex) toIndex -= 1;
+	if (toIndex < 0) toIndex = 0;
+	if (toIndex !== gDragIndex) groupManager.moveGroup(gDragIndex, toIndex);
+	gDragIndex = null;
+	gHoverIndex = null;
+}
 
-  function handleRename() {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    const next = (editableName || '').trim()
-    if (!next) return
-    if (next !== groupName) {
-      groupManager.renameGroup(selectedGroupId, next)
-      ;(plugin as any)?.syncPerGroupCommands?.()
-    }
-  }
+function handleRename() {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	const next = (editableName || "").trim();
+	if (!next) return;
+	if (next !== groupName) {
+		groupManager.renameGroup(selectedGroupId, next);
+		(plugin as any)?.syncPerGroupCommands?.();
+	}
+}
 
-  function handleDelete() {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    const ok = confirm('Delete this group? This cannot be undone.')
-    if (!ok) return
-    groupManager.removeGroup(selectedGroupId)
-    ;(plugin as any)?.syncPerGroupCommands?.()
-    onClose()
-  }
+function handleDelete() {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	const ok = confirm("Delete this group? This cannot be undone.");
+	if (!ok) return;
+	groupManager.removeGroup(selectedGroupId);
+	(plugin as any)?.syncPerGroupCommands?.();
+	onClose();
+}
 
-  function handleCreate() {
-    const id = groupManager.createGroup('New Group')
-    if (id) {
-      selectedGroupId = id
-    }
-    ;(plugin as any)?.syncPerGroupCommands?.()
-  }
+function handleCreate() {
+	const id = groupManager.createGroup("New Group");
+	if (id) {
+		selectedGroupId = id;
+	}
+	(plugin as any)?.syncPerGroupCommands?.();
+}
 
-  function handleDuplicate() {
-    if (!selectedGroupId || selectedGroupId === 'all') return
-    const id = groupManager.duplicateGroup(selectedGroupId)
-    if (id) {
-      selectedGroupId = id
-    }
-    ;(plugin as any)?.syncPerGroupCommands?.()
-  }
+function handleDuplicate() {
+	if (!selectedGroupId || selectedGroupId === "all") return;
+	const id = groupManager.duplicateGroup(selectedGroupId);
+	if (id) {
+		selectedGroupId = id;
+	}
+	(plugin as any)?.syncPerGroupCommands?.();
+}
 </script>
 
 <div class="kb-modal-backdrop" onclick={onClose}></div>

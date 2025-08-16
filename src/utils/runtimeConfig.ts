@@ -1,54 +1,53 @@
 // Centralized runtime configuration for cross-module flags
 // These settings can be updated from plugin settings and read by utils/components.
 
-export type EmulatedOS = 'none' | 'windows' | 'macos' | 'linux'
+export type EmulatedOS = "none" | "windows" | "macos" | "linux";
 
-let devLoggingEnabled = false
-let logLevel: 'debug' | 'info' | 'warn' | 'error' = 'debug'
-let emulatedOS: EmulatedOS = 'none'
+let devLoggingEnabled = false;
+let logLevel: "debug" | "info" | "warn" | "error" = "debug";
+let emulatedOS: EmulatedOS = "none";
 
 export function setDevLoggingEnabled(enabled: boolean) {
-  devLoggingEnabled = !!enabled
+	devLoggingEnabled = !!enabled;
 }
 
 export function isDevLoggingEnabled(): boolean {
-  return devLoggingEnabled
+	return devLoggingEnabled;
 }
 
 export function setLogLevel(level: typeof logLevel) {
-  logLevel = level
+	logLevel = level;
 }
 
 export function getLogLevel() {
-  return logLevel
+	return logLevel;
 }
 
 export function setEmulatedOS(os: EmulatedOS) {
-  emulatedOS = os
+	emulatedOS = os;
 }
 
 export function getEmulatedOS(): EmulatedOS {
-  return emulatedOS
+	return emulatedOS;
 }
 
 export function isMacOS(): boolean {
-  if (emulatedOS === 'macos') return true
-  if (emulatedOS === 'windows' || emulatedOS === 'linux') return false
-  // none → let platform decide at call site (fallbacks use real env when available)
-  // Since not all files can import Obsidian's Platform reliably here, callers
-  // should provide their own fallback when emulation is 'none'.
-  return false
+	if (emulatedOS === "macos") return true;
+	if (emulatedOS === "windows" || emulatedOS === "linux") return false;
+	// none → let platform decide at call site (fallbacks use real env when available)
+	// Since not all files can import Obsidian's Platform reliably here, callers
+	// should provide their own fallback when emulation is 'none'.
+	return false;
 }
 
 export function isWindows(): boolean {
-  if (emulatedOS === 'windows') return true
-  if (emulatedOS === 'macos' || emulatedOS === 'linux') return false
-  return false
+	if (emulatedOS === "windows") return true;
+	if (emulatedOS === "macos" || emulatedOS === "linux") return false;
+	return false;
 }
 
 export function isLinux(): boolean {
-  if (emulatedOS === 'linux') return true
-  if (emulatedOS === 'macos' || emulatedOS === 'windows') return false
-  return false
+	if (emulatedOS === "linux") return true;
+	if (emulatedOS === "macos" || emulatedOS === "windows") return false;
+	return false;
 }
-
