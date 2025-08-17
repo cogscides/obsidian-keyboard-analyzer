@@ -16,6 +16,18 @@ interface Props {
 	listenToggle?: number;
 }
 
+function handleGlobalKeyup(e: KeyboardEvent) {
+  if (!rootEl || !keyboardListenerIsActive) return;
+  const target = e.target as Node | null;
+  const isInside = target ? rootEl.contains(target) : false;
+  if (!isInside) return;
+  e.preventDefault();
+  e.stopPropagation();
+  try {
+    activeKeysStore.handlePhysicalKeyUp(e);
+  } catch {}
+}
+
 let {
 	plugin,
 	anchorEl = $bindable(null),
@@ -82,6 +94,7 @@ function recomputePosition() {
 	try {
 		const el = rootEl;
 		if (!el || !anchorEl) return;
+		if (isResizing) return;
 		const rect = anchorEl.getBoundingClientRect();
 		const viewportH =
 			window.innerHeight || document.documentElement.clientHeight;
@@ -124,6 +137,7 @@ function onLeftResizeDown(e: PointerEvent) {
 		(e.target as Element).setPointerCapture?.(e.pointerId);
 	} catch {}
 	resizingLeft = true;
+	isResizing = true;
 	startX = e.clientX;
 	startLeft = coords.left;
 	startWidth = coords.width;
@@ -161,6 +175,7 @@ function onLeftResizeMove(e: PointerEvent) {
 function onLeftResizeUp() {
 	if (!resizingLeft) return;
 	resizingLeft = false;
+	isResizing = false;
 	suppressOutsideCloseUntil = Date.now() + 150;
 	window.removeEventListener("pointermove", onLeftResizeMove, true);
 	window.removeEventListener("pointerup", onLeftResizeUp, true);
@@ -181,6 +196,7 @@ function onBottomResizeDown(e: PointerEvent) {
 		(e.target as Element).setPointerCapture?.(e.pointerId);
 	} catch {}
 	resizingBottom = true;
+	isResizing = true;
 	startY = e.clientY;
 	startHeight = coords.maxHeight;
 	suppressOutsideCloseUntil = Date.now() + 300;
@@ -206,6 +222,7 @@ function onBottomResizeMove(e: PointerEvent) {
 function onBottomResizeUp() {
 	if (!resizingBottom) return;
 	resizingBottom = false;
+	isResizing = false;
 	suppressOutsideCloseUntil = Date.now() + 150;
 	window.removeEventListener("pointermove", onBottomResizeMove, true);
 	window.removeEventListener("pointerup", onBottomResizeUp, true);
@@ -293,6 +310,14 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 		return;
 	}
 
+	// If typing in the search input, use arrows to move selection
+	if (target === searchInputEl && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+		e.preventDefault();
+		e.stopPropagation();
+		moveSelection(e.key === "ArrowDown" ? 1 : -1);
+		return;
+	}
+
 	// Keyboard navigation and close behavior
 	if (e.key === "Escape") {
 		e.preventDefault();
@@ -325,6 +350,17 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 		runSelectedCommand();
 		return;
 	}
+
+	// Local physical listening: capture when toggled on
+	if (keyboardListenerIsActive) {
+		e.preventDefault();
+		e.stopPropagation();
+		try {
+			activeKeysStore.handlePhysicalKeyDown(e);
+			refilter();
+		} catch {}
+		return;
+	}
 }
 
 function handleListClick(e: MouseEvent) {
@@ -349,6 +385,7 @@ function handleListClick(e: MouseEvent) {
 
 const onScroll = () => recomputePosition();
 let ro: ResizeObserver | null = null;
+let isResizing = false;
 
 onMount(() => {
 	refilter();
@@ -359,8 +396,12 @@ onMount(() => {
 		ro = new ResizeObserver(() => recomputePosition());
 		ro.observe(rootEl);
 	}
-	// Initial focus on first command
-	queueUpdateSelection(true);
+	// Capture keyboard at capture phase while popover is open
+	window.addEventListener("keydown", handleGlobalKeydown, true);
+	window.addEventListener("keyup", handleGlobalKeyup, true);
+	// Focus search input on open; keep list selection navigable via arrows
+	queueMicrotask(() => searchInputEl?.focus());
+	queueUpdateSelection(false);
 });
 
 onDestroy(() => {
@@ -368,6 +409,8 @@ onDestroy(() => {
 	document.removeEventListener("scroll", onScroll, true);
 	ro?.disconnect();
 	ro = null;
+	window.removeEventListener("keydown", handleGlobalKeydown, true);
+	window.removeEventListener("keyup", handleGlobalKeyup, true);
 	window.removeEventListener("pointermove", onLeftResizeMove, true);
 	window.removeEventListener("pointerup", onLeftResizeUp, true);
 	window.removeEventListener("pointermove", onBottomResizeMove, true);
@@ -395,7 +438,6 @@ setContext("activeKeysStore", activeKeysStore);
   role="dialog"
   aria-label="Quick View — Commands"
   bind:this={rootEl}
-  onkeydown={handleGlobalKeydown}
 >
   <!-- Left resize handle -->
   <div
@@ -430,7 +472,6 @@ setContext("activeKeysStore", activeKeysStore);
     role="listbox"
     aria-label="Command results"
     tabindex="0"
-    onkeydown={handleGlobalKeydown}
     onclick={handleListClick}
     bind:this={listContainer}
   >
@@ -474,7 +515,7 @@ setContext("activeKeysStore", activeKeysStore);
     flex: 1 1 auto;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 6px 8px;
+    padding: 4px 6px;
   }
 
   /* Left resize handle */
@@ -517,6 +558,19 @@ setContext("activeKeysStore", activeKeysStore);
     outline: 2px solid var(--interactive-accent);
     outline-offset: -2px;
     border-radius: 6px;
+  }
+
+  /* Compact list styles inside popover */
+  :global(.qv-popover .kbanalizer-setting-item.setting-item) {
+    padding: 4px 6px;
+    min-height: unset;
+  }
+  :global(.qv-popover .kbanalizer-setting-item .setting-item-name) {
+    font-size: 12.5px;
+    line-height: 1.25;
+  }
+  :global(.qv-popover .kbanalizer-setting-item .setting-command-hotkeys .setting-hotkey) {
+    transform: scale(0.95);
   }
 
   /* Ensure titles truncate instead of forcing horizontal scroll (global for nested component content) */

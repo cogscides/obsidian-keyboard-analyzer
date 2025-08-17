@@ -196,36 +196,36 @@ function RefreshCommands() {
 }
 
 function handleKeyDown(e: KeyboardEvent) {
-	if (e.key === "Escape") {
-		// Close any open menus and deactivate keyboard listener
-		if (viewDropdownOpen || filterIsOpen) {
-			viewDropdownOpen = false;
-			filterIsOpen = false;
-			e.stopPropagation();
-			return;
-		}
-		if (keyboardListenerIsActive) {
-			keyboardListenerIsActive = false;
-			// fall through to allow clearing keys below if any are active
-		}
-		// Clear active key/modifiers if present
-		if (PressedKeysStore.activeKey || PressedKeysStore.activeModifiers.length) {
-			PressedKeysStore.reset();
-			handleSearchInput();
-			e.stopPropagation();
-			e.preventDefault();
-			return;
-		}
-	}
-	if (keyboardListenerIsActive) {
-		// Let the global listener handle physical keys; avoid double-processing
-		e.stopPropagation();
-		e.preventDefault();
-		return;
-	}
-	// Fallback: when listener is off, local handler can still process keys if needed
-	// Re-apply search when hotkey listeners mutate active keys
-	handleSearchInput();
+  if (e.key === 'Escape') {
+    if (viewDropdownOpen || filterIsOpen) {
+      viewDropdownOpen = false;
+      filterIsOpen = false;
+      e.stopPropagation();
+      return;
+    }
+  }
+  // Backspace should pop activeKey/modifiers when text query is empty
+  if (e.key === 'Backspace' && String(search || '').trim() === '') {
+    if (PressedKeysStore.activeKey) {
+      PressedKeysStore.clearActiveKey();
+    } else if (PressedKeysStore.activeModifiers.length > 0) {
+      const next = [...PressedKeysStore.activeModifiers];
+      next.pop();
+      PressedKeysStore.ActiveModifiers = next as unknown as Modifier[];
+    }
+    handleSearchInput();
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+  // When listener is active, let global handler own keys
+  if (keyboardListenerIsActive) {
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
+  // Normal path: apply search for any other key affecting input
+  handleSearchInput();
 }
 
 function handleSearchInput() {
@@ -319,6 +319,7 @@ $effect(() => {
         placeholder="Filter..."
         bind:value={search}
         bind:this={inputHTML}
+        onkeydown={handleKeyDown}
         onfocus={() => (inputIsFocused = true)}
         onblur={() => (inputIsFocused = false)}
         oninput={handleDebouncedInput}

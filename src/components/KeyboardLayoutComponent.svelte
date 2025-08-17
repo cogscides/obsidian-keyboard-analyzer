@@ -1,107 +1,108 @@
 <!-- src/components/KeyboardLayoutComponent.svelte -->
 <script lang="ts">
-import { getContext } from "svelte";
-import KeyboardKey from "./KeyboardKey.svelte";
-import {
-	Coffee as CoffeeIcon,
-	Pin as PinIcon,
-	Settings as SettingsIcon,
-} from "lucide-svelte";
-import type {
-	KeyboardLayout,
-	KeyboardSection,
-	commandEntry,
-} from "../interfaces/Interfaces";
-import type KeyboardAnalyzerPlugin from "../main";
-import type CommandsManager from "../managers/commandsManager";
-import { GroupType } from "../managers/groupManager/groupManager.svelte.ts";
-import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts";
-import type { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
+  import { getContext } from 'svelte'
+  import KeyboardKey from './KeyboardKey.svelte'
+  import {
+    Coffee as CoffeeIcon,
+    Pin as PinIcon,
+    Settings as SettingsIcon,
+    Github as GithubIcon,
+  } from 'lucide-svelte'
+  import type {
+    KeyboardLayout,
+    KeyboardSection,
+    commandEntry,
+  } from '../interfaces/Interfaces'
+  import type KeyboardAnalyzerPlugin from '../main'
+  import type CommandsManager from '../managers/commandsManager'
+  import { GroupType } from '../managers/groupManager/groupManager.svelte.ts'
+  import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
+  import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
 
-interface Props {
-	visibleCommands: commandEntry[];
-	strictModifierMatch?: boolean;
-	selectedGroupID?: string;
-}
+  interface Props {
+    visibleCommands: commandEntry[]
+    strictModifierMatch?: boolean
+    selectedGroupID?: string
+  }
 
-let {
-	visibleCommands = [],
-	strictModifierMatch = false,
-	selectedGroupID = "",
-}: Props = $props();
+  let {
+    visibleCommands = [],
+    strictModifierMatch = false,
+    selectedGroupID = '',
+  }: Props = $props()
 
-const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
-const visualKeyboardManager: VisualKeyboardManager = getContext(
-	"visualKeyboardManager",
-);
-const activeKeysStore: ActiveKeysStore = getContext("activeKeysStore");
-import type SettingsManager from "../managers/settingsManager";
-const settingsManager: SettingsManager = plugin.settingsManager;
-const commandsManager: CommandsManager = plugin.commandsManager;
-let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout);
+  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
+  const visualKeyboardManager: VisualKeyboardManager = getContext(
+    'visualKeyboardManager'
+  )
+  const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  import type SettingsManager from '../managers/settingsManager'
+  const settingsManager: SettingsManager = plugin.settingsManager
+  const commandsManager: CommandsManager = plugin.commandsManager
+  let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
 
-// DEBUGGER
-let _keyClicked = $state("");
+  // DEBUGGER
+  let _keyClicked = $state('')
 
-function calculateSectionColumns(section: KeyboardSection) {
-	return (
-		section.rows.reduce((maxWidth, row) => {
-			const rowWidth = row.reduce((sum, key) => sum + (key.width || 1), 0);
-			return Math.max(maxWidth, rowWidth);
-		}, 0) * 4
-	); // Multiply by 4 to match the original scale
-}
+  function calculateSectionColumns(section: KeyboardSection) {
+    return (
+      section.rows.reduce((maxWidth, row) => {
+        const rowWidth = row.reduce((sum, key) => sum + (key.width || 1), 0)
+        return Math.max(maxWidth, rowWidth)
+      }, 0) * 4
+    ) // Multiply by 4 to match the original scale
+  }
 
-$effect(() => {
-	const commands =
-		heatmapScope === "all"
-			? commandsManager.getCommandsForGroup(GroupType.All)
-			: visibleCommands;
-	// Pass active search context and strict flag so non-matching shortcuts don't affect weights
-	visualKeyboardManager.calculateAndAssignWeights(
-		commands,
-		activeKeysStore.ActiveModifiers,
-		activeKeysStore.ActiveKey,
-		strictModifierMatch,
-	);
-});
+  $effect(() => {
+    const commands =
+      heatmapScope === 'all'
+        ? commandsManager.getCommandsForGroup(GroupType.All)
+        : visibleCommands
+    // Pass active search context and strict flag so non-matching shortcuts don't affect weights
+    visualKeyboardManager.calculateAndAssignWeights(
+      commands,
+      activeKeysStore.ActiveModifiers,
+      activeKeysStore.ActiveKey,
+      strictModifierMatch
+    )
+  })
 
-let gridTemplateColumns = KeyboardObject.sections
-	.map((section) => `${section.gridRatio}fr`)
-	.join(" ");
-let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(" ")}'`;
+  let gridTemplateColumns = KeyboardObject.sections
+    .map((section) => `${section.gridRatio}fr`)
+    .join(' ')
+  let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(' ')}'`
 
-// Calculate max columns for each section
-let sectionColumns = KeyboardObject.sections.reduce(
-	(acc, section) => {
-		acc[section.name] = calculateSectionColumns(section);
-		return acc;
-	},
-	{} as Record<string, number>,
-);
+  // Calculate max columns for each section
+  let sectionColumns = KeyboardObject.sections.reduce(
+    (acc, section) => {
+      acc[section.name] = calculateSectionColumns(section)
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
-// Local UI state for toolbar controls
-let panelCollapsed = $state(
-	Boolean(settingsManager.getSetting("keyboardCollapsed")),
-);
-let isPinned = $state(Boolean(settingsManager.getSetting("pinKeyboardPanel")));
-let heatmapScope: "filtered" | "all" = $state("filtered");
-let devMenuOpen = $state(false);
-let showInspector = $state(false);
-// Reflect live settings values
-const devOptionsEnabled = $derived(
-	Boolean(settingsManager.settings.enableDeveloperOptions),
-);
-let devLoggingEnabled = $derived(
-	Boolean(settingsManager.settings.devLoggingEnabled),
-);
-let emulatedOS = $derived(
-	(settingsManager.settings.emulatedOS || "none") as
-		| "none"
-		| "windows"
-		| "macos"
-		| "linux",
-);
+  // Local UI state for toolbar controls
+  let panelCollapsed = $state(
+    Boolean(settingsManager.getSetting('keyboardCollapsed'))
+  )
+  let isPinned = $state(Boolean(settingsManager.getSetting('pinKeyboardPanel')))
+  let heatmapScope: 'filtered' | 'all' = $state('filtered')
+  let devMenuOpen = $state(false)
+  let showInspector = $state(false)
+  // Reflect live settings values
+  const devOptionsEnabled = $derived(
+    Boolean(settingsManager.settings.enableDeveloperOptions)
+  )
+  let devLoggingEnabled = $derived(
+    Boolean(settingsManager.settings.devLoggingEnabled)
+  )
+  let emulatedOS = $derived(
+    (settingsManager.settings.emulatedOS || 'none') as
+      | 'none'
+      | 'windows'
+      | 'macos'
+      | 'linux'
+  )
 </script>
 
 <div
@@ -164,7 +165,6 @@ let emulatedOS = $derived(
                     oninput={(e: Event) => {
                       const v = (e.currentTarget as HTMLInputElement).checked
                       settingsManager.updateSettings({ devLoggingEnabled: v })
-                      setDevLoggingEnabled(v)
                     }}
                   />
                   <span>Dev logging</span>
@@ -205,7 +205,6 @@ let emulatedOS = $derived(
                       | 'macos'
                       | 'linux'
                     settingsManager.updateSettings({ emulatedOS: val })
-                    setEmulatedOS(val)
                   }}
                 >
                   <option value="none">None</option>
@@ -230,6 +229,19 @@ let emulatedOS = $derived(
       >
         <PinIcon size={16} />
         <span class="pin-label">{isPinned ? 'Unpin' : 'Pin'}</span>
+      </button>
+      <button
+        class="github-badge"
+        onclick={() =>
+          window.open(
+            'https://github.com/cogscides/obsidian-keyboard-analyzer',
+            '_blank'
+          )}
+        aria-label="GitHub repository"
+        title="Open GitHub repository"
+      >
+        <GithubIcon size={16} />
+        <span class="sr-only">GitHub</span>
       </button>
       <button
         class="donation-badge"
@@ -269,7 +281,9 @@ let emulatedOS = $derived(
           <div class="dev-row">
             <span class="k">Raw physical:</span>
             <span class="v">
-              {_raw.physical ? `${_raw.physical.code || '—'} (${_raw.physical.key || ''})` : '—'}
+              {_raw.physical
+                ? `${_raw.physical.code || '—'} (${_raw.physical.key || ''})`
+                : '—'}
             </span>
           </div>
         {/key}
@@ -308,7 +322,8 @@ let emulatedOS = $derived(
               <div class="dev-row">
                 <span class="k">Hotkey {i + 1}:</span>
                 <span class="v">
-                  {(hk.modifiers || []).join(' + ')} {hk.key}
+                  {(hk.modifiers || []).join(' + ')}
+                  {hk.key}
                 </span>
               </div>
             {/each}
@@ -464,6 +479,24 @@ let emulatedOS = $derived(
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
+  }
+
+  .github-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    width: 40px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-modifier-form-field);
+    color: var(--text-normal);
+    cursor: pointer;
+  }
+  .github-badge:hover,
+  .github-badge:focus-visible {
+    border-color: var(--interactive-accent);
+    color: var(--interactive-accent);
   }
 
   /* Developer menu */

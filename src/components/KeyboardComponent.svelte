@@ -10,6 +10,7 @@ import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import logger from "../utils/logger";
 import { convertModifiers } from "../utils/modifierUtils";
 import type ShortcutsView from "../views/ShortcutsView";
+import { VIEW_TYPE_SHORTCUTS_ANALYZER } from "../Constants";
 
 import type CommandsManager from "../managers/commandsManager";
 // Component imports
@@ -45,10 +46,17 @@ setContext("isPhysicalListenerActive", () => keyboardListenerIsActive);
 
 // Always attach listeners; handlers no-op unless listener is active
 const down = (e: KeyboardEvent) => {
-	// Always record raw input for dev inspector
-	activeKeysStore.recordPhysicalRaw(e);
-	// Global UX shortcuts for this view
-	if (isModF(e)) {
+	// Only treat shortcuts as ours when event originates inside this view
+    const insideView = rootEl?.contains(e.target as Node) === true;
+    const focusWithin = !!(rootEl && (rootEl as HTMLElement).matches(':focus-within'));
+    const isActiveView = (() => {
+      try {
+        const v = plugin.app.workspace.activeLeaf?.view as any;
+        return v && typeof v.getViewType === 'function' && v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER;
+      } catch { return false; }
+    })();
+    // Global UX shortcuts for this view (only when this pane is the active view)
+    if (isModF(e) && isActiveView) {
 		e.preventDefault();
 		e.stopPropagation();
 		if (document.activeElement !== input) {
@@ -62,7 +70,7 @@ const down = (e: KeyboardEvent) => {
 		}
 		return;
 	}
-	if (e.key === "Escape") {
+    if (e.key === "Escape" && isActiveView) {
 		e.preventDefault();
 		e.stopPropagation();
 		if (keyboardListenerIsActive) {
@@ -77,17 +85,24 @@ const down = (e: KeyboardEvent) => {
 		return;
 	}
 
-	if (!keyboardListenerIsActive) {
-		logger.debug("[keys] ignored keydown (listener off)", e.key, e.code);
-		return;
-	}
+    if (!keyboardListenerIsActive) {
+        // Privacy: do not record or log key details when listener is off
+        // Avoid noisy logs for common editing keys like Backspace while typing in inputs
+        if (e.key !== 'Backspace') {
+          logger.debug("[keys] ignored keydown (listener off)");
+        }
+        return;
+    }
+	// Record raw input only when actively listening
+	activeKeysStore.recordPhysicalRaw(e);
 	logger.debug("[keys] keydown", { key: e.key, code: e.code });
 	activeKeysStore.handlePhysicalKeyDown(e);
 	logger.debug("[keys] state after keydown", activeKeysStore.state);
 };
 const up = (e: KeyboardEvent) => {
 	if (!keyboardListenerIsActive) {
-		logger.debug("[keys] ignored keyup (listener off)", e.key, e.code);
+		// Privacy: do not log key details when listener is off
+		logger.debug("[keys] ignored keyup (listener off)");
 		return;
 	}
 	logger.debug("[keys] keyup", { key: e.key, code: e.code });
@@ -131,6 +146,7 @@ onMount(() => {
 
 // Reactive variables
 let viewWidth = $state(0);
+let rootEl: HTMLDivElement | null = null;
 let viewMode = $state("desktop");
 let search = $state("");
 let input: HTMLInputElement | undefined = $state();
@@ -312,6 +328,7 @@ function handleStarIconClicked(commandId: string) {
 <div
   id="keyboard-component"
   class="{viewMode} {viewMode === 'xs' ? 'is-mobile' : ''}"
+  bind:this={rootEl}
   bind:offsetWidth={viewWidth}
 >
   <div id="keyboard-preview-view">
