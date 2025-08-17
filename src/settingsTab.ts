@@ -87,42 +87,64 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
 				});
 			});
 
-		// Key listener scope
-		new Setting(containerEl)
-			.setName("Key listener scope")
-			.setDesc(
-				"Restrict the active key listener to the Analyzer view, or allow it globally.",
-			)
-			.addDropdown((dropdown) => {
-				dropdown.addOption("activeView", "Active view only");
-				dropdown.addOption("global", "Global");
-				dropdown.setValue(
-					(this.plugin.settingsManager.getSetting("keyListenerScope") ||
-						"activeView") as "activeView" | "global",
-				);
-				dropdown.onChange((value) => {
-					this.plugin.settingsManager.updateSettings({
-						keyListenerScope: (value as "activeView" | "global") || "activeView",
-					});
-				});
-			});
+        // Key listener scope (global only effective in 'On hold' mode)
+        new Setting(containerEl)
+            .setName("Key listener scope")
+            .setDesc(
+                "Restrict the active key listener to the Analyzer view, or allow it globally (global requires modifiers: On hold).",
+            )
+            .addDropdown((dropdown) => {
+                dropdown.addOption("activeView", "Active view only");
+                dropdown.addOption("global", "Global");
+                const currentScope = (this.plugin.settingsManager.getSetting(
+                    "keyListenerScope",
+                ) || "activeView") as "activeView" | "global";
+                dropdown.setValue(currentScope);
+                dropdown.onChange((value) => {
+                    const scope = (value as "activeView" | "global") || "activeView";
+                    const mode = (this.plugin.settingsManager.getSetting(
+                        "modifierActivationMode",
+                    ) || "click") as "click" | "press";
+                    if (scope === "global" && mode !== "press") {
+                        // Coerce to activeView to avoid confusing UX
+                        this.plugin.settingsManager.updateSettings({
+                            keyListenerScope: "activeView",
+                        });
+                    } else {
+                        this.plugin.settingsManager.updateSettings({
+                            keyListenerScope: scope,
+                        });
+                    }
+                });
+            });
 
-		// Chord preview mode
-		new Setting(containerEl)
-			.setName("Chord preview mode")
-			.setDesc(
-				"While key listener is active: preview the pressed chord and clear on release.",
-			)
-			.addToggle((toggle) => {
-				toggle.setValue(
-					!!this.plugin.settingsManager.getSetting("chordPreviewMode"),
-				);
-				toggle.onChange((value) => {
-					this.plugin.settingsManager.updateSettings({
-						chordPreviewMode: value,
-					});
-				});
-			});
+        // Modifier activation mode
+        new Setting(containerEl)
+            .setName("Modifier activation")
+            .setDesc(
+                "Choose how modifiers activate: On click (to add / remove) or On hold (select on hold, clears when released). Applies to modifiers only globally. Inside the Analyzer view, when the listener is active, you can select keys by clicking or by pressing keys; globally only modifiers are tracked.",
+            )
+            .addDropdown((dropdown) => {
+                dropdown.addOption("click", "On click");
+                dropdown.addOption("press", "On hold");
+                dropdown.setValue(
+                    (this.plugin.settingsManager.getSetting(
+                        "modifierActivationMode",
+                    ) || "click") as "click" | "press",
+                );
+                dropdown.onChange((value) => {
+                    const mode = (value as "click" | "press") || "click";
+                    const scope = (this.plugin.settingsManager.getSetting(
+                        "keyListenerScope",
+                    ) || "activeView") as "activeView" | "global";
+                    // If switching to click while scope is global, coerce scope to activeView
+                    const updates: any = { modifierActivationMode: mode };
+                    if (mode === "click" && scope === "global") {
+                        updates.keyListenerScope = "activeView";
+                    }
+                    this.plugin.settingsManager.updateSettings(updates);
+                });
+            });
 
 		// Search debounce
 		new Setting(containerEl)

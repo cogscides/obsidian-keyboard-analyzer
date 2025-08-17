@@ -9,7 +9,7 @@ import { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visual
 import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import logger from "../utils/logger";
 import { convertModifiers } from "../utils/modifierUtils";
-import { getKeyListenerScope, isChordPreviewModeEnabled } from "../utils/runtimeConfig";
+import { getKeyListenerScope, isModifierPressModeEnabled } from "../utils/runtimeConfig";
 import type ShortcutsView from "../views/ShortcutsView";
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from "../Constants";
 
@@ -52,7 +52,7 @@ const down = (e: KeyboardEvent) => {
     const focusWithin = !!(rootEl && (rootEl as HTMLElement).matches(':focus-within'));
     const isActiveView = (() => {
       try {
-        const v = plugin.app.workspace.activeLeaf?.view as any;
+        const v = plugin.app.workspace.activeLeaf?.view as unknown;
         return v && typeof v.getViewType === 'function' && v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER;
       } catch { return false; }
     })();
@@ -88,7 +88,8 @@ const down = (e: KeyboardEvent) => {
 
     // Respect configured listener scope (default: only when Analyzer view is active)
     const scope = getKeyListenerScope();
-    const scopeAllows = scope === 'global' ? true : isActiveView;
+    // Global scope is only effective when modifier activation is 'On press'
+    const scopeAllows = scope === 'global' ? isModifierPressModeEnabled() : isActiveView;
 
     if (!keyboardListenerIsActive || !scopeAllows) {
         // Privacy: do not record or log key details when listener is off
@@ -99,22 +100,17 @@ const down = (e: KeyboardEvent) => {
         return;
     }
 
-    // Chord preview inside Analyzer view should not trigger commands
-    if (isChordPreviewModeEnabled() && isActiveView) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
 	// Record raw input only when actively listening
 	activeKeysStore.recordPhysicalRaw(e);
 	logger.debug("[keys] keydown", { key: e.key, code: e.code });
-	activeKeysStore.handlePhysicalKeyDown(e);
+	activeKeysStore.handlePhysicalKeyDown(e, { inActiveView: isActiveView });
 	logger.debug("[keys] state after keydown", activeKeysStore.state);
 };
 const up = (e: KeyboardEvent) => {
     const scope = getKeyListenerScope();
-    const scopeAllows = scope === 'global' ? true : (() => {
+    const scopeAllows = scope === 'global' ? isModifierPressModeEnabled() : (() => {
       try {
-        const v = plugin.app.workspace.activeLeaf?.view as any;
+        const v = plugin.app.workspace.activeLeaf?.view as unknown;
         return v && typeof v.getViewType === 'function' && v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER;
       } catch { return false; }
     })();
@@ -125,20 +121,15 @@ const up = (e: KeyboardEvent) => {
         return;
     }
 
-    // Chord preview inside Analyzer view should not trigger commands
     const isActiveView = (() => {
       try {
-        const v = plugin.app.workspace.activeLeaf?.view as any;
+        const v = plugin.app.workspace.activeLeaf?.view as unknown;
         return v && typeof v.getViewType === 'function' && v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER;
       } catch { return false; }
     })();
-    if (isChordPreviewModeEnabled() && isActiveView) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-	logger.debug("[keys] keyup", { key: e.key, code: e.code });
-	activeKeysStore.handlePhysicalKeyUp(e);
-	logger.debug("[keys] state after keyup", activeKeysStore.state);
+    logger.debug("[keys] keyup", { key: e.key, code: e.code });
+	activeKeysStore.handlePhysicalKeyUp(e, { inActiveView: isActiveView });
+    logger.debug("[keys] state after keyup", activeKeysStore.state);
 };
 type WindowWithKb = Window & {
 	__kb_analyzer_keys_down?: (e: KeyboardEvent) => void;

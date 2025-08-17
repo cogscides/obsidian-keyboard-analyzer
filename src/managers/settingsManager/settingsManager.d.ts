@@ -34,7 +34,7 @@ export interface PluginSettings {
 
 	/** Keyboard listener behavior */
 	keyListenerScope?: "activeView" | "global"; // whether active key listener only works when Analyzer view is active
-	chordPreviewMode?: boolean; // preview pressed chord, clear on keyup
+	modifierActivationMode?: "click" | "press"; // click: modifiers toggle on click; press: modifiers from physical press and clear on release
 	searchDebounceMs?: number; // debounce for search text input
 
 	/**

@@ -8,7 +8,7 @@ let logLevel: "debug" | "info" | "warn" | "error" = "debug";
 let emulatedOS: EmulatedOS = "none";
 // Keyboard analyzer runtime flags
 let keyListenerScope: "activeView" | "global" = "activeView";
-let chordPreviewMode = false;
+let modifierActivationMode: "click" | "press" = "click";
 let searchDebounceMs = 200;
 
 export function setDevLoggingEnabled(enabled: boolean) {
@@ -66,12 +66,26 @@ export function getKeyListenerScope(): "activeView" | "global" {
 }
 
 // Chord preview mode: preview pressed chord and clear on release
+// Modifier activation mode
+export function setModifierActivationMode(mode: "click" | "press") {
+    modifierActivationMode = mode === "press" ? "press" : "click";
+}
+
+export function getModifierActivationMode(): "click" | "press" {
+    return modifierActivationMode;
+}
+
+export function isModifierPressModeEnabled(): boolean {
+    return modifierActivationMode === "press";
+}
+
+// Back-compat shims (deprecated): chord preview mapped to press mode
 export function setChordPreviewMode(enabled: boolean) {
-    chordPreviewMode = !!enabled;
+    modifierActivationMode = enabled ? "press" : "click";
 }
 
 export function isChordPreviewModeEnabled(): boolean {
-    return chordPreviewMode;
+    return modifierActivationMode === "press";
 }
 
 // Search debounce (ms)

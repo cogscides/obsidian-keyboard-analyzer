@@ -1,5 +1,4 @@
 import type { App, Modifier } from "obsidian";
-import { Platform } from "obsidian";
 import type { commandEntry } from "../interfaces/Interfaces";
 import HotkeyManager from "../managers/hotkeyManager";
 import type { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visualKeyboardsManager.svelte";
@@ -9,7 +8,7 @@ import {
 	convertModifier,
 	sortModifiers,
 } from "../utils/modifierUtils";
-import { getEmulatedOS, isChordPreviewModeEnabled } from "../utils/runtimeConfig";
+import { isModifierPressModeEnabled } from "../utils/runtimeConfig";
 
 export class ActiveKeysStore {
 	private hotkeyManager: HotkeyManager;
@@ -114,7 +113,7 @@ export class ActiveKeysStore {
 		logger.debug("[keys] after handleKeyClick", this.state);
 	}
 
-	public handlePhysicalKeyDown(e: KeyboardEvent) {
+	public handlePhysicalKeyDown(e: KeyboardEvent, opts?: { inActiveView?: boolean }) {
 		logger.debug("[keys] store.handlePhysicalKeyDown", {
 			key: e.key,
 			code: e.code,
@@ -127,22 +126,28 @@ export class ActiveKeysStore {
 			return;
 		}
 
-		// Chord preview mode: reflect currently pressed modifiers and non-modifier key; clear on keyup
-		if (isChordPreviewModeEnabled()) {
+		// Modifier 'hold' mode: reflect currently pressed modifiers, and inside the Analyzer view allow selecting keys via physical press.
+		if (isModifierPressModeEnabled()) {
 			const mods: Modifier[] = [];
 			if (e.ctrlKey) mods.push(convertModifier("Control"));
 			if (e.metaKey) mods.push(convertModifier("Meta"));
 			if (e.altKey) mods.push(convertModifier("Alt"));
 			if (e.shiftKey) mods.push("Shift");
 			this.activeModifiers = Array.from(new Set(mods));
+			// In hold mode, allow selecting a key via keyboard only when inside the Analyzer view.
+			// Global scope still ignores non-modifier keys.
 			const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key);
-			if (this.isModifier(normalizedKey)) {
-				// Only modifiers currently pressed; show no activeKey until a non-modifier is pressed
-				this.activeKey = "";
-			} else {
-				this.activeKey = normalizedKey;
+			if (opts?.inActiveView && !this.isModifier(normalizedKey)) {
+				if (this.activeKey === normalizedKey) {
+					// Toggle off if pressing the same key again (ignore repeats above)
+					this.activeKey = "";
+					logger.debug("[keys] hold mode: cleared activeKey (toggle)", this.state);
+				} else {
+					this.activeKey = normalizedKey;
+					logger.debug("[keys] hold mode: set activeKey (keydown)", this.state);
+				}
 			}
-			logger.debug("[keys] chord preview updated", this.state);
+			logger.debug("[keys] hold mode: modifiers updated", this.state);
 			return;
 		}
 		// Map to Obsidian modifier by code when possible
@@ -186,15 +191,21 @@ export class ActiveKeysStore {
 		}
 	}
 
-	public handlePhysicalKeyUp(e: KeyboardEvent) {
+	public handlePhysicalKeyUp(e: KeyboardEvent, opts?: { inActiveView?: boolean }) {
 		// No-op for toggle mode, just trace
 		logger.debug("[keys] store.handlePhysicalKeyUp (toggle/chord)", {
 			key: e.key,
 			code: e.code,
 		});
-		if (isChordPreviewModeEnabled()) {
-			// Clear the chord preview on any key release
-			this.reset();
+		if (isModifierPressModeEnabled()) {
+			// Update modifiers to reflect currently held modifiers; clear when none are held
+			const mods: Modifier[] = [];
+			if (e.ctrlKey) mods.push(convertModifier("Control"));
+			if (e.metaKey) mods.push(convertModifier("Meta"));
+			if (e.altKey) mods.push(convertModifier("Alt"));
+			if (e.shiftKey) mods.push("Shift");
+			this.activeModifiers = Array.from(new Set(mods));
+			// Do not modify activeKey
 		}
 	}
 

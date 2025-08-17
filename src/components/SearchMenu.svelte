@@ -260,7 +260,7 @@ function handleDebouncedInput() {
   const ms = Number(settingsManager.settings.searchDebounceMs ?? 200);
   inputDebounce = setTimeout(() => {
     handleSearchInput();
-  }, isNaN(ms) ? 200 : Math.max(0, Math.min(2000, ms)));
+  }, Number.isNaN(ms) ? 200 : Math.max(0, Math.min(2000, ms)));
 }
 
 function handleModifierChipClick(modifier: string) {

@@ -5,7 +5,7 @@ import {
     setEmulatedOS,
     setLogLevel,
     setKeyListenerScope,
-    setChordPreviewMode,
+    setModifierActivationMode,
     setSearchDebounceMs,
 } from "../../utils/runtimeConfig";
 import type { FilterSettings, PluginSettings } from "./settingsManager.d";
@@ -44,10 +44,10 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
 	emulatedOS: "none",
 	useBakedKeyNames: true,
 	allGroupOnOpen: "default",
-	// Keyboard listener behavior
-	keyListenerScope: "activeView",
-	chordPreviewMode: false,
-	searchDebounceMs: 200,
+    // Keyboard listener behavior
+    keyListenerScope: "activeView",
+    modifierActivationMode: "click",
+    searchDebounceMs: 200,
 	// Persisted UI state
 	quickViewHeight: 360,
 	quickViewWidth: 420,
@@ -116,13 +116,27 @@ export default class SettingsManager {
 			);
 			setLogLevel("debug");
 			// Apply keyboard behavior flags
-			setKeyListenerScope(
-				(this.settings.keyListenerScope || "activeView") as
-					| "activeView"
-					| "global",
-			);
-			setChordPreviewMode(!!this.settings.chordPreviewMode);
-			setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200));
+            setKeyListenerScope(
+                (this.settings.keyListenerScope || "activeView") as
+                    | "activeView"
+                    | "global",
+            );
+            // Migrate legacy setting if present
+            if (
+                (this.settings as any).chordPreviewMode !== undefined &&
+                this.settings.modifierActivationMode === undefined
+            ) {
+                this.settings.modifierActivationMode = (this.settings as any)
+                    .chordPreviewMode
+                    ? "press"
+                    : "click";
+            }
+            setModifierActivationMode(
+                (this.settings.modifierActivationMode || "click") as
+                    | "click"
+                    | "press",
+            );
+            setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200));
 		} catch (error) {
 			logger.error("Failed to Plugin load settings:", error);
 			// Repair by writing defaults so Obsidian stops failing JSON.parse on next boot
@@ -242,18 +256,22 @@ export default class SettingsManager {
 			logger.info("Emulated OS set to", this.settings.emulatedOS || "none");
 		}
 		// Live-apply keyboard behavior flags
-		if ("keyListenerScope" in newSettings) {
-			setKeyListenerScope(
-				(this.settings.keyListenerScope || "activeView") as
-					| "activeView"
-					| "global",
-			);
-		}
-		if ("chordPreviewMode" in newSettings) {
-			setChordPreviewMode(!!this.settings.chordPreviewMode);
-		}
-		if ("searchDebounceMs" in newSettings) {
-			setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200));
+        if ("keyListenerScope" in newSettings) {
+            setKeyListenerScope(
+                (this.settings.keyListenerScope || "activeView") as
+                    | "activeView"
+                    | "global",
+            );
+        }
+        if ("modifierActivationMode" in newSettings) {
+            setModifierActivationMode(
+                (this.settings.modifierActivationMode || "click") as
+                    | "click"
+                    | "press",
+            );
+        }
+        if ("searchDebounceMs" in newSettings) {
+            setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200));
 		}
 		this.scheduleSave();
 	}
