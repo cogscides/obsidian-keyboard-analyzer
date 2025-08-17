@@ -9,7 +9,7 @@ import {
 	convertModifier,
 	sortModifiers,
 } from "../utils/modifierUtils";
-import { getEmulatedOS } from "../utils/runtimeConfig";
+import { getEmulatedOS, isChordPreviewModeEnabled } from "../utils/runtimeConfig";
 
 export class ActiveKeysStore {
 	private hotkeyManager: HotkeyManager;
@@ -100,7 +100,10 @@ export class ActiveKeysStore {
 			if (this.activeKey !== "") {
 				this.activeKey = "";
 			} else if (this.activeModifiers.length > 0) {
-				this.activeModifiers.length = this.activeModifiers.length - 1;
+				// Remove the last modifier based on sorted order for consistent UX
+				const sorted = sortModifiers(this.activeModifiers);
+				sorted.pop();
+				this.activeModifiers = sorted as unknown as Modifier[];
 			}
 			logger.debug("[keys] backspace applied", this.state);
 			return;
@@ -121,6 +124,25 @@ export class ActiveKeysStore {
 		// Toggle semantics per key click, ignore auto-repeat
 		if (e.repeat) {
 			logger.debug("[keys] ignored repeat keydown");
+			return;
+		}
+
+		// Chord preview mode: reflect currently pressed modifiers and non-modifier key; clear on keyup
+		if (isChordPreviewModeEnabled()) {
+			const mods: Modifier[] = [];
+			if (e.ctrlKey) mods.push(convertModifier("Control"));
+			if (e.metaKey) mods.push(convertModifier("Meta"));
+			if (e.altKey) mods.push(convertModifier("Alt"));
+			if (e.shiftKey) mods.push("Shift");
+			this.activeModifiers = Array.from(new Set(mods));
+			const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key);
+			if (this.isModifier(normalizedKey)) {
+				// Only modifiers currently pressed; show no activeKey until a non-modifier is pressed
+				this.activeKey = "";
+			} else {
+				this.activeKey = normalizedKey;
+			}
+			logger.debug("[keys] chord preview updated", this.state);
 			return;
 		}
 		// Map to Obsidian modifier by code when possible
@@ -166,10 +188,14 @@ export class ActiveKeysStore {
 
 	public handlePhysicalKeyUp(e: KeyboardEvent) {
 		// No-op for toggle mode, just trace
-		logger.debug("[keys] store.handlePhysicalKeyUp (toggle mode)", {
+		logger.debug("[keys] store.handlePhysicalKeyUp (toggle/chord)", {
 			key: e.key,
 			code: e.code,
 		});
+		if (isChordPreviewModeEnabled()) {
+			// Clear the chord preview on any key release
+			this.reset();
+		}
 	}
 
 	private isModifier(key: string): key is ModifierKey {

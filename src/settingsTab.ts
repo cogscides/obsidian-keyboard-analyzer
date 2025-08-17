@@ -86,5 +86,58 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
 					});
 				});
 			});
+
+		// Key listener scope
+		new Setting(containerEl)
+			.setName("Key listener scope")
+			.setDesc(
+				"Restrict the active key listener to the Analyzer view, or allow it globally.",
+			)
+			.addDropdown((dropdown) => {
+				dropdown.addOption("activeView", "Active view only");
+				dropdown.addOption("global", "Global");
+				dropdown.setValue(
+					(this.plugin.settingsManager.getSetting("keyListenerScope") ||
+						"activeView") as "activeView" | "global",
+				);
+				dropdown.onChange((value) => {
+					this.plugin.settingsManager.updateSettings({
+						keyListenerScope: (value as "activeView" | "global") || "activeView",
+					});
+				});
+			});
+
+		// Chord preview mode
+		new Setting(containerEl)
+			.setName("Chord preview mode")
+			.setDesc(
+				"While key listener is active: preview the pressed chord and clear on release.",
+			)
+			.addToggle((toggle) => {
+				toggle.setValue(
+					!!this.plugin.settingsManager.getSetting("chordPreviewMode"),
+				);
+				toggle.onChange((value) => {
+					this.plugin.settingsManager.updateSettings({
+						chordPreviewMode: value,
+					});
+				});
+			});
+
+		// Search debounce
+		new Setting(containerEl)
+			.setName("Search debounce (ms)")
+			.setDesc("Delay before applying text filter changes.")
+			.addText((text) => {
+				text.inputEl.type = "number";
+				text.setPlaceholder("200");
+				text.setValue(String(this.plugin.settingsManager.getSetting("searchDebounceMs") ?? 200));
+				text.onChange((value) => {
+					const ms = Number(value);
+					this.plugin.settingsManager.updateSettings({
+						searchDebounceMs: Number.isFinite(ms) ? ms : 200,
+					});
+				});
+			});
 	}
 }

@@ -204,24 +204,26 @@ function handleKeyDown(e: KeyboardEvent) {
       return;
     }
   }
-  // Backspace should pop activeKey/modifiers when text query is empty
+  // When listener is active, let global handler own keys entirely
+  if (keyboardListenerIsActive) {
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
+
+  // Backspace should pop activeKey/modifiers when text query is empty (listener is not active)
   if (e.key === 'Backspace' && String(search || '').trim() === '') {
     if (PressedKeysStore.activeKey) {
       PressedKeysStore.clearActiveKey();
     } else if (PressedKeysStore.activeModifiers.length > 0) {
-      const next = [...PressedKeysStore.activeModifiers];
-      next.pop();
-      PressedKeysStore.ActiveModifiers = next as unknown as Modifier[];
+      // Pop from the end of the sorted list so UX reflects visual order
+      const sorted = [...PressedKeysStore.sortedModifiers];
+      sorted.pop();
+      PressedKeysStore.ActiveModifiers = sorted as unknown as Modifier[];
     }
     handleSearchInput();
     e.preventDefault();
     e.stopPropagation();
-    return;
-  }
-  // When listener is active, let global handler own keys
-  if (keyboardListenerIsActive) {
-    e.stopPropagation();
-    e.preventDefault();
     return;
   }
   // Normal path: apply search for any other key affecting input
@@ -254,10 +256,11 @@ function handleSearchInput() {
 }
 
 function handleDebouncedInput() {
-	if (inputDebounce) clearTimeout(inputDebounce);
-	inputDebounce = setTimeout(() => {
-		handleSearchInput();
-	}, 200);
+  if (inputDebounce) clearTimeout(inputDebounce);
+  const ms = Number(settingsManager.settings.searchDebounceMs ?? 200);
+  inputDebounce = setTimeout(() => {
+    handleSearchInput();
+  }, isNaN(ms) ? 200 : Math.max(0, Math.min(2000, ms)));
 }
 
 function handleModifierChipClick(modifier: string) {

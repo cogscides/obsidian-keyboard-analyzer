@@ -6,6 +6,10 @@ export type EmulatedOS = "none" | "windows" | "macos" | "linux";
 let devLoggingEnabled = false;
 let logLevel: "debug" | "info" | "warn" | "error" = "debug";
 let emulatedOS: EmulatedOS = "none";
+// Keyboard analyzer runtime flags
+let keyListenerScope: "activeView" | "global" = "activeView";
+let chordPreviewMode = false;
+let searchDebounceMs = 200;
 
 export function setDevLoggingEnabled(enabled: boolean) {
 	devLoggingEnabled = !!enabled;
@@ -28,7 +32,7 @@ export function setEmulatedOS(os: EmulatedOS) {
 }
 
 export function getEmulatedOS(): EmulatedOS {
-	return emulatedOS;
+    return emulatedOS;
 }
 
 export function isMacOS(): boolean {
@@ -50,4 +54,32 @@ export function isLinux(): boolean {
 	if (emulatedOS === "linux") return true;
 	if (emulatedOS === "macos" || emulatedOS === "windows") return false;
 	return false;
+}
+
+// Keyboard listener scope: restrict active listener to analyzer view or allow global
+export function setKeyListenerScope(scope: "activeView" | "global") {
+    keyListenerScope = scope === "global" ? "global" : "activeView";
+}
+
+export function getKeyListenerScope(): "activeView" | "global" {
+    return keyListenerScope;
+}
+
+// Chord preview mode: preview pressed chord and clear on release
+export function setChordPreviewMode(enabled: boolean) {
+    chordPreviewMode = !!enabled;
+}
+
+export function isChordPreviewModeEnabled(): boolean {
+    return chordPreviewMode;
+}
+
+// Search debounce (ms)
+export function setSearchDebounceMs(ms: number) {
+    const v = Number(ms);
+    searchDebounceMs = Number.isFinite(v) ? Math.max(0, Math.min(2000, v)) : 200;
+}
+
+export function getSearchDebounceMs(): number {
+    return searchDebounceMs;
 }
