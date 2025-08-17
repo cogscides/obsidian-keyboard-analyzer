@@ -402,23 +402,7 @@ export default class GroupManager {
 		}
 	}
 
-	/** Get group's onOpen behavior; defaults to 'default' for back-compat. */
-	getGroupBehavior(groupId: string): "default" | "dynamic" {
-		const g = this.getGroup(groupId);
-		return g?.behavior?.onOpen === "dynamic" ? "dynamic" : "default";
-	}
 
-	/** Set group's onOpen behavior. */
-	setGroupBehavior(groupId: string, mode: "default" | "dynamic"): void {
-		const updatedGroups = this.groups.map((group) => {
-			if (group.id === groupId) {
-				const behavior = { ...(group.behavior || {}), onOpen: mode };
-				return { ...group, behavior };
-			}
-			return group;
-		});
-		this.settingsManager.updateSettings({ commandGroups: updatedGroups });
-	}
 
 	/** Set/overwrite group's saved defaults. Only fields provided are updated. */
 	setGroupDefaults(groupId: string, state: Partial<GroupViewState>): void {
@@ -606,6 +590,79 @@ export default class GroupManager {
 		} catch {
 			// Fall back to writing normalized groups if diffing fails
 			this.settingsManager.updateSettings({ commandGroups: nextGroups });
+		}
+	}
+
+	/** Get group's onOpen behavior; allow 'all' as a special pseudo-group. */
+	getGroupBehavior(groupId: string): "default" | "dynamic" {
+		if (groupId === GroupType.All) {
+			return (this.settingsManager.settings.allGroupOnOpen || "default") as
+				"default" | "dynamic";
+		}
+		const g = this.getGroup(groupId);
+		return g?.behavior?.onOpen === "dynamic" ? "dynamic" : "default";
+	}
+
+	/** Set group's onOpen behavior; allow 'all' to store in settings. */
+	setGroupBehavior(groupId: string, mode: "default" | "dynamic"): void {
+		if (groupId === GroupType.All) {
+			this.settingsManager.updateSettings({ allGroupOnOpen: mode });
+			return;
+		}
+		const updatedGroups = this.groups.map((group) => {
+			if (group.id === groupId) {
+				const behavior = { ...(group.behavior || {}), onOpen: mode };
+				return { ...group, behavior };
+			}
+			return group;
+		});
+		this.settingsManager.updateSettings({ commandGroups: updatedGroups });
+	}
+
+	/** Store defaults snapshot for the implicit All Commands group. */
+	setAllGroupDefaults(state: Partial<GroupViewState>): void {
+		try {
+			const base = this.settingsManager.settings.defaultFilterSettings;
+			const filters: CGroupFilterSettings = {
+				...(base as CGroupFilterSettings),
+				...((state?.filters as CGroupFilterSettings) || ({} as CGroupFilterSettings)),
+			};
+			// Store in simple filters key to avoid nested state issues; defer write to next tick to avoid flush conflicts
+			setTimeout(() => {
+				this.settingsManager.updateSettings({
+					allGroupDefaultFilters: { ...filters },
+				});
+			}, 0);
+		} catch (err) {
+			logger.error("[groups] setAllGroupDefaults failed", { state, err });
+		}
+	}
+
+	/** Apply saved All Commands defaults into global defaultFilterSettings. */
+	applyDefaultsToAllFilters(): void {
+		try {
+			const filters =
+				(this.settingsManager.settings.allGroupDefaultFilters as CGroupFilterSettings | undefined) ||
+				((this.settingsManager.settings.allGroupDefaults as GroupViewState | undefined)?.filters as
+					CGroupFilterSettings | undefined);
+			if (filters) {
+				const base = this.settingsManager.settings.defaultFilterSettings;
+				const nextFilters: CGroupFilterSettings = {
+					...base,
+					...filters,
+				};
+				// Skip write if no actual change to avoid effect loops
+				if (this.isEqualFilters(base as CGroupFilterSettings, nextFilters)) {
+					return;
+				}
+				this.settingsManager.updateSettings({
+					defaultFilterSettings: nextFilters,
+				});
+			} else {
+				logger.debug("[groups] no allGroupDefaults to apply");
+			}
+		} catch (err) {
+			logger.error("[groups] applyDefaultsToAllFilters failed", { err });
 		}
 	}
 

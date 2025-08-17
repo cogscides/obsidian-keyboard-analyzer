@@ -1,256 +1,290 @@
 <script lang="ts">
-import { getContext } from "svelte";
-import { X } from "lucide-svelte";
-import clickOutside from "../utils/clickOutside.js";
-import type { commandEntry } from "../interfaces/Interfaces";
-import type { CGroupFilterSettings } from "../managers/settingsManager";
-import type KeyboardAnalyzerPlugin from "../main";
+  import { getContext } from 'svelte'
+  import { X } from 'lucide-svelte'
+  import clickOutside from '../utils/clickOutside.js'
+  import type { commandEntry } from '../interfaces/Interfaces'
+  import type { CGroupFilterSettings } from '../managers/settingsManager'
+  import type KeyboardAnalyzerPlugin from '../main'
+  import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
 
-interface Props {
-	plugin?: KeyboardAnalyzerPlugin;
-	selectedGroupId?: string;
-	onClose?: () => void;
-}
+  interface Props {
+    plugin?: KeyboardAnalyzerPlugin
+    selectedGroupId?: string
+    onClose?: () => void
+  }
 
-let {
-	plugin = $bindable(),
-	selectedGroupId = $bindable("all"),
-	onClose = $bindable(() => {}),
-}: Props = $props();
+  let {
+    plugin = $bindable(),
+    selectedGroupId = $bindable('all'),
+    onClose = $bindable(() => {}),
+  }: Props = $props()
 
-if (!plugin) {
-	plugin = getContext("keyboard-analyzer-plugin") as KeyboardAnalyzerPlugin;
-}
+  if (!plugin) {
+    plugin = getContext('keyboard-analyzer-plugin') as KeyboardAnalyzerPlugin
+  }
 
-const groupManager = (plugin as KeyboardAnalyzerPlugin).groupManager;
-const commandsManager = (plugin as KeyboardAnalyzerPlugin).commandsManager;
+  const groupManager = (plugin as KeyboardAnalyzerPlugin).groupManager
+  const commandsManager = (plugin as KeyboardAnalyzerPlugin).commandsManager
+  const settingsManager = (plugin as KeyboardAnalyzerPlugin).settingsManager
+  const hotkeyManager = (plugin as KeyboardAnalyzerPlugin).hotkeyManager
 
-let groups = $derived.by(() => groupManager.getGroups());
+  let groups = $derived.by(() => groupManager.getGroups())
 
-let groupName = $derived.by(
-	() => groupManager.getGroup(selectedGroupId || "")?.name || "",
-);
-let editableName = $state("");
-$effect(() => {
-	editableName = groupName;
-});
-let commands: commandEntry[] = $derived.by(() =>
-	commandsManager.getGroupCommands(selectedGroupId || ""),
-);
+  let groupName = $derived.by(
+    () => groupManager.getGroup(selectedGroupId || '')?.name || ''
+  )
+  let editableName = $state('')
+  $effect(() => {
+    editableName = groupName
+  })
+  let commands: commandEntry[] = $derived.by(() =>
+    commandsManager.getGroupCommands(selectedGroupId || '')
+  )
 
-// Inline "Add command" search (debounced)
-let cmdSearch = $state("");
-let cmdSearchOpen = $state(false);
-let cmdSearchResults: commandEntry[] = $state([]);
-let cmdSearchLimit = 20;
-let cmdSearchInputEl: HTMLInputElement | null = null;
-let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null;
+  // Inline "Add command" search (debounced)
+  let cmdSearch = $state('')
+  let cmdSearchOpen = $state(false)
+  let cmdSearchResults: commandEntry[] = $state([])
+  let cmdSearchLimit = 20
+  let cmdSearchInputEl: HTMLInputElement | null = null
+  let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null
 
-function formatFirstHotkey(entry: commandEntry): string {
-	const hk = entry.hotkeys?.[0];
-	if (!hk) return "";
-	const mods = (
-		Array.isArray(hk.modifiers) ? hk.modifiers : String(hk.modifiers).split(",")
-	) as string[];
-	const modsStr = mods.filter(Boolean).join("+");
-	return modsStr ? `${modsStr}+${hk.key || ""}` : hk.key || "";
-}
+  function renderFirstHotkey(entry: commandEntry): string {
+    const hk = entry.hotkeys?.[0]
+    if (!hk) return ''
+    if (settingsManager.settings.useBakedKeyNames) return formatHotkeyBaked(hk)
+    return hotkeyManager.renderHotkey(hk)
+  }
 
-function runCommandSearch() {
-	const term = (cmdSearch || "").trim();
-	if (!term || !selectedGroupId || selectedGroupId === "all") {
-		cmdSearchResults = [];
-		cmdSearchOpen = !!term;
-		return;
-	}
-	const exclude = new Set<string>((commands || []).map((c) => c.id));
-	const results = commandsManager.searchCommandsByName(term, {
-		excludeIds: exclude,
-		limit: cmdSearchLimit,
-	});
-	cmdSearchResults = results;
-	cmdSearchOpen = true;
-}
+  function runCommandSearch() {
+    const term = (cmdSearch || '').trim()
+    if (!selectedGroupId || selectedGroupId === 'all') {
+      cmdSearchResults = []
+      cmdSearchOpen = false
+      return
+    }
+    const exclude = new Set<string>((commands || []).map((c) => c.id))
+    let results: commandEntry[]
+    if (!term) {
+      // Show all commands (minus ones already in group) when query is empty
+      const all = commandsManager.getCommandsList()
+      results = []
+      for (const c of all) {
+        if (exclude.has(c.id)) continue
+        results.push(c)
+        // if (results.length >= cmdSearchLimit) break
+      }
+    } else {
+      results = commandsManager.searchCommandsByName(term, {
+        excludeIds: exclude,
+        limit: cmdSearchLimit,
+      })
+    }
+    cmdSearchResults = results
+    cmdSearchOpen = true
+  }
 
-function onCmdSearchInput() {
-	if (cmdSearchDebounce) clearTimeout(cmdSearchDebounce);
-	cmdSearchDebounce = setTimeout(runCommandSearch, 180);
-}
+  function onCmdSearchInput() {
+    if (cmdSearchDebounce) clearTimeout(cmdSearchDebounce)
+    cmdSearchDebounce = setTimeout(runCommandSearch, 180)
+  }
 
-function clearCmdSearch() {
-	cmdSearch = "";
-	cmdSearchResults = [];
-	cmdSearchOpen = false;
-	cmdSearchInputEl?.focus();
-}
+  function clearCmdSearch() {
+    cmdSearch = ''
+    cmdSearchResults = []
+    cmdSearchOpen = false
+    cmdSearchInputEl?.focus()
+  }
 
-function pickSearchResult(entry: commandEntry) {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	// Add to current group and remove from local results
-	groupManager.addCommandToGroup(selectedGroupId, entry.id);
-	cmdSearchResults = cmdSearchResults.filter((e) => e.id !== entry.id);
-	// keep dropdown open with remaining results
-}
+  function handleCmdSearchFocus() {
+    // Open and populate with all available commands when focused and empty
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    if ((cmdSearch || '').trim().length === 0) {
+      runCommandSearch()
+    }
+    cmdSearchOpen = true
+  }
 
-function handleCmdSearchKeydown(e: KeyboardEvent) {
-	if (e.key === "Escape") {
-		e.stopPropagation();
-		e.preventDefault();
-		if (cmdSearchOpen) {
-			cmdSearchOpen = false;
-			return;
-		}
-		clearCmdSearch();
-	}
-}
+  function pickSearchResult(entry: commandEntry) {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    // Add to current group and remove from local results
+    groupManager.addCommandToGroup(selectedGroupId, entry.id)
+    cmdSearchResults = cmdSearchResults.filter((e) => e.id !== entry.id)
+    // keep dropdown open with remaining results
+  }
 
-// Behavior toggle (default vs dynamic)
-let behavior = $derived.by(() =>
-	!selectedGroupId || selectedGroupId === "all"
-		? "default"
-		: groupManager.getGroupBehavior(selectedGroupId) || "default",
-);
-function setBehavior(mode: "default" | "dynamic") {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	groupManager.setGroupBehavior(selectedGroupId, mode);
-}
+  function handleCmdSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      e.preventDefault()
+      if (cmdSearchOpen) {
+        cmdSearchOpen = false
+        return
+      }
+      clearCmdSearch()
+    }
+  }
 
-// Actions for defaults vs current
-function useCurrentFiltersAsDefaults() {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	const g = groupManager.getGroup(selectedGroupId);
-	if (!g) return;
-	groupManager.setGroupDefaults(selectedGroupId, {
-		filters: g.filterSettings as CGroupFilterSettings,
-	});
-}
-function resetFiltersToDefaults() {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	groupManager.applyDefaultsToGroupFilters(selectedGroupId);
-}
-// Register per-group command toggle
-let registerCommand = $derived.by(() => {
-	if (!selectedGroupId || selectedGroupId === "all") return false;
-	const g = groupManager.getGroup(selectedGroupId);
-	return !!g?.registerCommand;
-});
-function setRegisterCommand(val: boolean) {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	groupManager.setGroupRegisterCommand(selectedGroupId, !!val);
-	(
-		plugin as unknown as { syncPerGroupCommands?: () => void }
-	).syncPerGroupCommands?.();
-}
+  // Behavior toggle (default vs dynamic)
+  let behavior = $derived.by(
+    () => groupManager.getGroupBehavior(selectedGroupId || 'all') || 'default'
+  )
+  function setBehavior(mode: 'default' | 'dynamic') {
+    if (!selectedGroupId) return
+    groupManager.setGroupBehavior(selectedGroupId, mode)
+  }
 
-// Drag & drop state for commands
-let dragIndex: number | null = $state(null);
-let hoverIndex: number | null = $state(null);
-let hoverAfter: boolean = $state(false);
+  // Actions for defaults vs current
+  function useCurrentFiltersAsDefaults() {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    const g = groupManager.getGroup(selectedGroupId)
+    if (!g) return
+    groupManager.setGroupDefaults(selectedGroupId, {
+      filters: g.filterSettings as CGroupFilterSettings,
+    })
+  }
+  function resetFiltersToDefaults() {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    groupManager.applyDefaultsToGroupFilters(selectedGroupId)
+  }
 
-function handleDragStart(index: number) {
-	dragIndex = index;
-}
-function handleDragOver(event: DragEvent, index: number) {
-	event.preventDefault();
-	const target = event.currentTarget as HTMLElement;
-	const rect = target.getBoundingClientRect();
-	const after = event.clientY > rect.top + rect.height / 2;
-	hoverIndex = index;
-	hoverAfter = after;
-}
-function handleDragLeave() {
-	hoverIndex = null;
-}
-function handleDrop() {
-	if (dragIndex === null || selectedGroupId === "all" || !selectedGroupId)
-		return;
-	if (hoverIndex === null) {
-		dragIndex = null;
-		return;
-	}
-	let toIndex = hoverIndex + (hoverAfter ? 1 : 0);
-	if (dragIndex < toIndex) toIndex -= 1; // adjust for removal
-	if (toIndex < 0) toIndex = 0;
-	groupManager.moveCommandInGroup(selectedGroupId, dragIndex, toIndex);
-	dragIndex = null;
-	hoverIndex = null;
-}
+  // All Commands: snapshot current filters as defaults (defensive)
+  function snapshotAllAsDefaults() {
+    try {
+      const base = settingsManager?.settings?.defaultFilterSettings
+      if (!base || typeof base !== 'object') return
+      // Shallow clone is enough (flat booleans)
+      groupManager.setAllGroupDefaults({
+        filters: { ...(base as CGroupFilterSettings) } as CGroupFilterSettings,
+      })
+    } catch (err) {
+      // Swallow to avoid uncaught runtime errors from UI click
+      console.error('[groups] failed to set All defaults', err)
+    }
+  }
+  // Register per-group command toggle
+  let registerCommand = $derived.by(() => {
+    if (!selectedGroupId || selectedGroupId === 'all') return false
+    const g = groupManager.getGroup(selectedGroupId)
+    return !!g?.registerCommand
+  })
+  function setRegisterCommand(val: boolean) {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    groupManager.setGroupRegisterCommand(selectedGroupId, !!val)
+    ;(
+      plugin as unknown as { syncPerGroupCommands?: () => void }
+    ).syncPerGroupCommands?.()
+  }
 
-// Drag & drop state for groups + reorder mode
-let gDragIndex: number | null = $state(null);
-let gHoverIndex: number | null = $state(null);
-let gHoverAfter: boolean = $state(false);
-let reorderMode: boolean = $state(false);
-function handleGroupDragStart(index: number) {
-	gDragIndex = index;
-}
-function handleGroupDragOver(event: DragEvent, index: number) {
-	event.preventDefault();
-	const target = event.currentTarget as HTMLElement;
-	const rect = target.getBoundingClientRect();
-	gHoverIndex = index;
-	gHoverAfter = event.clientY > rect.top + rect.height / 2;
-}
-function handleGroupDragLeave() {
-	gHoverIndex = null;
-}
-function handleGroupDrop() {
-	if (gDragIndex === null || gHoverIndex === null) {
-		gDragIndex = null;
-		gHoverIndex = null;
-		return;
-	}
-	let toIndex = gHoverIndex + (gHoverAfter ? 1 : 0);
-	if (gDragIndex < toIndex) toIndex -= 1;
-	if (toIndex < 0) toIndex = 0;
-	if (toIndex !== gDragIndex) groupManager.moveGroup(gDragIndex, toIndex);
-	gDragIndex = null;
-	gHoverIndex = null;
-}
+  // Drag & drop state for commands
+  let dragIndex: number | null = $state(null)
+  let hoverIndex: number | null = $state(null)
+  let hoverAfter: boolean = $state(false)
 
-function handleRename() {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	const next = (editableName || "").trim();
-	if (!next) return;
-	if (next !== groupName) {
-		groupManager.renameGroup(selectedGroupId, next);
-		(
-			plugin as unknown as { syncPerGroupCommands?: () => void }
-		).syncPerGroupCommands?.();
-	}
-}
+  function handleDragStart(index: number) {
+    dragIndex = index
+  }
+  function handleDragOver(event: DragEvent, index: number) {
+    event.preventDefault()
+    const target = event.currentTarget as HTMLElement
+    const rect = target.getBoundingClientRect()
+    const after = event.clientY > rect.top + rect.height / 2
+    hoverIndex = index
+    hoverAfter = after
+  }
+  function handleDragLeave() {
+    hoverIndex = null
+  }
+  function handleDrop() {
+    if (dragIndex === null || selectedGroupId === 'all' || !selectedGroupId)
+      return
+    if (hoverIndex === null) {
+      dragIndex = null
+      return
+    }
+    let toIndex = hoverIndex + (hoverAfter ? 1 : 0)
+    if (dragIndex < toIndex) toIndex -= 1 // adjust for removal
+    if (toIndex < 0) toIndex = 0
+    groupManager.moveCommandInGroup(selectedGroupId, dragIndex, toIndex)
+    dragIndex = null
+    hoverIndex = null
+  }
 
-function handleDelete() {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	const ok = confirm("Delete this group? This cannot be undone.");
-	if (!ok) return;
-	groupManager.removeGroup(selectedGroupId);
-	(
-		plugin as unknown as { syncPerGroupCommands?: () => void }
-	).syncPerGroupCommands?.();
-	onClose();
-}
+  // Drag & drop state for groups + reorder mode
+  let gDragIndex: number | null = $state(null)
+  let gHoverIndex: number | null = $state(null)
+  let gHoverAfter: boolean = $state(false)
+  let reorderMode: boolean = $state(false)
+  function handleGroupDragStart(index: number) {
+    gDragIndex = index
+  }
+  function handleGroupDragOver(event: DragEvent, index: number) {
+    event.preventDefault()
+    const target = event.currentTarget as HTMLElement
+    const rect = target.getBoundingClientRect()
+    gHoverIndex = index
+    gHoverAfter = event.clientY > rect.top + rect.height / 2
+  }
+  function handleGroupDragLeave() {
+    gHoverIndex = null
+  }
+  function handleGroupDrop() {
+    if (gDragIndex === null || gHoverIndex === null) {
+      gDragIndex = null
+      gHoverIndex = null
+      return
+    }
+    let toIndex = gHoverIndex + (gHoverAfter ? 1 : 0)
+    if (gDragIndex < toIndex) toIndex -= 1
+    if (toIndex < 0) toIndex = 0
+    if (toIndex !== gDragIndex) groupManager.moveGroup(gDragIndex, toIndex)
+    gDragIndex = null
+    gHoverIndex = null
+  }
 
-function handleCreate() {
-	const id = groupManager.createGroup("New Group");
-	if (id) {
-		selectedGroupId = id;
-	}
-	(
-		plugin as unknown as { syncPerGroupCommands?: () => void }
-	).syncPerGroupCommands?.();
-}
+  function handleRename() {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    const next = (editableName || '').trim()
+    if (!next) return
+    if (next !== groupName) {
+      groupManager.renameGroup(selectedGroupId, next)
+      ;(
+        plugin as unknown as { syncPerGroupCommands?: () => void }
+      ).syncPerGroupCommands?.()
+    }
+  }
 
-function handleDuplicate() {
-	if (!selectedGroupId || selectedGroupId === "all") return;
-	const id = groupManager.duplicateGroup(selectedGroupId);
-	if (id) {
-		selectedGroupId = id;
-	}
-	(
-		plugin as unknown as { syncPerGroupCommands?: () => void }
-	).syncPerGroupCommands?.();
-}
+  function handleDelete() {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    const ok = confirm('Delete this group? This cannot be undone.')
+    if (!ok) return
+    groupManager.removeGroup(selectedGroupId)
+    ;(
+      plugin as unknown as { syncPerGroupCommands?: () => void }
+    ).syncPerGroupCommands?.()
+    onClose()
+  }
+
+  function handleCreate() {
+    const id = groupManager.createGroup('New Group')
+    if (id) {
+      selectedGroupId = id
+    }
+    ;(
+      plugin as unknown as { syncPerGroupCommands?: () => void }
+    ).syncPerGroupCommands?.()
+  }
+
+  function handleDuplicate() {
+    if (!selectedGroupId || selectedGroupId === 'all') return
+    const id = groupManager.duplicateGroup(selectedGroupId)
+    if (id) {
+      selectedGroupId = id
+    }
+    ;(
+      plugin as unknown as { syncPerGroupCommands?: () => void }
+    ).syncPerGroupCommands?.()
+  }
 </script>
 
 <div class="kb-modal-backdrop" onclick={onClose}></div>
@@ -306,7 +340,7 @@ function handleDuplicate() {
             class={`kb-group-li ${String(g.id) === selectedGroupId ? 'is-active' : ''} ${gHoverIndex === gi ? (gHoverAfter ? 'insert-after' : 'insert-before') : ''}`}
             draggable="true"
             ondragstart={() => handleGroupDragStart(gi)}
-            ondragover={(e) => handleGroupDragOver(e, gi)}
+            ondragover={(e: DragEvent) => handleGroupDragOver(e, gi)}
             ondragleave={handleGroupDragLeave}
             ondrop={handleGroupDrop}
           >
@@ -340,10 +374,45 @@ function handleDuplicate() {
     {:else}
       <section class="kb-main">
         {#if !selectedGroupId || selectedGroupId === 'all'}
-          <p class="u-muted">
-            Select a user group to rename, set behavior, or reorder its
-            commands.
-          </p>
+          <div class="kb-group-behavior">
+            <label class="u-muted small">On open</label>
+            <div class="kb-row">
+              <label class="kb-radio">
+                <input
+                  type="radio"
+                  name="onopen"
+                  checked={behavior === 'default'}
+                  onchange={() => setBehavior('default')}
+                />
+                Default settings
+              </label>
+              <label class="kb-radio">
+                <input
+                  type="radio"
+                  name="onopen"
+                  checked={behavior === 'dynamic'}
+                  onchange={() => setBehavior('dynamic')}
+                />
+                Last used (dynamic)
+              </label>
+            </div>
+            <div class="kb-row wrap">
+              <button
+                class="kb-btn"
+                onclick={snapshotAllAsDefaults}
+                title="Save current filters as All Commands defaults"
+              >
+                Use current filters as defaults
+              </button>
+              <button
+                class="kb-btn"
+                onclick={() => groupManager.applyDefaultsToAllFilters()}
+                title="Apply saved All Commands defaults to current filters"
+              >
+                Reset filters to defaults
+              </button>
+            </div>
+            </div>
         {:else}
           <div class="kb-group-meta">
             <label class="u-muted small" for="kb-group-name">Name</label>
@@ -354,7 +423,8 @@ function handleDuplicate() {
                 type="text"
                 bind:value={editableName}
                 onblur={handleRename}
-                onkeydown={(e) => e.key === 'Enter' && handleRename()}
+                onkeydown={(e: KeyboardEvent) =>
+                  e.key === 'Enter' && handleRename()}
               />
               <button
                 class="kb-btn danger"
@@ -413,7 +483,7 @@ function handleDuplicate() {
                 <input
                   type="checkbox"
                   checked={registerCommand}
-                  onchange={(e) =>
+                  onchange={(e: Event) =>
                     setRegisterCommand(
                       (e.currentTarget as HTMLInputElement).checked
                     )}
@@ -424,6 +494,7 @@ function handleDuplicate() {
           </div>
 
           <!-- Add-command inline search -->
+          {#if selectedGroupId !== 'all'}
           <div
             class="kb-cmd-search"
             use:clickOutside
@@ -441,6 +512,7 @@ function handleDuplicate() {
                 bind:value={cmdSearch}
                 bind:this={cmdSearchInputEl}
                 oninput={onCmdSearchInput}
+                onfocus={handleCmdSearchFocus}
                 onkeydown={handleCmdSearchKeydown}
                 aria-autocomplete="list"
                 aria-expanded={cmdSearchOpen}
@@ -474,7 +546,7 @@ function handleDuplicate() {
                   >
                     <span class="label">{r.pluginName}: {r.name}</span>
                     {#if r.hotkeys && r.hotkeys.length > 0}
-                      <span class="hk">{formatFirstHotkey(r)}</span>
+                      <span class="hk">{renderFirstHotkey(r)}</span>
                     {:else}
                       <span class="hk u-muted">no hotkey</span>
                     {/if}
@@ -485,6 +557,7 @@ function handleDuplicate() {
               <div class="kb-cmd-empty u-muted small">No matching commands</div>
             {/if}
           </div>
+          {/if}
 
           {#if commands.length === 0}
             <div class="u-muted">No commands in this group yet.</div>
@@ -493,15 +566,29 @@ function handleDuplicate() {
               {#each commands as cmd, i (cmd.id)}
                 <li
                   class={`kb-dnd-item ${hoverIndex === i ? (hoverAfter ? 'insert-after' : 'insert-before') : ''}`}
-                  draggable="true"
+                  draggable={selectedGroupId !== 'all'}
                   ondragstart={() => handleDragStart(i)}
-                  ondragover={(e) => handleDragOver(e, i)}
+                  ondragover={(e: DragEvent) => handleDragOver(e, i)}
                   ondragleave={handleDragLeave}
                   ondrop={handleDrop}
                   aria-grabbed={dragIndex === i}
                 >
                   <span class="kb-dnd-handle">≡</span>
                   <span class="kb-dnd-label">{cmd.pluginName}: {cmd.name}</span>
+                  <span class="kb-hk-list">
+                    {#if cmd.hotkeys?.length}
+                      {#each cmd.hotkeys as hk, hkIdx (hkIdx)}
+                        <span class="hk">
+                          {settingsManager.settings.useBakedKeyNames
+                            ? formatHotkeyBaked(hk)
+                            : hotkeyManager.renderHotkey(hk)}
+                        </span>
+                      {/each}
+                    {:else}
+                      <span class="hk u-muted">no hotkey</span>
+                    {/if}
+                  </span>
+                  {#if selectedGroupId !== 'all'}
                   <button
                     class="kb-icon rm-icon"
                     title="Remove from group"
@@ -514,6 +601,7 @@ function handleDuplicate() {
                   >
                     <X size={14} />
                   </button>
+                  {/if}
                 </li>
               {/each}
             </ul>
@@ -560,8 +648,9 @@ function handleDuplicate() {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 50vh;
     max-height: 70vh;
-    overflow: hidden;
+    overflow: visible; /* allow dropdowns to escape */
   }
   .kb-controls-row {
     display: flex;
@@ -570,7 +659,7 @@ function handleDuplicate() {
     flex-wrap: wrap;
   }
   .kb-main {
-    overflow: auto;
+    overflow: visible;
   }
   .kb-close {
     font-size: 18px;
@@ -648,6 +737,30 @@ function handleDuplicate() {
     margin-left: auto;
     display: inline-flex;
     gap: 4px;
+  }
+  .kb-hk-list {
+    display: inline-flex;
+    gap: 6px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .kb-dnd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kb-cmd-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .kb-cmd-option .label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .kb-dnd-list {
     list-style: none;
@@ -758,7 +871,7 @@ function handleDuplicate() {
     white-space: nowrap;
     margin-right: 8px;
   }
-  .kb-cmd-option .hk {
+  .hk {
     flex: 0 0 auto;
     font-family: var(--font-monospace);
     font-size: 12px;

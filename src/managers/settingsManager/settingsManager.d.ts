@@ -31,6 +31,23 @@ export interface PluginSettings {
 	 * Undefined or 0 implies legacy data; current schema is 1+ when groups are present.
 	 */
 	settingsSchemaVersion?: number;
+
+	/** Keyboard listener behavior */
+	keyListenerScope?: "activeView" | "global"; // whether active key listener only works when Analyzer view is active
+	chordPreviewMode?: boolean; // preview pressed chord, clear on keyup
+	searchDebounceMs?: number; // debounce for search text input
+
+	/**
+	 * Behavior for the implicit "All commands" group on open.
+	 * Defaults to 'default' (use global defaults). When 'dynamic', restore last used state.
+	 */
+	allGroupOnOpen?: "default" | "dynamic";
+
+	/** Snapshot of defaults for the implicit All Commands group. */
+	allGroupDefaults?: GroupViewState;
+
+	/** Simpler storage: default filters snapshot for All Commands. */
+	allGroupDefaultFilters?: CGroupFilterSettings;
 }
 
 export enum FilterSettingsKeys {

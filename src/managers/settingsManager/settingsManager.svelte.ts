@@ -1,9 +1,12 @@
 import type KeyboardAnalyzerPlugin from "../../main";
 import logger from "../../utils/logger";
 import {
-	setDevLoggingEnabled,
-	setEmulatedOS,
-	setLogLevel,
+    setDevLoggingEnabled,
+    setEmulatedOS,
+    setLogLevel,
+    setKeyListenerScope,
+    setChordPreviewMode,
+    setSearchDebounceMs,
 } from "../../utils/runtimeConfig";
 import type { FilterSettings, PluginSettings } from "./settingsManager.d";
 
@@ -40,6 +43,11 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
 	devLoggingEnabled: false,
 	emulatedOS: "none",
 	useBakedKeyNames: true,
+	allGroupOnOpen: "default",
+	// Keyboard listener behavior
+	keyListenerScope: "activeView",
+	chordPreviewMode: false,
+	searchDebounceMs: 200,
 	// Persisted UI state
 	quickViewHeight: 360,
 	quickViewWidth: 420,
@@ -107,6 +115,14 @@ export default class SettingsManager {
 					| "linux",
 			);
 			setLogLevel("debug");
+			// Apply keyboard behavior flags
+			setKeyListenerScope(
+				(this.settings.keyListenerScope || "activeView") as
+					| "activeView"
+					| "global",
+			);
+			setChordPreviewMode(!!this.settings.chordPreviewMode);
+			setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200));
 		} catch (error) {
 			logger.error("Failed to Plugin load settings:", error);
 			// Repair by writing defaults so Obsidian stops failing JSON.parse on next boot
@@ -224,6 +240,20 @@ export default class SettingsManager {
 					| "linux",
 			);
 			logger.info("Emulated OS set to", this.settings.emulatedOS || "none");
+		}
+		// Live-apply keyboard behavior flags
+		if ("keyListenerScope" in newSettings) {
+			setKeyListenerScope(
+				(this.settings.keyListenerScope || "activeView") as
+					| "activeView"
+					| "global",
+			);
+		}
+		if ("chordPreviewMode" in newSettings) {
+			setChordPreviewMode(!!this.settings.chordPreviewMode);
+		}
+		if ("searchDebounceMs" in newSettings) {
+			setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200));
 		}
 		this.scheduleSave();
 	}

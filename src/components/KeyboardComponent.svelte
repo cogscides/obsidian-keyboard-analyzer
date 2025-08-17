@@ -9,6 +9,7 @@ import { VisualKeyboardManager } from "../managers/visualKeyboardsManager/visual
 import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
 import logger from "../utils/logger";
 import { convertModifiers } from "../utils/modifierUtils";
+import { getKeyListenerScope, isChordPreviewModeEnabled } from "../utils/runtimeConfig";
 import type ShortcutsView from "../views/ShortcutsView";
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from "../Constants";
 
@@ -85,13 +86,23 @@ const down = (e: KeyboardEvent) => {
 		return;
 	}
 
-    if (!keyboardListenerIsActive) {
+    // Respect configured listener scope (default: only when Analyzer view is active)
+    const scope = getKeyListenerScope();
+    const scopeAllows = scope === 'global' ? true : isActiveView;
+
+    if (!keyboardListenerIsActive || !scopeAllows) {
         // Privacy: do not record or log key details when listener is off
         // Avoid noisy logs for common editing keys like Backspace while typing in inputs
         if (e.key !== 'Backspace') {
           logger.debug("[keys] ignored keydown (listener off)");
         }
         return;
+    }
+
+    // Chord preview inside Analyzer view should not trigger commands
+    if (isChordPreviewModeEnabled() && isActiveView) {
+        e.preventDefault();
+        e.stopPropagation();
     }
 	// Record raw input only when actively listening
 	activeKeysStore.recordPhysicalRaw(e);
@@ -100,11 +111,31 @@ const down = (e: KeyboardEvent) => {
 	logger.debug("[keys] state after keydown", activeKeysStore.state);
 };
 const up = (e: KeyboardEvent) => {
-	if (!keyboardListenerIsActive) {
-		// Privacy: do not log key details when listener is off
-		logger.debug("[keys] ignored keyup (listener off)");
-		return;
-	}
+    const scope = getKeyListenerScope();
+    const scopeAllows = scope === 'global' ? true : (() => {
+      try {
+        const v = plugin.app.workspace.activeLeaf?.view as any;
+        return v && typeof v.getViewType === 'function' && v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER;
+      } catch { return false; }
+    })();
+
+    if (!keyboardListenerIsActive || !scopeAllows) {
+        // Privacy: do not log key details when listener is off
+        logger.debug("[keys] ignored keyup (listener off)");
+        return;
+    }
+
+    // Chord preview inside Analyzer view should not trigger commands
+    const isActiveView = (() => {
+      try {
+        const v = plugin.app.workspace.activeLeaf?.view as any;
+        return v && typeof v.getViewType === 'function' && v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER;
+      } catch { return false; }
+    })();
+    if (isChordPreviewModeEnabled() && isActiveView) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
 	logger.debug("[keys] keyup", { key: e.key, code: e.code });
 	activeKeysStore.handlePhysicalKeyUp(e);
 	logger.debug("[keys] state after keyup", activeKeysStore.state);
@@ -159,35 +190,55 @@ let selectedGroupID = $state(
 
 // Apply group's on-open behavior (defaults vs dynamic) when group changes.
 // For now, we apply only filter state since that's what's persisted.
+// Apply on-open behavior only when group changes (not on every settings flush)
 $effect(() => {
-	try {
-		const gid = selectedGroupID;
-		if (!gid || gid === GroupType.All) return;
-		const g = groupManager.getGroup(gid);
-		if (!g) {
-			logger.warn(
-				"[groups] selected group not found; skipping behavior apply",
-				{ gid },
-			);
-			return;
-		}
-		const mode = groupManager.getGroupBehavior(gid);
-		if (mode === "default") {
-			groupManager.applyDefaultsToGroupFilters(gid);
-		} else {
-			// Dynamic: use last used if available, otherwise fall back to defaults
-			if (g?.lastUsedState?.filters) {
-				groupManager.applyDynamicLastUsedToGroupFilters(gid);
-			} else {
-				groupManager.applyDefaultsToGroupFilters(gid);
-			}
-		}
-	} catch (err) {
-		logger.error("[groups] error applying on-open behavior", {
-			err,
-			selectedGroupID,
-		});
-	}
+    const gid = selectedGroupID || GroupType.All;
+    // Run in a microtask to avoid tracking reactive reads of groups/settings here.
+    queueMicrotask(() => {
+        try {
+            const mode = groupManager.getGroupBehavior(gid);
+            if (gid === GroupType.All) {
+                if (mode === "default") {
+                    groupManager.applyDefaultsToAllFilters();
+                }
+                return;
+            }
+            const g = groupManager.getGroup(gid);
+            if (!g) {
+                logger.warn(
+                    "[groups] selected group not found; skipping behavior apply",
+                    { gid },
+                );
+                return;
+            }
+            if (mode === "default") {
+                groupManager.applyDefaultsToGroupFilters(gid);
+            } else {
+                if (g?.lastUsedState?.filters) {
+                    groupManager.applyDynamicLastUsedToGroupFilters(gid);
+                } else {
+                    groupManager.applyDefaultsToGroupFilters(gid);
+                }
+            }
+        } catch (err) {
+            logger.error("[groups] error applying on-open behavior", {
+                err,
+                selectedGroupID,
+            });
+        }
+    });
+});
+
+// Recompute list when default filters change (do not re-apply defaults)
+$effect(() => {
+    // Track global default filters so All Commands resets reflect immediately
+    plugin.settingsManager.settings.defaultFilterSettings;
+    visibleCommands = commandsManager.filterCommands(
+        search,
+        activeKeysStore.ActiveModifiers,
+        activeKeysStore.ActiveKey,
+        selectedGroupID,
+    );
 });
 
 // Strict modifier match flag derived from current group's filter settings
