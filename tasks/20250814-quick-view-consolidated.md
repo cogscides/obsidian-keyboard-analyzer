@@ -1,6 +1,6 @@
 ---
 title: Quick View — Consolidated: Popover, UI/UX fixes, and Refactor
-status: in_progress
+status: deprecated
 owner: "@agent"
 updated: 2025-08-16 23:20 UTC
 related:

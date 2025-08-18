@@ -143,7 +143,7 @@ onDestroy(() => {
     placeholder="New group name"
     bind:value={newGroupName}
     class="kb-input"
-    onkeydown={(e) => e.key === 'Enter' && _createGroupAndAdd()}
+    onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && _createGroupAndAdd()}
   />
   <button class="kb-btn" onclick={_createGroupAndAdd}>Create & Add</button>
   </div>

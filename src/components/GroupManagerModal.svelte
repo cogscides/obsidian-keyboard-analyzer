@@ -412,7 +412,7 @@
                 Reset filters to defaults
               </button>
             </div>
-            </div>
+          </div>
         {:else}
           <div class="kb-group-meta">
             <label class="u-muted small" for="kb-group-name">Name</label>
@@ -495,68 +495,70 @@
 
           <!-- Add-command inline search -->
           {#if selectedGroupId !== 'all'}
-          <div
-            class="kb-cmd-search"
-            use:clickOutside
-            onclick_outside={() => (cmdSearchOpen = false)}
-          >
-            <label class="u-muted small" for="kb-cmd-search-input"
-              >Add commands</label
+            <div
+              class="kb-cmd-search"
+              use:clickOutside
+              onclick_outside={() => (cmdSearchOpen = false)}
             >
-            <div class="kb-cmd-search-input">
-              <input
-                id="kb-cmd-search-input"
-                class="kb-input"
-                type="text"
-                placeholder="Search commands to add..."
-                bind:value={cmdSearch}
-                bind:this={cmdSearchInputEl}
-                oninput={onCmdSearchInput}
-                onfocus={handleCmdSearchFocus}
-                onkeydown={handleCmdSearchKeydown}
-                aria-autocomplete="list"
-                aria-expanded={cmdSearchOpen}
-                aria-controls="kb-cmd-search-list"
-              />
-              {#if cmdSearch}
-                <button
-                  class="kb-icon clear"
-                  aria-label="Clear search"
-                  title="Clear"
-                  onclick={clearCmdSearch}
+              <label class="u-muted small" for="kb-cmd-search-input"
+                >Add commands</label
+              >
+              <div class="kb-cmd-search-input">
+                <input
+                  id="kb-cmd-search-input"
+                  class="kb-input"
+                  type="text"
+                  placeholder="Search commands to add..."
+                  bind:value={cmdSearch}
+                  bind:this={cmdSearchInputEl}
+                  oninput={onCmdSearchInput}
+                  onfocus={handleCmdSearchFocus}
+                  onkeydown={handleCmdSearchKeydown}
+                  aria-autocomplete="list"
+                  aria-expanded={cmdSearchOpen}
+                  aria-controls="kb-cmd-search-list"
+                />
+                {#if cmdSearch}
+                  <button
+                    class="kb-icon clear"
+                    aria-label="Clear search"
+                    title="Clear"
+                    onclick={clearCmdSearch}
+                  >
+                    <X size={14} />
+                  </button>
+                {/if}
+              </div>
+
+              {#if cmdSearchOpen && cmdSearchResults.length > 0}
+                <ul
+                  id="kb-cmd-search-list"
+                  class="kb-cmd-dropdown"
+                  role="listbox"
                 >
-                  <X size={14} />
-                </button>
+                  {#each cmdSearchResults as r (r.id)}
+                    <li
+                      class="kb-cmd-option"
+                      role="option"
+                      aria-selected="false"
+                      onclick={() => pickSearchResult(r)}
+                      title={`${r.pluginName}: ${r.name}`}
+                    >
+                      <span class="label">{r.pluginName}: {r.name}</span>
+                      {#if r.hotkeys && r.hotkeys.length > 0}
+                        <span class="hk">{renderFirstHotkey(r)}</span>
+                      {:else}
+                        <span class="hk u-muted">no hotkey</span>
+                      {/if}
+                    </li>
+                  {/each}
+                </ul>
+              {:else if cmdSearchOpen && cmdSearch.trim().length > 0}
+                <div class="kb-cmd-empty u-muted small">
+                  No matching commands
+                </div>
               {/if}
             </div>
-
-            {#if cmdSearchOpen && cmdSearchResults.length > 0}
-              <ul
-                id="kb-cmd-search-list"
-                class="kb-cmd-dropdown"
-                role="listbox"
-              >
-                {#each cmdSearchResults as r (r.id)}
-                  <li
-                    class="kb-cmd-option"
-                    role="option"
-                    aria-selected="false"
-                    onclick={() => pickSearchResult(r)}
-                    title={`${r.pluginName}: ${r.name}`}
-                  >
-                    <span class="label">{r.pluginName}: {r.name}</span>
-                    {#if r.hotkeys && r.hotkeys.length > 0}
-                      <span class="hk">{renderFirstHotkey(r)}</span>
-                    {:else}
-                      <span class="hk u-muted">no hotkey</span>
-                    {/if}
-                  </li>
-                {/each}
-              </ul>
-            {:else if cmdSearchOpen && cmdSearch.trim().length > 0}
-              <div class="kb-cmd-empty u-muted small">No matching commands</div>
-            {/if}
-          </div>
           {/if}
 
           {#if commands.length === 0}
@@ -589,18 +591,18 @@
                     {/if}
                   </span>
                   {#if selectedGroupId !== 'all'}
-                  <button
-                    class="kb-icon rm-icon"
-                    title="Remove from group"
-                    aria-label="Remove from group"
-                    onclick={() =>
-                      groupManager.removeCommandFromGroup(
-                        selectedGroupId,
-                        cmd.id
-                      )}
-                  >
-                    <X size={14} />
-                  </button>
+                    <button
+                      class="kb-icon rm-icon"
+                      title="Remove from group"
+                      aria-label="Remove from group"
+                      onclick={() =>
+                        groupManager.removeCommandFromGroup(
+                          selectedGroupId,
+                          cmd.id
+                        )}
+                    >
+                      <X size={14} />
+                    </button>
                   {/if}
                 </li>
               {/each}
@@ -630,6 +632,7 @@
     background: var(--background-primary);
     color: var(--text-normal);
     width: min(720px, 95vw);
+    max-width: 100%;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     z-index: 200001;
@@ -650,7 +653,7 @@
     gap: 10px;
     min-height: 50vh;
     max-height: 70vh;
-    overflow: visible; /* allow dropdowns to escape */
+    overflow: auto; /* allow dropdowns to escape */
   }
   .kb-controls-row {
     display: flex;

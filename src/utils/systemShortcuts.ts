@@ -2,35 +2,28 @@ import type { Modifier } from "obsidian";
 import type { commandEntry, hotkeyEntry } from "../interfaces/Interfaces";
 
 function isMac(): boolean {
-	// Electron/Node provides process.platform in Obsidian
-	// Fallback to navigator for safety
-	try {
-		// @ts-expect-error
-		return typeof process !== "undefined" && process.platform === "darwin";
-	} catch {
-		return (
-			typeof navigator !== "undefined" &&
-			/Mac|iPhone|iPad/.test(navigator.platform)
-		);
-	}
+    // Electron/Node provides process.platform in Obsidian; use safe global lookup.
+    const proc = (globalThis as unknown as { process?: { platform?: string } })
+        .process;
+    if (proc?.platform) return proc.platform === "darwin";
+    return (
+        typeof navigator !== "undefined" &&
+        /Mac|iPhone|iPad/.test(navigator.platform)
+    );
 }
 
 function isWindows(): boolean {
-	try {
-		// @ts-expect-error
-		return typeof process !== "undefined" && process.platform === "win32";
-	} catch {
-		return typeof navigator !== "undefined" && /Win/.test(navigator.platform);
-	}
+    const proc = (globalThis as unknown as { process?: { platform?: string } })
+        .process;
+    if (proc?.platform) return proc.platform === "win32";
+    return typeof navigator !== "undefined" && /Win/.test(navigator.platform);
 }
 
 function isLinux(): boolean {
-	try {
-		// @ts-expect-error
-		return typeof process !== "undefined" && process.platform === "linux";
-	} catch {
-		return typeof navigator !== "undefined" && /Linux/.test(navigator.platform);
-	}
+    const proc = (globalThis as unknown as { process?: { platform?: string } })
+        .process;
+    if (proc?.platform) return proc.platform === "linux";
+    return typeof navigator !== "undefined" && /Linux/.test(navigator.platform);
 }
 
 function hk(mods: Modifier[] | string[], key: string): hotkeyEntry {

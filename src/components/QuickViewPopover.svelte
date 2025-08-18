@@ -1,525 +1,672 @@
 <script lang="ts">
-import { onDestroy, onMount, setContext } from "svelte";
-import clickOutside from "../utils/clickOutside.js";
-import SearchMenu from "./SearchMenu.svelte";
-import CommandsList from "./CommandsList.svelte";
-import type { commandEntry } from "../interfaces/Interfaces";
-import type KeyboardAnalyzerPlugin from "../main";
-import { VisualKeyboardManager } from "../managers";
-import { ActiveKeysStore } from "../stores/activeKeysStore.svelte.ts";
-import { convertModifiers } from "../utils/modifierUtils";
+  import { onDestroy, onMount } from 'svelte'
+  import clickOutside from '../utils/clickOutside.js'
+  import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
+  import type KeyboardAnalyzerPlugin from '../main'
+  import { VisualKeyboardManager } from '../managers'
+  import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
+  import { convertModifiers } from '../utils/modifierUtils'
+  import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
 
-interface Props {
-	plugin: KeyboardAnalyzerPlugin;
-	anchorEl?: HTMLElement | null;
-	onClose?: () => void;
-	listenToggle?: number;
-}
+  interface Props {
+    plugin: KeyboardAnalyzerPlugin
+    anchorEl?: HTMLElement | null
+    onClose?: () => void
+    listenToggle?: number
+  }
 
-function handleGlobalKeyup(e: KeyboardEvent) {
-  if (!rootEl || !keyboardListenerIsActive) return;
-  const target = e.target as Node | null;
-  const isInside = target ? rootEl.contains(target) : false;
-  if (!isInside) return;
-  e.preventDefault();
-  e.stopPropagation();
-  try {
-    activeKeysStore.handlePhysicalKeyUp(e);
-  } catch {}
-}
+  let {
+    plugin,
+    anchorEl = $bindable(null),
+    onClose = $bindable(() => {}),
+    listenToggle = $bindable(0),
+  }: Props = $props()
 
-let {
-	plugin,
-	anchorEl = $bindable(null),
-	onClose = $bindable(() => {}),
-	listenToggle = $bindable(0),
-}: Props = $props();
+  const commandsManager = plugin.commandsManager
+  const settingsManager = plugin.settingsManager
+  const groupManager = plugin.groupManager
 
-const commandsManager = plugin.commandsManager;
-const settingsManager = plugin.settingsManager;
+  // Core state
+  let search = $state('')
+  let listenerActive = $state(false)
+  let selectedGroup = $state(
+    (settingsManager.getSetting('lastOpenedGroupId') as string) || 'all'
+  )
 
-// Search/listen state delegated to SearchMenu-compatible API
-let search = $state("");
-let keyboardListenerIsActive = $state(false);
-let selectedGroupID = $state(
-	(settingsManager.getSetting("lastOpenedGroupId") as string) || "all",
-);
+  // Keys state via ActiveKeysStore
+  const visualKeyboardManager = new VisualKeyboardManager()
+  const activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager)
+  let activeKey = $state('')
+  let activeModifiers: string[] = $state([])
 
-// Active key state (baked/consistent via ActiveKeysStore in SearchMenu)
-let activeKey = $state("");
-let activeModifiers: string[] = $state([]);
+  // Results
+  let filtered: commandEntry[] = $state([])
+  let selectedIndex = $state(0)
+  let listEl: HTMLDivElement | null = null
+  let inputEl: HTMLInputElement | null = null
 
-// Results
-let filteredCommands: commandEntry[] = $state([]);
-let resultLimit = $state(100);
+  // Persisted size and anchoring
+  let rootEl: HTMLDivElement | null = null
+  let placeAbove = $state(false)
+  let coords = $state({
+    top: 0,
+    left: 0,
+    width: Math.max(
+      320,
+      Math.min(520, Number(settingsManager.settings.quickViewWidth || 380))
+    ),
+    maxHeight: Math.min(
+      Math.floor((window.innerHeight || 600) * 0.6),
+      Math.max(240, Number(settingsManager.settings.quickViewHeight || 360))
+    ),
+  })
+  let anchorOffsetX = $state(0)
+  let isResizing = false
+  let suppressOutsideCloseUntil = 0
 
-function refilter() {
-	const base = commandsManager.filterCommands(
-		search,
-		convertModifiers(activeModifiers),
-		activeKey,
-		selectedGroupID,
-	);
-	filteredCommands = base.slice(0, resultLimit);
-	// Reset selection to first item after refilter
-	selectedIndex = 0;
-	queueUpdateSelection(true);
-}
+  // Refilter based on state
+  function refilter() {
+    const base = commandsManager.filterCommands(
+      search,
+      convertModifiers(activeModifiers),
+      activeKey,
+      selectedGroup
+    )
+    filtered = base.slice(0, 200)
+    selectedIndex = Math.min(selectedIndex, Math.max(0, filtered.length - 1))
+  }
 
-// Wire double-run signal
-$effect(() => {
-	listenToggle;
-	if (listenToggle) {
-		keyboardListenerIsActive = true;
-	}
-});
+  // Listen nonce from plugin command (double-run)
+  $effect(() => {
+    listenToggle // reactive ping
+    if (listenToggle) listenerActive = true
+  })
 
-let rootEl: HTMLDivElement | null = null;
-let placeAbove = $state(false);
-// Persisted size (defaults tuned for ~320–360px width and 60vh max height)
-let coords = $state({
-	top: 0,
-	left: 0,
-	maxHeight: Math.min(
-		Math.floor((window.innerHeight || 600) * 0.6),
-		Math.max(240, Number(settingsManager.settings.quickViewHeight || 360)),
-	),
-	width: Math.max(
-		320,
-		Math.min(480, Number(settingsManager.settings.quickViewWidth || 360)),
-	),
-});
+  // Positioning near status bar icon
+  function recomputePosition() {
+    try {
+      if (!rootEl || !anchorEl || isResizing) return
+      const rect = anchorEl.getBoundingClientRect()
+      const vh = window.innerHeight || document.documentElement.clientHeight
+      const vw = window.innerWidth || document.documentElement.clientWidth
+      const margin = 6
+      const desiredTop = rect.bottom + margin
+      const estH = Math.min(
+        Math.floor(vh * 0.6),
+        Math.max(240, coords.maxHeight)
+      )
+      const fitsBelow = desiredTop + estH <= vh
+      placeAbove = !fitsBelow
+      const top = placeAbove
+        ? Math.max(8, rect.top - margin - estH)
+        : Math.min(vh - estH - 8, desiredTop)
+      let left = anchorOffsetX ? rect.left + anchorOffsetX : rect.left
+      const width = coords.width || rootEl.offsetWidth || 360
+      if (left + width > vw - 8) left = Math.max(8, vw - width - 8)
+      if (left < 8) left = 8
+      coords = { ...coords, top, left, maxHeight: estH }
+      anchorOffsetX = left - rect.left
+    } catch {}
+  }
 
-function recomputePosition() {
-	try {
-		const el = rootEl;
-		if (!el || !anchorEl) return;
-		if (isResizing) return;
-		const rect = anchorEl.getBoundingClientRect();
-		const viewportH =
-			window.innerHeight || document.documentElement.clientHeight;
-		const viewportW = window.innerWidth || document.documentElement.clientWidth;
+  // Corner resize (top-left)
+  let resizingCorner = false
+  let startCX = 0,
+    startCY = 0,
+    startLeft = 0,
+    startW = 0,
+    startH = 0
+  function onCornerDown(e: PointerEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    resizingCorner = true
+    isResizing = true
+    startCX = e.clientX
+    startCY = e.clientY
+    startLeft = coords.left
+    startW = coords.width
+    startH = coords.maxHeight
+    suppressOutsideCloseUntil = Date.now() + 250
+    window.addEventListener('pointermove', onCornerMove, true)
+    window.addEventListener('pointerup', onCornerUp, true)
+  }
+  function onCornerMove(e: PointerEvent) {
+    if (!resizingCorner) return
+    const dx = e.clientX - startCX
+    const dy = e.clientY - startCY
+    let left = startLeft + dx
+    let width = startW - dx
+    let height = startH + dy
+    const minW = 320,
+      minH = 240
+    const vw = window.innerWidth || document.documentElement.clientWidth
+    const vh = window.innerHeight || document.documentElement.clientHeight
+    const maxH = Math.floor(vh * 0.6)
+    if (width < minW) {
+      left = startLeft + (startW - minW)
+      width = minW
+    }
+    if (left < 8) {
+      left = 8
+      width = Math.max(minW, Math.min(startW - (startLeft - 8), vw - 16))
+    }
+    if (left + width > vw - 8) width = Math.max(minW, vw - 8 - left)
+    if (height < minH) height = minH
+    if (height > maxH) height = maxH
+    coords = { ...coords, left, width, maxHeight: height }
+    try {
+      if (anchorEl)
+        anchorOffsetX = coords.left - anchorEl.getBoundingClientRect().left
+    } catch {}
+    settingsManager.updateSettings({
+      quickViewWidth: width,
+      quickViewHeight: height,
+    })
+  }
+  function onCornerUp() {
+    if (!resizingCorner) return
+    resizingCorner = false
+    isResizing = false
+    suppressOutsideCloseUntil = Date.now() + 120
+    window.removeEventListener('pointermove', onCornerMove, true)
+    window.removeEventListener('pointerup', onCornerUp, true)
+  }
 
-		const offset = 6;
-		const desiredTop = rect.bottom + offset;
-		const estimatedHeight = Math.min(
-			Math.floor(viewportH * 0.6),
-			Math.max(240, coords.maxHeight),
-		);
-		const fitsBelow = desiredTop + estimatedHeight <= viewportH;
-		placeAbove = !fitsBelow;
+  // Left-edge width resize (optional but handy)
+  let resizingLeft = false
+  let startLX = 0,
+    startLLeft = 0,
+    startLW = 0
+  function onLeftDown(e: PointerEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    ;(e.target as Element).setPointerCapture?.(e.pointerId)
+    resizingLeft = true
+    isResizing = true
+    startLX = e.clientX
+    startLLeft = coords.left
+    startLW = coords.width
+    suppressOutsideCloseUntil = Date.now() + 250
+    window.addEventListener('pointermove', onLeftMove, true)
+    window.addEventListener('pointerup', onLeftUp, true)
+  }
+  function onLeftMove(e: PointerEvent) {
+    if (!resizingLeft) return
+    const dx = e.clientX - startLX
+    let left = startLLeft + dx
+    let width = startLW - dx
+    const minW = 320
+    const vw = window.innerWidth || document.documentElement.clientWidth
+    if (width < minW) {
+      width = minW
+      left = startLLeft + (startLW - minW)
+    }
+    if (left < 8) {
+      left = 8
+      width = Math.max(minW, Math.min(startLW - (startLLeft - 8), vw - 16))
+    }
+    if (left + width > vw - 8) width = Math.max(minW, vw - 8 - left)
+    coords = { ...coords, left, width }
+    try {
+      if (anchorEl)
+        anchorOffsetX = coords.left - anchorEl.getBoundingClientRect().left
+    } catch {}
+    settingsManager.updateSettings({ quickViewWidth: width })
+  }
+  function onLeftUp() {
+    if (!resizingLeft) return
+    resizingLeft = false
+    isResizing = false
+    suppressOutsideCloseUntil = Date.now() + 120
+    window.removeEventListener('pointermove', onLeftMove, true)
+    window.removeEventListener('pointerup', onLeftUp, true)
+  }
 
-		const top = placeAbove
-			? Math.max(8, rect.top - offset - estimatedHeight)
-			: Math.min(viewportH - estimatedHeight - 8, desiredTop);
+  // Keyboard handling and selection
+  function clampIndex(n: number): number {
+    const max = Math.max(0, filtered.length - 1)
+    if (max === 0) return 0
+    if (n < 0) return max
+    if (n > max) return 0
+    return n
+  }
+  function moveSelection(delta: number) {
+    selectedIndex = clampIndex(selectedIndex + delta)
+    // ensure visible
+    queueMicrotask(() => {
+      const rows = listEl?.querySelectorAll<HTMLElement>('.qv-row')
+      const el = rows?.[selectedIndex]
+      el?.scrollIntoView({ block: 'nearest' })
+    })
+  }
+  function runSelected() {
+    const cmd = filtered[selectedIndex]
+    if (!cmd) return
+    try {
+      plugin.app.commands.executeCommandById(cmd.id)
+      commandsManager.addRecentCommand(cmd.id)
+    } catch {}
+    onClose?.()
+  }
 
-		// prefer align left with anchor; clamp
-		let left = rect.left;
-		const width = coords.width || el.offsetWidth || 360;
-		if (left + width > viewportW - 8) left = Math.max(8, viewportW - width - 8);
-		if (left < 8) left = 8;
+  function onKeydownGlobal(e: KeyboardEvent) {
+    if (!rootEl) return
+    const inside = rootEl.contains(e.target as Node)
+    if (!inside) return
 
-		coords = { ...coords, top, left, maxHeight: estimatedHeight };
-	} catch {}
-}
+    const modF = (e.key === 'f' || e.key === 'F') && (e.metaKey || e.ctrlKey)
+    if (modF) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (document.activeElement !== inputEl) {
+        inputEl?.focus()
+        return
+      }
+      listenerActive = !listenerActive
+      return
+    }
 
-// Left-edge resize
-let resizingLeft = false;
-let startX = 0;
-let startLeft = 0;
-let startWidth = 0;
-let suppressOutsideCloseUntil = 0;
+    if (listenerActive) {
+      e.preventDefault()
+      e.stopPropagation()
+      try {
+        activeKeysStore.handlePhysicalKeyDown(e)
+      } catch {}
+      activeKey = activeKeysStore.ActiveKey
+      activeModifiers = activeKeysStore.ActiveModifiers as unknown as string[]
+      refilter()
+      return
+    }
 
-function onLeftResizeDown(e: PointerEvent) {
-	e.preventDefault();
-	e.stopPropagation();
-	try {
-		(e.target as Element).setPointerCapture?.(e.pointerId);
-	} catch {}
-	resizingLeft = true;
-	isResizing = true;
-	startX = e.clientX;
-	startLeft = coords.left;
-	startWidth = coords.width;
-	suppressOutsideCloseUntil = Date.now() + 300;
-	window.addEventListener("pointermove", onLeftResizeMove, true);
-	window.addEventListener("pointerup", onLeftResizeUp, true);
-}
-function onLeftResizeMove(e: PointerEvent) {
-	if (!resizingLeft) return;
-	const dx = e.clientX - startX;
-	let newLeft = startLeft + dx;
-	let newWidth = startWidth - dx;
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      onClose?.()
+      return
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      e.stopPropagation()
+      moveSelection(1)
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      e.stopPropagation()
+      moveSelection(-1)
+      return
+    }
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      moveSelection(e.shiftKey ? -1 : 1)
+      return
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      e.stopPropagation()
+      runSelected()
+      return
+    }
+  }
+  function onKeyupGlobal(e: KeyboardEvent) {
+    if (!rootEl || !listenerActive) return
+    const inside = rootEl.contains(e.target as Node)
+    if (!inside) return
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      activeKeysStore.handlePhysicalKeyUp(e)
+    } catch {}
+  }
 
-	// clamp
-	const minW = 320;
-	const viewportW = window.innerWidth || document.documentElement.clientWidth;
-	if (newWidth < minW) {
-		newWidth = minW;
-		newLeft = startLeft + (startWidth - minW);
-	}
-	if (newLeft < 8) {
-		const delta = 8 - newLeft;
-		newLeft = 8;
-		newWidth = Math.min(startWidth - (startLeft - 8), viewportW - 16);
-		if (newWidth < minW) newWidth = minW;
-	}
-	// Ensure right edge fits viewport
-	if (newLeft + newWidth > viewportW - 8) {
-		newWidth = Math.max(minW, viewportW - 8 - newLeft);
-	}
+  // UI helpers
+  function clearSearch() {
+    if (search.trim() === '') {
+      activeKeysStore.reset()
+      activeKey = ''
+      activeModifiers = []
+    } else {
+      search = ''
+    }
+    refilter()
+    inputEl?.focus()
+  }
+  function toggleListener() {
+    listenerActive = !listenerActive
+    inputEl?.focus()
+  }
+  function onInput() {
+    refilter()
+  }
+  function onGroupChange(e: Event) {
+    const val = (e.target as HTMLSelectElement).value
+    selectedGroup = val
+    settingsManager.updateSettings({ lastOpenedGroupId: val })
+    refilter()
+  }
+  function openFull(mode: boolean | 'split') {
+    plugin.addShortcutsView(mode)
+    onClose?.()
+  }
 
-	coords = { ...coords, left: newLeft, width: newWidth };
-	settingsManager.updateSettings({ quickViewWidth: newWidth });
-}
-function onLeftResizeUp() {
-	if (!resizingLeft) return;
-	resizingLeft = false;
-	isResizing = false;
-	suppressOutsideCloseUntil = Date.now() + 150;
-	window.removeEventListener("pointermove", onLeftResizeMove, true);
-	window.removeEventListener("pointerup", onLeftResizeUp, true);
-}
+  // Minimal filter dropdown (collapsed)
+  let filtersOpen = $state(false)
+  const filterKeys: Array<{
+    key: keyof ReturnType<typeof groupManager.getGroupSettings>
+    label: string
+  }> = [
+    { key: 'StrictModifierMatch', label: 'Strict modifiers' },
+    { key: 'ViewWOhotkeys', label: 'Only with hotkeys' },
+    { key: 'OnlyDuplicates', label: 'Only duplicates' },
+    { key: 'DisplayInternalModules', label: 'Include internal modules' },
+  ]
+  function setFilter(key: string, val: boolean) {
+    groupManager.updateGroupFilterSettings(selectedGroup, { [key]: val } as any)
+    refilter()
+  }
 
-// Reference to SearchMenu's input for focusing via Mod+F from anywhere in the popover
-let searchInputEl: HTMLInputElement | undefined = $state(undefined);
-
-// Bottom-edge resize (height)
-let resizingBottom = false;
-let startY = 0;
-let startHeight = 0;
-
-function onBottomResizeDown(e: PointerEvent) {
-	e.preventDefault();
-	e.stopPropagation();
-	try {
-		(e.target as Element).setPointerCapture?.(e.pointerId);
-	} catch {}
-	resizingBottom = true;
-	isResizing = true;
-	startY = e.clientY;
-	startHeight = coords.maxHeight;
-	suppressOutsideCloseUntil = Date.now() + 300;
-	window.addEventListener("pointermove", onBottomResizeMove, true);
-	window.addEventListener("pointerup", onBottomResizeUp, true);
-}
-function onBottomResizeMove(e: PointerEvent) {
-	if (!resizingBottom) return;
-	const dy = e.clientY - startY;
-	const viewportH = window.innerHeight || document.documentElement.clientHeight;
-	let newHeight = startHeight + dy;
-
-	// Clamp height to viewport and minimum; prefer <= 60vh
-	const minH = 240;
-	const maxH = Math.floor(viewportH * 0.6);
-	if (newHeight < minH) newHeight = minH;
-	if (newHeight > maxH) newHeight = maxH;
-
-	coords = { ...coords, maxHeight: newHeight };
-	// Persist last height
-	settingsManager.updateSettings({ quickViewHeight: newHeight });
-}
-function onBottomResizeUp() {
-	if (!resizingBottom) return;
-	resizingBottom = false;
-	isResizing = false;
-	suppressOutsideCloseUntil = Date.now() + 150;
-	window.removeEventListener("pointermove", onBottomResizeMove, true);
-	window.removeEventListener("pointerup", onBottomResizeUp, true);
-}
-
-// Keyboard selection management (roving tabindex without mutating CommandsList)
-let selectedIndex = $state(0);
-let pendingSelectionFocus = false;
-let listContainer: HTMLDivElement | null = null;
-function getRowNodes(): HTMLDivElement[] {
-	if (!listContainer) return [];
-	return Array.from(
-		listContainer.querySelectorAll<HTMLDivElement>(
-			".kbanalizer-setting-item.setting-item",
-		),
-	);
-}
-
-function clampIndex(n: number): number {
-	const rows = getRowNodes();
-	if (rows.length === 0) return 0;
-	if (n < 0) return rows.length - 1;
-	if (n >= rows.length) return 0;
-	return n;
-}
-
-function applyRovingTabindex(focus: boolean) {
-	const rows = getRowNodes();
-	rows.forEach((el, i) => {
-		el.setAttribute("tabindex", i === selectedIndex ? "0" : "-1");
-		el.classList.toggle("keyboard-selected", i === selectedIndex);
-	});
-	if (focus && rows[selectedIndex]) {
-		// Focus visible ring
-		rows[selectedIndex].focus();
-	}
-}
-
-function queueUpdateSelection(focus: boolean) {
-	pendingSelectionFocus = focus;
-	// Wait for DOM to update after list changes
-	queueMicrotask(() => {
-		applyRovingTabindex(pendingSelectionFocus);
-		pendingSelectionFocus = false;
-	});
-}
-
-function moveSelection(delta: number) {
-	selectedIndex = clampIndex(selectedIndex + delta);
-	queueUpdateSelection(true);
-}
-
-function runSelectedCommand() {
-	const list = filteredCommands;
-	if (!list || list.length === 0) return;
-	const cmd = list[Math.min(selectedIndex, list.length - 1)];
-	if (!cmd) return;
-	try {
-		// Reuse Obsidian's command execution path
-		plugin.app.commands.executeCommandById(cmd.id);
-		commandsManager.addRecentCommand(cmd.id);
-	} catch {}
-	// Close after execute
-	onClose?.();
-}
-
-// Capture key handling inside the popover to prevent leakage to underlying views
-function handleGlobalKeydown(e: KeyboardEvent) {
-	if (!rootEl) return;
-	const target = e.target as Node | null;
-	const isInside = target ? rootEl.contains(target) : false;
-	if (!isInside) return;
-
-	const isModF =
-		(e.key === "f" || e.key === "F") &&
-		(e.metaKey === true || e.ctrlKey === true);
-	if (isModF) {
-		e.preventDefault();
-		e.stopPropagation();
-		if (document.activeElement !== searchInputEl) {
-			searchInputEl?.focus();
-			return;
-		}
-		keyboardListenerIsActive = !keyboardListenerIsActive;
-		return;
-	}
-
-	// If typing in the search input, use arrows to move selection
-	if (target === searchInputEl && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
-		e.preventDefault();
-		e.stopPropagation();
-		moveSelection(e.key === "ArrowDown" ? 1 : -1);
-		return;
-	}
-
-	// Keyboard navigation and close behavior
-	if (e.key === "Escape") {
-		e.preventDefault();
-		e.stopPropagation();
-		onClose?.();
-		return;
-	}
-
-	if (e.key === "ArrowDown") {
-		e.preventDefault();
-		e.stopPropagation();
-		moveSelection(1);
-		return;
-	}
-	if (e.key === "ArrowUp") {
-		e.preventDefault();
-		e.stopPropagation();
-		moveSelection(-1);
-		return;
-	}
-	if (e.key === "Tab") {
-		e.preventDefault();
-		e.stopPropagation();
-		moveSelection(e.shiftKey ? -1 : 1);
-		return;
-	}
-	if (e.key === "Enter") {
-		e.preventDefault();
-		e.stopPropagation();
-		runSelectedCommand();
-		return;
-	}
-
-	// Local physical listening: capture when toggled on
-	if (keyboardListenerIsActive) {
-		e.preventDefault();
-		e.stopPropagation();
-		try {
-			activeKeysStore.handlePhysicalKeyDown(e);
-			refilter();
-		} catch {}
-		return;
-	}
-}
-
-function handleListClick(e: MouseEvent) {
-	const t = e.target as HTMLElement | null;
-	if (!t) return;
-	// Ignore clicks on action icons or hotkey chips
-	if (t.closest(".action-icons") || t.closest(".kbanalizer-setting-hotkey")) {
-		return;
-	}
-	const row = t.closest(
-		".kbanalizer-setting-item.setting-item",
-	) as HTMLDivElement | null;
-	if (!row) return;
-	const rows = getRowNodes();
-	const idx = rows.indexOf(row);
-	if (idx >= 0) {
-		selectedIndex = idx;
-		queueUpdateSelection(false);
-		runSelectedCommand();
-	}
-}
-
-const onScroll = () => recomputePosition();
-let ro: ResizeObserver | null = null;
-let isResizing = false;
-
-onMount(() => {
-	refilter();
-	recomputePosition();
-	window.addEventListener("resize", recomputePosition);
-	document.addEventListener("scroll", onScroll, true);
-	if ("ResizeObserver" in window && rootEl) {
-		ro = new ResizeObserver(() => recomputePosition());
-		ro.observe(rootEl);
-	}
-	// Capture keyboard at capture phase while popover is open
-	window.addEventListener("keydown", handleGlobalKeydown, true);
-	window.addEventListener("keyup", handleGlobalKeyup, true);
-	// Focus search input on open; keep list selection navigable via arrows
-	queueMicrotask(() => searchInputEl?.focus());
-	queueUpdateSelection(false);
-});
-
-onDestroy(() => {
-	window.removeEventListener("resize", recomputePosition);
-	document.removeEventListener("scroll", onScroll, true);
-	ro?.disconnect();
-	ro = null;
-	window.removeEventListener("keydown", handleGlobalKeydown, true);
-	window.removeEventListener("keyup", handleGlobalKeyup, true);
-	window.removeEventListener("pointermove", onLeftResizeMove, true);
-	window.removeEventListener("pointerup", onLeftResizeUp, true);
-	window.removeEventListener("pointermove", onBottomResizeMove, true);
-	window.removeEventListener("pointerup", onBottomResizeUp, true);
-});
-
-// Provide contexts expected by reused components (GroupSelector, SearchMenu, CommandsList)
-const visualKeyboardManager = new VisualKeyboardManager();
-const activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager);
-setContext("keyboard-analyzer-plugin", plugin);
-setContext("visualKeyboardManager", visualKeyboardManager);
-setContext("activeKeysStore", activeKeysStore);
+  // Mount/teardown
+  const onScroll = () => recomputePosition()
+  let ro: ResizeObserver | null = null
+  onMount(() => {
+    refilter()
+    recomputePosition()
+    window.addEventListener('resize', recomputePosition)
+    document.addEventListener('scroll', onScroll, true)
+    if ('ResizeObserver' in window && rootEl) {
+      ro = new ResizeObserver(() => recomputePosition())
+      ro.observe(rootEl)
+    }
+    window.addEventListener('keydown', onKeydownGlobal, true)
+    window.addEventListener('keyup', onKeyupGlobal, true)
+    queueMicrotask(() => inputEl?.focus())
+  })
+  onDestroy(() => {
+    window.removeEventListener('resize', recomputePosition)
+    document.removeEventListener('scroll', onScroll, true)
+    ro?.disconnect()
+    ro = null
+    window.removeEventListener('keydown', onKeydownGlobal, true)
+    window.removeEventListener('keyup', onKeyupGlobal, true)
+    window.removeEventListener('pointermove', onCornerMove, true)
+    window.removeEventListener('pointerup', onCornerUp, true)
+    window.removeEventListener('pointermove', onLeftMove, true)
+    window.removeEventListener('pointerup', onLeftUp, true)
+  })
 </script>
 
 <div
-  class="qv-popover"
+  class="qv"
   class:is-above={placeAbove}
-  style="position: fixed; top: {coords.top}px; left: {coords.left}px; max-height:{coords.maxHeight}px; width:{coords.width}px;"
+  style="position: fixed; top:{coords.top}px; left:{coords.left}px; width:{coords.width}px; max-height:{coords.maxHeight}px;"
   use:clickOutside
   onclick_outside={() => {
-    if (resizingLeft) return
     if (Date.now() < suppressOutsideCloseUntil) return
     onClose?.()
   }}
   role="dialog"
-  aria-label="Quick View — Commands"
+  aria-label="Quick Commands"
   bind:this={rootEl}
 >
-  <!-- Left resize handle -->
-  <div
-    class="qv-resize-handle-left"
-    role="separator"
-    aria-orientation="vertical"
-    title="Resize width"
-    onpointerdown={onLeftResizeDown}
-  ></div>
+  <div class="qv-corner" title="Resize" onpointerdown={onCornerDown}></div>
+  <div class="qv-left" title="Resize width" onpointerdown={onLeftDown}></div>
 
-  <!-- Reused SearchMenu in compact mode -->
-  <div class="qv-header-compact">
-    <SearchMenu
-      {plugin}
-      bind:inputHTML={searchInputEl}
-      selectedGroup={selectedGroupID}
-      {search}
-      bind:keyboardListenerIsActive
-      onSearch={(q, mods, key, group) => {
-        search = q
-        activeModifiers = mods
-        activeKey = key
-        selectedGroupID = group
-        refilter()
-      }}
-    />
-  </div>
+  <header class="qv-header">
+    <div class="qv-row-1">
+      <select
+        class="qv-group"
+        onchange={onGroupChange}
+        bind:value={selectedGroup}
+      >
+        <option value="all">All Commands</option>
+        {#each groupManager.getGroups() as g}
+          <option value={g.id}>{g.name}</option>
+        {/each}
+      </select>
+      <div class="spacer"></div>
+      <div class="qv-actions">
+        <button
+          class="qv-btn"
+          onclick={() => (filtersOpen = !filtersOpen)}
+          aria-expanded={filtersOpen}>Filters</button
+        >
+        <div class="sep"></div>
+        <button class="qv-btn" onclick={() => openFull(false)}>Open</button>
+        <button class="qv-btn" onclick={() => openFull(true)}>New Pane</button>
+        <button class="qv-btn" onclick={() => openFull('split')}>Split</button>
+      </div>
+    </div>
+    {#if filtersOpen}
+      <div class="qv-filters">
+        {#each filterKeys as f}
+          {#key selectedGroup}
+            <label class="qv-filter">
+              <input
+                type="checkbox"
+                checked={groupManager.getGroupSettings(selectedGroup)[f.key]}
+                onchange={(e) =>
+                  setFilter(f.key, (e.target as HTMLInputElement).checked)}
+              />
+              {f.label}
+            </label>
+          {/key}
+        {/each}
+      </div>
+    {/if}
+    <div class="qv-search">
+      <div class="chips">
+        {#each activeModifiers as m}
+          <kbd class="chip">{m}</kbd>
+        {/each}
+        {#if activeKey}
+          <kbd class="chip">{activeKey}</kbd>
+        {/if}
+      </div>
+      <input
+        class="qv-input"
+        type="text"
+        placeholder="Search…"
+        bind:value={search}
+        bind:this={inputEl}
+        oninput={onInput}
+      />
+      <div class="qv-right">
+        <button
+          class={`qv-btn ${listenerActive ? 'is-on' : ''}`}
+          title={listenerActive
+            ? 'Deactivate key listener (Esc)'
+            : 'Activate key listener'}
+          onclick={toggleListener}>Keys</button
+        >
+        <button class="qv-btn" title="Clear" onclick={clearSearch}>Clear</button
+        >
+      </div>
+    </div>
+  </header>
 
-  <!-- Results (rendered via CommandsList for reuse) -->
   <div
-    class="qv-content"
+    class="qv-list"
+    bind:this={listEl}
     role="listbox"
     aria-label="Command results"
-    tabindex="0"
-    onclick={handleListClick}
-    bind:this={listContainer}
   >
-    <CommandsList {filteredCommands} selectedGroup={selectedGroupID} />
+    {#if filtered.length === 0}
+      <div class="qv-empty">No matching commands</div>
+    {:else}
+      {#each filtered as cmd, i (cmd.id)}
+        <div
+          class="qv-row {i === selectedIndex ? 'is-selected' : ''}"
+          onclick={() => {
+            selectedIndex = i
+            runSelected()
+          }}
+        >
+          <div class="qv-name">{cmd.name}</div>
+          <div class="qv-hotkeys">
+            {#each cmd.hotkeys as hk}
+              <span class="hk"
+                >{settingsManager.settings.useBakedKeyNames
+                  ? formatHotkeyBaked(hk as hotkeyEntry)
+                  : plugin.hotkeyManager.renderHotkey(hk as hotkeyEntry)}</span
+              >
+            {/each}
+          </div>
+        </div>
+      {/each}
+    {/if}
   </div>
-
-  <!-- Bottom resize handle -->
-  <div
-    class="qv-resize-handle-bottom"
-    role="separator"
-    aria-orientation="horizontal"
-    title="Resize height"
-    onpointerdown={onBottomResizeDown}
-  ></div>
 </div>
 
 <style>
-  .qv-popover {
+  .qv {
     min-width: 320px;
-    max-width: 90vw;
-    min-height: 240px;
+    max-width: 92vw;
+    min-height: 220px;
     max-height: 60vh;
+    height: 100%;
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
     z-index: 180000;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* prevent horizontal scroll */
+    overflow: hidden;
   }
-  .qv-popover.is-above::after {
-    content: '';
-  }
-  .qv-header-compact {
+  .qv-header {
     padding: 8px;
     border-bottom: 1px solid var(--background-modifier-border);
     background: var(--background-primary);
   }
-  .qv-content {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    overflow-x: hidden;
+  .qv-row-1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .qv-group {
+    font-size: 12px;
     padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+  }
+  .spacer {
+    flex: 1 1 auto;
+  }
+  .qv-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qv-btn {
+    font-size: 12px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+  }
+  .qv-btn:hover {
+    background: var(--background-modifier-hover);
+  }
+  .qv-btn.is-on {
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
+    border-color: var(--interactive-accent);
+  }
+  .sep {
+    width: 1px;
+    height: 16px;
+    background: var(--background-modifier-border);
+    margin: 0 4px;
+  }
+  .qv-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 8px 2px 4px;
+  }
+  .qv-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+  .qv-search {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chips {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    min-height: 20px;
+  }
+  .chip {
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+  .qv-input {
+    flex: 1 1 auto;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+  }
+  .qv-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  /* Left resize handle */
-  .qv-resize-handle-left {
+  .qv-list {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 6px;
+  }
+  .qv-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .qv-row:hover {
+    background: var(--background-modifier-hover);
+  }
+  .qv-row.is-selected {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: -2px;
+  }
+  .qv-name {
+    flex: 1 1 auto;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .qv-hotkeys {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .hk {
+    font-size: 11.5px;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    text-wrap: nowrap;
+    padding: 2px 6px;
+  }
+
+  .qv-left {
     position: absolute;
     left: 0;
     top: 0;
@@ -533,51 +680,34 @@ setContext("activeKeysStore", activeKeysStore);
       transparent
     );
   }
-  .qv-resize-handle-left:hover {
+  .qv-left:hover {
     background: linear-gradient(
       to right,
       color-mix(in oklab, var(--background-modifier-border), transparent 50%),
       transparent
     );
   }
-
-  /* Bottom resize handle */
-  .qv-resize-handle-bottom {
-    height: 10px;
-    cursor: ns-resize;
-    border-top: 1px solid var(--background-modifier-border);
+  .qv-corner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+    border-right: 1px solid var(--background-modifier-border);
+    border-bottom: 1px solid var(--background-modifier-border);
     background: linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--background-modifier-border), transparent 70%),
-      transparent
+      135deg,
+      color-mix(in oklab, var(--background-modifier-border), transparent 40%),
+      transparent 65%
     );
+    border-top-left-radius: 8px;
   }
-
-  /* Visual focus ring / selection when navigating with keyboard (global to target nested list rows) */
-  :global(.qv-popover .setting-item.keyboard-selected) {
-    outline: 2px solid var(--interactive-accent);
-    outline-offset: -2px;
-    border-radius: 6px;
-  }
-
-  /* Compact list styles inside popover */
-  :global(.qv-popover .kbanalizer-setting-item.setting-item) {
-    padding: 4px 6px;
-    min-height: unset;
-  }
-  :global(.qv-popover .kbanalizer-setting-item .setting-item-name) {
-    font-size: 12.5px;
-    line-height: 1.25;
-  }
-  :global(.qv-popover .kbanalizer-setting-item .setting-command-hotkeys .setting-hotkey) {
-    transform: scale(0.95);
-  }
-
-  /* Ensure titles truncate instead of forcing horizontal scroll (global for nested component content) */
-  :global(.qv-popover .setting-item-name .command-name) {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
+  .qv-corner:hover {
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--background-modifier-border), transparent 25%),
+      transparent 65%
+    );
   }
 </style>
