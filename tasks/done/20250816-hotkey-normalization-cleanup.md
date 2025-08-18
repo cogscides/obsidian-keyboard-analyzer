@@ -1,7 +1,7 @@
 ---
 title: Cleanup — Remove hotkey normalization and update call sites
-status: in_progress
-owner: "@agent"
+status: done
+owner: '@agent'
 updated: 2025-08-16 23:20 UTC
 related:
   - [[20250815-centralize-command-hotkey-logic]]
@@ -27,6 +27,7 @@ Goal: remove the `hotkeysObj` normalization, converge on a single canonical shap
 - Maintain `CommandsManager.getCommandsByHotkeyKey()` for fast duplicate detection and hotkey search — no change.
 - Transitional period: keep `hotkeysObj` optional in `commandEntry` until all call sites are migrated, then remove from the interface.
 - Optional enhancements approved:
+
   - Rename `processCommands()` to `rebuildIndex()` and document contract.
   - Expose `makeHotkeyKey` in `CommandsManager.d.ts` for external consumers.
   - Note: We opted not to keep a `toHotkeysObj` helper since code uses arrays directly; removing an unused helper keeps the API surface minimal.

@@ -1,6 +1,6 @@
 ---
 title: User-defined Hotkey Groups (manual)
-status: in_progress
+status: done
 owner: '@agent'
 updated: 2025-08-13 00:09 UTC
 related: []

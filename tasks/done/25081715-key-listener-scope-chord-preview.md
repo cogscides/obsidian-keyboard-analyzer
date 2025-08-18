@@ -1,7 +1,7 @@
 ---
 title: Fix search Backspace pop order; add key listener scope + modifier activation (click/hold)
-status: in_progress
-owner: "@agent"
+status: done
+owner: '@agent'
 updated: 2025-08-17 18:20 UTC
 related: []
 ---
@@ -9,12 +9,14 @@ related: []
 ## Context
 
 Improve UX of the Search menu and the active key listener:
+
 - Make Backspace pop modifiers in the expected sorted order (Cmd, Ctrl, Alt, Shift), and not by historical click order.
 - Ensure Backspace contributes to the active key store when the global listener is active (input shouldn't eat it).
 - Add user-configurable behavior for the key listener (scope and chord preview).
 - Add configurable debounce for search input.
 
 Definition of done (for this task):
+
 - Backspace pop order consistent in both Search input and store.
 - Search input does not interfere with active listener’s Backspace.
 - Settings available for key listener scope, chord preview, and search debounce.
