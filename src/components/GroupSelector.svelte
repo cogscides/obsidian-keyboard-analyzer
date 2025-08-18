@@ -2,15 +2,25 @@
 import { getContext } from "svelte";
 import GroupManagerModal from "./GroupManagerModal.svelte";
 import type KeyboardAnalyzerPlugin from "../main";
+import logger from "../utils/logger";
 
 interface Props {
 	selectedGroup: string;
+	compact?: boolean;
+	plugin?: KeyboardAnalyzerPlugin;
+	onChange?: (groupId: string) => void;
 }
 
-let { selectedGroup = $bindable("all") }: Props = $props();
+let { selectedGroup = $bindable("all"), compact = $bindable(false), plugin = $bindable(), onChange = $bindable((_) => {}) }: Props = $props();
 
-const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
-const _groupManager = plugin.groupManager;
+// Resolve plugin via prop first, then context as fallback
+let _plugin: KeyboardAnalyzerPlugin;
+try {
+	_plugin = (plugin as KeyboardAnalyzerPlugin) || (getContext("keyboard-analyzer-plugin") as KeyboardAnalyzerPlugin);
+} catch (err) {
+	logger.error("[GroupSelector] failed to resolve plugin from context", err);
+}
+const _groupManager = _plugin?.groupManager;
 
 let _isManagerOpen = $state(false);
 
@@ -22,23 +32,27 @@ function _closeManager() {
 }
 </script>
 
-<div class="kb-group-selector">
-  <label class="u-muted" for="kb-group-select">Group</label>
+<div class="kb-group-selector" data-compact={compact ? 'true' : 'false'}>
+  {#if !compact}
+    <label class="u-muted" for="kb-group-select">Group</label>
+  {/if}
   <div class="row">
-    <select id="kb-group-select" class="dropdown" bind:value={selectedGroup}>
+    <select id="kb-group-select" class="dropdown" bind:value={selectedGroup} onchange={() => onChange(selectedGroup)}>
       <option value="all">All Commands</option>
-      {#each _groupManager.getGroups() as group (group.id)}
+      {#each (_groupManager?.getGroups?.() || []) as group (group.id)}
         <option value={group.id}>{group.name}</option>
       {/each}
     </select>
-    <button class="btn-manage" onclick={_openManager} aria-label="Manage groups"
-      >Manage</button
-    >
+    {#if !compact && _plugin}
+      <button class="btn-manage" onclick={_openManager} aria-label="Manage groups"
+        >Manage</button
+      >
+    {/if}
   </div>
 
-  {#if _isManagerOpen}
+  {#if _isManagerOpen && _plugin}
     <GroupManagerModal
-      {plugin}
+      plugin={_plugin}
       selectedGroupId={selectedGroup}
       onClose={_closeManager}
     />
@@ -48,6 +62,9 @@ function _closeManager() {
 <style>
   .kb-group-selector {
     margin-top: 0.5rem;
+  }
+  .kb-group-selector[data-compact='true'] {
+    margin-top: 0;
   }
   .kb-group-selector .row {
     display: flex;

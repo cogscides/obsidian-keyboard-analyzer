@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte'
+  import { onDestroy, onMount, setContext } from 'svelte'
   import clickOutside from '../utils/clickOutside.js'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import type KeyboardAnalyzerPlugin from '../main'
   import { VisualKeyboardManager } from '../managers'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
-  import { convertModifiers } from '../utils/modifierUtils'
+  import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
   import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
+  import GroupSelector from './GroupSelector.svelte'
+  import logger from '../utils/logger'
 
   interface Props {
     plugin: KeyboardAnalyzerPlugin
@@ -15,27 +17,51 @@
     listenToggle?: number
   }
 
-  let {
-    plugin,
-    anchorEl = $bindable(null),
-    onClose = $bindable(() => {}),
-    listenToggle = $bindable(0),
-  }: Props = $props()
+  let { plugin, anchorEl = null, onClose = () => {}, listenToggle = 0 }: Props = $props()
 
   const commandsManager = plugin.commandsManager
   const settingsManager = plugin.settingsManager
   const groupManager = plugin.groupManager
 
+  // Early init logs and error capture to catch pre-mount issues
+  logger.debug('[qv] script:init')
+  try {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('error', (ev: any) => {
+        try {
+          const data = {
+            message: (ev && ev.message) ?? undefined,
+            filename: (ev && ev.filename) ?? undefined,
+            lineno: (ev && ev.lineno) ?? undefined,
+            colno: (ev && ev.colno) ?? undefined,
+            error: (ev && ev.error) ?? undefined,
+          }
+          logger.error('[qv] early window error', data)
+        } catch {}
+      }, { once: true })
+      window.addEventListener('unhandledrejection', (ev: any) => {
+        try { logger.error('[qv] early unhandledrejection', ev && ev.reason) } catch {}
+      }, { once: true })
+    }
+  } catch {}
+  // Provide plugin for children that expect it via context (GroupSelector)
+  try { setContext('keyboard-analyzer-plugin', plugin); logger.debug('[qv] init context provided') } catch (err) { logger.error('[qv] context set failed', err) }
+  
+
   // Core state
   let search = $state('')
   let listenerActive = $state(false)
-  let selectedGroup = $state(
-    (settingsManager.getSetting('lastOpenedGroupId') as string) || 'all'
-  )
+  let selectedGroup = $state('all')
+  try {
+    const sg = (settingsManager.getSetting('lastOpenedGroupId') as string) || 'all'
+    selectedGroup = sg
+  } catch (err) {
+    logger.error('[qv] read lastOpenedGroupId failed', err)
+  }
 
-  // Keys state via ActiveKeysStore
-  const visualKeyboardManager = new VisualKeyboardManager()
-  const activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager)
+  // Keys state via ActiveKeysStore (init on mount to avoid pre-mount side effects)
+  let visualKeyboardManager: VisualKeyboardManager
+  let activeKeysStore: ActiveKeysStore
   let activeKey = $state('')
   let activeModifiers: string[] = $state([])
 
@@ -48,21 +74,19 @@
   // Persisted size and anchoring
   let rootEl: HTMLDivElement | null = null
   let placeAbove = $state(false)
+  // Start with safe defaults; read persisted size on mount
   let coords = $state({
     top: 0,
     left: 0,
-    width: Math.max(
-      320,
-      Math.min(520, Number(settingsManager.settings.quickViewWidth || 380))
-    ),
-    maxHeight: Math.min(
-      Math.floor((window.innerHeight || 600) * 0.6),
-      Math.max(240, Number(settingsManager.settings.quickViewHeight || 360))
-    ),
+    width: 380,
+    height: 360,
   })
   let anchorOffsetX = $state(0)
   let isResizing = false
   let suppressOutsideCloseUntil = 0
+  let autoRun = $state(true)
+  let mounted = $state(false)
+  let prevSelectedGroup: string = selectedGroup
 
   // Refilter based on state
   function refilter() {
@@ -76,37 +100,58 @@
     selectedIndex = Math.min(selectedIndex, Math.max(0, filtered.length - 1))
   }
 
-  // Listen nonce from plugin command (double-run)
-  $effect(() => {
-    listenToggle // reactive ping
-    if (listenToggle) listenerActive = true
-  })
+  // Removed reactive listenToggle effect to avoid re-entrant updates.
 
   // Positioning near status bar icon
+  let recomputeQueued = false
+  function scheduleRecompute() {
+    if (recomputeQueued) return
+    recomputeQueued = true
+    requestAnimationFrame(() => {
+      recomputeQueued = false
+      try { recomputePosition() } catch (err) { logger.error('[qv] recomputePosition:raf error', err) }
+    })
+  }
   function recomputePosition() {
     try {
+      logger.debug('[qv] recomputePosition:start')
       if (!rootEl || !anchorEl || isResizing) return
       const rect = anchorEl.getBoundingClientRect()
       const vh = window.innerHeight || document.documentElement.clientHeight
       const vw = window.innerWidth || document.documentElement.clientWidth
       const margin = 6
       const desiredTop = rect.bottom + margin
-      const estH = Math.min(
-        Math.floor(vh * 0.6),
-        Math.max(240, coords.maxHeight)
-      )
+      const capH = Math.floor(vh * 0.6)
+      const estH = Math.min(capH, Math.max(240, coords.height))
       const fitsBelow = desiredTop + estH <= vh
-      placeAbove = !fitsBelow
-      const top = placeAbove
+      const nextPlaceAbove = !fitsBelow
+      const top = nextPlaceAbove
         ? Math.max(8, rect.top - margin - estH)
         : Math.min(vh - estH - 8, desiredTop)
       let left = anchorOffsetX ? rect.left + anchorOffsetX : rect.left
-      const width = coords.width || rootEl.offsetWidth || 360
+      let width = coords.width || rootEl.offsetWidth || 360
+      const maxW = Math.max(320, Math.floor(vw * 0.92))
+      if (width > maxW) width = maxW
       if (left + width > vw - 8) left = Math.max(8, vw - width - 8)
       if (left < 8) left = 8
-      coords = { ...coords, top, left, maxHeight: estH }
-      anchorOffsetX = left - rect.left
-    } catch {}
+      const next = { ...coords, top, left, width }
+      const changed =
+        next.top !== coords.top || next.left !== coords.left || next.width !== coords.width || nextPlaceAbove !== placeAbove
+      if (changed) {
+        // Defer state writes to next microtask to avoid nested update depth
+        queueMicrotask(() => {
+          placeAbove = nextPlaceAbove
+          coords = next
+          anchorOffsetX = left - rect.left
+          logger.debug('[qv] recomputePosition:end', { coords })
+        })
+      } else {
+        anchorOffsetX = left - rect.left
+        logger.debug('[qv] recomputePosition:end', { coords })
+      }
+    } catch (err) {
+      logger.error('[qv] recomputePosition:error', err)
+    }
   }
 
   // Corner resize (top-left)
@@ -114,6 +159,7 @@
   let startCX = 0,
     startCY = 0,
     startLeft = 0,
+    startTop = 0,
     startW = 0,
     startH = 0
   function onCornerDown(e: PointerEvent) {
@@ -125,9 +171,11 @@
     startCX = e.clientX
     startCY = e.clientY
     startLeft = coords.left
+    startTop = coords.top
     startW = coords.width
-    startH = coords.maxHeight
+    startH = coords.height
     suppressOutsideCloseUntil = Date.now() + 250
+    logger.debug('[qv] resize:corner:down', { startLeft, startTop, startW, startH })
     window.addEventListener('pointermove', onCornerMove, true)
     window.addEventListener('pointerup', onCornerUp, true)
   }
@@ -136,25 +184,47 @@
     const dx = e.clientX - startCX
     const dy = e.clientY - startCY
     let left = startLeft + dx
+    let top = startTop + dy
     let width = startW - dx
-    let height = startH + dy
+    let height = startH - dy
     const minW = 320,
       minH = 240
     const vw = window.innerWidth || document.documentElement.clientWidth
     const vh = window.innerHeight || document.documentElement.clientHeight
     const maxH = Math.floor(vh * 0.6)
+    const maxW = Math.floor(vw * 0.92)
     if (width < minW) {
       left = startLeft + (startW - minW)
       width = minW
+    }
+    if (width > maxW) {
+      width = maxW
+      left = Math.min(left, vw - 8 - width)
     }
     if (left < 8) {
       left = 8
       width = Math.max(minW, Math.min(startW - (startLeft - 8), vw - 16))
     }
     if (left + width > vw - 8) width = Math.max(minW, vw - 8 - left)
-    if (height < minH) height = minH
-    if (height > maxH) height = maxH
-    coords = { ...coords, left, width, maxHeight: height }
+    if (height < minH) {
+      height = minH
+      top = startTop + (startH - minH)
+    }
+    if (height > maxH) {
+      height = maxH
+      top = Math.max(8, startTop - (maxH - startH))
+    }
+    if (top < 8) {
+      const delta = 8 - top
+      top = 8
+      height = Math.min(maxH, Math.max(minH, height - delta))
+    }
+    if (top + height > vh - 8) {
+      const overflow = top + height - (vh - 8)
+      height = Math.max(minH, height - overflow)
+    }
+    coords = { ...coords, left, top, width, height }
+    logger.debug('[qv] resize:corner:move', { left, top, width, height })
     try {
       if (anchorEl)
         anchorOffsetX = coords.left - anchorEl.getBoundingClientRect().left
@@ -169,6 +239,7 @@
     resizingCorner = false
     isResizing = false
     suppressOutsideCloseUntil = Date.now() + 120
+    logger.debug('[qv] resize:corner:up', coords)
     window.removeEventListener('pointermove', onCornerMove, true)
     window.removeEventListener('pointerup', onCornerUp, true)
   }
@@ -188,6 +259,7 @@
     startLLeft = coords.left
     startLW = coords.width
     suppressOutsideCloseUntil = Date.now() + 250
+    logger.debug('[qv] resize:left:down', { startLLeft, startLW })
     window.addEventListener('pointermove', onLeftMove, true)
     window.addEventListener('pointerup', onLeftUp, true)
   }
@@ -198,9 +270,14 @@
     let width = startLW - dx
     const minW = 320
     const vw = window.innerWidth || document.documentElement.clientWidth
+    const maxW = Math.floor(vw * 0.92)
     if (width < minW) {
       width = minW
       left = startLLeft + (startLW - minW)
+    }
+    if (width > maxW) {
+      width = maxW
+      left = Math.min(left, vw - 8 - width)
     }
     if (left < 8) {
       left = 8
@@ -208,6 +285,7 @@
     }
     if (left + width > vw - 8) width = Math.max(minW, vw - 8 - left)
     coords = { ...coords, left, width }
+    logger.debug('[qv] resize:left:move', { left, width })
     try {
       if (anchorEl)
         anchorOffsetX = coords.left - anchorEl.getBoundingClientRect().left
@@ -219,6 +297,7 @@
     resizingLeft = false
     isResizing = false
     suppressOutsideCloseUntil = Date.now() + 120
+    logger.debug('[qv] resize:left:up', coords)
     window.removeEventListener('pointermove', onLeftMove, true)
     window.removeEventListener('pointerup', onLeftUp, true)
   }
@@ -285,6 +364,25 @@
       onClose?.()
       return
     }
+    if (
+      e.key === 'Backspace' &&
+      !listenerActive &&
+      String(search || '').trim() === ''
+    ) {
+      if (activeKey) {
+        activeKeysStore.clearActiveKey?.()
+        activeKey = ''
+      } else if ((activeModifiers?.length || 0) > 0) {
+        const mods = [...(activeKeysStore.sortedModifiers as unknown as string[])]
+        mods.pop()
+        ;(activeKeysStore as any).ActiveModifiers = mods
+        activeModifiers = mods
+      }
+      refilter()
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       e.stopPropagation()
@@ -306,7 +404,7 @@
     if (e.key === 'Enter') {
       e.preventDefault()
       e.stopPropagation()
-      runSelected()
+      if (autoRun) runSelected()
       return
     }
   }
@@ -340,15 +438,45 @@
   function onInput() {
     refilter()
   }
-  function onGroupChange(e: Event) {
-    const val = (e.target as HTMLSelectElement).value
-    selectedGroup = val
-    settingsManager.updateSettings({ lastOpenedGroupId: val })
-    refilter()
+  function onInputKeydown(e: KeyboardEvent) {
+    const modF = (e.key === 'f' || e.key === 'F') && (e.metaKey || e.ctrlKey)
+    if (modF) {
+      e.preventDefault()
+      e.stopPropagation()
+      listenerActive = !listenerActive
+      return
+    }
+    if (
+      e.key === 'Backspace' &&
+      !listenerActive &&
+      String(search || '').trim() === ''
+    ) {
+      if (activeKey) {
+        activeKeysStore.clearActiveKey?.()
+        activeKey = ''
+      } else if ((activeModifiers?.length || 0) > 0) {
+        const mods = [...(activeKeysStore.sortedModifiers as unknown as string[])]
+        mods.pop()
+        ;(activeKeysStore as any).ActiveModifiers = mods
+        activeModifiers = mods
+      }
+      refilter()
+      e.preventDefault()
+      e.stopPropagation()
+    }
   }
+
+  // Note: no reactive effects here to avoid nested update loops.
   function openFull(mode: boolean | 'split') {
     plugin.addShortcutsView(mode)
     onClose?.()
+  }
+  function openFullByModifiers(e: MouseEvent) {
+    const mod = e.ctrlKey || e.metaKey
+    const alt = e.altKey
+    if (mod && alt) return openFull('split')
+    if (mod) return openFull(true)
+    return openFull(false)
   }
 
   // Minimal filter dropdown (collapsed)
@@ -371,17 +499,39 @@
   const onScroll = () => recomputePosition()
   let ro: ResizeObserver | null = null
   onMount(() => {
-    refilter()
-    recomputePosition()
-    window.addEventListener('resize', recomputePosition)
-    document.addEventListener('scroll', onScroll, true)
-    if ('ResizeObserver' in window && rootEl) {
-      ro = new ResizeObserver(() => recomputePosition())
-      ro.observe(rootEl)
+    logger.debug('[qv] mount', { anchorExists: !!anchorEl })
+    try {
+      visualKeyboardManager = new VisualKeyboardManager()
+      activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager)
+      logger.debug('[qv] stores initialized')
+    } catch (err) {
+      logger.error('[qv] failed to init stores', err)
     }
+    try {
+      if (listenToggle) listenerActive = true
+    } catch {}
+    try {
+      const w = Number(settingsManager.settings.quickViewWidth || 380)
+      const h = Number(settingsManager.settings.quickViewHeight || 360)
+      coords = {
+        ...coords,
+        width: Math.max(320, Math.min(520, Number.isFinite(w) ? w : 380)),
+        height: Math.max(240, Number.isFinite(h) ? h : 360),
+      }
+      logger.debug('[qv] size from settings', coords)
+    } catch (err) {
+      logger.error('[qv] read size settings failed', err)
+    }
+    try { refilter() } catch (err) { logger.error('[qv] refilter on mount failed', err) }
+    try { scheduleRecompute() } catch (err) { logger.error('[qv] recompute on mount failed', err) }
+    window.addEventListener('resize', scheduleRecompute)
+    document.addEventListener('scroll', onScroll, true)
+    // Disable ResizeObserver to avoid render/measure feedback loops
+    // (We rely on explicit window resize + scroll + pointer resize handling.)
     window.addEventListener('keydown', onKeydownGlobal, true)
     window.addEventListener('keyup', onKeyupGlobal, true)
     queueMicrotask(() => inputEl?.focus())
+    mounted = true
   })
   onDestroy(() => {
     window.removeEventListener('resize', recomputePosition)
@@ -397,10 +547,11 @@
   })
 </script>
 
+{#if mounted}
 <div
   class="qv"
   class:is-above={placeAbove}
-  style="position: fixed; top:{coords.top}px; left:{coords.left}px; width:{coords.width}px; max-height:{coords.maxHeight}px;"
+  style="position: fixed; top:{coords.top}px; left:{coords.left}px; width:{coords.width}px; height:{Math.min(coords.height, Math.floor((window.innerHeight||600)*0.6))}px;"
   use:clickOutside
   onclick_outside={() => {
     if (Date.now() < suppressOutsideCloseUntil) return
@@ -415,16 +566,9 @@
 
   <header class="qv-header">
     <div class="qv-row-1">
-      <select
-        class="qv-group"
-        onchange={onGroupChange}
-        bind:value={selectedGroup}
-      >
-        <option value="all">All Commands</option>
-        {#each groupManager.getGroups() as g}
-          <option value={g.id}>{g.name}</option>
-        {/each}
-      </select>
+      <div class="qv-group-wrapper">
+        <GroupSelector {plugin} bind:selectedGroup compact onChange={() => refilter()} />
+      </div>
       <div class="spacer"></div>
       <div class="qv-actions">
         <button
@@ -433,9 +577,11 @@
           aria-expanded={filtersOpen}>Filters</button
         >
         <div class="sep"></div>
-        <button class="qv-btn" onclick={() => openFull(false)}>Open</button>
-        <button class="qv-btn" onclick={() => openFull(true)}>New Pane</button>
-        <button class="qv-btn" onclick={() => openFull('split')}>Split</button>
+        <button class="qv-btn" title="Open view (Ctrl=new, Ctrl+Alt=split)" onclick={openFullByModifiers}>Open</button>
+        <div class="sep"></div>
+        <button class={`qv-btn ${autoRun ? 'is-on' : ''}`} title={autoRun ? 'Click/Enter runs command' : 'Select only; no run on Enter/click'} onclick={() => (autoRun = !autoRun)}>
+          Run
+        </button>
       </div>
     </div>
     {#if filtersOpen}
@@ -458,10 +604,22 @@
     <div class="qv-search">
       <div class="chips">
         {#each activeModifiers as m}
-          <kbd class="chip">{m}</kbd>
+          <kbd class="chip" onclick={() => {
+            try {
+              (activeKeysStore as any)?.handleKeyClick?.(unconvertModifier(m as any))
+              activeModifiers = (activeKeysStore?.ActiveModifiers as unknown as string[]) || []
+              activeKey = activeKeysStore?.ActiveKey || ''
+            } catch {}
+            refilter()
+          }}>{m}</kbd>
         {/each}
         {#if activeKey}
-          <kbd class="chip">{activeKey}</kbd>
+          <kbd class="chip" onclick={() => {
+            try { (activeKeysStore as any)?.handleKeyClick?.(activeKey) } catch {}
+            activeModifiers = (activeKeysStore?.ActiveModifiers as unknown as string[]) || []
+            activeKey = activeKeysStore?.ActiveKey || ''
+            refilter()
+          }}>{activeKey}</kbd>
         {/if}
       </div>
       <input
@@ -471,6 +629,7 @@
         bind:value={search}
         bind:this={inputEl}
         oninput={onInput}
+        onkeydown={onInputKeydown}
       />
       <div class="qv-right">
         <button
@@ -500,7 +659,7 @@
           class="qv-row {i === selectedIndex ? 'is-selected' : ''}"
           onclick={() => {
             selectedIndex = i
-            runSelected()
+            if (autoRun) runSelected()
           }}
         >
           <div class="qv-name">{cmd.name}</div>
@@ -518,14 +677,14 @@
     {/if}
   </div>
 </div>
+{/if}
 
 <style>
   .qv {
     min-width: 320px;
-    max-width: 92vw;
+    /* width is clamped in code */
     min-height: 220px;
-    max-height: 60vh;
-    height: 100%;
+    /* height is clamped in code to ~60vh */
     background: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     border-radius: 10px;
@@ -545,12 +704,9 @@
     align-items: center;
     gap: 8px;
   }
-  .qv-group {
-    font-size: 12px;
-    padding: 4px 6px;
-    border-radius: 6px;
-    border: 1px solid var(--background-modifier-border);
-    background: var(--background-secondary);
+  .qv-group-wrapper {
+    display: flex;
+    align-items: center;
   }
   .spacer {
     flex: 1 1 auto;
@@ -611,6 +767,7 @@
     border-radius: 6px;
     padding: 2px 6px;
     font-size: 11px;
+    cursor: pointer;
   }
   .qv-input {
     flex: 1 1 auto;

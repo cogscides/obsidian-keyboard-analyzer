@@ -371,7 +371,7 @@
   /* Prevent overflow on medium-and-down screens: toolbar full width */
   #keyboard-component.md .keyboard-toolbar,
   #keyboard-component.sm .keyboard-toolbar,
-  #keyboard-component.is-mobile .keyboard-toolbar {
+  #keyboard-component.xs .keyboard-toolbar {
     max-width: 100%;
     padding-left: 12px;
     padding-right: 12px;
@@ -380,7 +380,7 @@
   /* Prevent overflow on medium-and-down screens: let content fit screen */
   #keyboard-component.md .keyboard-panel:not(.collapsed) .panel-content,
   #keyboard-component.sm .keyboard-panel:not(.collapsed) .panel-content,
-  #keyboard-component.is-mobile .keyboard-panel:not(.collapsed) .panel-content {
+  #keyboard-component.xs .keyboard-panel:not(.collapsed) .panel-content {
     width: 100%;
     max-width: 100%;
   }
