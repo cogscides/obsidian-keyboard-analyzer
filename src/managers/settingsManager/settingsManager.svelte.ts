@@ -51,6 +51,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
 	// Persisted UI state
 	quickViewHeight: 360,
 	quickViewWidth: 420,
+	quickViewAutoRun: true,
 	settingsSchemaVersion: 1,
 };
 

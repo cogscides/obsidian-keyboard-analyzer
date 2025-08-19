@@ -21,10 +21,16 @@ export interface PluginSettings {
 	 * Persisted height for the Quick View popover (in px). Allows user-resizable popover.
 	 */
 	quickViewHeight?: number;
-	/**
-	 * Persisted width for the Quick View popover (in px). Allows left-edge resizing.
-	 */
-	quickViewWidth?: number;
+  /**
+   * Persisted width for the Quick View popover (in px). Allows left-edge resizing.
+   */
+  quickViewWidth?: number;
+
+  /**
+   * Quick View behavior: when true, selecting/pressing Enter runs the command.
+   * When false, selection does not execute until explicitly clicked.
+   */
+  quickViewAutoRun?: boolean;
 
 	/**
 	 * Settings schema/migration version.

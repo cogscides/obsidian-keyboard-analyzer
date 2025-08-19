@@ -40,6 +40,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 	private lastQuickViewInvoke = 0;
 	private quickViewListenNonce = 0;
 	private quickViewListeningActive = false;
+	private lastQuickViewCloseAt = 0;
 
 	constructor(app: App, manifest: PluginManifest) {
 		super(app, manifest);
@@ -160,8 +161,15 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		}
 
 		// Default click → toggle Quick View
-		if (this.quickViewComponent) this.closeQuickView();
-		else this.openQuickView(false);
+		if (this.quickViewComponent) {
+			this.closeQuickView();
+			return;
+		}
+		// Guard against immediate reopen if an outside-click closed it in the same gesture
+		if (Date.now() - this.lastQuickViewCloseAt < 200) {
+			return;
+		}
+		this.openQuickView(false);
 	}
 
 	async addShortcutsView(leafBehavior: boolean | "split" = false) {
@@ -305,6 +313,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		}
 		// Always reset listen flags when closing (Esc, outside click, command toggle, etc.)
 		this.quickViewListeningActive = false;
+		this.lastQuickViewCloseAt = Date.now();
 	}
 
 	private enterQuickViewListenMode() {

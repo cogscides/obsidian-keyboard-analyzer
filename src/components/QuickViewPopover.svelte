@@ -6,7 +6,8 @@
   import { VisualKeyboardManager } from '../managers'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
-  import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
+  import { formatHotkeyBaked, getBakedKeyLabel, getBakedModifierLabel } from '../utils/normalizeKeyDisplay'
+  import { CircleDot as CircleDotIcon, X } from 'lucide-svelte'
   import GroupSelector from './GroupSelector.svelte'
   import logger from '../utils/logger'
 
@@ -17,7 +18,12 @@
     listenToggle?: number
   }
 
-  let { plugin, anchorEl = null, onClose = () => {}, listenToggle = 0 }: Props = $props()
+  let {
+    plugin,
+    anchorEl = null,
+    onClose = () => {},
+    listenToggle = 0,
+  }: Props = $props()
 
   const commandsManager = plugin.commandsManager
   const settingsManager = plugin.settingsManager
@@ -27,33 +33,48 @@
   logger.debug('[qv] script:init')
   try {
     if (typeof window !== 'undefined') {
-      window.addEventListener('error', (ev: any) => {
-        try {
-          const data = {
-            message: (ev && ev.message) ?? undefined,
-            filename: (ev && ev.filename) ?? undefined,
-            lineno: (ev && ev.lineno) ?? undefined,
-            colno: (ev && ev.colno) ?? undefined,
-            error: (ev && ev.error) ?? undefined,
-          }
-          logger.error('[qv] early window error', data)
-        } catch {}
-      }, { once: true })
-      window.addEventListener('unhandledrejection', (ev: any) => {
-        try { logger.error('[qv] early unhandledrejection', ev && ev.reason) } catch {}
-      }, { once: true })
+      window.addEventListener(
+        'error',
+        (ev: any) => {
+          try {
+            const data = {
+              message: (ev && ev.message) ?? undefined,
+              filename: (ev && ev.filename) ?? undefined,
+              lineno: (ev && ev.lineno) ?? undefined,
+              colno: (ev && ev.colno) ?? undefined,
+              error: (ev && ev.error) ?? undefined,
+            }
+            logger.error('[qv] early window error', data)
+          } catch {}
+        },
+        { once: true }
+      )
+      window.addEventListener(
+        'unhandledrejection',
+        (ev: any) => {
+          try {
+            logger.error('[qv] early unhandledrejection', ev && ev.reason)
+          } catch {}
+        },
+        { once: true }
+      )
     }
   } catch {}
   // Provide plugin for children that expect it via context (GroupSelector)
-  try { setContext('keyboard-analyzer-plugin', plugin); logger.debug('[qv] init context provided') } catch (err) { logger.error('[qv] context set failed', err) }
-  
+  try {
+    setContext('keyboard-analyzer-plugin', plugin)
+    logger.debug('[qv] init context provided')
+  } catch (err) {
+    logger.error('[qv] context set failed', err)
+  }
 
   // Core state
   let search = $state('')
   let listenerActive = $state(false)
   let selectedGroup = $state('all')
   try {
-    const sg = (settingsManager.getSetting('lastOpenedGroupId') as string) || 'all'
+    const sg =
+      (settingsManager.getSetting('lastOpenedGroupId') as string) || 'all'
     selectedGroup = sg
   } catch (err) {
     logger.error('[qv] read lastOpenedGroupId failed', err)
@@ -84,6 +105,7 @@
   let anchorOffsetX = $state(0)
   let isResizing = false
   let suppressOutsideCloseUntil = 0
+  // Default true; load persisted value on mount
   let autoRun = $state(true)
   let mounted = $state(false)
   let prevSelectedGroup: string = selectedGroup
@@ -109,7 +131,11 @@
     recomputeQueued = true
     requestAnimationFrame(() => {
       recomputeQueued = false
-      try { recomputePosition() } catch (err) { logger.error('[qv] recomputePosition:raf error', err) }
+      try {
+        recomputePosition()
+      } catch (err) {
+        logger.error('[qv] recomputePosition:raf error', err)
+      }
     })
   }
   function recomputePosition() {
@@ -130,13 +156,16 @@
         : Math.min(vh - estH - 8, desiredTop)
       let left = anchorOffsetX ? rect.left + anchorOffsetX : rect.left
       let width = coords.width || rootEl.offsetWidth || 360
-      const maxW = Math.max(320, Math.floor(vw * 0.92))
+      const maxW = Math.max(430, Math.floor(vw * 0.92))
       if (width > maxW) width = maxW
       if (left + width > vw - 8) left = Math.max(8, vw - width - 8)
       if (left < 8) left = 8
       const next = { ...coords, top, left, width }
       const changed =
-        next.top !== coords.top || next.left !== coords.left || next.width !== coords.width || nextPlaceAbove !== placeAbove
+        next.top !== coords.top ||
+        next.left !== coords.left ||
+        next.width !== coords.width ||
+        nextPlaceAbove !== placeAbove
       if (changed) {
         // Defer state writes to next microtask to avoid nested update depth
         queueMicrotask(() => {
@@ -175,7 +204,12 @@
     startW = coords.width
     startH = coords.height
     suppressOutsideCloseUntil = Date.now() + 250
-    logger.debug('[qv] resize:corner:down', { startLeft, startTop, startW, startH })
+    logger.debug('[qv] resize:corner:down', {
+      startLeft,
+      startTop,
+      startW,
+      startH,
+    })
     window.addEventListener('pointermove', onCornerMove, true)
     window.addEventListener('pointerup', onCornerUp, true)
   }
@@ -187,7 +221,7 @@
     let top = startTop + dy
     let width = startW - dx
     let height = startH - dy
-    const minW = 320,
+    const minW = 430,
       minH = 240
     const vw = window.innerWidth || document.documentElement.clientWidth
     const vh = window.innerHeight || document.documentElement.clientHeight
@@ -268,7 +302,7 @@
     const dx = e.clientX - startLX
     let left = startLLeft + dx
     let width = startLW - dx
-    const minW = 320
+    const minW = 430
     const vw = window.innerWidth || document.documentElement.clientWidth
     const maxW = Math.floor(vw * 0.92)
     if (width < minW) {
@@ -332,36 +366,46 @@
   function onKeydownGlobal(e: KeyboardEvent) {
     if (!rootEl) return
     const inside = rootEl.contains(e.target as Node)
+
+    // Allow Esc to act even if focus isn't inside the popover
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation?.()
+      if (listenerActive) {
+        listenerActive = false
+        return
+      }
+      onClose?.()
+      return
+    }
+
+    // If listener is active, capture keys even if focus moved (e.g., after running a command)
+    if (listenerActive) {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation?.()
+      try {
+        activeKeysStore.handlePhysicalKeyDown(e, { inActiveView: true })
+      } catch {}
+      activeKey = activeKeysStore.ActiveKey
+      activeModifiers = (activeKeysStore.sortedModifiers as unknown as string[]) || []
+      refilter()
+      return
+    }
+
     if (!inside) return
 
     const modF = (e.key === 'f' || e.key === 'F') && (e.metaKey || e.ctrlKey)
     if (modF) {
       e.preventDefault()
       e.stopPropagation()
+      e.stopImmediatePropagation?.()
       if (document.activeElement !== inputEl) {
         inputEl?.focus()
         return
       }
       listenerActive = !listenerActive
-      return
-    }
-
-    if (listenerActive) {
-      e.preventDefault()
-      e.stopPropagation()
-      try {
-        activeKeysStore.handlePhysicalKeyDown(e)
-      } catch {}
-      activeKey = activeKeysStore.ActiveKey
-      activeModifiers = activeKeysStore.ActiveModifiers as unknown as string[]
-      refilter()
-      return
-    }
-
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      e.stopPropagation()
-      onClose?.()
       return
     }
     if (
@@ -373,7 +417,9 @@
         activeKeysStore.clearActiveKey?.()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
-        const mods = [...(activeKeysStore.sortedModifiers as unknown as string[])]
+        const mods = [
+          ...(activeKeysStore.sortedModifiers as unknown as string[]),
+        ]
         mods.pop()
         ;(activeKeysStore as any).ActiveModifiers = mods
         activeModifiers = mods
@@ -410,12 +456,11 @@
   }
   function onKeyupGlobal(e: KeyboardEvent) {
     if (!rootEl || !listenerActive) return
-    const inside = rootEl.contains(e.target as Node)
-    if (!inside) return
     e.preventDefault()
     e.stopPropagation()
+    e.stopImmediatePropagation?.()
     try {
-      activeKeysStore.handlePhysicalKeyUp(e)
+      activeKeysStore.handlePhysicalKeyUp(e, { inActiveView: true })
     } catch {}
   }
 
@@ -443,7 +488,14 @@
     if (modF) {
       e.preventDefault()
       e.stopPropagation()
+      e.stopImmediatePropagation?.()
       listenerActive = !listenerActive
+      return
+    }
+    if (listenerActive && e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      listenerActive = false
       return
     }
     if (
@@ -455,7 +507,9 @@
         activeKeysStore.clearActiveKey?.()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
-        const mods = [...(activeKeysStore.sortedModifiers as unknown as string[])]
+        const mods = [
+          ...(activeKeysStore.sortedModifiers as unknown as string[]),
+        ]
         mods.pop()
         ;(activeKeysStore as any).ActiveModifiers = mods
         activeModifiers = mods
@@ -515,15 +569,29 @@
       const h = Number(settingsManager.settings.quickViewHeight || 360)
       coords = {
         ...coords,
-        width: Math.max(320, Math.min(520, Number.isFinite(w) ? w : 380)),
+        width: Math.max(430, Math.min(520, Number.isFinite(w) ? w : 380)),
         height: Math.max(240, Number.isFinite(h) ? h : 360),
       }
       logger.debug('[qv] size from settings', coords)
     } catch (err) {
       logger.error('[qv] read size settings failed', err)
     }
-    try { refilter() } catch (err) { logger.error('[qv] refilter on mount failed', err) }
-    try { scheduleRecompute() } catch (err) { logger.error('[qv] recompute on mount failed', err) }
+    try {
+      // Load persisted autoRun behavior
+      autoRun = !!settingsManager.settings.quickViewAutoRun
+    } catch (err) {
+      logger.error('[qv] read quickViewAutoRun failed', err)
+    }
+    try {
+      refilter()
+    } catch (err) {
+      logger.error('[qv] refilter on mount failed', err)
+    }
+    try {
+      scheduleRecompute()
+    } catch (err) {
+      logger.error('[qv] recompute on mount failed', err)
+    }
     window.addEventListener('resize', scheduleRecompute)
     document.addEventListener('scroll', onScroll, true)
     // Disable ResizeObserver to avoid render/measure feedback loops
@@ -545,143 +613,222 @@
     window.removeEventListener('pointermove', onLeftMove, true)
     window.removeEventListener('pointerup', onLeftUp, true)
   })
+
+  // Persist selected group id with debounce to avoid save churn
+  let lastPersistedGroup = $state(
+    (settingsManager.getSetting('lastOpenedGroupId') as string) || 'all'
+  )
+  let persistGroupTimer: ReturnType<typeof setTimeout> | null = null
+  $effect(() => {
+    const gid = selectedGroup
+    if (!gid || gid === lastPersistedGroup) return
+    if (persistGroupTimer) clearTimeout(persistGroupTimer)
+    persistGroupTimer = setTimeout(() => {
+      try {
+        settingsManager.updateSettings({ lastOpenedGroupId: gid })
+        lastPersistedGroup = gid
+      } catch (err) {
+        logger.error('[qv] persist lastOpenedGroupId failed', err)
+      }
+    }, 200)
+  })
 </script>
 
 {#if mounted}
-<div
-  class="qv"
-  class:is-above={placeAbove}
-  style="position: fixed; top:{coords.top}px; left:{coords.left}px; width:{coords.width}px; height:{Math.min(coords.height, Math.floor((window.innerHeight||600)*0.6))}px;"
-  use:clickOutside
-  onclick_outside={() => {
-    if (Date.now() < suppressOutsideCloseUntil) return
-    onClose?.()
-  }}
-  role="dialog"
-  aria-label="Quick Commands"
-  bind:this={rootEl}
->
-  <div class="qv-corner" title="Resize" onpointerdown={onCornerDown}></div>
-  <div class="qv-left" title="Resize width" onpointerdown={onLeftDown}></div>
-
-  <header class="qv-header">
-    <div class="qv-row-1">
-      <div class="qv-group-wrapper">
-        <GroupSelector {plugin} bind:selectedGroup compact onChange={() => refilter()} />
-      </div>
-      <div class="spacer"></div>
-      <div class="qv-actions">
-        <button
-          class="qv-btn"
-          onclick={() => (filtersOpen = !filtersOpen)}
-          aria-expanded={filtersOpen}>Filters</button
-        >
-        <div class="sep"></div>
-        <button class="qv-btn" title="Open view (Ctrl=new, Ctrl+Alt=split)" onclick={openFullByModifiers}>Open</button>
-        <div class="sep"></div>
-        <button class={`qv-btn ${autoRun ? 'is-on' : ''}`} title={autoRun ? 'Click/Enter runs command' : 'Select only; no run on Enter/click'} onclick={() => (autoRun = !autoRun)}>
-          Run
-        </button>
-      </div>
-    </div>
-    {#if filtersOpen}
-      <div class="qv-filters">
-        {#each filterKeys as f}
-          {#key selectedGroup}
-            <label class="qv-filter">
-              <input
-                type="checkbox"
-                checked={groupManager.getGroupSettings(selectedGroup)[f.key]}
-                onchange={(e) =>
-                  setFilter(f.key, (e.target as HTMLInputElement).checked)}
-              />
-              {f.label}
-            </label>
-          {/key}
-        {/each}
-      </div>
-    {/if}
-    <div class="qv-search">
-      <div class="chips">
-        {#each activeModifiers as m}
-          <kbd class="chip" onclick={() => {
-            try {
-              (activeKeysStore as any)?.handleKeyClick?.(unconvertModifier(m as any))
-              activeModifiers = (activeKeysStore?.ActiveModifiers as unknown as string[]) || []
-              activeKey = activeKeysStore?.ActiveKey || ''
-            } catch {}
-            refilter()
-          }}>{m}</kbd>
-        {/each}
-        {#if activeKey}
-          <kbd class="chip" onclick={() => {
-            try { (activeKeysStore as any)?.handleKeyClick?.(activeKey) } catch {}
-            activeModifiers = (activeKeysStore?.ActiveModifiers as unknown as string[]) || []
-            activeKey = activeKeysStore?.ActiveKey || ''
-            refilter()
-          }}>{activeKey}</kbd>
-        {/if}
-      </div>
-      <input
-        class="qv-input"
-        type="text"
-        placeholder="Search…"
-        bind:value={search}
-        bind:this={inputEl}
-        oninput={onInput}
-        onkeydown={onInputKeydown}
-      />
-      <div class="qv-right">
-        <button
-          class={`qv-btn ${listenerActive ? 'is-on' : ''}`}
-          title={listenerActive
-            ? 'Deactivate key listener (Esc)'
-            : 'Activate key listener'}
-          onclick={toggleListener}>Keys</button
-        >
-        <button class="qv-btn" title="Clear" onclick={clearSearch}>Clear</button
-        >
-      </div>
-    </div>
-  </header>
-
   <div
-    class="qv-list"
-    bind:this={listEl}
-    role="listbox"
-    aria-label="Command results"
+    class="qv"
+    class:is-above={placeAbove}
+    style="position: fixed; top:{coords.top}px; left:{coords.left}px; width:{coords.width}px; height:{Math.min(
+      coords.height,
+      Math.floor((window.innerHeight || 600) * 0.6)
+    )}px;"
+    use:clickOutside
+    onclick_outside={() => {
+      if (Date.now() < suppressOutsideCloseUntil) return
+      onClose?.()
+    }}
+    role="dialog"
+    aria-label="Quick Commands"
+    bind:this={rootEl}
   >
-    {#if filtered.length === 0}
-      <div class="qv-empty">No matching commands</div>
-    {:else}
-      {#each filtered as cmd, i (cmd.id)}
-        <div
-          class="qv-row {i === selectedIndex ? 'is-selected' : ''}"
-          onclick={() => {
-            selectedIndex = i
-            if (autoRun) runSelected()
-          }}
-        >
-          <div class="qv-name">{cmd.name}</div>
-          <div class="qv-hotkeys">
-            {#each cmd.hotkeys as hk}
-              <span class="hk"
-                >{settingsManager.settings.useBakedKeyNames
-                  ? formatHotkeyBaked(hk as hotkeyEntry)
-                  : plugin.hotkeyManager.renderHotkey(hk as hotkeyEntry)}</span
-              >
-            {/each}
+    <div class="qv-corner" title="Resize" onpointerdown={onCornerDown}></div>
+    <div class="qv-left" title="Resize width" onpointerdown={onLeftDown}></div>
+
+    <header class="qv-header">
+      <div class="qv-row-1">
+        <div class="qv-group-wrapper">
+          <GroupSelector
+            {plugin}
+            bind:selectedGroup
+            compact
+            onChange={() => refilter()}
+          />
+        </div>
+        <div class="spacer"></div>
+        <div class="qv-actions">
+          <button
+            class="qv-btn"
+            onclick={() => (filtersOpen = !filtersOpen)}
+            aria-expanded={filtersOpen}>Filters</button
+          >
+          <div class="sep"></div>
+          <button
+            class="qv-btn"
+            title="Open view (Ctrl=new, Ctrl+Alt=split)"
+            onclick={openFullByModifiers}>Open</button
+          >
+          <div class="sep"></div>
+          <button
+            class={`qv-btn ${autoRun ? 'is-on' : ''}`}
+            title={autoRun
+              ? 'Click/Enter runs command'
+              : 'Select only; no run on Enter/click'}
+            onclick={() => {
+              autoRun = !autoRun
+              try {
+                settingsManager.updateSettings({ quickViewAutoRun: autoRun })
+              } catch (err) {
+                logger.error('[qv] persist quickViewAutoRun failed', err)
+              }
+            }}
+          >
+            Run
+          </button>
+        </div>
+      </div>
+      {#if filtersOpen}
+        <div class="qv-filters">
+          {#each filterKeys as f}
+            {#key selectedGroup}
+              <label class="qv-filter">
+                <input
+                  type="checkbox"
+                  checked={groupManager.getGroupSettings(selectedGroup)[f.key]}
+                  onchange={(e) =>
+                    setFilter(f.key, (e.target as HTMLInputElement).checked)}
+                />
+                {f.label}
+              </label>
+            {/key}
+          {/each}
+        </div>
+      {/if}
+      <div class="search-wrapper" class:is-focused={document.activeElement === inputEl} onkeydown={onInputKeydown}>
+        <div class="modifiers-wrapper">
+          {#each (activeKeysStore.sortedModifiers as unknown as string[]) as m}
+            <kbd
+              class="modifier setting-hotkey"
+              onclick={() => {
+                try {
+                  ;(activeKeysStore as any)?.handleKeyClick?.(
+                    unconvertModifier(m as any)
+                  )
+                  activeModifiers =
+                    (activeKeysStore.sortedModifiers as unknown as string[]) || []
+                  activeKey = activeKeysStore?.ActiveKey || ''
+                } catch {}
+                refilter()
+              }}
+            >
+              {settingsManager.settings.useBakedKeyNames
+                ? getBakedModifierLabel(m as any)
+                : m}
+            </kbd>
+          {/each}
+          {#if activeKey}
+            <kbd
+              class="modifier setting-hotkey"
+              onclick={() => {
+                try {
+                  ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
+                } catch {}
+                activeModifiers =
+                  (activeKeysStore.sortedModifiers as unknown as string[]) || []
+                activeKey = activeKeysStore?.ActiveKey || ''
+                refilter()
+              }}
+            >
+              {settingsManager.settings.useBakedKeyNames
+                ? getBakedKeyLabel(activeKey)
+                : (activeKeysStore as any)?.getDisplayKey?.() || activeKey}
+            </kbd>
+          {/if}
+        </div>
+        <div class="hotkey-search-container">
+          <input
+            type="text"
+            placeholder="Filter..."
+            bind:value={search}
+            bind:this={inputEl}
+            oninput={onInput}
+            onkeydown={onInputKeydown}
+          />
+          <div class="meta-search-wrapper">
+            <button
+              class={`keyboard-icon icon ${listenerActive ? 'pulse' : ''}`}
+              aria-label={listenerActive
+                ? 'Press Esc to deactivate key listener'
+                : `Press ${convertModifiers(['Mod'])[0]}+F or long press to activate key listener`}
+              aria-pressed={listenerActive}
+              title={listenerActive
+                ? 'Deactivate key listener (Esc)'
+                : 'Activate key listener'}
+              onclick={toggleListener}
+            >
+              <CircleDotIcon size={16} />
+            </button>
+            <button
+              class="clear-icon icon"
+              aria-label="Clear text or reset keys"
+              title="Clear text or reset keys"
+              onclick={clearSearch}
+            >
+              <X size={16} />
+            </button>
           </div>
         </div>
-      {/each}
-    {/if}
+      </div>
+    </header>
+
+    <div
+      class="qv-list"
+      bind:this={listEl}
+      role="listbox"
+      aria-label="Command results"
+    >
+      {#if filtered.length === 0}
+        <div class="qv-empty">No matching commands</div>
+      {:else}
+        {#each filtered as cmd, i (cmd.id)}
+          <div
+            class="qv-row {i === selectedIndex ? 'is-selected' : ''}"
+            onclick={() => {
+              selectedIndex = i
+              if (autoRun) runSelected()
+            }}
+          >
+            <div class="qv-name">{cmd.name}</div>
+            <div class="qv-hotkeys">
+              {#each cmd.hotkeys as hk}
+                <span class="hk"
+                  >{settingsManager.settings.useBakedKeyNames
+                    ? formatHotkeyBaked(hk as hotkeyEntry)
+                    : plugin.hotkeyManager.renderHotkey(
+                        hk as hotkeyEntry
+                      )}</span
+                >
+              {/each}
+            </div>
+          </div>
+        {/each}
+      {/if}
+    </div>
   </div>
-</div>
 {/if}
 
 <style>
   .qv {
-    min-width: 320px;
+    min-width: 430px;
     /* width is clamped in code */
     min-height: 220px;
     /* height is clamped in code to ~60vh */
@@ -693,6 +840,100 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+  /* Search row parity with SearchMenu, scoped to popover */
+  .qv .search-wrapper {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    color: var(--text-normal);
+    padding: 8px 12px;
+    margin: 8px 0 0 0;
+    background: var(--background-secondary);
+    position: relative;
+  }
+  .qv .search-wrapper.is-focused {
+    border: 1px solid var(--interactive-accent);
+    box-shadow: 0px 0px 0px 3px var(--color-d-gray-60);
+  }
+  .qv .modifiers-wrapper {
+    display: flex;
+    width: fit-content;
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    align-content: center;
+    margin-right: 8px;
+  }
+  .qv kbd.modifier.setting-hotkey {
+    padding: 2px 6px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+    border: 1px solid var(--indentation-guide);
+    background-color: var(--background-secondary-alt);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .qv kbd.modifier.setting-hotkey:hover {
+    background-color: var(--interactive-hover);
+  }
+  .qv .hotkey-search-container {
+    position: relative;
+    flex: 1 1 auto;
+  }
+  .qv .hotkey-search-container input {
+    height: 34px;
+    width: 100%;
+    font-size: 14px;
+    padding: 0 48px 0 0;
+    margin: 0;
+    border: none !important;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-normal);
+    box-shadow: none;
+  }
+  .qv .meta-search-wrapper {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qv .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-muted);
+  }
+  .qv .icon:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+  }
+  .qv .keyboard-icon.pulse {
+    animation: qv-pulse 1s ease-in-out infinite alternate;
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
+    border-color: var(--interactive-accent);
+  }
+  @keyframes qv-pulse {
+    from {
+      transform: translateY(-50%) scale(1);
+      opacity: 0.9;
+    }
+    to {
+      transform: translateY(-50%) scale(1.06);
+      opacity: 1;
+    }
   }
   .qv-header {
     padding: 8px;

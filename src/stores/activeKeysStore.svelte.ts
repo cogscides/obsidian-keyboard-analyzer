@@ -205,7 +205,12 @@ export class ActiveKeysStore {
 			if (e.altKey) mods.push(convertModifier("Alt"));
 			if (e.shiftKey) mods.push("Shift");
 			this.activeModifiers = Array.from(new Set(mods));
-			// Do not modify activeKey
+			// Clear activeKey when the non-modifier key is released (press/hold UX)
+			const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key);
+			if (!this.isModifier(normalizedKey) && this.activeKey === normalizedKey) {
+				this.activeKey = "";
+				logger.debug("[keys] hold mode: cleared activeKey on keyup", this.state);
+			}
 		}
 	}
 

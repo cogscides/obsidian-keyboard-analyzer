@@ -1,8 +1,8 @@
 ---
 title: Quick View Popover — polish UI and maintainability
 status: in_progress
-owner: "@agent"
-updated: 2025-08-18 23:59 UTC
+owner: '@agent'
+updated: 2025-08-19 14:05 UTC
 related:
   - [[ISSUE-quick-view-popover]]
 ---
@@ -24,9 +24,9 @@ Refine the Quick View Commands popover to be clean, compact, and maintainable. R
 - [2025-08-18] Fix CMD/Ctrl+F when input focused by handling on input keydown in addition to global capture.
 - [2025-08-18] Clamp width/height to viewport caps in code to avoid CSS max-width drift that shifted the popover left.
 - [2025-08-18] Update QuickView group selector to reuse the same styled GroupSelector as SearchMenu (with Manage).
- - [2025-08-18] Resolve mount/effect loops by removing reactive `$effect` blocks that mutate state; gate UI by `mounted`; init stores on mount; pass `plugin` explicitly to `GroupSelector` and guard `getGroups()` access.
- - [2025-08-18] Break layout feedback loops: defer `coords/placeAbove` writes with `queueMicrotask`, throttle recompute via `requestAnimationFrame`, and disable `ResizeObserver` for the popover.
- - [2025-08-18] Keep legacy event attributes (`onclick_outside`, `onchange`) to avoid Svelte mixed-syntax build errors.
+- [2025-08-18] Resolve mount/effect loops by removing reactive `$effect` blocks that mutate state; gate UI by `mounted`; init stores on mount; pass `plugin` explicitly to `GroupSelector` and guard `getGroups()` access.
+- [2025-08-18] Break layout feedback loops: defer `coords/placeAbove` writes with `queueMicrotask`, throttle recompute via `requestAnimationFrame`, and disable `ResizeObserver` for the popover.
+- [2025-08-18] Keep legacy event attributes (`onclick_outside`, `onchange`) to avoid Svelte mixed-syntax build errors.
 
 ## Implementation Summary
 
@@ -56,7 +56,28 @@ Refine the Quick View Commands popover to be clean, compact, and maintainable. R
 - [x] Check resizing (top-left + left edge) feels natural and persists across reload; ensure top/height move together.
 - [ ] Consider a minimal “view/filter” toggle grouping if needed for space.
 - [ ] Optionally address Svelte a11y/unused selector warnings or suppress intentionally where appropriate.
-- [ ] Reintroduce safe persistence of `lastOpenedGroupId` (debounced on change or on popover close, not via `$effect`).
+- [x] Reintroduce safe persistence of `lastOpenedGroupId` (debounced on change).
+
+  - feedback from team on usability and any edge cases encountered:
+    - We need to bake modifiers in the popover active keys, consistent with SearchMenu and commands list in popover.
+    - make sure it can be toggled off with developer tools
+  - The `Run` toggle should be persistent, so it doesn't reset on popover reopen
+    - CMD/CTRL+F when search input is focused doesn't trigger the active key listener. Need to be investigated and fixed
+    - [x] `Run` commands persistence added (`quickViewAutoRun` setting).
+    - When `Chord` modifiers is active, the behavior is inconsistent and needs to be reviewed. When `Chord` is active, it assigns the modifiers on click, and doesn't clear them on release.
+  - [x] Bake modifier/key chip labels to use baked names when enabled (parity with SearchMenu).
+  - [x] Sort active modifiers consistently with SearchMenu/Obsidian.
+  - [x] Make search row match SearchMenu (chips, input, Keys toggle, Clear button) for visual and behavioral parity.
+  - [x] Esc behavior consistency: Esc deactivates key listener if active, otherwise closes the popover even when input is blurred.
+  - [x] Cmd/Ctrl+F toggles key listener even when input is focused.
+  - [x] Status bar icon toggling: prevent immediate reopen on second click by guarding against reopen within 200ms of close.
+  - [x] Chord/press mode: capture non-modifier active key while popover is focused and clear it on keyup; keep modifiers updated on press/release.
+
+- [ ] Groups fix:
+  - [ ] We need to add an intermediate state to the group "Default settings" is active to allow the user to interact with plugin views and popover independently.
+  - e.g. when I open plugin view and popover and change view/filter settings it's applied to both. We need to have a way to isolate these changes. We need to display `Save` and reset button to in plugin view near the group selector and `Manage` button. It should be displayed if group filter settings are different from the default.
+  - when the group `on open` setting is set to `Dynamic`, we need to ensure that we save the group state on close and restore it on reopen. This is to avoid the issue where the group filters is changing which applying settings for all views and popover.
+  - So being said we need to clearly articulate the difference between `Default settings` and `Dynamic` group settings in the groupManager popup.
 
 ## Session Notes — 2025-08-18
 
@@ -68,6 +89,25 @@ Refine the Quick View Commands popover to be clean, compact, and maintainable. R
 - Kept legacy event syntax to avoid mixed-syntax build errors with Svelte runes.
 
 Outcome: Quick View opens reliably; no “Uncaught” or effect-depth errors; resizing and keyboard interactions verified. Build successful.
+
+## Session Notes — 2025-08-19
+
+- Added `quickViewAutoRun` to plugin settings (default true) and wired Quick View Run toggle to persist on change; loaded persisted value on mount.
+- Reintroduced safe persistence of `lastOpenedGroupId` in Quick View via a debounced update when the bound group selector changes.
+- Unified chip label rendering in Quick View with SearchMenu: use baked labels for modifiers/keys when `useBakedKeyNames` is enabled; fallback to `ActiveKeysStore.getDisplayKey()` for active key.
+
+- Styling/UX and keys behavior:
+  - Implemented scoped search row styles in Quick View (`.qv .search-wrapper`, input, chips, icon buttons) to match SearchMenu visually while avoiding global `src/styles.css` bleed.
+  - Sorted active modifiers to match SearchMenu/Obsidian order; chips render from `sortedModifiers`.
+  - Arrow/Tab navigation works even when input focused; Enter runs and closes when `Run` is active.
+  - Cmd/Ctrl+F handling hardened: capture at window level with `stopImmediatePropagation`, plus input-level handler; toggles listener and focuses input as needed.
+  - Esc consistency: Esc disables key listener if active, otherwise closes popover; works even if input isn’t focused.
+  - Chord/press mode: when enabled, modifiers update on press/release; active key is set on keydown and cleared on keyup in popover scope.
+  - Status bar icon toggling: added 200ms reopen guard to prevent immediate reopen when closing.
+
+Verification:
+
+- Built locally; types pass. Confirmed Run toggle persists across reopen. Group selection updates `lastOpenedGroupId` without loops. Chip labels match SearchMenu with baked names on/off.
 
 ## Links
 
