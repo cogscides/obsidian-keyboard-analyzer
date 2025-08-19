@@ -5,8 +5,18 @@
   import type KeyboardAnalyzerPlugin from '../main'
   import { VisualKeyboardManager } from '../managers'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
-  import { convertModifiers, unconvertModifier } from '../utils/modifierUtils'
-  import { formatHotkeyBaked, getBakedKeyLabel, getBakedModifierLabel } from '../utils/normalizeKeyDisplay'
+  import {
+    convertModifiers,
+    unconvertModifier,
+    matchHotkey,
+    normalizeKey,
+    platformizeModifiers,
+  } from '../utils/modifierUtils'
+  import {
+    formatHotkeyBaked,
+    getBakedKeyLabel,
+    getBakedModifierLabel,
+  } from '../utils/normalizeKeyDisplay'
   import { CircleDot as CircleDotIcon, X } from 'lucide-svelte'
   import GroupSelector from './GroupSelector.svelte'
   import logger from '../utils/logger'
@@ -16,6 +26,10 @@
     anchorEl?: HTMLElement | null
     onClose?: () => void
     listenToggle?: number
+    armTriggers?: {
+      triggers: { modifiers: string[]; key: string }[]
+      until: number
+    } | null
   }
 
   let {
@@ -23,6 +37,7 @@
     anchorEl = null,
     onClose = () => {},
     listenToggle = 0,
+    armTriggers = null,
   }: Props = $props()
 
   const commandsManager = plugin.commandsManager
@@ -389,14 +404,54 @@
         activeKeysStore.handlePhysicalKeyDown(e, { inActiveView: true })
       } catch {}
       activeKey = activeKeysStore.ActiveKey
-      activeModifiers = (activeKeysStore.sortedModifiers as unknown as string[]) || []
+      activeModifiers =
+        (activeKeysStore.sortedModifiers as unknown as string[]) || []
       refilter()
       return
     }
 
+    // Arm trigger: if just opened by command, pressing the same hotkey again toggles listener
+    if (armTriggers && Date.now() < armTriggers.until) {
+      try {
+        const activeMods: string[] = []
+        if (e.ctrlKey) activeMods.push('Control')
+        if (e.metaKey) activeMods.push('Meta')
+        if (e.altKey) activeMods.push('Alt')
+        if (e.shiftKey) activeMods.push('Shift')
+        const aKey = normalizeKey(e.code || e.key || '')
+        const hit = armTriggers.triggers.some((t) =>
+          matchHotkey(
+            {
+              modifiers: platformizeModifiers(
+                t.modifiers
+              ) as unknown as string[],
+              key: t.key,
+            },
+            activeMods,
+            aKey,
+            {
+              strictModifierMatch: true,
+              allowKeyOnly: false,
+              platformize: true,
+            }
+          )
+        )
+        if (hit) {
+          e.preventDefault()
+          e.stopPropagation()
+          e.stopImmediatePropagation?.()
+          listenerActive = true
+          armTriggers = null
+          return
+        }
+      } catch {}
+    }
+
     if (!inside) return
 
-    const modF = (e.key === 'f' || e.key === 'F') && (e.metaKey || e.ctrlKey)
+    const modF =
+      (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') &&
+      (e.metaKey || e.ctrlKey)
     if (modF) {
       e.preventDefault()
       e.stopPropagation()
@@ -462,6 +517,11 @@
     try {
       activeKeysStore.handlePhysicalKeyUp(e, { inActiveView: true })
     } catch {}
+    // Reflect cleared key/modifiers immediately
+    activeKey = activeKeysStore.ActiveKey
+    activeModifiers =
+      (activeKeysStore.sortedModifiers as unknown as string[]) || []
+    refilter()
   }
 
   // UI helpers
@@ -484,7 +544,9 @@
     refilter()
   }
   function onInputKeydown(e: KeyboardEvent) {
-    const modF = (e.key === 'f' || e.key === 'F') && (e.metaKey || e.ctrlKey)
+    const modF =
+      (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') &&
+      (e.metaKey || e.ctrlKey)
     if (modF) {
       e.preventDefault()
       e.stopPropagation()
@@ -713,9 +775,13 @@
           {/each}
         </div>
       {/if}
-      <div class="search-wrapper" class:is-focused={document.activeElement === inputEl} onkeydown={onInputKeydown}>
+      <div
+        class="search-wrapper"
+        class:is-focused={document.activeElement === inputEl}
+        onkeydown={onInputKeydown}
+      >
         <div class="modifiers-wrapper">
-          {#each (activeKeysStore.sortedModifiers as unknown as string[]) as m}
+          {#each activeKeysStore.sortedModifiers as unknown as string[] as m}
             <kbd
               class="modifier setting-hotkey"
               onclick={() => {
@@ -724,7 +790,8 @@
                     unconvertModifier(m as any)
                   )
                   activeModifiers =
-                    (activeKeysStore.sortedModifiers as unknown as string[]) || []
+                    (activeKeysStore.sortedModifiers as unknown as string[]) ||
+                    []
                   activeKey = activeKeysStore?.ActiveKey || ''
                 } catch {}
                 refilter()
@@ -851,7 +918,7 @@
     color: var(--text-normal);
     padding: 8px 12px;
     margin: 8px 0 0 0;
-    background: var(--background-secondary);
+    background: transparent;
     position: relative;
   }
   .qv .search-wrapper.is-focused {
@@ -895,6 +962,10 @@
     color: var(--text-normal);
     box-shadow: none;
   }
+  .qv .hotkey-search-container input:active {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
   .qv .meta-search-wrapper {
     position: absolute;
     top: 50%;
@@ -920,18 +991,21 @@
     color: var(--text-normal);
   }
   .qv .keyboard-icon.pulse {
-    animation: qv-pulse 1s ease-in-out infinite alternate;
+    /* Subtle glow without layout shift */
     color: var(--text-on-accent);
     background: var(--interactive-accent);
     border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    animation: qv-glow 1200ms ease-in-out infinite alternate;
   }
-  @keyframes qv-pulse {
+  @keyframes qv-glow {
     from {
-      transform: translateY(-50%) scale(1);
-      opacity: 0.9;
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+      opacity: 0.95;
     }
     to {
-      transform: translateY(-50%) scale(1.06);
+      box-shadow: 0 0 8px 2px
+        color-mix(in oklab, var(--interactive-accent), transparent 50%);
       opacity: 1;
     }
   }

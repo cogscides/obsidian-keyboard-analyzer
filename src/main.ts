@@ -41,6 +41,12 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 	private quickViewListenNonce = 0;
 	private quickViewListeningActive = false;
 	private lastQuickViewCloseAt = 0;
+	private quickViewArm:
+		| {
+				triggers: { modifiers: string[]; key: string }[];
+				until: number;
+		  }
+		| null = null;
 
 	constructor(app: App, manifest: PluginManifest) {
 		super(app, manifest);
@@ -244,7 +250,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 				this.lastQuickViewInvoke = now;
 
 				if (!this.quickViewComponent) {
-					this.openQuickView(isDoubleRun);
+					this.openQuickView(isDoubleRun, /*armFromCommand*/ true);
 					return;
 				}
 
@@ -258,7 +264,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		});
 	}
 
-	private openQuickView(listenOnOpen = false) {
+	private openQuickView(listenOnOpen = false, armFromCommand = false) {
 		try {
 			// Ensure we have an anchor; fallback to status bar container if not set
 			const anchor =
@@ -275,6 +281,23 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 				this.quickViewListeningActive = false;
 			}
 
+			// If invoked from the command, arm a brief post-open listener trigger:
+			// pressing the same hotkey again while holding modifiers will activate listener.
+			this.quickViewArm = null;
+			if (armFromCommand) {
+				try {
+					const fullId = `${this.manifest.id}:open-quick-view`;
+					const { all } = this.hotkeyManager.getHotkeysForCommand(fullId);
+					const triggers = all.map((hk) => ({
+						modifiers: hk.modifiers as unknown as string[],
+						key: hk.key || "",
+					}));
+					if (triggers.length) {
+						this.quickViewArm = { triggers, until: Date.now() + 900 };
+					}
+				} catch {}
+			}
+
 			this.quickViewComponent = mount(QuickViewPopover, {
 				target: document.body,
 				props: {
@@ -284,6 +307,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 					listenToggle: this.quickViewListeningActive
 						? this.quickViewListenNonce
 						: 0,
+					armTriggers: this.quickViewArm,
 				},
 			});
 		} catch (err) {
@@ -314,6 +338,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		// Always reset listen flags when closing (Esc, outside click, command toggle, etc.)
 		this.quickViewListeningActive = false;
 		this.lastQuickViewCloseAt = Date.now();
+		this.quickViewArm = null;
 	}
 
 	private enterQuickViewListenMode() {

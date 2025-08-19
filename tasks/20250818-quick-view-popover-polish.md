@@ -2,7 +2,7 @@
 title: Quick View Popover — polish UI and maintainability
 status: in_progress
 owner: '@agent'
-updated: 2025-08-19 14:05 UTC
+updated: 2025-08-19 15:02 UTC
 related:
   - [[ISSUE-quick-view-popover]]
 ---
@@ -97,13 +97,17 @@ Outcome: Quick View opens reliably; no “Uncaught” or effect-depth errors; re
 - Unified chip label rendering in Quick View with SearchMenu: use baked labels for modifiers/keys when `useBakedKeyNames` is enabled; fallback to `ActiveKeysStore.getDisplayKey()` for active key.
 
 - Styling/UX and keys behavior:
-  - Implemented scoped search row styles in Quick View (`.qv .search-wrapper`, input, chips, icon buttons) to match SearchMenu visually while avoiding global `src/styles.css` bleed.
+  - Implemented scoped search row styles in Quick View (`.qv .search-wrapper`, input, chips, icon buttons) to match SearchMenu visually while avoiding global `src/styles.css` bleed. Aligned input background (transparent) and focus border/shadow.
   - Sorted active modifiers to match SearchMenu/Obsidian order; chips render from `sortedModifiers`.
   - Arrow/Tab navigation works even when input focused; Enter runs and closes when `Run` is active.
-  - Cmd/Ctrl+F handling hardened: capture at window level with `stopImmediatePropagation`, plus input-level handler; toggles listener and focuses input as needed.
+  - Cmd/Ctrl+F handling hardened: capture at window level with `stopImmediatePropagation`, plus input-level handler; checks `e.code === 'KeyF'` too; toggles listener and focuses input as needed even when input is focused.
   - Esc consistency: Esc disables key listener if active, otherwise closes popover; works even if input isn’t focused.
   - Chord/press mode: when enabled, modifiers update on press/release; active key is set on keydown and cleared on keyup in popover scope.
   - Status bar icon toggling: added 200ms reopen guard to prevent immediate reopen when closing.
+  - Stabilized action buttons: removed transform-based pulse to avoid jump on activation; use subtle box-shadow glow instead.
+
+- Command-trigger arming:
+  - When opened via the Quick View command, arm a short window (~900ms) where pressing the same hotkey again (with modifiers still held) activates the key listener. Implemented by passing `armTriggers` from main to the popover and matching with `matchHotkey`.
 
 Verification:
 
