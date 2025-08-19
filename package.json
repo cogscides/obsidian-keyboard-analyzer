@@ -9,6 +9,8 @@
     "dev": "npm run dev:setup && npm run dev:watch",
     "build": "vite build --mode production",
     "release": "standard-version",
+    "svelte-check": "svelte-check",
+    "svelte-check:fix": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "biome check .",
     "lint:fix": "biome check . --write"
   },
