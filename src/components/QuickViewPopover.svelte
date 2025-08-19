@@ -25,6 +25,7 @@
     plugin: KeyboardAnalyzerPlugin
     anchorEl?: HTMLElement | null
     onClose?: () => void
+    // Double-command activation nonce; when incremented, enable listener
     listenToggle?: number
     armTriggers?: {
       triggers: { modifiers: string[]; key: string }[]
@@ -394,12 +395,41 @@
       onClose?.()
       return
     }
+    // Global Mod+F toggles listener even if focus is outside
+    const modFGlobal =
+      (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') &&
+      (e.metaKey || e.ctrlKey)
+    if (modFGlobal) {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation?.()
+      if (document.activeElement !== inputEl) inputEl?.focus()
+      listenerActive = !listenerActive
+      return
+    }
 
     // If listener is active, capture keys even if focus moved (e.g., after running a command)
     if (listenerActive) {
       e.preventDefault()
       e.stopPropagation()
       e.stopImmediatePropagation?.()
+      // While listening, allow navigation and run/close via keyboard
+      if (e.key === 'ArrowDown') {
+        moveSelection(1)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        moveSelection(-1)
+        return
+      }
+      if (e.key === 'Tab') {
+        moveSelection(e.shiftKey ? -1 : 1)
+        return
+      }
+      if (e.key === 'Enter') {
+        if (autoRun) runSelected()
+        return
+      }
       try {
         activeKeysStore.handlePhysicalKeyDown(e, { inActiveView: true })
       } catch {}
@@ -536,6 +566,18 @@
     refilter()
     inputEl?.focus()
   }
+
+  // React to double-run command activation to enable listener
+  let lastListenNonce = $state(0)
+  $effect(() => {
+    const n = Number(listenToggle || 0)
+    if (!Number.isFinite(n)) return
+    if (n > 0 && n !== lastListenNonce) {
+      lastListenNonce = n
+      listenerActive = true
+      queueMicrotask(() => inputEl?.focus())
+    }
+  })
   function toggleListener() {
     listenerActive = !listenerActive
     inputEl?.focus()
@@ -623,9 +665,7 @@
     } catch (err) {
       logger.error('[qv] failed to init stores', err)
     }
-    try {
-      if (listenToggle) listenerActive = true
-    } catch {}
+    // No auto-activation via legacy listenToggle; replaced by armTriggers flow
     try {
       const w = Number(settingsManager.settings.quickViewWidth || 380)
       const h = Number(settingsManager.settings.quickViewHeight || 360)

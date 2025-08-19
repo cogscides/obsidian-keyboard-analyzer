@@ -235,37 +235,32 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		});
 	}
 
-	/**
-	 * Register "Open Quick View" command with double-run detection to enable listen mode.
-	 * First run opens/targets the popover near the status bar keyboard icon.
-	 * Second run within 500ms toggles key-listen mode inside the popover.
-	 */
-	private addQuickViewCommand() {
-		this.addCommand({
-			id: "open-quick-view",
-			name: "Open Quick View",
-			callback: () => {
-				const now = Date.now();
-				const isDoubleRun = now - this.lastQuickViewInvoke <= 500;
-				this.lastQuickViewInvoke = now;
+		private addQuickViewCommand() {
+			this.addCommand({
+				id: "open-quick-view",
+				name: "Open Quick View",
+				callback: () => {
+					const now = Date.now();
+					const isDoubleRun = now - this.lastQuickViewInvoke <= 500;
+					this.lastQuickViewInvoke = now;
 
-				if (!this.quickViewComponent) {
-					this.openQuickView(isDoubleRun, /*armFromCommand*/ true);
-					return;
-				}
+					if (!this.quickViewComponent) {
+						this.openQuickView(false, /*armFromCommand*/ true);
+						return;
+					}
 
-				// Already open: double-run → enter listen mode, single-run → close
-				if (isDoubleRun) {
-					this.enterQuickViewListenMode();
-				} else {
-					this.closeQuickView();
-				}
-			},
-		});
-	}
+					// Already open: double-run → enter listen mode, single-run → close
+					if (isDoubleRun) {
+						this.enterQuickViewListenMode();
+					} else {
+						this.closeQuickView();
+					}
+				},
+			});
+		}
 
-	private openQuickView(listenOnOpen = false, armFromCommand = false) {
-		try {
+		private openQuickView(_listenOnOpen = false, armFromCommand = false) {
+			try {
 			// Ensure we have an anchor; fallback to status bar container if not set
 			const anchor =
 				this.quickViewAnchorEl ||
@@ -274,42 +269,46 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 				) as HTMLElement | null);
 			this.quickViewAnchorEl = anchor || this.quickViewAnchorEl;
 
-			if (listenOnOpen) {
-				this.quickViewListenNonce++;
-				this.quickViewListeningActive = true;
-			} else {
-				this.quickViewListeningActive = false;
-			}
+				// If invoked from the command, arm a brief post-open listener trigger:
+				// pressing the same hotkey again while holding modifiers will activate listener.
+				this.quickViewArm = null;
+				if (armFromCommand) {
+					try {
+						const fullId = `${this.manifest.id}:open-quick-view`;
+						const defaults = this.app.hotkeyManager.getDefaultHotkeys(fullId) || [];
+						const customs = (this.app.hotkeyManager.customKeys as any)[fullId] || [];
+						const map = new Map<string, { modifiers: string[]; key: string }>();
+						const toMods = (mods: unknown): string[] => {
+							if (Array.isArray(mods)) return mods as string[];
+							if (typeof mods === "string") return mods ? mods.split(",") : [];
+							return [];
+						};
+						const add = (mods: unknown, key: string) => {
+							const m = toMods(mods);
+							const sorted = [...m].sort().join(",");
+							map.set(`${sorted}|${key}`, { modifiers: m, key });
+						};
+						for (const hk of defaults) add((hk as any).modifiers, (hk as any).key || "");
+						for (const hk of customs) add((hk as any).modifiers, (hk as any).key || "");
+						const triggers = Array.from(map.values());
+						if (triggers.length) {
+							this.quickViewArm = { triggers, until: Date.now() + 900 };
+						}
+					} catch {}
+				}
 
-			// If invoked from the command, arm a brief post-open listener trigger:
-			// pressing the same hotkey again while holding modifiers will activate listener.
-			this.quickViewArm = null;
-			if (armFromCommand) {
-				try {
-					const fullId = `${this.manifest.id}:open-quick-view`;
-					const { all } = this.hotkeyManager.getHotkeysForCommand(fullId);
-					const triggers = all.map((hk) => ({
-						modifiers: hk.modifiers as unknown as string[],
-						key: hk.key || "",
-					}));
-					if (triggers.length) {
-						this.quickViewArm = { triggers, until: Date.now() + 900 };
-					}
-				} catch {}
-			}
-
-			this.quickViewComponent = mount(QuickViewPopover, {
-				target: document.body,
-				props: {
-					plugin: this,
-					anchorEl: this.quickViewAnchorEl,
-					onClose: () => this.closeQuickView(),
-					listenToggle: this.quickViewListeningActive
-						? this.quickViewListenNonce
-						: 0,
-					armTriggers: this.quickViewArm,
-				},
-			});
+				this.quickViewComponent = mount(QuickViewPopover, {
+					target: document.body,
+					props: {
+						plugin: this,
+						anchorEl: this.quickViewAnchorEl,
+						onClose: () => this.closeQuickView(),
+						listenToggle: this.quickViewListeningActive
+							? this.quickViewListenNonce
+							: 0,
+						armTriggers: this.quickViewArm,
+					},
+				});
 		} catch (err) {
 			// If mount fails for any reason, clear ref to avoid stale state
 			this.quickViewComponent = null;
