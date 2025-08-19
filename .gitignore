@@ -34,3 +34,7 @@ repomix-output.xml
 
 # Obsidian
 tasks/.obsidian/*
+
+# AI
+.roo
+AGENTS.md
