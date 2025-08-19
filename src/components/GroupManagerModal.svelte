@@ -46,7 +46,7 @@
   let cmdSearchOpen = $state(false)
   let cmdSearchResults: commandEntry[] = $state([])
   let cmdSearchLimit = 20
-  let cmdSearchInputEl: HTMLInputElement | null = null
+  let cmdSearchInputEl: HTMLInputElement | null = $state(null)
   let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null
 
   function renderFirstHotkey(entry: commandEntry): string {
@@ -285,9 +285,22 @@
       plugin as unknown as { syncPerGroupCommands?: () => void }
     ).syncPerGroupCommands?.()
   }
+  function onBackdropKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClose?.()
+    }
+  }
 </script>
 
-<div class="kb-modal-backdrop" onclick={onClose}></div>
+<div
+  class="kb-modal-backdrop"
+  role="button"
+  tabindex="0"
+  aria-label="Close dialog"
+  onclick={onClose}
+  onkeydown={onBackdropKeydown}
+></div>
 <div
   class="kb-modal"
   role="dialog"
@@ -375,8 +388,9 @@
       <section class="kb-main">
         {#if !selectedGroupId || selectedGroupId === 'all'}
           <div class="kb-group-behavior">
-            <label class="u-muted small">On open</label>
-            <div class="kb-row">
+            <fieldset class="kb-fieldset">
+              <legend class="u-muted small">On open</legend>
+              <div class="kb-row">
               <label class="kb-radio">
                 <input
                   type="radio"
@@ -395,7 +409,8 @@
                 />
                 Last used (dynamic)
               </label>
-            </div>
+              </div>
+            </fieldset>
             <div class="kb-row wrap">
               <button
                 class="kb-btn"
@@ -437,8 +452,9 @@
           </div>
 
           <div class="kb-group-behavior">
-            <label class="u-muted small">On open</label>
-            <div class="kb-row">
+            <fieldset class="kb-fieldset">
+              <legend class="u-muted small">On open</legend>
+              <div class="kb-row">
               <label class="kb-radio">
                 <input
                   type="radio"
@@ -457,7 +473,8 @@
                 />
                 Last used (dynamic)
               </label>
-            </div>
+              </div>
+            </fieldset>
             <div class="kb-row wrap">
               <button
                 class="kb-btn"
@@ -477,7 +494,7 @@
           </div>
 
           <div class="kb-group-commands">
-            <label class="u-muted small">Command palette</label>
+            <span class="u-muted small">Command palette</span>
             <div class="kb-row">
               <label class="kb-radio">
                 <input
@@ -514,7 +531,9 @@
                   oninput={onCmdSearchInput}
                   onfocus={handleCmdSearchFocus}
                   onkeydown={handleCmdSearchKeydown}
+                  role="combobox"
                   aria-autocomplete="list"
+                  aria-haspopup="listbox"
                   aria-expanded={cmdSearchOpen}
                   aria-controls="kb-cmd-search-list"
                 />
@@ -541,7 +560,11 @@
                       class="kb-cmd-option"
                       role="option"
                       aria-selected="false"
+                      tabindex="0"
                       onclick={() => pickSearchResult(r)}
+                      onkeydown={(e: KeyboardEvent) =>
+                        (e.key === 'Enter' || e.key === ' ') &&
+                        (e.preventDefault(), pickSearchResult(r))}
                       title={`${r.pluginName}: ${r.name}`}
                     >
                       <span class="label">{r.pluginName}: {r.name}</span>

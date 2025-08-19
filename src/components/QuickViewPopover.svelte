@@ -97,19 +97,19 @@
   }
 
   // Keys state via ActiveKeysStore (init on mount to avoid pre-mount side effects)
-  let visualKeyboardManager: VisualKeyboardManager
-  let activeKeysStore: ActiveKeysStore
+  let visualKeyboardManager: VisualKeyboardManager | null = $state(null)
+  let activeKeysStore: ActiveKeysStore | null = $state(null)
   let activeKey = $state('')
   let activeModifiers: string[] = $state([])
 
   // Results
   let filtered: commandEntry[] = $state([])
   let selectedIndex = $state(0)
-  let listEl: HTMLDivElement | null = null
-  let inputEl: HTMLInputElement | null = null
+  let listEl: HTMLDivElement | null = $state(null)
+  let inputEl: HTMLInputElement | null = $state(null)
 
   // Persisted size and anchoring
-  let rootEl: HTMLDivElement | null = null
+  let rootEl: HTMLDivElement | null = $state(null)
   let placeAbove = $state(false)
   // Start with safe defaults; read persisted size on mount
   let coords = $state({
@@ -126,7 +126,7 @@
   let pinned = $state(false)
   let keyScope: Scope | null = null
   let mounted = $state(false)
-  let prevSelectedGroup: string = selectedGroup
+  // removed non-reactive capture of selectedGroup
 
   // Refilter based on state
   function refilter() {
@@ -436,11 +436,11 @@
         return
       }
       try {
-        activeKeysStore.handlePhysicalKeyDown(e, { inActiveView: true })
+        (activeKeysStore as any).handlePhysicalKeyDown?.(e, { inActiveView: true })
       } catch {}
-      activeKey = activeKeysStore.ActiveKey
+      activeKey = (activeKeysStore as any)?.ActiveKey
       activeModifiers =
-        (activeKeysStore.sortedModifiers as unknown as string[]) || []
+        ((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []
       refilter()
       return
     }
@@ -504,11 +504,11 @@
       String(search || '').trim() === ''
     ) {
       if (activeKey) {
-        activeKeysStore.clearActiveKey?.()
+        ;(activeKeysStore as any)?.clearActiveKey?.()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
         const mods = [
-          ...(activeKeysStore.sortedModifiers as unknown as string[]),
+          ...(((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []),
         ]
         mods.pop()
         ;(activeKeysStore as any).ActiveModifiers = mods
@@ -550,19 +550,19 @@
     e.stopPropagation()
     e.stopImmediatePropagation?.()
     try {
-      activeKeysStore.handlePhysicalKeyUp(e, { inActiveView: true })
+      (activeKeysStore as any)?.handlePhysicalKeyUp?.(e, { inActiveView: true })
     } catch {}
     // Reflect cleared key/modifiers immediately
-    activeKey = activeKeysStore.ActiveKey
+    activeKey = (activeKeysStore as any)?.ActiveKey
     activeModifiers =
-      (activeKeysStore.sortedModifiers as unknown as string[]) || []
+      (((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || [])
     refilter()
   }
 
   // UI helpers
   function clearSearch() {
     if (search.trim() === '') {
-      activeKeysStore.reset()
+      ;(activeKeysStore as any)?.reset?.()
       activeKey = ''
       activeModifiers = []
     } else {
@@ -613,11 +613,11 @@
       String(search || '').trim() === ''
     ) {
       if (activeKey) {
-        activeKeysStore.clearActiveKey?.()
+        ;(activeKeysStore as any)?.clearActiveKey?.()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
         const mods = [
-          ...(activeKeysStore.sortedModifiers as unknown as string[]),
+          ...(((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []),
         ]
         mods.pop()
         ;(activeKeysStore as any).ActiveModifiers = mods
@@ -644,16 +644,15 @@
 
   // Minimal filter dropdown (collapsed)
   let filtersOpen = $state(false)
-  const filterKeys: Array<{
-    key: keyof ReturnType<typeof groupManager.getGroupSettings>
-    label: string
-  }> = [
-    { key: 'StrictModifierMatch', label: 'Strict modifiers' },
-    { key: 'ViewWOhotkeys', label: 'Only with hotkeys' },
-    { key: 'OnlyDuplicates', label: 'Only duplicates' },
-    { key: 'DisplayInternalModules', label: 'Include internal modules' },
+  import type { CGroupFilterSettings } from '../managers/settingsManager'
+  import { FilterSettingsKeyValues } from '../managers/settingsManager/keys'
+  const filterKeys: Array<{ key: keyof CGroupFilterSettings; label: string }> = [
+    { key: FilterSettingsKeyValues.StrictModifierMatch as keyof CGroupFilterSettings, label: 'Strict modifiers' },
+    { key: FilterSettingsKeyValues.ViewWOhotkeys as keyof CGroupFilterSettings, label: 'Only with hotkeys' },
+    { key: FilterSettingsKeyValues.OnlyDuplicates as keyof CGroupFilterSettings, label: 'Only duplicates' },
+    { key: FilterSettingsKeyValues.DisplayInternalModules as keyof CGroupFilterSettings, label: 'Include internal modules' },
   ]
-  function setFilter(key: string, val: boolean) {
+  function setFilter(key: keyof CGroupFilterSettings, val: boolean) {
     groupManager.updateGroupFilterSettings(selectedGroup, { [key]: val } as any)
     refilter()
   }
@@ -777,6 +776,7 @@
       if (!pinned) onClose?.()
     }}
     role="dialog"
+    tabindex="-1"
     aria-label="Quick Commands"
     bind:this={rootEl}
     onmouseenter={() => {
@@ -852,7 +852,7 @@
                 <input
                   type="checkbox"
                   checked={groupManager.getGroupSettings(selectedGroup)[f.key]}
-                  onchange={(e) =>
+                  onchange={(e: Event) =>
                     setFilter(f.key, (e.target as HTMLInputElement).checked)}
                 />
                 {f.label}
@@ -864,23 +864,39 @@
       <div
         class="search-wrapper"
         class:is-focused={document.activeElement === inputEl}
-        onkeydown={onInputKeydown}
+        role="group"
+        aria-label="Search and active keys"
       >
         <div class="modifiers-wrapper">
-          {#each activeKeysStore.sortedModifiers as unknown as string[] as m}
+          {#each (((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []) as m}
             <kbd
               class="modifier setting-hotkey"
+              role="button"
+              tabindex="0"
               onclick={() => {
                 try {
                   ;(activeKeysStore as any)?.handleKeyClick?.(
                     unconvertModifier(m as any)
                   )
                   activeModifiers =
-                    (activeKeysStore.sortedModifiers as unknown as string[]) ||
-                    []
-                  activeKey = activeKeysStore?.ActiveKey || ''
+                    ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                  activeKey = (activeKeysStore as any)?.ActiveKey || ''
                 } catch {}
                 refilter()
+              }}
+              onkeydown={(e: KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  try {
+                    ;(activeKeysStore as any)?.handleKeyClick?.(
+                      unconvertModifier(m as any)
+                    )
+                    activeModifiers =
+                      ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                    activeKey = (activeKeysStore as any)?.ActiveKey || ''
+                  } catch {}
+                  refilter()
+                }
               }}
             >
               {settingsManager.settings.useBakedKeyNames
@@ -891,14 +907,28 @@
           {#if activeKey}
             <kbd
               class="modifier setting-hotkey"
+              role="button"
+              tabindex="0"
               onclick={() => {
                 try {
                   ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
                 } catch {}
                 activeModifiers =
-                  (activeKeysStore.sortedModifiers as unknown as string[]) || []
-                activeKey = activeKeysStore?.ActiveKey || ''
+                  ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                activeKey = (activeKeysStore as any)?.ActiveKey || ''
                 refilter()
+              }}
+              onkeydown={(e: KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  try {
+                    ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
+                  } catch {}
+                  activeModifiers =
+                    ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                  activeKey = (activeKeysStore as any)?.ActiveKey || ''
+                  refilter()
+                }
               }}
             >
               {settingsManager.settings.useBakedKeyNames
@@ -955,9 +985,19 @@
         {#each filtered as cmd, i (cmd.id)}
           <div
             class="qv-row {i === selectedIndex ? 'is-selected' : ''}"
+            role="option"
+            tabindex="0"
+            aria-selected={i === selectedIndex}
             onclick={() => {
               selectedIndex = i
               if (autoRun) runSelected()
+            }}
+            onkeydown={(e: KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                selectedIndex = i
+                if (autoRun) runSelected()
+              }
             }}
           >
             <div class="qv-name">{cmd.name}</div>

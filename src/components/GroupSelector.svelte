@@ -13,13 +13,17 @@ interface Props {
 
 let { selectedGroup = $bindable("all"), compact = $bindable(false), plugin = $bindable(), onChange = $bindable((_) => {}) }: Props = $props();
 
-// Resolve plugin via prop first, then context as fallback
-let _plugin: KeyboardAnalyzerPlugin;
-try {
-	_plugin = (plugin as KeyboardAnalyzerPlugin) || (getContext("keyboard-analyzer-plugin") as KeyboardAnalyzerPlugin);
-} catch (err) {
-	logger.error("[GroupSelector] failed to resolve plugin from context", err);
+// Resolve plugin via prop first, then context as fallback (safely)
+function resolvePluginFromContext(): KeyboardAnalyzerPlugin | undefined {
+  try {
+    return getContext("keyboard-analyzer-plugin") as KeyboardAnalyzerPlugin;
+  } catch (err) {
+    logger.error("[GroupSelector] failed to resolve plugin from context", err);
+    return undefined;
+  }
 }
+
+const _plugin: KeyboardAnalyzerPlugin | undefined = plugin ?? resolvePluginFromContext();
 const _groupManager = _plugin?.groupManager;
 
 let _isManagerOpen = $state(false);

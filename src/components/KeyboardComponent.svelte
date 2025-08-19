@@ -55,13 +55,14 @@
     const focusWithin = !!(
       rootEl && (rootEl as HTMLElement).matches(':focus-within')
     )
-    const isActiveView = (() => {
+    const isActiveView: boolean = (() => {
       try {
-        const v = plugin.app.workspace.activeLeaf?.view as unknown
-        return (
-          v &&
-          typeof v.getViewType === 'function' &&
-          v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER
+        const v = plugin.app.workspace.activeLeaf?.view as
+          | { getViewType?: () => string }
+          | undefined
+        return !!(
+          v && typeof v.getViewType === 'function' &&
+          v.getViewType?.() === VIEW_TYPE_SHORTCUTS_ANALYZER
         )
       } catch {
         return false
@@ -125,11 +126,12 @@
         ? isModifierPressModeEnabled()
         : (() => {
             try {
-              const v = plugin.app.workspace.activeLeaf?.view as unknown
-              return (
-                v &&
-                typeof v.getViewType === 'function' &&
-                v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER
+              const v = plugin.app.workspace.activeLeaf?.view as
+                | { getViewType?: () => string }
+                | undefined
+              return !!(
+                v && typeof v.getViewType === 'function' &&
+                v.getViewType?.() === VIEW_TYPE_SHORTCUTS_ANALYZER
               )
             } catch {
               return false
@@ -142,13 +144,14 @@
       return
     }
 
-    const isActiveView = (() => {
+    const isActiveView: boolean = (() => {
       try {
-        const v = plugin.app.workspace.activeLeaf?.view as unknown
-        return (
-          v &&
-          typeof v.getViewType === 'function' &&
-          v.getViewType() === VIEW_TYPE_SHORTCUTS_ANALYZER
+        const v = plugin.app.workspace.activeLeaf?.view as
+          | { getViewType?: () => string }
+          | undefined
+        return !!(
+          v && typeof v.getViewType === 'function' &&
+          v.getViewType?.() === VIEW_TYPE_SHORTCUTS_ANALYZER
         )
       } catch {
         return false

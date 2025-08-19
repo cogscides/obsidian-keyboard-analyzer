@@ -223,9 +223,13 @@
               ? 'is-builtin'
               : ''}"
             role="button"
+            tabindex="0"
             aria-expanded={!isCollapsed(group.pluginName)}
             aria-controls={`group-${slugify(group.pluginName)}`}
             onclick={() => togglePluginCollapse(group.pluginName)}
+            onkeydown={(e: KeyboardEvent) =>
+              (e.key === 'Enter' || e.key === ' ') &&
+              (e.preventDefault(), togglePluginCollapse(group.pluginName))}
           >
             <span
               class="chevron {isCollapsed(group.pluginName)
@@ -264,7 +268,12 @@
                       <div class="action-icons">
                         <div
                           class="star-icon icon"
+                          role="button"
+                          tabindex="0"
                           onclick={() => handleStarClick(cmdEntry.id)}
+                          onkeydown={(e: KeyboardEvent) =>
+                            (e.key === 'Enter' || e.key === ' ') &&
+                            (e.preventDefault(), handleStarClick(cmdEntry.id))}
                         >
                           <StarIcon size={16} />
                         </div>
@@ -272,8 +281,13 @@
                         <div
                           class="folder-plus-icon icon"
                           title="Add to group"
+                          role="button"
+                          tabindex="0"
                           onclick={(e: MouseEvent) =>
                             toggleAddToGroupPopover(e, cmdEntry.id)}
+                          onkeydown={(e: KeyboardEvent) =>
+                            (e.key === 'Enter' || e.key === ' ') &&
+                            (e.preventDefault(), toggleAddToGroupPopover(e as unknown as MouseEvent, cmdEntry.id))}
                         >
                           <FolderPlusIcon size={16} />
                         </div>
@@ -305,8 +319,13 @@
                           ) && groupSettings?.HighlightDuplicates}
                           class:is-customized={hotkey.isCustom &&
                             groupSettings?.HighlightCustom}
+                          role="button"
+                          tabindex="0"
                           onclick={() =>
                             handleDuplicateHotkeyClick(hotkey, cmdEntry)}
+                          onkeydown={(e: KeyboardEvent) =>
+                            (e.key === 'Enter' || e.key === ' ') &&
+                            (e.preventDefault(), handleDuplicateHotkeyClick(hotkey, cmdEntry))}
                           onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
                           onmouseleave={handleHotkeyMouseLeave}
                         >
@@ -348,7 +367,12 @@
               <div class="action-icons">
                 <div
                   class="star-icon icon"
+                  role="button"
+                  tabindex="0"
                   onclick={() => handleStarClick(cmdEntry.id)}
+                  onkeydown={(e: KeyboardEvent) =>
+                    (e.key === 'Enter' || e.key === ' ') &&
+                    (e.preventDefault(), handleStarClick(cmdEntry.id))}
                 >
                   <StarIcon size={16} />
                 </div>
@@ -356,8 +380,13 @@
                 <div
                   class="folder-plus-icon icon"
                   title="Add to group"
+                  role="button"
+                  tabindex="0"
                   onclick={(e: MouseEvent) =>
                     toggleAddToGroupPopover(e, cmdEntry.id)}
+                  onkeydown={(e: KeyboardEvent) =>
+                    (e.key === 'Enter' || e.key === ' ') &&
+                    (e.preventDefault(), toggleAddToGroupPopover(e as unknown as MouseEvent, cmdEntry.id))}
                 >
                   <FolderPlusIcon size={16} />
                 </div>
@@ -387,7 +416,12 @@
                   ) && groupSettings?.HighlightDuplicates}
                   class:is-customized={hotkey.isCustom &&
                     groupSettings?.HighlightCustom}
+                  role="button"
+                  tabindex="0"
                   onclick={() => handleDuplicateHotkeyClick(hotkey, cmdEntry)}
+                  onkeydown={(e: KeyboardEvent) =>
+                    (e.key === 'Enter' || e.key === ' ') &&
+                    (e.preventDefault(), handleDuplicateHotkeyClick(hotkey, cmdEntry))}
                   onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
                   onmouseleave={handleHotkeyMouseLeave}
                 >
