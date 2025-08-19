@@ -127,29 +127,27 @@ export class ActiveKeysStore {
 		}
 
 		// Modifier 'hold' mode: reflect currently pressed modifiers, and inside the Analyzer view allow selecting keys via physical press.
-		if (isModifierPressModeEnabled()) {
-			const mods: Modifier[] = [];
-			if (e.ctrlKey) mods.push(convertModifier("Control"));
-			if (e.metaKey) mods.push(convertModifier("Meta"));
-			if (e.altKey) mods.push(convertModifier("Alt"));
-			if (e.shiftKey) mods.push("Shift");
-			this.activeModifiers = Array.from(new Set(mods));
-			// In hold mode, allow selecting a key via keyboard only when inside the Analyzer view.
-			// Global scope still ignores non-modifier keys.
-			const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key);
-			if (opts?.inActiveView && !this.isModifier(normalizedKey)) {
-				if (this.activeKey === normalizedKey) {
-					// Toggle off if pressing the same key again (ignore repeats above)
-					this.activeKey = "";
-					logger.debug("[keys] hold mode: cleared activeKey (toggle)", this.state);
-				} else {
-					this.activeKey = normalizedKey;
-					logger.debug("[keys] hold mode: set activeKey (keydown)", this.state);
-				}
-			}
-			logger.debug("[keys] hold mode: modifiers updated", this.state);
-			return;
-		}
+        if (isModifierPressModeEnabled()) {
+            const mods: Modifier[] = [];
+            if (e.ctrlKey) mods.push(convertModifier("Control"));
+            if (e.metaKey) mods.push(convertModifier("Meta"));
+            if (e.altKey) mods.push(convertModifier("Alt"));
+            if (e.shiftKey) mods.push("Shift");
+            this.activeModifiers = Array.from(new Set(mods));
+            // In press mode, keep keys behavior: toggle on physical press when in active view
+            const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key);
+            if (opts?.inActiveView && !this.isModifier(normalizedKey)) {
+                if (this.activeKey === normalizedKey) {
+                    this.activeKey = "";
+                    logger.debug("[keys] hold mode: cleared activeKey (toggle)", this.state);
+                } else {
+                    this.activeKey = normalizedKey;
+                    logger.debug("[keys] hold mode: set activeKey (keydown)", this.state);
+                }
+            }
+            logger.debug("[keys] hold mode: modifiers updated", this.state);
+            return;
+        }
 		// Map to Obsidian modifier by code when possible
 		const mod = this.visualKeyboardManager.mapCodeToObsidianModifier(
 			e.code || e.key,
@@ -197,21 +195,16 @@ export class ActiveKeysStore {
 			key: e.key,
 			code: e.code,
 		});
-		if (isModifierPressModeEnabled()) {
-			// Update modifiers to reflect currently held modifiers; clear when none are held
-			const mods: Modifier[] = [];
-			if (e.ctrlKey) mods.push(convertModifier("Control"));
-			if (e.metaKey) mods.push(convertModifier("Meta"));
-			if (e.altKey) mods.push(convertModifier("Alt"));
-			if (e.shiftKey) mods.push("Shift");
-			this.activeModifiers = Array.from(new Set(mods));
-			// Clear activeKey when the non-modifier key is released (press/hold UX)
-			const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key);
-			if (!this.isModifier(normalizedKey) && this.activeKey === normalizedKey) {
-				this.activeKey = "";
-				logger.debug("[keys] hold mode: cleared activeKey on keyup", this.state);
-			}
-		}
+        if (isModifierPressModeEnabled()) {
+            // Update modifiers to reflect currently held modifiers; clear when none are held
+            const mods: Modifier[] = [];
+            if (e.ctrlKey) mods.push(convertModifier("Control"));
+            if (e.metaKey) mods.push(convertModifier("Meta"));
+            if (e.altKey) mods.push(convertModifier("Alt"));
+            if (e.shiftKey) mods.push("Shift");
+            this.activeModifiers = Array.from(new Set(mods));
+            // Keys are not managed by press mode; leave activeKey unchanged
+        }
 	}
 
 	private isModifier(key: string): key is ModifierKey {

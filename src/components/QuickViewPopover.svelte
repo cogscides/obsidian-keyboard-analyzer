@@ -18,6 +18,7 @@
     getBakedModifierLabel,
   } from '../utils/normalizeKeyDisplay'
   import { CircleDot as CircleDotIcon, X } from 'lucide-svelte'
+  import { Scope } from 'obsidian'
   import GroupSelector from './GroupSelector.svelte'
   import logger from '../utils/logger'
 
@@ -25,7 +26,6 @@
     plugin: KeyboardAnalyzerPlugin
     anchorEl?: HTMLElement | null
     onClose?: () => void
-    // Double-command activation nonce; when incremented, enable listener
     listenToggle?: number
     armTriggers?: {
       triggers: { modifiers: string[]; key: string }[]
@@ -123,6 +123,8 @@
   let suppressOutsideCloseUntil = 0
   // Default true; load persisted value on mount
   let autoRun = $state(true)
+  let pinned = $state(false)
+  let keyScope: Scope | null = null
   let mounted = $state(false)
   let prevSelectedGroup: string = selectedGroup
 
@@ -376,7 +378,7 @@
       plugin.app.commands.executeCommandById(cmd.id)
       commandsManager.addRecentCommand(cmd.id)
     } catch {}
-    onClose?.()
+    if (!pinned) onClose?.()
   }
 
   function onKeydownGlobal(e: KeyboardEvent) {
@@ -392,10 +394,10 @@
         listenerActive = false
         return
       }
-      onClose?.()
+      if (!pinned) onClose?.()
       return
     }
-    // Global Mod+F toggles listener even if focus is outside
+    // Global Mod+F: prevent propagation; focus input first; only toggle when input is focused
     const modFGlobal =
       (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') &&
       (e.metaKey || e.ctrlKey)
@@ -403,8 +405,11 @@
       e.preventDefault()
       e.stopPropagation()
       e.stopImmediatePropagation?.()
-      if (document.activeElement !== inputEl) inputEl?.focus()
-      listenerActive = !listenerActive
+      if (document.activeElement !== inputEl) {
+        inputEl?.focus()
+      } else {
+        listenerActive = !listenerActive
+      }
       return
     }
 
@@ -566,7 +571,6 @@
     refilter()
     inputEl?.focus()
   }
-
   // React to double-run command activation to enable listener
   let lastListenNonce = $state(0)
   $effect(() => {
@@ -578,6 +582,7 @@
       queueMicrotask(() => inputEl?.focus())
     }
   })
+
   function toggleListener() {
     listenerActive = !listenerActive
     inputEl?.focus()
@@ -665,6 +670,25 @@
     } catch (err) {
       logger.error('[qv] failed to init stores', err)
     }
+    // Hotkey override scope: ensure Mod+F is captured while popover is hovered/focused
+    try {
+      keyScope = new Scope(plugin.app.scope)
+      keyScope.register(['Mod'], 'F', (evt: KeyboardEvent) => {
+        try {
+          evt?.preventDefault?.()
+          evt?.stopPropagation?.()
+          // Focus-first rule: focus input first; toggle only when already focused
+          if (document.activeElement !== inputEl) {
+            inputEl?.focus()
+          } else {
+            listenerActive = !listenerActive
+          }
+        } catch {}
+        return true
+      })
+    } catch (err) {
+      logger.error('[qv] key scope init failed', err)
+    }
     // No auto-activation via legacy listenToggle; replaced by armTriggers flow
     try {
       const w = Number(settingsManager.settings.quickViewWidth || 380)
@@ -714,6 +738,9 @@
     window.removeEventListener('pointerup', onCornerUp, true)
     window.removeEventListener('pointermove', onLeftMove, true)
     window.removeEventListener('pointerup', onLeftUp, true)
+    try {
+      if (keyScope) plugin.app.keymap.popScope(keyScope)
+    } catch {}
   })
 
   // Persist selected group id with debounce to avoid save churn
@@ -747,11 +774,21 @@
     use:clickOutside
     onclick_outside={() => {
       if (Date.now() < suppressOutsideCloseUntil) return
-      onClose?.()
+      if (!pinned) onClose?.()
     }}
     role="dialog"
     aria-label="Quick Commands"
     bind:this={rootEl}
+    onmouseenter={() => {
+      try {
+        if (keyScope) plugin.app.keymap.pushScope(keyScope)
+      } catch {}
+    }}
+    onmouseleave={() => {
+      try {
+        if (keyScope) plugin.app.keymap.popScope(keyScope)
+      } catch {}
+    }}
   >
     <div class="qv-corner" title="Resize" onpointerdown={onCornerDown}></div>
     <div class="qv-left" title="Resize width" onpointerdown={onLeftDown}></div>
@@ -773,6 +810,15 @@
             onclick={() => (filtersOpen = !filtersOpen)}
             aria-expanded={filtersOpen}>Filters</button
           >
+          <div class="sep"></div>
+          <button
+            class={`qv-btn ${pinned ? 'is-on' : ''}`}
+            title={pinned ? 'Unpin popover' : 'Pin popover to prevent auto-close'}
+            aria-pressed={pinned}
+            onclick={() => (pinned = !pinned)}
+          >
+            Pin
+          </button>
           <div class="sep"></div>
           <button
             class="qv-btn"

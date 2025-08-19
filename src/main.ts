@@ -235,32 +235,36 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		});
 	}
 
-		private addQuickViewCommand() {
-			this.addCommand({
-				id: "open-quick-view",
-				name: "Open Quick View",
-				callback: () => {
-					const now = Date.now();
-					const isDoubleRun = now - this.lastQuickViewInvoke <= 500;
-					this.lastQuickViewInvoke = now;
+    private addQuickViewCommand() {
+        this.addCommand({
+            id: "open-quick-view",
+            name: "Open Quick View",
+            callback: () => {
+                const now = Date.now();
+                const isDoubleRun = now - this.lastQuickViewInvoke <= 500;
+                this.lastQuickViewInvoke = now;
 
-					if (!this.quickViewComponent) {
-						this.openQuickView(false, /*armFromCommand*/ true);
-						return;
-					}
+                if (!this.quickViewComponent) {
+                    // If we just closed it, do not auto-activate listener on reopen
+                    const recentlyClosed = now - this.lastQuickViewCloseAt < 250;
+                    this.openQuickView(
+                        isDoubleRun && !recentlyClosed,
+                        /*armFromCommand*/ true,
+                    );
+                    return;
+                }
 
-					// Already open: double-run → enter listen mode, single-run → close
-					if (isDoubleRun) {
-						this.enterQuickViewListenMode();
-					} else {
-						this.closeQuickView();
-					}
-				},
-			});
-		}
+                if (isDoubleRun) {
+                    this.enterQuickViewListenMode();
+                } else {
+                    this.closeQuickView();
+                }
+            },
+        });
+    }
 
-		private openQuickView(_listenOnOpen = false, armFromCommand = false) {
-			try {
+    private openQuickView(listenOnOpen = false, armFromCommand = false) {
+        try {
 			// Ensure we have an anchor; fallback to status bar container if not set
 			const anchor =
 				this.quickViewAnchorEl ||
@@ -269,11 +273,18 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 				) as HTMLElement | null);
 			this.quickViewAnchorEl = anchor || this.quickViewAnchorEl;
 
-				// If invoked from the command, arm a brief post-open listener trigger:
-				// pressing the same hotkey again while holding modifiers will activate listener.
-				this.quickViewArm = null;
-				if (armFromCommand) {
-					try {
+            if (listenOnOpen) {
+                this.quickViewListenNonce++;
+                this.quickViewListeningActive = true;
+            } else {
+                this.quickViewListeningActive = false;
+            }
+
+            // If invoked from the command, arm a brief post-open listener trigger:
+            // pressing the same hotkey again while holding modifiers will activate listener.
+            this.quickViewArm = null;
+            if (armFromCommand) {
+                try {
 						const fullId = `${this.manifest.id}:open-quick-view`;
 						const defaults = this.app.hotkeyManager.getDefaultHotkeys(fullId) || [];
 						const customs = (this.app.hotkeyManager.customKeys as any)[fullId] || [];
@@ -297,19 +308,19 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 					} catch {}
 				}
 
-				this.quickViewComponent = mount(QuickViewPopover, {
-					target: document.body,
-					props: {
-						plugin: this,
-						anchorEl: this.quickViewAnchorEl,
-						onClose: () => this.closeQuickView(),
-						listenToggle: this.quickViewListeningActive
-							? this.quickViewListenNonce
-							: 0,
-						armTriggers: this.quickViewArm,
-					},
-				});
-		} catch (err) {
+            this.quickViewComponent = mount(QuickViewPopover, {
+                target: document.body,
+                props: {
+                    plugin: this,
+                    anchorEl: this.quickViewAnchorEl,
+                    onClose: () => this.closeQuickView(),
+                    listenToggle: this.quickViewListeningActive
+                        ? this.quickViewListenNonce
+                        : 0,
+                    armTriggers: this.quickViewArm,
+                },
+            });
+        } catch (err) {
 			// If mount fails for any reason, clear ref to avoid stale state
 			this.quickViewComponent = null;
 			this.quickViewListeningActive = false;
@@ -340,23 +351,22 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		this.quickViewArm = null;
 	}
 
-	private enterQuickViewListenMode() {
-		if (!this.quickViewComponent) {
-			this.openQuickView(true);
-			return;
-		}
-		// Activate listening mode and bump nonce
-		this.quickViewListeningActive = true;
-		this.quickViewListenNonce++;
-		try {
-			this.quickViewComponent?.update?.({
-				listenToggle: this.quickViewListenNonce,
-			});
-		} catch {
-			this.closeQuickView();
-			this.openQuickView(true);
-		}
-	}
+    private enterQuickViewListenMode() {
+        if (!this.quickViewComponent) {
+            this.openQuickView(true);
+            return;
+        }
+        this.quickViewListeningActive = true;
+        this.quickViewListenNonce++;
+        try {
+            this.quickViewComponent?.update?.({
+                listenToggle: this.quickViewListenNonce,
+            });
+        } catch {
+            this.closeQuickView();
+            this.openQuickView(true);
+        }
+    }
 
 	private async openGroupPicker() {
 		const plugin = this;

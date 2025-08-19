@@ -2,7 +2,7 @@
 title: Quick View Popover — polish UI and maintainability
 status: in_progress
 owner: '@agent'
-updated: 2025-08-19 16:28 UTC
+updated: 2025-08-19 18:25 UTC
 related:
   - [[ISSUE-quick-view-popover]]
 ---
@@ -101,12 +101,12 @@ Outcome: Quick View opens reliably; no “Uncaught” or effect-depth errors; re
   - Sorted active modifiers to match SearchMenu/Obsidian order; chips render from `sortedModifiers`.
   - Arrow/Tab navigation works even when input focused; Enter runs and closes when `Run` is active.
 - Cmd/Ctrl+F handling hardened: capture at window level with `stopImmediatePropagation`, plus input-level handler; checks `e.code === 'KeyF'` too; toggles listener and focuses input as needed even when input is focused.
-  - Also handle Mod+F globally even when the popover isn’t focused (prevents main view from stealing).
-  - When popover is focused, prevent propagation of Mod+F to stop the main view from intercepting.
+  - Also handle Mod+F globally even when the popover isn’t focused (prevents main view from stealing). When popover is focused, prevent propagation of Mod+F to stop the main view from intercepting. If input isn’t focused, first focus it; only when input is focused do we toggle listener.
   - Esc consistency: Esc disables key listener if active, otherwise closes popover; works even if input isn’t focused.
   - Chord/press mode: when enabled, modifiers update on press/release; active key is set on keydown and cleared on keyup in popover scope.
-- Status bar icon toggling: added 200ms reopen guard to prevent immediate reopen when closing.
+  - Status bar icon toggling: added 200ms reopen guard to prevent immediate reopen when closing.
   - Stabilized action buttons: removed transform-based pulse to avoid jump on activation; use subtle box-shadow glow instead.
+  - Pinning: Added a Pin toggle in the header. When pinned, popover does not close on outside click, Esc (unless for deactivating listener), or after running a command. Explicit close via status bar toggle still closes.
 
 - Command-trigger arming:
   - When opened via the Quick View command, arm a short window (~900ms) where pressing the same hotkey again (with modifiers still held) activates the key listener. Implemented by passing `armTriggers` from main to the popover and matching with `matchHotkey`.
