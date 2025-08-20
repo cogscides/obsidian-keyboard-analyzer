@@ -1,10 +1,13 @@
 {
-  "id": "keyboard-analyzer",
-  "name": "Keyboard Analyzer",
-  "version": "0.3.0",
-  "minAppVersion": "0.12.10",
-  "description": "See and analyze your keyboard hotkeys and shortcuts",
   "author": "cogscides",
+  "minAppVersion": "0.12.10",
+  "name": "Keyboard Analyzer",
+  "description": "See and analyze your keyboard hotkeys and shortcuts",
+  "id": "keyboard-analyzer",
+  "version": "0.3.0",
+  "isDesktopOnly": false,
   "authorUrl": "https://github.com/cogscides",
-  "isDesktopOnly": false
+  "fundingUrl": {
+    "Buy Me a Coffee": "https://ko-fi.com/S6S5E6K74"
+  }
 }
