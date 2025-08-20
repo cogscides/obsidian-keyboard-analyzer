@@ -4,7 +4,7 @@
   "description": "Analyse your keyboard shortcuts",
   "main": "main.js",
   "scripts": {
-    "dev:setup": "node -e \"const fs=require('fs'),path=require('path');const cwd=process.cwd();const out=path.resolve(cwd,'..','obsidian-keyboard-analyzer-dev');fs.mkdirSync(out,{recursive:true});for (const f of ['manifest.json','versions.json']){const src=path.resolve(cwd,'build',f);if(fs.existsSync(src)) fs.copyFileSync(src,path.join(out,f));}\"",
+    "dev:setup": "node -e \"const fs=require('fs'),path=require('path');const cwd=process.cwd();const out=path.resolve(cwd,'..','obsidian-keyboard-analyzer-dev');fs.mkdirSync(out,{recursive:true});for (const f of ['manifest.json','versions.json']){const src=path.resolve(cwd,f);if(fs.existsSync(src)) fs.copyFileSync(src,path.join(out,f));}\"",
     "dev:watch": "vite build --mode development --watch",
     "dev": "npm run dev:setup && npm run dev:watch",
     "build": "vite build --mode production",
