@@ -10,13 +10,13 @@ Install from Community Plugins: https://obsidian.md/plugins?id=keyboard-analyzer
 
 ## Features
 
-- Visual keyboard [REFACTOR]: see which keys are used and by which commands
+- Visual keyboard `[REFACTOR]`: see which keys are used and by which commands
 - Powerful search: by key combo (e.g., `Ctrl+K`), command name, plugin
 - Duplicates and gaps: highlight conflicts and unassigned areas
-- Grouping [NEW] [WIP]: Assign commands to groups, configure group settings and filtration
-- Quick View Popup [NEW]: Quick access to commands list with option run commands (Run command twice to start with key listener enabled)
-- Modifier activation mode [NEW]: Option to select how active key listener tracks modifier keys - On hold or toggle
-- Key listener scope [NEW]: Allow to set key listener scope (e.g., global, plugin view)
+- Grouping `[NEW]` `[WIP]`: Assign commands to groups, configure group settings and filtration
+- Quick View Popup `[NEW]`: Quick access to commands list with option run commands (Run command twice to start with key listener enabled)
+- Modifier activation mode `[NEW]`: Option to select how active key listener tracks modifier keys - On hold or toggle
+- Key listener scope `[NEW]`: Allow to set key listener scope (e.g., global, plugin view)
 - System default overlay: avoid colliding with OS/editor shortcuts ([See default keys](docs/system-shortcuts.md))
 - Status-bar entry: click to open quick commands popup
 
