@@ -1,10 +1,11 @@
 import {
-	type App,
-	Plugin,
-	type PluginManifest,
-	SuggestModal,
-	type WorkspaceLeaf,
-	setIcon,
+    type App,
+    Plugin,
+    type PluginManifest,
+    SuggestModal,
+    type WorkspaceLeaf,
+    setIcon,
+    MarkdownView,
 } from "obsidian";
 import { mount, unmount } from "svelte";
 import { VIEW_TYPE_SHORTCUTS_ANALYZER } from "./Constants";
@@ -37,6 +38,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 	// Quick View Popover state
 	private quickViewComponent: ReturnType<typeof mount> | null = null;
 	private quickViewAnchorEl: HTMLElement | null = null;
+	// Track the element that had focus before opening Quick View, so we can restore it
+	private quickViewPrevActiveEl: HTMLElement | null = null;
 	private lastQuickViewInvoke = 0;
 	private quickViewListenNonce = 0;
 	private quickViewListeningActive = false;
@@ -149,6 +152,10 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		// Right-click also toggles Quick View (suppress native menu on the icon only)
 		icon.addEventListener("contextmenu", (evt) => {
 			evt.preventDefault();
+			// Record current focus target before toggling the popover
+			try {
+				this.quickViewPrevActiveEl = document.activeElement as HTMLElement | null;
+			} catch {}
 			if (this.quickViewComponent) this.closeQuickView();
 			else this.openQuickView(false);
 		});
@@ -157,6 +164,11 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 	async onStatusBarClick(evt: MouseEvent) {
 		const isMeta = evt.ctrlKey === true || evt.metaKey === true;
 		const useSplit = evt.altKey === true;
+
+		// Capture previously focused element before any action changes it
+		try {
+			this.quickViewPrevActiveEl = document.activeElement as HTMLElement | null;
+		} catch {}
 
 		// Meta/Ctrl click → open full view (Alt+Meta splits)
 		if (isMeta) {
@@ -236,13 +248,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 	}
 
     private addQuickViewCommand() {
-        this.addCommand({
-            id: "open-quick-view",
-            name: "Open Quick View",
-            callback: () => {
-                const now = Date.now();
-                const isDoubleRun = now - this.lastQuickViewInvoke <= 500;
-                this.lastQuickViewInvoke = now;
+		this.addCommand({
+			id: "open-quick-view",
+			name: "Open Quick View",
+			callback: () => {
+				// Capture the currently focused element so we can restore it on close
+				try {
+					this.quickViewPrevActiveEl = document.activeElement as HTMLElement | null;
+				} catch {}
+				const now = Date.now();
+				const isDoubleRun = now - this.lastQuickViewInvoke <= 500;
+				this.lastQuickViewInvoke = now;
 
                 if (!this.quickViewComponent) {
                     // If we just closed it, do not auto-activate listener on reopen
@@ -263,8 +279,14 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         });
     }
 
-    private openQuickView(listenOnOpen = false, armFromCommand = false) {
-        try {
+	private openQuickView(listenOnOpen = false, armFromCommand = false) {
+		try {
+			// If we don't already have a recorded focus target, record it now
+			if (!this.quickViewPrevActiveEl) {
+				try {
+					this.quickViewPrevActiveEl = document.activeElement as HTMLElement | null;
+				} catch {}
+			}
 			// Ensure we have an anchor; fallback to status bar container if not set
 			const anchor =
 				this.quickViewAnchorEl ||
@@ -308,19 +330,20 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 					} catch {}
 				}
 
-            this.quickViewComponent = mount(QuickViewPopover, {
-                target: document.body,
-                props: {
-                    plugin: this,
-                    anchorEl: this.quickViewAnchorEl,
-                    onClose: () => this.closeQuickView(),
-                    listenToggle: this.quickViewListeningActive
-                        ? this.quickViewListenNonce
-                        : 0,
-                    armTriggers: this.quickViewArm,
-                },
-            });
-        } catch (err) {
+			this.quickViewComponent = mount(QuickViewPopover, {
+				target: document.body,
+				props: {
+					plugin: this,
+					anchorEl: this.quickViewAnchorEl,
+					onClose: (opts?: { restoreFocus?: boolean; reason?: string }) =>
+						this.closeQuickView(opts),
+					listenToggle: this.quickViewListeningActive
+						? this.quickViewListenNonce
+						: 0,
+					armTriggers: this.quickViewArm,
+				},
+			});
+		} catch (err) {
 			// If mount fails for any reason, clear ref to avoid stale state
 			this.quickViewComponent = null;
 			this.quickViewListeningActive = false;
@@ -338,7 +361,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		}
 	}
 
-	private closeQuickView() {
+	private closeQuickView(opts?: { restoreFocus?: boolean; reason?: string }) {
 		if (this.quickViewComponent) {
 			try {
 				unmount(this.quickViewComponent);
@@ -349,6 +372,27 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 		this.quickViewListeningActive = false;
 		this.lastQuickViewCloseAt = Date.now();
 		this.quickViewArm = null;
+
+		// Restore focus to the element that previously had it, unless caller opted out
+		const shouldRestore = opts?.restoreFocus !== false;
+		if (shouldRestore) {
+			let restored = false;
+			try {
+				const el = this.quickViewPrevActiveEl;
+				if (el && (el as any).isConnected) {
+					(el as HTMLElement).focus?.({ preventScroll: true } as any);
+					restored = document.activeElement === el;
+				}
+			} catch {}
+			// Fallback to focusing active editor (more robust if CM view re-rendered)
+			if (!restored) {
+				try {
+					const md = this.app.workspace.getActiveViewOfType(MarkdownView);
+					(md as any)?.editor?.focus?.();
+				} catch {}
+			}
+		}
+		this.quickViewPrevActiveEl = null;
 	}
 
     private enterQuickViewListenMode() {

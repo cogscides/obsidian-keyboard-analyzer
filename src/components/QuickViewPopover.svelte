@@ -25,7 +25,7 @@
   interface Props {
     plugin: KeyboardAnalyzerPlugin
     anchorEl?: HTMLElement | null
-    onClose?: () => void
+    onClose?: (opts?: { restoreFocus?: boolean; reason?: string }) => void
     listenToggle?: number
     armTriggers?: {
       triggers: { modifiers: string[]; key: string }[]
@@ -378,7 +378,7 @@
       plugin.app.commands.executeCommandById(cmd.id)
       commandsManager.addRecentCommand(cmd.id)
     } catch {}
-    if (!pinned) onClose?.()
+    if (!pinned) onClose?.({ restoreFocus: true, reason: 'run-selected' })
   }
 
   function onKeydownGlobal(e: KeyboardEvent) {
@@ -394,7 +394,8 @@
         listenerActive = false
         return
       }
-      if (!pinned) onClose?.()
+      // Even when pinned, Esc should close the popover
+      onClose?.({ restoreFocus: true, reason: 'escape' })
       return
     }
     // Global Mod+F: prevent propagation; focus input first; only toggle when input is focused
@@ -436,7 +437,9 @@
         return
       }
       try {
-        (activeKeysStore as any).handlePhysicalKeyDown?.(e, { inActiveView: true })
+        ;(activeKeysStore as any).handlePhysicalKeyDown?.(e, {
+          inActiveView: true,
+        })
       } catch {}
       activeKey = (activeKeysStore as any)?.ActiveKey
       activeModifiers =
@@ -508,7 +511,8 @@
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
         const mods = [
-          ...(((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []),
+          ...(((activeKeysStore as any)
+            ?.sortedModifiers as unknown as string[]) || []),
         ]
         mods.pop()
         ;(activeKeysStore as any).ActiveModifiers = mods
@@ -550,12 +554,14 @@
     e.stopPropagation()
     e.stopImmediatePropagation?.()
     try {
-      (activeKeysStore as any)?.handlePhysicalKeyUp?.(e, { inActiveView: true })
+      ;(activeKeysStore as any)?.handlePhysicalKeyUp?.(e, {
+        inActiveView: true,
+      })
     } catch {}
     // Reflect cleared key/modifiers immediately
     activeKey = (activeKeysStore as any)?.ActiveKey
     activeModifiers =
-      (((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || [])
+      ((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []
     refilter()
   }
 
@@ -617,7 +623,8 @@
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
         const mods = [
-          ...(((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []),
+          ...(((activeKeysStore as any)
+            ?.sortedModifiers as unknown as string[]) || []),
         ]
         mods.pop()
         ;(activeKeysStore as any).ActiveModifiers = mods
@@ -632,7 +639,7 @@
   // Note: no reactive effects here to avoid nested update loops.
   function openFull(mode: boolean | 'split') {
     plugin.addShortcutsView(mode)
-    onClose?.()
+    onClose?.({ restoreFocus: false, reason: 'open-full' })
   }
   function openFullByModifiers(e: MouseEvent) {
     const mod = e.ctrlKey || e.metaKey
@@ -646,12 +653,25 @@
   let filtersOpen = $state(false)
   import type { CGroupFilterSettings } from '../managers/settingsManager'
   import { FilterSettingsKeyValues } from '../managers/settingsManager/keys'
-  const filterKeys: Array<{ key: keyof CGroupFilterSettings; label: string }> = [
-    { key: FilterSettingsKeyValues.StrictModifierMatch as keyof CGroupFilterSettings, label: 'Strict modifiers' },
-    { key: FilterSettingsKeyValues.ViewWOhotkeys as keyof CGroupFilterSettings, label: 'Only with hotkeys' },
-    { key: FilterSettingsKeyValues.OnlyDuplicates as keyof CGroupFilterSettings, label: 'Only duplicates' },
-    { key: FilterSettingsKeyValues.DisplayInternalModules as keyof CGroupFilterSettings, label: 'Include internal modules' },
-  ]
+  const filterKeys: Array<{ key: keyof CGroupFilterSettings; label: string }> =
+    [
+      {
+        key: FilterSettingsKeyValues.StrictModifierMatch as keyof CGroupFilterSettings,
+        label: 'Strict modifiers',
+      },
+      {
+        key: FilterSettingsKeyValues.ViewWOhotkeys as keyof CGroupFilterSettings,
+        label: 'Only with hotkeys',
+      },
+      {
+        key: FilterSettingsKeyValues.OnlyDuplicates as keyof CGroupFilterSettings,
+        label: 'Only duplicates',
+      },
+      {
+        key: FilterSettingsKeyValues.DisplayInternalModules as keyof CGroupFilterSettings,
+        label: 'Include internal modules',
+      },
+    ]
   function setFilter(key: keyof CGroupFilterSettings, val: boolean) {
     groupManager.updateGroupFilterSettings(selectedGroup, { [key]: val } as any)
     refilter()
@@ -773,7 +793,7 @@
     use:clickOutside
     onclick_outside={() => {
       if (Date.now() < suppressOutsideCloseUntil) return
-      if (!pinned) onClose?.()
+      if (!pinned) onClose?.({ restoreFocus: true, reason: 'click-outside' })
     }}
     role="dialog"
     tabindex="-1"
@@ -813,7 +833,9 @@
           <div class="sep"></div>
           <button
             class={`qv-btn ${pinned ? 'is-on' : ''}`}
-            title={pinned ? 'Unpin popover' : 'Pin popover to prevent auto-close'}
+            title={pinned
+              ? 'Unpin popover'
+              : 'Pin popover to prevent auto-close'}
             aria-pressed={pinned}
             onclick={() => (pinned = !pinned)}
           >
@@ -865,10 +887,9 @@
         class="search-wrapper"
         class:is-focused={document.activeElement === inputEl}
         role="group"
-        aria-label="Search and active keys"
       >
         <div class="modifiers-wrapper">
-          {#each (((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []) as m}
+          {#each ((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || [] as m}
             <kbd
               class="modifier setting-hotkey"
               role="button"
@@ -879,7 +900,8 @@
                     unconvertModifier(m as any)
                   )
                   activeModifiers =
-                    ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                    ((activeKeysStore as any)
+                      ?.sortedModifiers as unknown as string[]) || []
                   activeKey = (activeKeysStore as any)?.ActiveKey || ''
                 } catch {}
                 refilter()
@@ -892,7 +914,8 @@
                       unconvertModifier(m as any)
                     )
                     activeModifiers =
-                      ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                      ((activeKeysStore as any)
+                        ?.sortedModifiers as unknown as string[]) || []
                     activeKey = (activeKeysStore as any)?.ActiveKey || ''
                   } catch {}
                   refilter()
@@ -914,7 +937,8 @@
                   ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
                 } catch {}
                 activeModifiers =
-                  ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                  ((activeKeysStore as any)
+                    ?.sortedModifiers as unknown as string[]) || []
                 activeKey = (activeKeysStore as any)?.ActiveKey || ''
                 refilter()
               }}
@@ -925,7 +949,8 @@
                     ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
                   } catch {}
                   activeModifiers =
-                    ((((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []))
+                    ((activeKeysStore as any)
+                      ?.sortedModifiers as unknown as string[]) || []
                   activeKey = (activeKeysStore as any)?.ActiveKey || ''
                   refilter()
                 }
