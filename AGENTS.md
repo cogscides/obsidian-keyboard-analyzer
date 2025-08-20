@@ -18,16 +18,14 @@
 ## Coding Style & Naming Conventions
 
 - Language: TypeScript (strict) + Svelte 5.
+- If `contex7` mcp tool available, you may use it to gather online documentations. Try to control the amount of information retrieved (less is better, max 6000 tokens). Use when facing unexpected issues, or need specific information.
+  - Preferred libs:
+    - `svelte5-llm-compact`
+    - `/sveltejs/svelte`
 - Obsidian API typings: import from the official `obsidian` package; internal members are declared via `src/types/obsidian-augmentations.d.ts`.
 - Components: PascalCase (e.g., `KeyboardLayoutComponent.svelte`). Utilities/managers: camelCase filenames (e.g., `hotkeyManager`).
 - Indentation: 2 spaces; prefer explicit types and `const` where possible.
 - Formatting/Linting: Biome config present (`biome.json`). Example: `npx @biomejs/biome check .` and `npx @biomejs/biome format .`.
-
-## Testing Guidelines
-
-- No automated tests yet. Validate in Obsidian using `test-vault/` or your own vault.
-- Verify: opening the view, status bar icon behavior, command palette entries, hotkey detection, and layout rendering across OS themes.
-- Include screenshots or short clips for UI changes.
 
 ## Commit & Pull Request Guidelines
 
@@ -45,6 +43,7 @@
 - Purpose: Track ongoing work in `tasks//` so engineers and the AI agent keep a shared, searchable history of progress and decisions.
 - Location & naming: `tasks/25080812-<id>.md` (one file per task).
 - Frontmatter: Use YAML props at the top of each task file.
+- Try to provide updates to the tasks periodically.
 
 ```markdown
 ---
