@@ -6,7 +6,7 @@ Visualize, search, and analyze your Obsidian hotkeys on a keyboard layout. Quick
 
 Install from Community Plugins: https://obsidian.md/plugins?id=keyboard-analyzer
 
-![Keyboard Analyzer screenshot](Screens/Image1.png)
+![Keyboard Analyzer screenshot](Screens/image.png)
 
 ## Features
 
