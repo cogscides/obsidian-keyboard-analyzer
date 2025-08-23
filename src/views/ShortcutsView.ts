@@ -49,9 +49,14 @@ export default class ShortcutsView extends ItemView {
 		return VIEW_TYPE_SHORTCUTS_ANALYZER;
 	}
 
-	getDisplayText(): string {
-		return "Keyboard Shortcuts Analyzer";
-	}
+  getDisplayText(): string {
+    return "Keyboard Shortcuts Analyzer";
+  }
+
+  getIcon(): string {
+    // Use a keyboard icon for the view tab/header
+    return "keyboard";
+  }
 
 	async draw(): Promise<void> {
 		const { contentEl } = this;
