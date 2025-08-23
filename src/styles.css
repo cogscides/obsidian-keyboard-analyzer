@@ -755,7 +755,7 @@ button#hotkey-refresh-button:hover {
 } */
 
 #keyboard-component.xs .setting-item {
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
 }
 
@@ -765,12 +765,12 @@ button#hotkey-refresh-button:hover {
 }
 
 #keyboard-component .hotkey-list-container .setting-item:first-child {
-  padding-top: 18px;
+  /* padding-top: 18px; */
   border-top: 1px solid var(--background-modifier-border);
 }
 
 #keyboard-component .hotkey-list-container .setting-item:last-child {
-  padding-bottom: 18px;
+  /* padding-bottom: 18px; */
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
@@ -782,7 +782,7 @@ button#hotkey-refresh-button:hover {
   display: flex;
   align-items: center;
   border-top: 1px solid var(--background-modifier-border);
-  padding: 18px 0px 18px 0px;
+  padding: 10px 0px 10px 0px;
 }
 
 .kbanalizer-setting-item-control {
