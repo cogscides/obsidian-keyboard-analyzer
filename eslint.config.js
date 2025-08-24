@@ -1,74 +1,75 @@
-import js from '@eslint/js'
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
 import svelte from 'eslint-plugin-svelte'
-import svelteParser from 'svelte-eslint-parser'
 import globals from 'globals'
-import ts from 'typescript-eslint'
-import tsParser from '@typescript-eslint/parser'
+import prettier from 'eslint-config-prettier'
 import svelteConfig from './svelte.config.js'
 
-export default [
-  js.configs.recommended,
-  ...ts.configs.recommended,
+export default tseslint.config(
+  // Base JS rules
+  eslint.configs.recommended,
+
+  // TypeScript rules (type-aware)
+  ...tseslint.configs.recommendedTypeChecked,
+
+  // Svelte plugin recommended flat config
+  ...svelte.configs['flat/recommended'],
+
+  // Configure Svelte files to use TS parser for <script lang="ts">
   {
     files: ['**/*.svelte'],
-    plugins: {
-      svelte,
-    },
     languageOptions: {
-      parser: svelteParser,
       parserOptions: {
-        parser: tsParser,
-        extraFileExtensions: ['.svelte'],
+        parser: tseslint.parser,
         svelteConfig,
+        extraFileExtensions: ['.svelte'],
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
+      globals: { ...globals.browser },
     },
     rules: {
-      // Add specific Svelte rules that we know exist
       'svelte/no-unused-svelte-ignore': 'error',
     },
   },
+
+  // Configure TS/JS parser options and globals
   {
+    files: ['**/*.{ts,tsx,js,jsx,mts,cts,mjs,cjs}'],
     languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
+      globals: { ...globals.browser, ...globals.node },
     },
     rules: {
-      // ESLint base rules
       'no-console': 'warn',
       'no-debugger': 'warn',
-      'no-unused-vars': 'off', // Handled by TypeScript ESLint
-      'prefer-const': 'error',
-      'no-var': 'error',
       'no-empty': 'warn',
+      'no-var': 'error',
+      'prefer-const': 'error',
 
-      // TypeScript ESLint rules
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-this-alias': 'error',
     },
   },
-  {
-    settings: {
-      svelte: {
-        // Ignore TypeScript warnings in Svelte templates that may produce false positives
-        ignoreWarnings: [
-          '@typescript-eslint/no-unsafe-assignment',
-          '@typescript-eslint/no-unsafe-member-access',
-        ],
-      },
-    },
-  },
+
+  // Disable formatting rules in favor of Prettier
+  prettier,
+
+  // Ignores
   {
     ignores: [
       'node_modules/**',
       'dist/**',
-      '*.config.js',
-      '*.config.ts',
       'main.js',
       'styles.css',
       '**/*.d.ts',
+      '*.config.{js,ts,mjs,cjs,mts,cts}',
+      '**/.svelte-kit/**',
     ],
-  },
-]
+  }
+)
