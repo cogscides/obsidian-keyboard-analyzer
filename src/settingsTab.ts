@@ -47,6 +47,21 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
 				});
 			});
 
+		// Keyboard dev tooltips
+		new Setting(containerEl)
+			.setName("Keyboard key tooltips")
+			.setDesc("Show informative tooltips when hovering over keyboard keys. Useful for development and debugging.")
+			.addToggle((toggle) => {
+				toggle.setValue(
+					!!this.plugin.settingsManager.getSetting("keyboardDevTooltipsEnabled"),
+				);
+				toggle.onChange((value) => {
+					this.plugin.settingsManager.updateSettings({
+						keyboardDevTooltipsEnabled: value,
+					});
+				});
+			});
+
 		// Emulated OS
 		new Setting(containerEl)
 			.setName("Emulated OS")

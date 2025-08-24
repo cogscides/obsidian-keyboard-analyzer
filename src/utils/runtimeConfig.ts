@@ -10,6 +10,7 @@ let emulatedOS: EmulatedOS = "none";
 let keyListenerScope: "activeView" | "global" = "activeView";
 let modifierActivationMode: "click" | "press" = "click";
 let searchDebounceMs = 200;
+let keyboardDevTooltipsEnabled = false;
 
 export function setDevLoggingEnabled(enabled: boolean) {
 	devLoggingEnabled = !!enabled;
@@ -96,4 +97,13 @@ export function setSearchDebounceMs(ms: number) {
 
 export function getSearchDebounceMs(): number {
     return searchDebounceMs;
+}
+
+// Keyboard dev tooltips
+export function setKeyboardDevTooltipsEnabled(enabled: boolean) {
+    keyboardDevTooltipsEnabled = !!enabled;
+}
+
+export function isKeyboardDevTooltipsEnabled(): boolean {
+    return keyboardDevTooltipsEnabled;
 }

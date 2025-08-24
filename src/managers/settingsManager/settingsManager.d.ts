@@ -13,6 +13,7 @@ export interface PluginSettings {
 	// Developer options (non-breaking defaults)
 	enableDeveloperOptions?: boolean;
 	devLoggingEnabled?: boolean;
+	keyboardDevTooltipsEnabled?: boolean;
 	emulatedOS?: "none" | "windows" | "macos" | "linux";
 	// Debuggable presentation toggle for key display names
 	useBakedKeyNames?: boolean;

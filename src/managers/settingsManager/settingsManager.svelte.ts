@@ -7,6 +7,7 @@ import {
     setKeyListenerScope,
     setModifierActivationMode,
     setSearchDebounceMs,
+    setKeyboardDevTooltipsEnabled,
 } from "../../utils/runtimeConfig";
 import type { FilterSettings, PluginSettings } from "./settingsManager.d";
 
@@ -41,6 +42,7 @@ const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
 	keyboardCollapsed: false,
 	enableDeveloperOptions: false,
 	devLoggingEnabled: false,
+	keyboardDevTooltipsEnabled: false,
 	emulatedOS: "none",
 	useBakedKeyNames: true,
 	allGroupOnOpen: "default",
@@ -108,6 +110,7 @@ export default class SettingsManager {
 
 			// Apply runtime flags from settings
 			setDevLoggingEnabled(!!this.settings.devLoggingEnabled);
+			setKeyboardDevTooltipsEnabled(!!this.settings.keyboardDevTooltipsEnabled);
 			setEmulatedOS(
 				(this.settings.emulatedOS || "none") as
 					| "none"
@@ -244,6 +247,13 @@ export default class SettingsManager {
 			logger.info(
 				"Dev logging",
 				this.settings.devLoggingEnabled ? "enabled" : "disabled",
+			);
+		}
+		if ("keyboardDevTooltipsEnabled" in newSettings) {
+			setKeyboardDevTooltipsEnabled(!!this.settings.keyboardDevTooltipsEnabled);
+			logger.info(
+				"Keyboard dev tooltips",
+				this.settings.keyboardDevTooltipsEnabled ? "enabled" : "disabled",
 			);
 		}
 		if ("emulatedOS" in newSettings) {
