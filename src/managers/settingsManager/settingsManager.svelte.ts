@@ -212,7 +212,7 @@ export default class SettingsManager {
       // Poll-wait up to ~1s for the in-flight save to finish, then the queued one to schedule
       const start = Date.now()
       while (this.saveInProgress && Date.now() - start < 1000) {
-        await new Promise((r) => setTimeout(r, 25))
+        await new Promise(r => setTimeout(r, 25))
       }
     }
     // Perform an immediate flush write
@@ -229,7 +229,7 @@ export default class SettingsManager {
     const next = { ...this.settings }
     for (const [k, v] of Object.entries(newSettings) as [
       keyof PluginSettings,
-      unknown
+      unknown,
     ][]) {
       if (next[k] !== v) {
         // @ts-expect-error generic write into settings shape

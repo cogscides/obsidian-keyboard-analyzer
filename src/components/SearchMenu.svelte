@@ -123,7 +123,7 @@
   let inputIsFocused = $state(false)
   let filterIsOpen = $state(false)
   let refreshIsActive = $state(false)
-  let PressedKeysStore = $derived(activeKeysStore)
+  const PressedKeysStore = $derived(activeKeysStore)
 
   // Debounce for text input
   let inputDebounce: ReturnType<typeof setTimeout> | null = null
@@ -138,7 +138,7 @@
   } = $state({ search: '', activeKey: '', selectedGroup: '', modifiersSig: '' })
 
   // Groups
-  let excludedModules = $derived.by(() => {
+  const excludedModules = $derived.by(() => {
     // Track group changes to recompute excluded modules
     groupManager.groups
     return groupManager.getExcludedModulesForGroup(selectedGroup)

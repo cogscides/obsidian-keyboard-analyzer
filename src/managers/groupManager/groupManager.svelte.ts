@@ -47,7 +47,7 @@ export default class GroupManager {
   }
 
   getGroup(groupId: string): CGroup | undefined {
-    return this.groups.find((g) => g.id === groupId)
+    return this.groups.find(g => g.id === groupId)
   }
 
   createGroup(groupName: string): string {
@@ -74,7 +74,7 @@ export default class GroupManager {
 
   removeGroup(groupId: string): void {
     this.settingsManager.updateSettings({
-      commandGroups: this.groups.filter((g) => g.id !== groupId),
+      commandGroups: this.groups.filter(g => g.id !== groupId),
     })
   }
 
@@ -97,7 +97,7 @@ export default class GroupManager {
   }
 
   addCommandToGroup(groupId: string, commandId: string): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId && !group.commandIds.includes(commandId)) {
         return { ...group, commandIds: [...group.commandIds, commandId] }
       }
@@ -112,7 +112,7 @@ export default class GroupManager {
     commandId: string,
     index: number
   ): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId && !group.commandIds.includes(commandId)) {
         const next = [...group.commandIds]
         const clamped = Math.max(0, Math.min(index, next.length))
@@ -130,9 +130,9 @@ export default class GroupManager {
   }
 
   removeCommandFromAllGroups(commandId: string): void {
-    const updatedGroups = this.groups.map((group) => ({
+    const updatedGroups = this.groups.map(group => ({
       ...group,
-      commandIds: group.commandIds.filter((id) => id !== commandId),
+      commandIds: group.commandIds.filter(id => id !== commandId),
     }))
     this.settingsManager.updateSettings({ commandGroups: updatedGroups })
   }
@@ -141,18 +141,18 @@ export default class GroupManager {
     const group = this.getGroup(groupId)
     // filter commands in group by featuredCommandIDs from settings
     return (
-      group?.commandIds.filter((id) =>
+      group?.commandIds.filter(id =>
         this.settingsManager.settings.featuredCommandIDs.includes(id)
       ) || []
     )
   }
 
   removeCommandFromGroup(groupId: string, commandId: string): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         return {
           ...group,
-          commandIds: group.commandIds.filter((id) => id !== commandId),
+          commandIds: group.commandIds.filter(id => id !== commandId),
         }
       }
       return group
@@ -161,7 +161,7 @@ export default class GroupManager {
   }
 
   renameGroup(groupId: string, newName: string): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         return { ...group, name: newName }
       }
@@ -188,7 +188,7 @@ export default class GroupManager {
     key: keyof CGroupFilterSettings,
     value: boolean
   ): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         return {
           ...group,
@@ -213,7 +213,7 @@ export default class GroupManager {
       }
       // Update in place if group exists
       const currentGroups = this.groups
-      const groupIndex = currentGroups.findIndex((g) => g.id === groupId)
+      const groupIndex = currentGroups.findIndex(g => g.id === groupId)
       if (groupIndex !== -1) {
         const updated = [...currentGroups]
         const prev = updated[groupIndex]
@@ -276,7 +276,7 @@ export default class GroupManager {
   }
 
   toggleFilterSetting(groupId: string, key: keyof CGroupFilterSettings): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         return {
           ...group,
@@ -297,12 +297,12 @@ export default class GroupManager {
   }
 
   toggleExcludedModuleForGroup(groupId: string, moduleId: string): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         const index = group.excludedModules.indexOf(moduleId)
         const newExcludedModules =
           index !== -1
-            ? group.excludedModules.filter((id) => id !== moduleId)
+            ? group.excludedModules.filter(id => id !== moduleId)
             : [...group.excludedModules, moduleId]
         return { ...group, excludedModules: newExcludedModules }
       }
@@ -320,7 +320,7 @@ export default class GroupManager {
     fromIndex: number,
     toIndex: number
   ): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         const ids = [...group.commandIds]
         if (
@@ -345,10 +345,10 @@ export default class GroupManager {
    * Unknown ids are filtered out; missing ids are ignored.
    */
   setGroupCommandOrder(groupId: string, orderedIds: string[]): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         const set = new Set(group.commandIds)
-        const next = orderedIds.filter((id) => set.has(id))
+        const next = orderedIds.filter(id => set.has(id))
         return { ...group, commandIds: next }
       }
       return group
@@ -366,7 +366,7 @@ export default class GroupManager {
         return
       }
       const base = this.settingsManager.settings.defaultFilterSettings
-      const updatedGroups = this.groups.map((group) => {
+      const updatedGroups = this.groups.map(group => {
         if (group.id === groupId) {
           const merged = {
             ...base,
@@ -411,7 +411,7 @@ export default class GroupManager {
   setGroupDefaults(groupId: string, state: Partial<GroupViewState>): void {
     try {
       const base = this.settingsManager.settings.defaultFilterSettings
-      const updatedGroups = this.groups.map((group) => {
+      const updatedGroups = this.groups.map(group => {
         if (group.id === groupId) {
           const prev = group as unknown as { defaults?: GroupViewState }
           const prevDefaults = prev.defaults
@@ -642,7 +642,7 @@ export default class GroupManager {
 
   /** Enable or disable per-group dynamic command registration for a group. */
   setGroupRegisterCommand(groupId: string, register: boolean): void {
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         return { ...group, registerCommand: !!register }
       }
@@ -654,7 +654,7 @@ export default class GroupManager {
   /** Normalize all groups to include a complete filterSettings object and hydrated defaults/lastUsedState. */
   public normalizeAllGroups(): void {
     const base = this.settingsManager.settings.defaultFilterSettings
-    const nextGroups = this.groups.map((g) => {
+    const nextGroups = this.groups.map(g => {
       const normalizedFilters: CGroupFilterSettings = {
         ...base,
         ...(g.filterSettings || ({} as CGroupFilterSettings)),
@@ -724,7 +724,7 @@ export default class GroupManager {
       this.settingsManager.updateSettings({ allGroupOnOpen: mode })
       return
     }
-    const updatedGroups = this.groups.map((group) => {
+    const updatedGroups = this.groups.map(group => {
       if (group.id === groupId) {
         const behavior = { ...(group.behavior || {}), onOpen: mode }
         return { ...group, behavior }
@@ -797,7 +797,7 @@ export default class GroupManager {
         .slice(0, 60) || 'group'
     let id = base
     let i = 1
-    const existing = new Set(this.groups.map((g) => String(g.id)))
+    const existing = new Set(this.groups.map(g => String(g.id)))
     while (existing.has(id)) {
       id = `${base}-${i++}`
     }

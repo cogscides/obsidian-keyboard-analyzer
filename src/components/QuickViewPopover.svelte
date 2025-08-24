@@ -508,7 +508,7 @@
         if (e.altKey) activeMods.push('Alt')
         if (e.shiftKey) activeMods.push('Shift')
         const aKey = normalizeKey(e.code || e.key || '')
-        const hit = armTriggers.triggers.some((t) =>
+        const hit = armTriggers.triggers.some(t =>
           matchHotkey(
             {
               modifiers: platformizeModifiers(

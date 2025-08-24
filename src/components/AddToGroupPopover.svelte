@@ -1,99 +1,100 @@
 <script lang="ts">
-import { getContext, onDestroy, onMount } from "svelte";
-import { X } from "lucide-svelte";
-import clickOutside from "../utils/clickOutside.js";
-import type KeyboardAnalyzerPlugin from "../main";
+  import { getContext, onDestroy, onMount } from 'svelte'
+  import { X } from 'lucide-svelte'
+  import clickOutside from '../utils/clickOutside.js'
+  import type KeyboardAnalyzerPlugin from '../main'
 
-interface Props {
-	commandId: string;
-	onClose?: () => void;
-}
+  interface Props {
+    commandId: string
+    onClose?: () => void
+  }
 
-let { commandId, onClose = $bindable(() => {}) }: Props = $props();
+  let { commandId, onClose = $bindable(() => {}) }: Props = $props()
 
-const plugin: KeyboardAnalyzerPlugin = getContext("keyboard-analyzer-plugin");
-const _groupManager = plugin.groupManager;
+  const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
+  const _groupManager = plugin.groupManager
 
-let search = $state("");
-let newGroupName = $state("");
-let _placeAbove = $state(false);
-let offsetX = $state(0);
-let rootEl: HTMLDivElement | null = null;
+  let search = $state('')
+  let newGroupName = $state('')
+  let _placeAbove = $state(false)
+  let offsetX = $state(0)
+  let rootEl: HTMLDivElement | null = null
 
-function _filteredGroups() {
-	const term = search.trim().toLowerCase();
-	const all = _groupManager.getGroups();
-	if (!term) return all;
-	return all.filter((g: { name: string }) =>
-		g.name.toLowerCase().includes(term),
-	);
-}
+  function _filteredGroups() {
+    const term = search.trim().toLowerCase()
+    const all = _groupManager.getGroups()
+    if (!term) return all
+    return all.filter((g: { name: string }) =>
+      g.name.toLowerCase().includes(term)
+    )
+  }
 
-function _toggleMembership(groupId: string) {
-	const inGroup = _groupManager.isCommandInGroup(groupId, commandId);
-	if (inGroup) _groupManager.removeCommandFromGroup(groupId, commandId);
-	else _groupManager.addCommandToGroup(groupId, commandId);
-}
+  function _toggleMembership(groupId: string) {
+    const inGroup = _groupManager.isCommandInGroup(groupId, commandId)
+    if (inGroup) _groupManager.removeCommandFromGroup(groupId, commandId)
+    else _groupManager.addCommandToGroup(groupId, commandId)
+  }
 
-function _createGroupAndAdd() {
-	const name = newGroupName.trim();
-	if (!name) return;
-	const id = _groupManager.createGroup(name);
-	if (id) _groupManager.addCommandToGroup(String(id), commandId);
-	newGroupName = "";
-	search = "";
-}
+  function _createGroupAndAdd() {
+    const name = newGroupName.trim()
+    if (!name) return
+    const id = _groupManager.createGroup(name)
+    if (id) _groupManager.addCommandToGroup(String(id), commandId)
+    newGroupName = ''
+    search = ''
+  }
 
-function recomputePosition() {
-	try {
-		const el = rootEl;
-		if (!el) return;
-		const anchor = el.parentElement || el;
-		const rect = anchor.getBoundingClientRect();
-		const viewportH =
-			window.innerHeight || document.documentElement.clientHeight;
-		const viewportW = window.innerWidth || document.documentElement.clientWidth;
+  function recomputePosition() {
+    try {
+      const el = rootEl
+      if (!el) return
+      const anchor = el.parentElement || el
+      const rect = anchor.getBoundingClientRect()
+      const viewportH =
+        window.innerHeight || document.documentElement.clientHeight
+      const viewportW =
+        window.innerWidth || document.documentElement.clientWidth
 
-		// Vertical flip if not enough space below the anchor
-		const spaceBelow = viewportH - rect.bottom;
-		const spaceAbove = rect.top;
-		// threshold ~ popover height
-		_placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
+      // Vertical flip if not enough space below the anchor
+      const spaceBelow = viewportH - rect.bottom
+      const spaceAbove = rect.top
+      // threshold ~ popover height
+      _placeAbove = spaceBelow < 260 && spaceAbove > spaceBelow
 
-		// Horizontal clamping relative to viewport
-		// Compute the popover's projected left/right if left:0 on anchor plus current offsetX
-		const projectedLeft = rect.left + 0 + offsetX;
-		const projectedRight = projectedLeft + (rootEl?.offsetWidth || 260);
+      // Horizontal clamping relative to viewport
+      // Compute the popover's projected left/right if left:0 on anchor plus current offsetX
+      const projectedLeft = rect.left + 0 + offsetX
+      const projectedRight = projectedLeft + (rootEl?.offsetWidth || 260)
 
-		let dx = 0;
-		if (projectedRight > viewportW) dx -= projectedRight - viewportW + 8;
-		if (projectedLeft + dx < 0) dx += -(projectedLeft + dx) + 8;
+      let dx = 0
+      if (projectedRight > viewportW) dx -= projectedRight - viewportW + 8
+      if (projectedLeft + dx < 0) dx += -(projectedLeft + dx) + 8
 
-		offsetX += dx;
-	} catch {}
-}
+      offsetX += dx
+    } catch {}
+  }
 
-let ro: ResizeObserver | null = null;
-const onScroll = () => recomputePosition();
+  let ro: ResizeObserver | null = null
+  const onScroll = () => recomputePosition()
 
-onMount(() => {
-	recomputePosition();
-	window.addEventListener("resize", recomputePosition);
-	// Capture-phase scroll to react to any scrolling ancestor
-	document.addEventListener("scroll", onScroll, true);
+  onMount(() => {
+    recomputePosition()
+    window.addEventListener('resize', recomputePosition)
+    // Capture-phase scroll to react to any scrolling ancestor
+    document.addEventListener('scroll', onScroll, true)
 
-	if ("ResizeObserver" in window && rootEl) {
-		ro = new ResizeObserver(() => recomputePosition());
-		ro.observe(rootEl);
-	}
-});
+    if ('ResizeObserver' in window && rootEl) {
+      ro = new ResizeObserver(() => recomputePosition())
+      ro.observe(rootEl)
+    }
+  })
 
-onDestroy(() => {
-	window.removeEventListener("resize", recomputePosition);
-	document.removeEventListener("scroll", onScroll, true);
-	ro?.disconnect();
-	ro = null;
-});
+  onDestroy(() => {
+    window.removeEventListener('resize', recomputePosition)
+    document.removeEventListener('scroll', onScroll, true)
+    ro?.disconnect()
+    ro = null
+  })
 </script>
 
 <div
@@ -127,25 +128,26 @@ onDestroy(() => {
   </div>
   <div class="kb-popover-body">
     {#each _filteredGroups() as g (g.id)}
-        <label class="kb-row">
-          <input
-            type="checkbox"
-            checked={_groupManager.isCommandInGroup(String(g.id), commandId)}
-            onchange={() => _toggleMembership(String(g.id))}
-          />
-          <span>{g.name}</span>
-        </label>
-      {/each}
+      <label class="kb-row">
+        <input
+          type="checkbox"
+          checked={_groupManager.isCommandInGroup(String(g.id), commandId)}
+          onchange={() => _toggleMembership(String(g.id))}
+        />
+        <span>{g.name}</span>
+      </label>
+    {/each}
   </div>
   <div class="kb-popover-footer">
     <input
-    type="text"
-    placeholder="New group name"
-    bind:value={newGroupName}
-    class="kb-input"
-    onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && _createGroupAndAdd()}
-  />
-  <button class="kb-btn" onclick={_createGroupAndAdd}>Create & Add</button>
+      type="text"
+      placeholder="New group name"
+      bind:value={newGroupName}
+      class="kb-input"
+      onkeydown={(e: KeyboardEvent) =>
+        e.key === 'Enter' && _createGroupAndAdd()}
+    />
+    <button class="kb-btn" onclick={_createGroupAndAdd}>Create & Add</button>
   </div>
 </div>
 

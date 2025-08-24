@@ -19,11 +19,11 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Enable developer options')
       .setDesc('Show extra developer tools in the UI and settings.')
-      .addToggle((toggle) => {
+      .addToggle(toggle => {
         toggle.setValue(
           !!this.plugin.settingsManager.getSetting('enableDeveloperOptions')
         )
-        toggle.onChange((value) => {
+        toggle.onChange(value => {
           this.plugin.settingsManager.updateSettings({
             enableDeveloperOptions: value,
           })
@@ -35,11 +35,11 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Developer logging')
       .setDesc('Enable verbose logging to the console for diagnostics.')
-      .addToggle((toggle) => {
+      .addToggle(toggle => {
         toggle.setValue(
           !!this.plugin.settingsManager.getSetting('devLoggingEnabled')
         )
-        toggle.onChange((value) => {
+        toggle.onChange(value => {
           this.plugin.settingsManager.updateSettings({
             devLoggingEnabled: value,
           })
@@ -53,11 +53,11 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
       .setDesc(
         'Show informative tooltips when hovering over keyboard keys. Useful for development and debugging.'
       )
-      .addToggle((toggle) => {
+      .addToggle(toggle => {
         toggle.setValue(
           !!this.plugin.settingsManager.getSetting('keyboardDevTooltipsEnabled')
         )
-        toggle.onChange((value) => {
+        toggle.onChange(value => {
           this.plugin.settingsManager.updateSettings({
             keyboardDevTooltipsEnabled: value,
           })
@@ -68,7 +68,7 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Emulated OS')
       .setDesc('Temporarily override OS to test modifier mapping.')
-      .addDropdown((dropdown) => {
+      .addDropdown(dropdown => {
         dropdown.addOption('none', 'None')
         dropdown.addOption('windows', 'Windows')
         dropdown.addOption('macos', 'macOS')
@@ -80,7 +80,7 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
             | 'macos'
             | 'linux'
         )
-        dropdown.onChange((value) => {
+        dropdown.onChange(value => {
           const os = value as 'none' | 'windows' | 'macos' | 'linux'
           this.plugin.settingsManager.updateSettings({ emulatedOS: os })
           setEmulatedOS(os)
@@ -93,11 +93,11 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
       .setDesc(
         'Show human-friendly key names (e.g., Backspace, Up Arrow, Cmd). Turn off to debug raw keys/glyphs.'
       )
-      .addToggle((toggle) => {
+      .addToggle(toggle => {
         toggle.setValue(
           !!this.plugin.settingsManager.getSetting('useBakedKeyNames')
         )
-        toggle.onChange((value) => {
+        toggle.onChange(value => {
           this.plugin.settingsManager.updateSettings({
             useBakedKeyNames: value,
           })
@@ -110,14 +110,14 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
       .setDesc(
         'Restrict the active key listener to the Analyzer view, or allow it globally (global requires modifiers: On hold).'
       )
-      .addDropdown((dropdown) => {
+      .addDropdown(dropdown => {
         dropdown.addOption('activeView', 'Active view only')
         dropdown.addOption('global', 'Global')
         const currentScope = (this.plugin.settingsManager.getSetting(
           'keyListenerScope'
         ) || 'activeView') as 'activeView' | 'global'
         dropdown.setValue(currentScope)
-        dropdown.onChange((value) => {
+        dropdown.onChange(value => {
           const scope = (value as 'activeView' | 'global') || 'activeView'
           const mode = (this.plugin.settingsManager.getSetting(
             'modifierActivationMode'
@@ -141,14 +141,14 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
       .setDesc(
         'Choose how modifiers activate: On click (to add / remove) or On hold (select on hold, clears when released). Applies to modifiers only globally. Inside the Analyzer view, when the listener is active, you can select keys by clicking or by pressing keys; globally only modifiers are tracked.'
       )
-      .addDropdown((dropdown) => {
+      .addDropdown(dropdown => {
         dropdown.addOption('click', 'On click')
         dropdown.addOption('press', 'On hold')
         dropdown.setValue(
           (this.plugin.settingsManager.getSetting('modifierActivationMode') ||
             'click') as 'click' | 'press'
         )
-        dropdown.onChange((value) => {
+        dropdown.onChange(value => {
           const mode = (value as 'click' | 'press') || 'click'
           const scope = (this.plugin.settingsManager.getSetting(
             'keyListenerScope'
@@ -166,7 +166,7 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Search debounce (ms)')
       .setDesc('Delay before applying text filter changes.')
-      .addText((text) => {
+      .addText(text => {
         text.inputEl.type = 'number'
         text.setPlaceholder('200')
         text.setValue(
@@ -174,7 +174,7 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
             this.plugin.settingsManager.getSetting('searchDebounceMs') ?? 200
           )
         )
-        text.onChange((value) => {
+        text.onChange(value => {
           const ms = Number(value)
           this.plugin.settingsManager.updateSettings({
             searchDebounceMs: Number.isFinite(ms) ? ms : 200,

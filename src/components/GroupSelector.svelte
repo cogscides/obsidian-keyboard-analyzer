@@ -16,7 +16,7 @@
     selectedGroup = $bindable('all'),
     compact = $bindable(false),
     plugin = $bindable(),
-    onChange = $bindable((_) => {}),
+    onChange = $bindable(_ => {}),
   }: Props = $props()
 
   // Resolve plugin via prop first, then context as fallback (safely)
@@ -36,7 +36,7 @@
   let _isManagerOpen = $state(false)
 
   // Check if current group has unsaved filter changes
-  let hasUnsavedChanges = $derived.by(() => {
+  const hasUnsavedChanges = $derived.by(() => {
     if (!_groupManager || !selectedGroup) return false
     try {
       // Force reactive tracking of groups and settings to detect changes

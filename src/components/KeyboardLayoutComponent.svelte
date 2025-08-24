@@ -26,7 +26,7 @@
     selectedGroupID?: string
   }
 
-  let {
+  const {
     visibleCommands = [],
     strictModifierMatch = false,
     selectedGroupID = '',
@@ -40,10 +40,10 @@
   import type SettingsManager from '../managers/settingsManager'
   const settingsManager: SettingsManager = plugin.settingsManager
   const commandsManager: CommandsManager = plugin.commandsManager
-  let KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
+  const KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
 
   // DEBUGGER
-  let _keyClicked = $state('')
+  const _keyClicked = $state('')
 
   function calculateSectionColumns(section: KeyboardSection) {
     return (
@@ -68,13 +68,13 @@
     )
   })
 
-  let gridTemplateColumns = KeyboardObject.sections
-    .map((section) => `${section.gridRatio}fr`)
+  const gridTemplateColumns = KeyboardObject.sections
+    .map(section => `${section.gridRatio}fr`)
     .join(' ')
-  let gridTemplateAreas = `'${KeyboardObject.sections.map((section) => section.name).join(' ')}'`
+  const gridTemplateAreas = `'${KeyboardObject.sections.map(section => section.name).join(' ')}'`
 
   // Calculate max columns for each section
-  let sectionColumns = KeyboardObject.sections.reduce(
+  const sectionColumns = KeyboardObject.sections.reduce(
     (acc, section) => {
       acc[section.name] = calculateSectionColumns(section)
       return acc
@@ -94,7 +94,7 @@
   const devOptionsEnabled = $derived(
     Boolean(settingsManager.settings.enableDeveloperOptions)
   )
-  let devLoggingEnabled = $derived(
+  const devLoggingEnabled = $derived(
     Boolean(settingsManager.settings.devLoggingEnabled)
   )
   let emulatedOS = $derived(
@@ -381,14 +381,14 @@
 
   /* Prevent overflow on medium-and-down screens: let content fit screen */
   :global(
-      #keyboard-component.md .keyboard-panel:not(.collapsed) .panel-content
-    ),
+    #keyboard-component.md .keyboard-panel:not(.collapsed) .panel-content
+  ),
   :global(
-      #keyboard-component.sm .keyboard-panel:not(.collapsed) .panel-content
-    ),
+    #keyboard-component.sm .keyboard-panel:not(.collapsed) .panel-content
+  ),
   :global(
-      #keyboard-component.xs .keyboard-panel:not(.collapsed) .panel-content
-    ) {
+    #keyboard-component.xs .keyboard-panel:not(.collapsed) .panel-content
+  ) {
     width: 100%;
     max-width: 100%;
   }

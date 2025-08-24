@@ -16,7 +16,7 @@
     style?: string
   }
 
-  let {
+  const {
     content,
     delay = 500,
     disabled = false,

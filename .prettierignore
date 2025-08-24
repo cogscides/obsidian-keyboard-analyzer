@@ -24,3 +24,6 @@ CHANGELOG.md
 # OS and editor files
 .DS_Store
 *.log
+
+# tasks
+tasks/

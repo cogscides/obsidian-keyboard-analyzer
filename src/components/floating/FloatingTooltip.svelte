@@ -34,7 +34,7 @@
     group?: TooltipGroupId
   }
 
-  let {
+  const {
     content,
     placement = 'top',
     delay = 500,
@@ -53,14 +53,13 @@
   // Arrow element reference
   let arrowElement = $state<HTMLDivElement | null>(null)
 
-  // Floating UI configuration
+  // Floating UI configuration - arrow will be added via effect when element is ready
   const floating = useFloating({
     placement,
     middleware: [
       offset(8), // 8px distance from trigger element
       flip(), // Flip to opposite side if no space
       shift({ padding: 8 }), // Shift within viewport bounds
-      ...(arrowElement ? [arrow({ element: arrowElement })] : []), // Position arrow element if available
     ],
   })
 
@@ -162,9 +161,10 @@
 
   // Calculate arrow position from middleware data
   const arrowPosition = $derived(() => {
-    if (!floating.middlewareData.arrow) return {}
+    const arrowData = floating.middlewareData?.arrow
+    if (!arrowData) return { display: 'none' }
 
-    const { x, y } = floating.middlewareData.arrow
+    const { x, y } = arrowData
     const side = floating.placement.split('-')[0]
 
     const staticSide = {
@@ -200,7 +200,6 @@
 
 <!-- Tooltip element -->
 {#if isOpen && content}
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     bind:this={floating.elements.floating}
     style={floating.floatingStyles}

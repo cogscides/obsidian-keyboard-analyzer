@@ -13,7 +13,7 @@
     maxWeightSteps?: number
   }
 
-  let {
+  const {
     key = {
       label: '',
       unicode: '',
@@ -32,14 +32,14 @@
     'isPhysicalListenerActive'
   )
 
-  let keyState = $derived(visualKeyboardManager.getKeyState(key))
-  let _displayLabel = $derived(keyState.displayValue)
+  const keyState = $derived(visualKeyboardManager.getKeyState(key))
+  const _displayLabel = $derived(keyState.displayValue)
 
   // Check if dev tooltips are enabled
-  let devTooltipsEnabled = $derived(isKeyboardDevTooltipsEnabled())
+  const devTooltipsEnabled = $derived(isKeyboardDevTooltipsEnabled())
 
   // Generate user-friendly tooltip content only when dev mode is enabled
-  let tooltipContent = $derived(
+  const tooltipContent = $derived(
     (() => {
       if (!devTooltipsEnabled || _displayLabel === 'empty' || !key.code)
         return ''
@@ -58,10 +58,10 @@
   )
 
   // let keyOutput = $derived(key.unicode || key.label)
-  let _smallText = $derived(key.smallText || false)
+  const _smallText = $derived(key.smallText || false)
 
-  let _width = $derived(key.width || 1)
-  let _height = $derived(key.height || 1)
+  const _width = $derived(key.width || 1)
+  const _height = $derived(key.height || 1)
 
   function _getColumnSpan(w: number) {
     return `span ${Math.max(1, Math.round(w * 4))}`

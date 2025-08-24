@@ -28,16 +28,16 @@
   const settingsManager = (plugin as KeyboardAnalyzerPlugin).settingsManager
   const hotkeyManager = (plugin as KeyboardAnalyzerPlugin).hotkeyManager
 
-  let groups = $derived.by(() => groupManager.getGroups())
+  const groups = $derived.by(() => groupManager.getGroups())
 
-  let groupName = $derived.by(
+  const groupName = $derived.by(
     () => groupManager.getGroup(selectedGroupId || '')?.name || ''
   )
   let editableName = $state('')
   $effect(() => {
     editableName = groupName
   })
-  let commands: commandEntry[] = $derived.by(() =>
+  const commands: commandEntry[] = $derived.by(() =>
     commandsManager.getGroupCommands(selectedGroupId || '')
   )
 
@@ -45,7 +45,7 @@
   let cmdSearch = $state('')
   let cmdSearchOpen = $state(false)
   let cmdSearchResults: commandEntry[] = $state([])
-  let cmdSearchLimit = 20
+  const cmdSearchLimit = 20
   let cmdSearchInputEl: HTMLInputElement | null = $state(null)
   let cmdSearchDebounce: ReturnType<typeof setTimeout> | null = null
 
@@ -63,7 +63,7 @@
       cmdSearchOpen = false
       return
     }
-    const exclude = new Set<string>((commands || []).map((c) => c.id))
+    const exclude = new Set<string>((commands || []).map(c => c.id))
     let results: commandEntry[]
     if (!term) {
       // Show all commands (minus ones already in group) when query is empty
@@ -109,7 +109,7 @@
     if (!selectedGroupId || selectedGroupId === 'all') return
     // Add to current group and remove from local results
     groupManager.addCommandToGroup(selectedGroupId, entry.id)
-    cmdSearchResults = cmdSearchResults.filter((e) => e.id !== entry.id)
+    cmdSearchResults = cmdSearchResults.filter(e => e.id !== entry.id)
     // keep dropdown open with remaining results
   }
 
@@ -126,7 +126,7 @@
   }
 
   // Behavior toggle (default vs dynamic)
-  let behavior = $derived.by(
+  const behavior = $derived.by(
     () => groupManager.getGroupBehavior(selectedGroupId || 'all') || 'default'
   )
   function setBehavior(mode: 'default' | 'dynamic') {
@@ -163,7 +163,7 @@
     }
   }
   // Register per-group command toggle
-  let registerCommand = $derived.by(() => {
+  const registerCommand = $derived.by(() => {
     if (!selectedGroupId || selectedGroupId === 'all') return false
     const g = groupManager.getGroup(selectedGroupId)
     return !!g?.registerCommand
@@ -391,24 +391,24 @@
             <fieldset class="kb-fieldset">
               <legend class="u-muted small">On open</legend>
               <div class="kb-row">
-              <label class="kb-radio">
-                <input
-                  type="radio"
-                  name="onopen"
-                  checked={behavior === 'default'}
-                  onchange={() => setBehavior('default')}
-                />
-                Default settings
-              </label>
-              <label class="kb-radio">
-                <input
-                  type="radio"
-                  name="onopen"
-                  checked={behavior === 'dynamic'}
-                  onchange={() => setBehavior('dynamic')}
-                />
-                Last used (dynamic)
-              </label>
+                <label class="kb-radio">
+                  <input
+                    type="radio"
+                    name="onopen"
+                    checked={behavior === 'default'}
+                    onchange={() => setBehavior('default')}
+                  />
+                  Default settings
+                </label>
+                <label class="kb-radio">
+                  <input
+                    type="radio"
+                    name="onopen"
+                    checked={behavior === 'dynamic'}
+                    onchange={() => setBehavior('dynamic')}
+                  />
+                  Last used (dynamic)
+                </label>
               </div>
             </fieldset>
             <div class="kb-row wrap">
@@ -455,24 +455,24 @@
             <fieldset class="kb-fieldset">
               <legend class="u-muted small">On open</legend>
               <div class="kb-row">
-              <label class="kb-radio">
-                <input
-                  type="radio"
-                  name="onopen"
-                  checked={behavior === 'default'}
-                  onchange={() => setBehavior('default')}
-                />
-                Default settings
-              </label>
-              <label class="kb-radio">
-                <input
-                  type="radio"
-                  name="onopen"
-                  checked={behavior === 'dynamic'}
-                  onchange={() => setBehavior('dynamic')}
-                />
-                Last used (dynamic)
-              </label>
+                <label class="kb-radio">
+                  <input
+                    type="radio"
+                    name="onopen"
+                    checked={behavior === 'default'}
+                    onchange={() => setBehavior('default')}
+                  />
+                  Default settings
+                </label>
+                <label class="kb-radio">
+                  <input
+                    type="radio"
+                    name="onopen"
+                    checked={behavior === 'dynamic'}
+                    onchange={() => setBehavior('dynamic')}
+                  />
+                  Last used (dynamic)
+                </label>
               </div>
             </fieldset>
             <div class="kb-row wrap">

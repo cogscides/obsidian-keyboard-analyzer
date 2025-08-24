@@ -16,9 +16,9 @@
       "files": "*.svelte",
       "options": {
         "parser": "svelte",
-        "svelteStrictMode": false,
         "svelteAllowShorthand": true,
-        "svelteIndentScriptAndStyle": true
+        "svelteIndentScriptAndStyle": true,
+        "svelteSortOrder": "options-scripts-markup-styles"
       }
     },
     {

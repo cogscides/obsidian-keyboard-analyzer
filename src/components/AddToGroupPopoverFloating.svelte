@@ -19,7 +19,7 @@
     onClose?: () => void
   }
 
-  let { commandId, onClose = () => {} }: Props = $props()
+  const { commandId, onClose = () => {} }: Props = $props()
 
   const plugin: KeyboardAnalyzerPlugin = getContext('keyboard-analyzer-plugin')
   const _groupManager = plugin.groupManager
@@ -32,14 +32,13 @@
   // Arrow element for floating-ui
   let arrowElement = $state<HTMLDivElement | null>(null)
 
-  // Floating UI configuration - we'll set the reference element manually
+  // Floating UI configuration - arrow will be added via effect when element is ready
   const floating = useFloating({
     placement: 'bottom-start',
     middleware: [
       offset(8), // 8px distance from trigger
       flip(), // Auto-flip when near viewport edges
       shift({ padding: 8 }), // Shift to stay within viewport
-      ...(arrowElement ? [arrow({ element: arrowElement })] : []), // Position arrow element if available
     ],
   })
 
@@ -100,9 +99,10 @@
 
   // Calculate arrow position from middleware data
   const arrowPosition = $derived(() => {
-    if (!floating.middlewareData.arrow) return {}
+    const arrowData = floating.middlewareData?.arrow
+    if (!arrowData) return { display: 'none' }
 
-    const { x, y } = floating.middlewareData.arrow
+    const { x, y } = arrowData
     const side = floating.placement.split('-')[0]
 
     const staticSide = {

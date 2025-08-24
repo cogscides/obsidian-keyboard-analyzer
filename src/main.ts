@@ -118,7 +118,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       this.app.workspace
         .getLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
-        .forEach((leaf) => {
+        .forEach(leaf => {
           if (leaf.view instanceof ShortcutsView) {
             leaf.view.plugin = this // Update the plugin instance
             leaf.view.onOpen() // Re-run onOpen to refresh the view
@@ -148,9 +148,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     setIcon(icon, 'keyboard-glyph')
     // Use the glyph span as an anchor for the Quick View popover
     this.quickViewAnchorEl = icon
-    icon.addEventListener('click', (evt) => this.onStatusBarClick(evt))
+    icon.addEventListener('click', evt => this.onStatusBarClick(evt))
     // Right-click also toggles Quick View (suppress native menu on the icon only)
-    icon.addEventListener('contextmenu', (evt) => {
+    icon.addEventListener('contextmenu', evt => {
       evt.preventDefault()
       // Record current focus target before toggling the popover
       try {
@@ -437,7 +437,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         const q = query.toLowerCase().trim()
         return !q
           ? this.available
-          : this.available.filter((g) => g.name.toLowerCase().includes(q))
+          : this.available.filter(g => g.name.toLowerCase().includes(q))
       }
       renderSuggestion(value: { id: string; name: string }, el: HTMLElement) {
         el.setText(value.name)
@@ -448,7 +448,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     }
     const modal = new GroupSuggest(
       this.app,
-      groups.map((g) => ({
+      groups.map(g => ({
         id: String(g.id),
         name: g.name,
       }))

@@ -5,6 +5,7 @@ Updated: 2025-08-09
 This plugin can optionally display common OS/editor default shortcuts in the results so they don’t look “free to use” when assigning hotkeys. Toggle via: Filter → “Include system shortcuts”.
 
 Notes:
+
 - The list is platform-aware and may vary on macOS vs Windows/Linux.
 - These are shown as virtual commands under plugin name “System Shortcuts”.
 
@@ -35,4 +36,3 @@ Notes:
 - Select Word Right: `Option+Shift+ArrowRight`
 
 If you want us to include more editor/OS defaults (e.g., line start/end navigation, tab/window management), please open an issue with your platform and preferred behavior.
-

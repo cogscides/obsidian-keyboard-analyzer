@@ -34,7 +34,7 @@
     view: ShortcutsView
   }
 
-  let { plugin, view }: Props = $props()
+  const { plugin, view }: Props = $props()
 
   // Managers and stores
   const commandsManager: CommandsManager = plugin.commandsManager
@@ -61,7 +61,8 @@
           | { getViewType?: () => string }
           | undefined
         return !!(
-          v && typeof v.getViewType === 'function' &&
+          v &&
+          typeof v.getViewType === 'function' &&
           v.getViewType?.() === VIEW_TYPE_SHORTCUTS_ANALYZER
         )
       } catch {
@@ -130,7 +131,8 @@
                 | { getViewType?: () => string }
                 | undefined
               return !!(
-                v && typeof v.getViewType === 'function' &&
+                v &&
+                typeof v.getViewType === 'function' &&
                 v.getViewType?.() === VIEW_TYPE_SHORTCUTS_ANALYZER
               )
             } catch {
@@ -150,7 +152,8 @@
           | { getViewType?: () => string }
           | undefined
         return !!(
-          v && typeof v.getViewType === 'function' &&
+          v &&
+          typeof v.getViewType === 'function' &&
           v.getViewType?.() === VIEW_TYPE_SHORTCUTS_ANALYZER
         )
       } catch {
@@ -263,7 +266,7 @@
   })
 
   // Strict modifier match flag derived from current group's filter settings
-  let strictModifierMatch = $derived.by(() => {
+  const strictModifierMatch = $derived.by(() => {
     // Track groups to recompute when settings update
     groupManager.groups
     const gid = selectedGroupID
@@ -272,8 +275,8 @@
   })
 
   let visibleCommands = $state<commandEntry[]>([])
-  let searchCommandsCount = $derived(visibleCommands.length)
-  let searchHotkeysCount = $derived(
+  const searchCommandsCount = $derived(visibleCommands.length)
+  const searchHotkeysCount = $derived(
     visibleCommands.reduce(
       (count, command) => count + command.hotkeys.length,
       0
@@ -382,7 +385,7 @@
     const duplicativeModifiers = convertModifiers(modifiers)
 
     if (
-      activeKeysStore.ActiveModifiers.every((modifier) =>
+      activeKeysStore.ActiveModifiers.every(modifier =>
         duplicativeModifiers.includes(modifier as Modifier)
       ) &&
       activeKeysStore.ActiveKey.toLowerCase() === key.toLowerCase()

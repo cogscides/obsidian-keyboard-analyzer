@@ -46,13 +46,13 @@
 
   // Using callback props instead of component events (Svelte 5)
 
-  let groupSettings = $derived.by(() => {
+  const groupSettings = $derived.by(() => {
     groupManager.groups
     const settings = groupManager.getGroupSettings(selectedGroup)
     return settings
   })
 
-  let groupIsEmpty = $derived.by(() => {
+  const groupIsEmpty = $derived.by(() => {
     if (!selectedGroup || selectedGroup === 'all') return false
     const g = groupManager.getGroup(selectedGroup)
     return !g || (g.commandIds?.length || 0) === 0
@@ -65,7 +65,7 @@
     return hotkeyManager.renderHotkey(hotkey)
   }
 
-  let featuredIds = $derived.by(
+  const featuredIds = $derived.by(
     () => new Set(settingsManager.settings.featuredCommandIDs || [])
   )
 
@@ -146,7 +146,7 @@
     commands: commandEntry[]
     isBuiltIn: boolean
   }
-  let groupedByPlugin: PluginGroup[] = $derived.by(() => {
+  const groupedByPlugin: PluginGroup[] = $derived.by(() => {
     // Track changes
     groupSettings
     const map = new Map<string, commandEntry[]>()
@@ -167,7 +167,7 @@
           return 0
         })
       }
-      const isBuiltIn = commands.some((c) => c.isInternalModule)
+      const isBuiltIn = commands.some(c => c.isInternalModule)
       return { pluginName, commands, isBuiltIn }
     })
     groups.sort((a, b) => a.pluginName.localeCompare(b.pluginName))
