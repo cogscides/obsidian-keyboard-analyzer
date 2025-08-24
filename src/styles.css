@@ -1013,6 +1013,148 @@ button#hotkey-refresh-button:hover {
   border: 1px solid var(--indentation-guide);
   font-size: var(--font-scale-0);
   line-height: initial;
+
+/* -------------------------------------------------------------- */
+/* FLOATING UI ELEMENTS                                           */
+/* -------------------------------------------------------------- */
+
+/* Base floating element styles required by @skeletonlabs/floating-ui-svelte */
+.floating {
+  width: max-content;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 200000; /* Above other popups */
+}
+
+/* Enhanced floating tooltip styles */
+.floating-tooltip {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-normal);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  max-width: 300px;
+  word-wrap: break-word;
+  z-index: 200001;
+}
+
+/* Floating dropdown container */
+.floating-dropdown {
+  background: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  min-width: 220px;
+  box-shadow: 0px 45px 18px rgba(5, 5, 5, 0.01),
+    0px 25px 15px rgba(5, 5, 5, 0.03), 0px 11px 11px rgba(5, 5, 5, 0.04),
+    0px 3px 6px rgba(5, 5, 5, 0.05), 0px 0px 0px rgba(5, 5, 5, 0.05);
+  z-index: 150000;
+}
+
+/* Floating popover container */
+.floating-popover {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 8px;
+  min-width: 260px;
+  max-height: 320px;
+  overflow: auto;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  z-index: 160000;
+}
+
+/* Floating arrow styles for tooltips and popovers */
+.floating-arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  border: inherit;
+  transform: rotate(45deg);
+}
+
+/* Arrow positioning adjustments */
+.floating-arrow[data-side="top"] {
+  bottom: -4px;
+  border-bottom: none;
+  border-right: none;
+}
+
+.floating-arrow[data-side="bottom"] {
+  top: -4px;
+  border-top: none;
+  border-left: none;
+}
+
+.floating-arrow[data-side="left"] {
+  right: -4px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.floating-arrow[data-side="right"] {
+  left: -4px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Floating element animations */
+.floating-enter {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.floating-enter-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.floating-exit {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 100ms ease, transform 100ms ease;
+}
+
+.floating-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* Specific styling for dev-dropdown content */
+.floating-dropdown.dev-dropdown {
+  min-width: 220px;
+  padding: 8px;
+}
+
+.floating-dropdown .dev-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.floating-dropdown .dev-item .inline {
+  margin-right: auto;
+  color: var(--text-muted);
+}
+
+.floating-dropdown .dev-item .link {
+  background: none;
+  border: none;
+  color: var(--interactive-accent);
+  cursor: pointer;
+  padding: 0;
+}
+
+.floating-dropdown .dev-item select {
+  width: 120px;
+}
   display: flex;
   justify-content: center;
   align-items: center;
