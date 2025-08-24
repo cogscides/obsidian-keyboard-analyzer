@@ -14,6 +14,7 @@ related:
 ### ✅ Additional Enhancements Completed
 
 **1. Developer-Only Keyboard Tooltips**
+
 - Added new setting `keyboardDevTooltipsEnabled` to plugin settings system
 - Keyboard key tooltips now only appear when developer options are enabled
 - Added runtime config function `isKeyboardDevTooltipsEnabled()`
@@ -21,6 +22,7 @@ related:
 - Fixed tooltip positioning issues with CSS grid layout
 
 **2. Smooth Dropdown Animations**
+
 - Enhanced FloatingDropdown with sophisticated animation system
 - Added scale animations (0.95 → 1.0) with opacity transitions
 - Implemented proper animation state management
@@ -28,6 +30,7 @@ related:
 - 150ms duration with cubic-bezier(0.16, 1, 0.3, 1) easing
 
 **3. Fixed Animation Jitter**
+
 - Resolved visual jitter caused by transform conflicts
 - Separated positioning transforms from animation transforms
 - Maintained proper dropdown styling while adding smooth transitions
@@ -36,6 +39,7 @@ related:
 ### Technical Achievement Summary
 
 **Files Enhanced:**
+
 - `src/utils/runtimeConfig.ts` - Added keyboard dev tooltips config
 - `src/managers/settingsManager/*` - Extended settings system
 - `src/settingsTab.ts` - Added UI control for dev tooltips
@@ -45,6 +49,7 @@ related:
 - `src/components/floating/FloatingTooltip.svelte` - Grid positioning fix
 
 **Key Benefits Achieved:**
+
 - Zero animation jitter regardless of floating-ui positioning
 - User-friendly tooltip content without technical details
 - Developer-only features properly gated
@@ -52,6 +57,7 @@ related:
 - CSS grid layout stability maintained
 
 **Performance & UX:**
+
 - Reduced custom positioning code by ~90%
 - Unified behavior across all floating elements
 - Advanced UX patterns (delay groups, smart animations)

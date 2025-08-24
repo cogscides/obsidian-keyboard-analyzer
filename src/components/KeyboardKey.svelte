@@ -41,7 +41,8 @@
   // Generate user-friendly tooltip content only when dev mode is enabled
   let tooltipContent = $derived(
     (() => {
-      if (!devTooltipsEnabled || _displayLabel === 'empty' || !key.code) return ''
+      if (!devTooltipsEnabled || _displayLabel === 'empty' || !key.code)
+        return ''
 
       const weight = keyState.weight || 0
       let content = _displayLabel // Show the key label, not the code

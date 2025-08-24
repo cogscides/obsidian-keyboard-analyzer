@@ -88,7 +88,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 
     // Initialize runtime config from settings
     setDevLoggingEnabled(!!this.settingsManager.getSetting('devLoggingEnabled'))
-    setKeyboardDevTooltipsEnabled(!!this.settingsManager.getSetting('keyboardDevTooltipsEnabled'))
+    setKeyboardDevTooltipsEnabled(
+      !!this.settingsManager.getSetting('keyboardDevTooltipsEnabled')
+    )
     setLogLevel('debug')
     setEmulatedOS(
       (this.settingsManager.getSetting('emulatedOS') || 'none') as
