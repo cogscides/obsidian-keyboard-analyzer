@@ -2,6 +2,7 @@
 <script lang="ts">
   import { getContext } from 'svelte'
   import KeyboardKey from './KeyboardKey.svelte'
+  import FloatingDropdown from './floating/FloatingDropdown.svelte'
   import {
     Coffee as CoffeeIcon,
     Pin as PinIcon,
@@ -145,77 +146,78 @@
     </div>
     <div class="toolbar-right">
       {#if devOptionsEnabled}
-        <div class="dev-menu">
+        <FloatingDropdown
+          bind:open={devMenuOpen}
+          placement="bottom-end"
+          class="dev-dropdown"
+        >
           <button
             class="dev-gear"
             aria-haspopup="true"
             aria-expanded={devMenuOpen}
             title="Developer options"
-            onclick={() => (devMenuOpen = !devMenuOpen)}
+            slot="trigger"
           >
             <SettingsIcon size={16} />
           </button>
-          {#if devMenuOpen}
-            <div class="dev-dropdown" role="menu">
-              <div class="dev-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={devLoggingEnabled}
-                    oninput={(e: Event) => {
-                      const v = (e.currentTarget as HTMLInputElement).checked
-                      settingsManager.updateSettings({ devLoggingEnabled: v })
-                    }}
-                  />
-                  <span>Dev logging</span>
-                </label>
-              </div>
-              <div class="dev-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settingsManager.settings.useBakedKeyNames)}
-                    oninput={(e: Event) => {
-                      const v = (e.currentTarget as HTMLInputElement).checked
-                      settingsManager.updateSettings({ useBakedKeyNames: v })
-                    }}
-                  />
-                  <span>Use baked key names</span>
-                </label>
-              </div>
-              <div class="dev-item">
-                <button
-                  class="link"
-                  onclick={() => (showInspector = !showInspector)}
-                >
-                  {showInspector ? 'Hide' : 'Show'} Active Keys inspector
-                </button>
-              </div>
-              <div class="dev-item">
-                <label class="inline" for="kbd-emu-os-select"
-                  >Emulated OS:</label
-                >
-                <select
-                  id="kbd-emu-os-select"
-                  bind:value={emulatedOS}
+
+          <div slot="content" role="menu">
+            <div class="dev-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={devLoggingEnabled}
                   oninput={(e: Event) => {
-                    const val = (e.currentTarget as HTMLSelectElement).value as
-                      | 'none'
-                      | 'windows'
-                      | 'macos'
-                      | 'linux'
-                    settingsManager.updateSettings({ emulatedOS: val })
+                    const v = (e.currentTarget as HTMLInputElement).checked
+                    settingsManager.updateSettings({ devLoggingEnabled: v })
                   }}
-                >
-                  <option value="none">None</option>
-                  <option value="windows">Windows</option>
-                  <option value="macos">macOS</option>
-                  <option value="linux">Linux</option>
-                </select>
-              </div>
+                />
+                <span>Dev logging</span>
+              </label>
             </div>
-          {/if}
-        </div>
+            <div class="dev-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={Boolean(settingsManager.settings.useBakedKeyNames)}
+                  oninput={(e: Event) => {
+                    const v = (e.currentTarget as HTMLInputElement).checked
+                    settingsManager.updateSettings({ useBakedKeyNames: v })
+                  }}
+                />
+                <span>Use baked key names</span>
+              </label>
+            </div>
+            <div class="dev-item">
+              <button
+                class="link"
+                onclick={() => (showInspector = !showInspector)}
+              >
+                {showInspector ? 'Hide' : 'Show'} Active Keys inspector
+              </button>
+            </div>
+            <div class="dev-item">
+              <label class="inline" for="kbd-emu-os-select">Emulated OS:</label>
+              <select
+                id="kbd-emu-os-select"
+                bind:value={emulatedOS}
+                oninput={(e: Event) => {
+                  const val = (e.currentTarget as HTMLSelectElement).value as
+                    | 'none'
+                    | 'windows'
+                    | 'macos'
+                    | 'linux'
+                  settingsManager.updateSettings({ emulatedOS: val })
+                }}
+              >
+                <option value="none">None</option>
+                <option value="windows">Windows</option>
+                <option value="macos">macOS</option>
+                <option value="linux">Linux</option>
+              </select>
+            </div>
+          </div>
+        </FloatingDropdown>
       {/if}
       <button
         class="pin-toggle"
@@ -378,9 +380,15 @@
   }
 
   /* Prevent overflow on medium-and-down screens: let content fit screen */
-  :global(#keyboard-component.md .keyboard-panel:not(.collapsed) .panel-content),
-  :global(#keyboard-component.sm .keyboard-panel:not(.collapsed) .panel-content),
-  :global(#keyboard-component.xs .keyboard-panel:not(.collapsed) .panel-content) {
+  :global(
+      #keyboard-component.md .keyboard-panel:not(.collapsed) .panel-content
+    ),
+  :global(
+      #keyboard-component.sm .keyboard-panel:not(.collapsed) .panel-content
+    ),
+  :global(
+      #keyboard-component.xs .keyboard-panel:not(.collapsed) .panel-content
+    ) {
     width: 100%;
     max-width: 100%;
   }
@@ -500,9 +508,6 @@
   }
 
   /* Developer menu */
-  .dev-menu {
-    position: relative;
-  }
   .dev-gear {
     display: inline-flex;
     align-items: center;
@@ -518,18 +523,6 @@
   .dev-gear:focus-visible {
     border-color: var(--interactive-accent);
     color: var(--text-normal);
-  }
-  .dev-dropdown {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 6px);
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    box-shadow: var(--shadow-s);
-    padding: 8px;
-    min-width: 220px;
-    z-index: 1000;
   }
   .dev-item {
     display: flex;

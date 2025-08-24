@@ -1,5 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte'
+  import FloatingTooltip from './floating/FloatingTooltip.svelte'
+  import { TOOLTIP_GROUPS } from '../utils/tooltipGroups'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import type KeyboardAnalyzerPlugin from '../main'
   import type GroupManager from '../managers/groupManager'
@@ -8,7 +10,7 @@
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import { convertModifiers } from '../utils/modifierUtils'
   import { formatHotkeyBaked } from '../utils/normalizeKeyDisplay'
-  import AddToGroupPopover from './AddToGroupPopover.svelte'
+  import AddToGroupPopover from './AddToGroupPopoverFloating.svelte'
   import {
     ChevronDown,
     Star as StarIcon,
@@ -132,9 +134,11 @@
 
   // Add-to-group popover state
   let openPopoverFor: string | null = $state(null)
+
   function toggleAddToGroupPopover(event: MouseEvent, commandId: string) {
     event.stopPropagation()
-    openPopoverFor = openPopoverFor === commandId ? null : commandId
+    const wasOpen = openPopoverFor === commandId
+    openPopoverFor = wasOpen ? null : commandId
   }
 
   type PluginGroup = {
@@ -278,27 +282,31 @@
                           <StarIcon size={16} />
                         </div>
                         <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                        <div
-                          class="folder-plus-icon icon"
-                          title="Add to group"
-                          role="button"
-                          tabindex="0"
-                          onclick={(e: MouseEvent) =>
-                            toggleAddToGroupPopover(e, cmdEntry.id)}
-                          onkeydown={(e: KeyboardEvent) =>
-                            (e.key === 'Enter' || e.key === ' ') &&
-                            (e.preventDefault(), toggleAddToGroupPopover(e as unknown as MouseEvent, cmdEntry.id))}
-                        >
-                          <FolderPlusIcon size={16} />
-                        </div>
-                        {#if openPopoverFor === cmdEntry.id}
-                          <span class="kb-popover-anchor">
+                        <div class="menu-anchor">
+                          <div
+                            class="folder-plus-icon icon"
+                            title="Add to group"
+                            role="button"
+                            tabindex="0"
+                            onclick={(e: MouseEvent) =>
+                              toggleAddToGroupPopover(e, cmdEntry.id)}
+                            onkeydown={(e: KeyboardEvent) =>
+                              (e.key === 'Enter' || e.key === ' ') &&
+                              (e.preventDefault(),
+                              toggleAddToGroupPopover(
+                                e as unknown as MouseEvent,
+                                cmdEntry.id
+                              ))}
+                          >
+                            <FolderPlusIcon size={16} />
+                          </div>
+                          {#if openPopoverFor === cmdEntry.id}
                             <AddToGroupPopover
                               commandId={cmdEntry.id}
                               onClose={() => (openPopoverFor = null)}
                             />
-                          </span>
-                        {/if}
+                          {/if}
+                        </div>
                       </div>
                     </div>
                     {#if groupSettings?.DisplayIDs}
@@ -325,7 +333,8 @@
                             handleDuplicateHotkeyClick(hotkey, cmdEntry)}
                           onkeydown={(e: KeyboardEvent) =>
                             (e.key === 'Enter' || e.key === ' ') &&
-                            (e.preventDefault(), handleDuplicateHotkeyClick(hotkey, cmdEntry))}
+                            (e.preventDefault(),
+                            handleDuplicateHotkeyClick(hotkey, cmdEntry))}
                           onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
                           onmouseleave={handleHotkeyMouseLeave}
                         >
@@ -365,39 +374,59 @@
               >
               <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
               <div class="action-icons">
-                <div
-                  class="star-icon icon"
-                  role="button"
-                  tabindex="0"
-                  onclick={() => handleStarClick(cmdEntry.id)}
-                  onkeydown={(e: KeyboardEvent) =>
-                    (e.key === 'Enter' || e.key === ' ') &&
-                    (e.preventDefault(), handleStarClick(cmdEntry.id))}
+                <FloatingTooltip
+                  content={featuredIds.has(cmdEntry.id)
+                    ? 'Remove from featured commands'
+                    : 'Add to featured commands'}
+                  placement="top"
+                  delay={500}
+                  group={TOOLTIP_GROUPS.ACTION_ICONS}
                 >
-                  <StarIcon size={16} />
-                </div>
+                  <div
+                    class="star-icon icon"
+                    role="button"
+                    tabindex="0"
+                    onclick={() => handleStarClick(cmdEntry.id)}
+                    onkeydown={(e: KeyboardEvent) =>
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      (e.preventDefault(), handleStarClick(cmdEntry.id))}
+                  >
+                    <StarIcon size={16} />
+                  </div>
+                </FloatingTooltip>
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-                <div
-                  class="folder-plus-icon icon"
-                  title="Add to group"
-                  role="button"
-                  tabindex="0"
-                  onclick={(e: MouseEvent) =>
-                    toggleAddToGroupPopover(e, cmdEntry.id)}
-                  onkeydown={(e: KeyboardEvent) =>
-                    (e.key === 'Enter' || e.key === ' ') &&
-                    (e.preventDefault(), toggleAddToGroupPopover(e as unknown as MouseEvent, cmdEntry.id))}
-                >
-                  <FolderPlusIcon size={16} />
-                </div>
-                {#if openPopoverFor === cmdEntry.id}
-                  <span class="kb-popover-anchor">
+                <div class="menu-anchor">
+                  <FloatingTooltip
+                    content="Add command to a group for better organization"
+                    placement="top"
+                    delay={500}
+                    group={TOOLTIP_GROUPS.ACTION_ICONS}
+                  >
+                    <div
+                      class="folder-plus-icon icon"
+                      title="Add to group"
+                      role="button"
+                      tabindex="0"
+                      onclick={(e: MouseEvent) =>
+                        toggleAddToGroupPopover(e, cmdEntry.id)}
+                      onkeydown={(e: KeyboardEvent) =>
+                        (e.key === 'Enter' || e.key === ' ') &&
+                        (e.preventDefault(),
+                        toggleAddToGroupPopover(
+                          e as unknown as MouseEvent,
+                          cmdEntry.id
+                        ))}
+                    >
+                      <FolderPlusIcon size={16} />
+                    </div>
+                  </FloatingTooltip>
+                  {#if openPopoverFor === cmdEntry.id}
                     <AddToGroupPopover
                       commandId={cmdEntry.id}
                       onClose={() => (openPopoverFor = null)}
                     />
-                  </span>
-                {/if}
+                  {/if}
+                </div>
               </div>
             </div>
             {#if groupSettings?.DisplayIDs}
@@ -421,7 +450,8 @@
                   onclick={() => handleDuplicateHotkeyClick(hotkey, cmdEntry)}
                   onkeydown={(e: KeyboardEvent) =>
                     (e.key === 'Enter' || e.key === ' ') &&
-                    (e.preventDefault(), handleDuplicateHotkeyClick(hotkey, cmdEntry))}
+                    (e.preventDefault(),
+                    handleDuplicateHotkeyClick(hotkey, cmdEntry))}
                   onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
                   onmouseleave={handleHotkeyMouseLeave}
                 >
@@ -477,7 +507,7 @@
     align-items: center;
     overflow: visible;
   }
-  .kb-popover-anchor {
+  .menu-anchor {
     position: relative;
     display: inline-block;
     overflow: visible;

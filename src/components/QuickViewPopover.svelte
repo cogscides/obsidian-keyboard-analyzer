@@ -1,5 +1,11 @@
 <script lang="ts">
   import { onDestroy, onMount, setContext } from 'svelte'
+  import {
+    useFloating,
+    flip,
+    shift,
+    offset,
+  } from '@skeletonlabs/floating-ui-svelte'
   import clickOutside from '../utils/clickOutside.js'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import type KeyboardAnalyzerPlugin from '../main'
@@ -111,6 +117,17 @@
   // Persisted size and anchoring
   let rootEl: HTMLDivElement | null = $state(null)
   let placeAbove = $state(false)
+
+  // Floating UI setup for smart positioning
+  const floating = useFloating({
+    placement: 'bottom-start',
+    middleware: [
+      offset(6), // 6px margin from anchor
+      flip(), // Auto-flip when near viewport edges
+      shift({ padding: 8 }), // Shift to stay within viewport
+    ],
+  })
+
   // Start with safe defaults; read persisted size on mount
   let coords = $state({
     top: 0,
@@ -160,6 +177,40 @@
     try {
       logger.debug('[qv] recomputePosition:start')
       if (!rootEl || !anchorEl || isResizing) return
+
+      // Use floating-ui for positioning when available and not resizing
+      if (floating.isPositioned && !isResizing) {
+        const floatingStyles = floating.floatingStyles
+        // Parse the floating styles to get computed position
+        const transformMatch = floatingStyles.match(
+          /translate3d\(([^,]+),\s*([^,]+),/
+        )
+        if (transformMatch) {
+          const floatingLeft = parseFloat(transformMatch[1])
+          const floatingTop = parseFloat(transformMatch[2])
+
+          // Use floating-ui position but respect our custom width/height
+          const next = {
+            ...coords,
+            top: floatingTop,
+            left: floatingLeft,
+          }
+
+          const changed = next.top !== coords.top || next.left !== coords.left
+          if (changed) {
+            queueMicrotask(() => {
+              coords = next
+              anchorOffsetX = next.left - anchorEl.getBoundingClientRect().left
+              logger.debug('[qv] recomputePosition:end (floating-ui)', {
+                coords,
+              })
+            })
+          }
+          return
+        }
+      }
+
+      // Fallback to original positioning logic
       const rect = anchorEl.getBoundingClientRect()
       const vh = window.innerHeight || document.documentElement.clientHeight
       const vw = window.innerWidth || document.documentElement.clientWidth
@@ -190,11 +241,11 @@
           placeAbove = nextPlaceAbove
           coords = next
           anchorOffsetX = left - rect.left
-          logger.debug('[qv] recomputePosition:end', { coords })
+          logger.debug('[qv] recomputePosition:end (fallback)', { coords })
         })
       } else {
         anchorOffsetX = left - rect.left
-        logger.debug('[qv] recomputePosition:end', { coords })
+        logger.debug('[qv] recomputePosition:end (fallback)', { coords })
       }
     } catch (err) {
       logger.error('[qv] recomputePosition:error', err)
@@ -682,6 +733,13 @@
   let ro: ResizeObserver | null = null
   onMount(() => {
     logger.debug('[qv] mount', { anchorExists: !!anchorEl })
+
+    // Set up floating-ui reference element
+    if (anchorEl) {
+      floating.elements.reference = anchorEl
+      logger.debug('[qv] floating-ui reference set')
+    }
+
     try {
       visualKeyboardManager = new VisualKeyboardManager()
       activeKeysStore = new ActiveKeysStore(plugin.app, visualKeyboardManager)
