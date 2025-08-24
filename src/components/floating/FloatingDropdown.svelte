@@ -90,7 +90,7 @@
     if (hoverTrigger) return // Don't handle clicks if hover-based
 
     const wasOpen = open
-    
+
     if (!wasOpen) {
       // Opening
       open = true
@@ -172,7 +172,7 @@
   function startOpenAnimation() {
     clearAnimationTimeout()
     isAnimating = true
-    
+
     // Add visible class after DOM update for animation
     setTimeout(() => {
       if (floating.elements.floating) {
@@ -180,7 +180,7 @@
         floating.elements.floating.classList.add('dropdown-visible')
       }
     }, 10)
-    
+
     // Clear animation state after transition
     animationTimeout = setTimeout(() => {
       isAnimating = false
@@ -190,19 +190,19 @@
   function startCloseAnimation() {
     clearAnimationTimeout()
     isAnimating = true
-    
+
     // Add exit animation class
     if (floating.elements.floating) {
       floating.elements.floating.classList.remove('dropdown-visible')
       floating.elements.floating.classList.add('dropdown-exiting')
     }
-    
+
     // Hide content after animation completes
     animationTimeout = setTimeout(() => {
       open = false
       showContent = false
       isAnimating = false
-      
+
       // Clean up animation classes
       setTimeout(() => {
         if (floating.elements.floating) {
@@ -289,19 +289,22 @@
   :global(.floating-dropdown) {
     font-size: 14px;
     line-height: 1.4;
-    
+
     /* Use opacity-only animation on main element to avoid transform conflicts */
     opacity: 0;
     transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1);
-    
+
     /* Maintain proper dropdown background and styling */
     background: var(--background-primary-alt);
     border: 1px solid var(--background-modifier-border);
     border-radius: 6px;
     padding: 12px 16px;
-    box-shadow: 0px 45px 18px rgba(5, 5, 5, 0.01),
-      0px 25px 15px rgba(5, 5, 5, 0.03), 0px 11px 11px rgba(5, 5, 5, 0.04),
-      0px 3px 6px rgba(5, 5, 5, 0.05), 0px 0px 0px rgba(5, 5, 5, 0.05);
+    box-shadow:
+      0px 45px 18px rgba(5, 5, 5, 0.01),
+      0px 25px 15px rgba(5, 5, 5, 0.03),
+      0px 11px 11px rgba(5, 5, 5, 0.04),
+      0px 3px 6px rgba(5, 5, 5, 0.05),
+      0px 0px 0px rgba(5, 5, 5, 0.05);
   }
 
   /* Use pseudo-element for scale animation to avoid floating-ui transform conflicts */

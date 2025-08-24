@@ -102,17 +102,17 @@
   // Hide tooltip immediately or with short delay
   function hideTooltip() {
     clearTimeouts()
-    
+
     // Add exit animation class and remove visible class
     if (floating.elements.floating) {
       floating.elements.floating.classList.remove('tooltip-visible')
       floating.elements.floating.classList.add('exiting')
     }
-    
+
     hideTimeout = setTimeout(() => {
       isOpen = false
       if (group) tooltipDelayManager.onTooltipHide(group)
-      
+
       // Clean up animation classes after hiding
       setTimeout(() => {
         if (floating.elements.floating) {
@@ -248,13 +248,13 @@
     line-height: 1.4;
     white-space: pre-wrap;
     word-wrap: break-word;
-    
+
     /* Use separate elements for animation to avoid transform conflicts */
     opacity: 0;
-    
+
     /* Smooth transition */
     transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
-    
+
     /* Animate to visible state */
     animation: tooltip-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
