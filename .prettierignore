@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+main.js
+styles.css
+
+# Configuration files
+*.config.js
+*.config.ts
+*.config.mjs
+
+# TypeScript declaration files
+*.d.ts
+
+# Version and manifest files
+versions.json
+manifest.json
+
+# Generated files
+CHANGELOG.md
+
+# OS and editor files
+.DS_Store
+*.log

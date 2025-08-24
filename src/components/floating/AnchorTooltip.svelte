@@ -1,5 +1,3 @@
-<!-- AnchorTooltip.svelte -->
-<!-- A modern tooltip component using CSS anchor positioning with fallback -->
 <script lang="ts">
   import { onMount } from 'svelte'
 

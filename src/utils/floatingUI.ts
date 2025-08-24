@@ -10,7 +10,7 @@ import {
   arrow,
   autoUpdate,
 } from '@skeletonlabs/floating-ui-svelte'
-import type { Middleware, Placement } from '@skeletonlabs/floating-ui-svelte'
+import type { Middleware, Placement } from '@floating-ui/dom'
 
 /**
  * Standard middleware configuration for tooltips
@@ -26,7 +26,11 @@ export function createTooltipMiddleware(
 
   // Add arrow middleware if element is provided
   if (arrowElement) {
-    middleware.push(arrow({ element: arrowElement }))
+    const element =
+      typeof arrowElement === 'function' ? arrowElement() : arrowElement
+    if (element) {
+      middleware.push(arrow({ element }))
+    }
   }
 
   return middleware
@@ -57,7 +61,11 @@ export function createPopoverMiddleware(
 
   // Add arrow middleware if element is provided
   if (arrowElement) {
-    middleware.push(arrow({ element: arrowElement }))
+    const element =
+      typeof arrowElement === 'function' ? arrowElement() : arrowElement
+    if (element) {
+      middleware.push(arrow({ element }))
+    }
   }
 
   return middleware
