@@ -44,9 +44,7 @@
     close: void
   }>()
 
-  // Animation state
-  let isAnimating = $state(false)
-  let showContent = $state(false)
+  // Animation state management (DOM class-based)
   let animationTimeout: ReturnType<typeof setTimeout> | null = null
 
   // Hover delay timeout
@@ -94,7 +92,6 @@
     if (!wasOpen) {
       // Opening
       open = true
-      showContent = true
       startOpenAnimation()
       dispatch('open')
     } else {
@@ -113,13 +110,12 @@
     if (hoverDelay > 0) {
       hoverTimeout = setTimeout(() => {
         open = true
-        showContent = true
+        _showContent = true
         startOpenAnimation()
         dispatch('open')
       }, hoverDelay)
     } else {
       open = true
-      showContent = true
       startOpenAnimation()
       dispatch('open')
     }
@@ -171,7 +167,6 @@
   // Animation helper functions
   function startOpenAnimation() {
     clearAnimationTimeout()
-    isAnimating = true
 
     // Add visible class after DOM update for animation
     setTimeout(() => {
@@ -183,13 +178,12 @@
 
     // Clear animation state after transition
     animationTimeout = setTimeout(() => {
-      isAnimating = false
+      // Animation complete - no state tracking needed
     }, 200)
   }
 
   function startCloseAnimation() {
     clearAnimationTimeout()
-    isAnimating = true
 
     // Add exit animation class
     if (floating.elements.floating) {
@@ -200,8 +194,7 @@
     // Hide content after animation completes
     animationTimeout = setTimeout(() => {
       open = false
-      showContent = false
-      isAnimating = false
+      // Animation complete - no state tracking needed
 
       // Clean up animation classes
       setTimeout(() => {
@@ -219,12 +212,6 @@
       clearTimeout(animationTimeout)
       animationTimeout = null
     }
-  }
-
-  // Cleanup on unmount
-  function cleanup() {
-    clearHoverTimeout()
-    clearAnimationTimeout()
   }
 
   // Set up click outside listener when dropdown is open

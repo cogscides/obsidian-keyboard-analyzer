@@ -136,13 +136,6 @@
     modifiersSig: string
   } = $state({ search: '', activeKey: '', selectedGroup: '', modifiersSig: '' })
 
-  // Groups
-  const excludedModules = $derived.by(() => {
-    // Track group changes to recompute excluded modules
-    groupManager.groups
-    return groupManager.getExcludedModulesForGroup(selectedGroup)
-  })
-
   function ClearSearch() {
     if (search === '') {
       PressedKeysStore.reset()

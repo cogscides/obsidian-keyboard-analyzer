@@ -69,7 +69,7 @@
   function _createGroupAndAdd() {
     const name = newGroupName.trim()
     if (!name) return
-    const id = _groupManager.createGroup(name)
+    const id: string = _groupManager.createGroup(name)
     if (id) _groupManager.addCommandToGroup(String(id), commandId)
     newGroupName = ''
     search = ''

@@ -76,7 +76,10 @@ export default class CommandsManager {
         (globalThis as unknown as { __KBA_PROFILING__?: unknown })
           .__KBA_PROFILING__
       )
-      if (enableProfiling) console.time('CommandsManager.loadCommands')
+      if (enableProfiling) {
+        // eslint-disable-next-line no-console
+        console.time('CommandsManager.loadCommands')
+      }
       const allCommands = this.getCommands()
       this.commands = this.rebuildIndex(allCommands)
       // Append virtual system/editor default shortcuts so they can be filtered/displayed
@@ -90,7 +93,10 @@ export default class CommandsManager {
       } catch {
         // swallow notification errors
       }
-      if (enableProfiling) console.timeEnd('CommandsManager.loadCommands')
+      if (enableProfiling) {
+        // eslint-disable-next-line no-console
+        console.timeEnd('CommandsManager.loadCommands')
+      }
       logger.timeEnd('CommandsManager.loadCommands')
     }
 
@@ -128,7 +134,10 @@ export default class CommandsManager {
         .__KBA_PROFILING__
     )
     logger.timeStart('CommandsManager.rebuildIndex')
-    if (enableProfiling) console.time('CommandsManager.rebuildIndex')
+    if (enableProfiling) {
+      // eslint-disable-next-line no-console
+      console.time('CommandsManager.rebuildIndex')
+    }
     const hotkeyIndex: Record<string, string[]> = {}
     const result = commands.reduce(
       (acc, command) => {
@@ -153,7 +162,10 @@ export default class CommandsManager {
     )
 
     this.hotkeyIndex = hotkeyIndex
-    if (enableProfiling) console.timeEnd('CommandsManager.rebuildIndex')
+    if (enableProfiling) {
+      // eslint-disable-next-line no-console
+      console.timeEnd('CommandsManager.rebuildIndex')
+    }
     logger.timeEnd('CommandsManager.rebuildIndex')
     return result
   }

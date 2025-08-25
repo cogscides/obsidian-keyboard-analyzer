@@ -106,7 +106,9 @@ export default class SettingsManager {
         this.settings.settingsSchemaVersion = 1
         try {
           await this.plugin.saveData(this.settings)
-        } catch {}
+        } catch {
+          // Defensive: suppress save errors during migration
+        }
       }
 
       // Apply runtime flags from settings

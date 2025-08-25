@@ -42,9 +42,6 @@
   const commandsManager: CommandsManager = plugin.commandsManager
   const KeyboardObject: KeyboardLayout = $state(visualKeyboardManager.layout)
 
-  // DEBUGGER
-  const _keyClicked = $state('')
-
   function calculateSectionColumns(section: KeyboardSection) {
     return (
       section.rows.reduce((maxWidth, row) => {

@@ -197,7 +197,7 @@ export class ActiveKeysStore {
 
   public handlePhysicalKeyUp(
     e: KeyboardEvent,
-    opts?: { inActiveView?: boolean }
+    _opts?: { inActiveView?: boolean }
   ) {
     // No-op for toggle mode, just trace
     logger.debug('[keys] store.handlePhysicalKeyUp (toggle/chord)', {

@@ -6,10 +6,8 @@
     flip,
     shift,
     offset,
-    arrow,
   } from '@skeletonlabs/floating-ui-svelte'
   import type { Placement } from '@floating-ui/dom'
-  import { tick } from 'svelte'
   import {
     tooltipDelayManager,
     type TooltipGroupId,
@@ -132,11 +130,6 @@
       clearTimeout(hideTimeout)
       hideTimeout = null
     }
-  }
-
-  // Cleanup on unmount
-  function cleanup() {
-    clearTimeouts()
   }
 
   // Handle mouse enter on trigger element

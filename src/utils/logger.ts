@@ -61,6 +61,7 @@ function timeEnd(label: string) {
   const shouldEmitImmediate =
     duration >= MIN_IMMEDIATE_TIMING_MS || agg.count <= 3
   if (shouldEmitImmediate && shouldLog('debug')) {
+    // eslint-disable-next-line no-console
     console.debug('[KB][timing]', label, `${duration.toFixed(2)}ms`)
   }
 }
@@ -87,6 +88,7 @@ function dumpTimings() {
       .sort((a, b) => b.avg - a.avg)
       .slice(0, 8)
       .map(s => s.line)
+    // eslint-disable-next-line no-console
     console.info(
       '[KB][timings] aggregated timings (top ' +
         String(sorted.length) +
@@ -94,21 +96,26 @@ function dumpTimings() {
         sorted.join('\n')
     )
   } else {
+    // eslint-disable-next-line no-console
     console.info('[KB][timings] no timings recorded')
   }
 }
 
 export const logger = {
   debug: (...args: unknown[]) => {
+    // eslint-disable-next-line no-console
     if (shouldLog('debug')) console.debug('[KB]', ...format(args))
   },
   info: (...args: unknown[]) => {
+    // eslint-disable-next-line no-console
     if (shouldLog('info')) console.info('[KB]', ...format(args))
   },
   warn: (...args: unknown[]) => {
+    // eslint-disable-next-line no-console
     if (shouldLog('warn')) console.warn('[KB]', ...format(args))
   },
   error: (...args: unknown[]) => {
+    // eslint-disable-next-line no-console
     if (shouldLog('error')) console.error('[KB]', ...format(args))
   },
   timeStart,

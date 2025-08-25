@@ -7,7 +7,7 @@
     offset,
   } from '@skeletonlabs/floating-ui-svelte'
   import clickOutside from '../utils/clickOutside.js'
-  import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
+  import type { commandEntry } from '../interfaces/Interfaces'
   import type KeyboardAnalyzerPlugin from '../main'
   import { VisualKeyboardManager } from '../managers'
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
@@ -670,7 +670,9 @@
     if (modF) {
       e.preventDefault()
       e.stopPropagation()
-      e.stopImmediatePropagation?.()
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation()
+      }
       listenerActive = !listenerActive
       return
     }
@@ -686,15 +688,12 @@
       String(search || '').trim() === ''
     ) {
       if (activeKey) {
-        ;(activeKeysStore as any)?.clearActiveKey?.()
+        activeKeysStore?.clearActiveKey()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
-        const mods = [
-          ...(((activeKeysStore as any)
-            ?.sortedModifiers as unknown as string[]) || []),
-        ]
+        const mods = [...(activeKeysStore?.sortedModifiers ?? [])]
         mods.pop()
-        ;(activeKeysStore as any).ActiveModifiers = mods
+        if (activeKeysStore) activeKeysStore.ActiveModifiers = mods
         activeModifiers = mods
       }
       refilter()
@@ -771,8 +770,12 @@
       keyScope = new Scope(plugin.app.scope)
       keyScope.register(['Mod'], 'F', (evt: KeyboardEvent) => {
         try {
-          evt?.preventDefault?.()
-          evt?.stopPropagation?.()
+          if (typeof evt?.preventDefault === 'function') {
+            evt.preventDefault()
+          }
+          if (typeof evt?.stopPropagation === 'function') {
+            evt.stopPropagation()
+          }
           // Focus-first rule: focus input first; toggle only when already focused
           if (document.activeElement !== inputEl) {
             inputEl?.focus()
@@ -935,7 +938,10 @@
               try {
                 settingsManager.updateSettings({ quickViewAutoRun: autoRun })
               } catch (err) {
-                logger.error('[qv] persist quickViewAutoRun failed', err)
+                logger.error(
+                  '[qv] persist quickViewAutoRun failed',
+                  err as Error
+                )
               }
             }}
           >

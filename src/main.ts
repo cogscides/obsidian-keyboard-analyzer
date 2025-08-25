@@ -82,7 +82,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     try {
       // Ensure persisted groups are hydrated with full filter shapes before use
       this.groupManager.normalizeAllGroups()
-    } catch {}
+    } catch {
+      // Defensive: suppress group normalization errors on startup
+    }
     this.hotkeyManager.initialize()
     this.commandsManager.initialize()
 
@@ -123,7 +125,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
 
   onunload() {
     // Try to flush any pending settings writes to avoid truncated JSON on shutdown
-    void this.settingsManager.flushAllSaves().catch(() => {})
+    void this.settingsManager.flushAllSaves().catch(() => {
+      // Defensive: suppress errors during shutdown cleanup
+    })
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
   }
 
@@ -148,7 +152,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       try {
         this.quickViewPrevActiveEl =
           document.activeElement as HTMLElement | null
-      } catch {}
+      } catch {
+        // Defensive: suppress DOM access errors in context menu handler
+      }
       if (this.quickViewComponent) this.closeQuickView()
       else this.openQuickView(false)
     })
@@ -161,7 +167,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     // Capture previously focused element before any action changes it
     try {
       this.quickViewPrevActiveEl = document.activeElement as HTMLElement | null
-    } catch {}
+    } catch {
+      // Defensive: suppress DOM access errors when capturing focus
+    }
 
     // Meta/Ctrl click → open full view (Alt+Meta splits)
     if (isMeta) {
@@ -249,7 +257,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         try {
           this.quickViewPrevActiveEl =
             document.activeElement as HTMLElement | null
-        } catch {}
+        } catch {
+          // Defensive: suppress DOM access errors during command callback
+        }
         const now = Date.now()
         const isDoubleRun = now - this.lastQuickViewInvoke <= 500
         this.lastQuickViewInvoke = now
@@ -281,7 +291,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         try {
           this.quickViewPrevActiveEl =
             document.activeElement as HTMLElement | null
-        } catch {}
+        } catch {
+          // Defensive: suppress DOM access errors when capturing previous focus
+        }
       }
       // Ensure we have an anchor; fallback to status bar container if not set
       const anchorCandidate =
@@ -335,7 +347,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
           if (triggers.length) {
             this.quickViewArm = { triggers, until: Date.now() + 900 }
           }
-        } catch {}
+        } catch {
+          // Defensive: suppress errors when parsing hotkey configuration
+        }
       }
 
       this.quickViewComponent = mount(QuickViewPopover, {
@@ -363,9 +377,12 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
             err instanceof Error
               ? `${err.message}\n${err.stack || ''}`
               : String(err)
+          // eslint-disable-next-line no-console
           console.error('[Keyboard Analyzer] Quick View mount failed:', msg)
         }
-      } catch {}
+      } catch {
+        // Defensive: suppress settings access errors during error logging
+      }
     }
   }
 
@@ -373,7 +390,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     if (this.quickViewComponent) {
       try {
         void unmount(this.quickViewComponent)
-      } catch {}
+      } catch {
+        // Defensive: suppress unmount errors during cleanup
+      }
       this.quickViewComponent = null
     }
     // Always reset listen flags when closing (Esc, outside click, command toggle, etc.)
@@ -391,13 +410,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
           el.focus?.({ preventScroll: true })
           restored = document.activeElement === el
         }
-      } catch {}
+      } catch {
+        // Defensive: suppress focus errors during restoration
+      }
       // Fallback to focusing active editor (more robust if CM view re-rendered)
       if (!restored) {
         try {
           const md = this.app.workspace.getActiveViewOfType(MarkdownView)
           md?.editor?.focus()
-        } catch {}
+        } catch {
+          // Defensive: suppress editor focus errors during fallback
+        }
       }
     }
     this.quickViewPrevActiveEl = null
@@ -416,6 +439,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       }
       comp.update?.({ listenToggle: this.quickViewListenNonce })
     } catch {
+      // Defensive: if update fails, restart the Quick View with listening enabled
       this.closeQuickView()
       this.openQuickView(true)
     }
@@ -477,7 +501,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         // Full id includes plugin manifest id prefix
         this.app.commands.removeCommand(fullId)
       } catch {
-        // ignore
+        // Defensive: suppress errors when removing non-existent commands
       }
     }
     this.registeredGroupCommandIds.clear()

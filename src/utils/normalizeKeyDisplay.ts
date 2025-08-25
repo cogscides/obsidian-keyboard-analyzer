@@ -49,7 +49,6 @@ function normalizeCodeOrKey(k: string): string {
 // Text-first, platform-aware key names
 export function getBakedKeyLabel(rawKey: string): string {
   const key = normalizeCodeOrKey(rawKey)
-  const _mac = isMac()
   const lower = key.toLowerCase()
 
   const map: Record<string, string> = {

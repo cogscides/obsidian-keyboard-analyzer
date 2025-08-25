@@ -1,7 +1,6 @@
 <!-- src/components/KeyboardComponent.svelte -->
 
 <script lang="ts">
-  import type { Modifier } from 'obsidian'
   import { onMount, setContext } from 'svelte'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
   import type KeyboardAnalyzerPlugin from '../main'
@@ -34,7 +33,7 @@
     view: ShortcutsView
   }
 
-  const { plugin, view: _view }: Props = $props()
+  const { plugin }: Props = $props()
 
   // Managers and stores
   const commandsManager: CommandsManager = plugin.commandsManager
