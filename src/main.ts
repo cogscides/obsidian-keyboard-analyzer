@@ -306,13 +306,17 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       if (armFromCommand) {
         try {
           const fullId = `${this.manifest.id}:open-quick-view`
-          type SimpleHotkey = { modifiers?: string[] | string; key?: string | null }
-          const defaults = (this.app.hotkeyManager.getDefaultHotkeys(
-            fullId
-          ) || []) as unknown as SimpleHotkey[]
-          const customMap = (this.app.hotkeyManager as unknown as {
-            customKeys?: Record<string, SimpleHotkey[]>
-          }).customKeys
+          type SimpleHotkey = {
+            modifiers?: string[] | string
+            key?: string | null
+          }
+          const defaults = (this.app.hotkeyManager.getDefaultHotkeys(fullId) ||
+            []) as unknown as SimpleHotkey[]
+          const customMap = (
+            this.app.hotkeyManager as unknown as {
+              customKeys?: Record<string, SimpleHotkey[]>
+            }
+          ).customKeys
           const customs: SimpleHotkey[] = (customMap && customMap[fullId]) || []
           const map = new Map<string, { modifiers: string[]; key: string }>()
           const toMods = (mods: unknown): string[] => {

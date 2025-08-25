@@ -3,7 +3,12 @@
 <script lang="ts">
   import { getContext, onMount, onDestroy } from 'svelte'
   import { X } from 'lucide-svelte'
-  import { useFloating, flip, shift, offset } from '@skeletonlabs/floating-ui-svelte'
+  import {
+    useFloating,
+    flip,
+    shift,
+    offset,
+  } from '@skeletonlabs/floating-ui-svelte'
   import type KeyboardAnalyzerPlugin from '../main'
 
   interface Props {

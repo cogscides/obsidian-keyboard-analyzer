@@ -151,7 +151,9 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
             this.plugin.settingsManager.getSetting('keyListenerScope') ||
             'activeView'
           // If switching to click while scope is global, coerce scope to activeView
-          const updates: Partial<PluginSettings> = { modifierActivationMode: mode }
+          const updates: Partial<PluginSettings> = {
+            modifierActivationMode: mode,
+          }
           if (mode === 'click' && scope === 'global') {
             updates.keyListenerScope = 'activeView'
           }

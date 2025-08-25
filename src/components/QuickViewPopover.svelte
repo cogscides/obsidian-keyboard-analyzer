@@ -66,7 +66,10 @@
               filename: ev.filename,
               lineno: ev.lineno,
               colno: ev.colno,
-              error: ev.error instanceof Error ? ev.error.message : String(ev.error ?? ''),
+              error:
+                ev.error instanceof Error
+                  ? ev.error.message
+                  : String(ev.error ?? ''),
             }
             logger.error('[qv] early window error', data)
           } catch {
@@ -625,9 +628,7 @@
     }
     // Reflect cleared key/modifiers immediately
     activeKey = activeKeysStore?.ActiveKey || ''
-    activeModifiers = unconvertModifiers(
-      activeKeysStore?.ActiveModifiers || []
-    )
+    activeModifiers = unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
     refilter()
   }
 
@@ -739,9 +740,9 @@
       },
     ]
   function setFilter(key: keyof CGroupFilterSettings, val: boolean) {
-    const patch: Partial<CGroupFilterSettings> = { [key]: val } as Partial<
-      CGroupFilterSettings
-    >
+    const patch: Partial<CGroupFilterSettings> = {
+      [key]: val,
+    } as Partial<CGroupFilterSettings>
     groupManager.updateGroupFilterSettings(selectedGroup, patch)
     refilter()
   }
@@ -986,9 +987,7 @@
                   try {
                     activeKeysStore?.handleKeyClick(unconvertModifier(m))
                     activeModifiers = sortModifiers(
-                      unconvertModifiers(
-                        activeKeysStore?.ActiveModifiers || []
-                      )
+                      unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
                     )
                     activeKey = activeKeysStore?.ActiveKey || ''
                   } catch {}

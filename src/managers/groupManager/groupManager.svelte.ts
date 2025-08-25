@@ -416,7 +416,10 @@ export default class GroupManager {
           }
 
           // Skip write if defaults already identical
-          if (prevDefaults && this.isEqualFilters(prevDefaults.filters, nextDefaults.filters)) {
+          if (
+            prevDefaults &&
+            this.isEqualFilters(prevDefaults.filters, nextDefaults.filters)
+          ) {
             logger.debug('[groups] setGroupDefaults noop (no change)', {
               groupId,
             })
@@ -535,7 +538,8 @@ export default class GroupManager {
     try {
       if (groupId === String(GroupType.All)) {
         // For "All" group, save current global defaults
-        const currentFilters = this.settingsManager.settings.defaultFilterSettings
+        const currentFilters =
+          this.settingsManager.settings.defaultFilterSettings
         this.settingsManager.updateSettings({
           allGroupDefaultFilters: { ...currentFilters } as CGroupFilterSettings,
         })
@@ -688,7 +692,7 @@ export default class GroupManager {
   /** Get group's onOpen behavior; allow 'all' as a special pseudo-group. */
   getGroupBehavior(groupId: string): 'default' | 'dynamic' {
     if (groupId === String(GroupType.All)) {
-      return (this.settingsManager.settings.allGroupOnOpen || 'default')
+      return this.settingsManager.settings.allGroupOnOpen || 'default'
     }
     const g = this.getGroup(groupId)
     return g?.behavior?.onOpen === 'dynamic' ? 'dynamic' : 'default'

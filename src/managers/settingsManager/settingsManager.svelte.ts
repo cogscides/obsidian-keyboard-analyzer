@@ -160,10 +160,10 @@ export default class SettingsManager {
     if (this.saveTimer) {
       clearTimeout(this.saveTimer)
     }
-      this.saveTimer = setTimeout(() => {
-        this.saveTimer = null
-        void this.flushSaveQueue()
-      }, delay)
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null
+      void this.flushSaveQueue()
+    }, delay)
   }
 
   private async flushSaveQueue() {

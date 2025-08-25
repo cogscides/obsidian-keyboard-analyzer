@@ -550,24 +550,20 @@
         <div class="setting-item mod-toggle">
           <div
             class="checkbox-container"
-            class:is-enabled={filterSettings[
-              setting as keyof FilterSettings
-            ]}
+            class:is-enabled={filterSettings[setting as keyof FilterSettings]}
             role="button"
             tabindex="0"
             onclick={() =>
               setFilterSetting(
                 setting as keyof CGroupFilterSettings,
-                !(
-                  filterSettings[setting as keyof FilterSettings]
-                )
+                !filterSettings[setting as keyof FilterSettings]
               )}
             onkeydown={(e: KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 setFilterSetting(
                   setting as keyof CGroupFilterSettings,
-                  !(filterSettings[setting as keyof FilterSettings])
+                  !filterSettings[setting as keyof FilterSettings]
                 )
               }
             }}
