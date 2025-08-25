@@ -1,6 +1,7 @@
 import { PluginSettingTab, Setting } from 'obsidian'
 import type KeyboardAnalyzerPlugin from './main'
 import { setDevLoggingEnabled, setEmulatedOS } from './utils/runtimeConfig'
+import type { PluginSettings } from './managers/settingsManager/settingsManager.d'
 
 export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
   plugin: KeyboardAnalyzerPlugin
@@ -74,14 +75,10 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
         dropdown.addOption('macos', 'macOS')
         dropdown.addOption('linux', 'Linux')
         dropdown.setValue(
-          (this.plugin.settingsManager.getSetting('emulatedOS') || 'none') as
-            | 'none'
-            | 'windows'
-            | 'macos'
-            | 'linux'
+          this.plugin.settingsManager.getSetting('emulatedOS') || 'none'
         )
         dropdown.onChange(value => {
-          const os = value as 'none' | 'windows' | 'macos' | 'linux'
+          const os = (value as 'none' | 'windows' | 'macos' | 'linux') || 'none'
           this.plugin.settingsManager.updateSettings({ emulatedOS: os })
           setEmulatedOS(os)
         })
@@ -113,15 +110,15 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
       .addDropdown(dropdown => {
         dropdown.addOption('activeView', 'Active view only')
         dropdown.addOption('global', 'Global')
-        const currentScope = (this.plugin.settingsManager.getSetting(
-          'keyListenerScope'
-        ) || 'activeView') as 'activeView' | 'global'
+        const currentScope =
+          this.plugin.settingsManager.getSetting('keyListenerScope') ||
+          'activeView'
         dropdown.setValue(currentScope)
         dropdown.onChange(value => {
           const scope = (value as 'activeView' | 'global') || 'activeView'
-          const mode = (this.plugin.settingsManager.getSetting(
-            'modifierActivationMode'
-          ) || 'click') as 'click' | 'press'
+          const mode =
+            this.plugin.settingsManager.getSetting('modifierActivationMode') ||
+            'click'
           if (scope === 'global' && mode !== 'press') {
             // Coerce to activeView to avoid confusing UX
             this.plugin.settingsManager.updateSettings({
@@ -145,16 +142,16 @@ export default class KeyboardAnalyzerSettingTab extends PluginSettingTab {
         dropdown.addOption('click', 'On click')
         dropdown.addOption('press', 'On hold')
         dropdown.setValue(
-          (this.plugin.settingsManager.getSetting('modifierActivationMode') ||
-            'click') as 'click' | 'press'
+          this.plugin.settingsManager.getSetting('modifierActivationMode') ||
+            'click'
         )
         dropdown.onChange(value => {
           const mode = (value as 'click' | 'press') || 'click'
-          const scope = (this.plugin.settingsManager.getSetting(
-            'keyListenerScope'
-          ) || 'activeView') as 'activeView' | 'global'
+          const scope =
+            this.plugin.settingsManager.getSetting('keyListenerScope') ||
+            'activeView'
           // If switching to click while scope is global, coerce scope to activeView
-          const updates: any = { modifierActivationMode: mode }
+          const updates: Partial<PluginSettings> = { modifierActivationMode: mode }
           if (mode === 'click' && scope === 'global') {
             updates.keyListenerScope = 'activeView'
           }

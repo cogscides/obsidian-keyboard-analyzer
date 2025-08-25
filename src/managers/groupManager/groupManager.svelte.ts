@@ -52,7 +52,7 @@ export default class GroupManager {
 
   createGroup(groupName: string): string {
     const id = this.slugifyUnique(groupName)
-    const baseFilters = {
+    const baseFilters: CGroupFilterSettings = {
       ...this.settingsManager.settings.defaultFilterSettings,
     }
     const newGroup: CGroup = {
@@ -63,8 +63,8 @@ export default class GroupManager {
       filterSettings: baseFilters,
       // Initialize defaults to current base settings so new groups have a baseline
       defaults: {
-        filters: { ...baseFilters } as CGroupFilterSettings,
-      } as GroupViewState,
+        filters: { ...baseFilters },
+      },
     }
     this.settingsManager.updateSettings({
       commandGroups: [...this.groups, newGroup],
@@ -225,12 +225,7 @@ export default class GroupManager {
         }
 
         // Skip write if nothing actually changed to avoid rerender loops
-        if (
-          this.isEqualFilters(
-            prev.filterSettings as CGroupFilterSettings,
-            nextFilters
-          )
-        ) {
+        if (this.isEqualFilters(prev.filterSettings, nextFilters)) {
           logger.debug('[groups] updateGroupFilterSettings noop (no change)', {
             groupId,
           })
@@ -246,7 +241,7 @@ export default class GroupManager {
                 lastUsedState: {
                   ...(prev.lastUsedState || {}),
                   filters: { ...nextFilters },
-                } as GroupViewState,
+                },
               }
             : {}),
         }
@@ -368,18 +363,13 @@ export default class GroupManager {
       const base = this.settingsManager.settings.defaultFilterSettings
       const updatedGroups = this.groups.map(group => {
         if (group.id === groupId) {
-          const merged = {
+          const merged: CGroupFilterSettings = {
             ...base,
-            ...(filters || ({} as CGroupFilterSettings)),
+            ...filters,
           }
 
           // Skip write if no actual change
-          if (
-            this.isEqualFilters(
-              group.filterSettings as CGroupFilterSettings,
-              merged
-            )
-          ) {
+          if (this.isEqualFilters(group.filterSettings, merged)) {
             return group
           }
 
@@ -391,7 +381,7 @@ export default class GroupManager {
                   lastUsedState: {
                     ...(group.lastUsedState || {}),
                     filters: { ...merged },
-                  } as GroupViewState,
+                  },
                 }
               : {}),
           }
@@ -413,28 +403,20 @@ export default class GroupManager {
       const base = this.settingsManager.settings.defaultFilterSettings
       const updatedGroups = this.groups.map(group => {
         if (group.id === groupId) {
-          const prev = group as unknown as { defaults?: GroupViewState }
-          const prevDefaults = prev.defaults
+          const prevDefaults = group.defaults
           const nextDefaults: GroupViewState = {
             ...(prevDefaults || { filters: { ...group.filterSettings } }),
-            ...(state as GroupViewState),
+            ...(state || {}),
             // Always include filters object if missing
             filters: {
               ...base,
-              ...(prevDefaults?.filters ||
-                (group.filterSettings as CGroupFilterSettings)),
+              ...(prevDefaults?.filters || group.filterSettings),
               ...(state.filters || {}),
-            } as CGroupFilterSettings,
+            },
           }
 
           // Skip write if defaults already identical
-          if (
-            prevDefaults &&
-            this.isEqualFilters(
-              prevDefaults.filters as CGroupFilterSettings,
-              nextDefaults.filters as CGroupFilterSettings
-            )
-          ) {
+          if (prevDefaults && this.isEqualFilters(prevDefaults.filters, nextDefaults.filters)) {
             logger.debug('[groups] setGroupDefaults noop (no change)', {
               groupId,
             })
@@ -464,7 +446,7 @@ export default class GroupManager {
         const base = this.settingsManager.settings.defaultFilterSettings
         this.replaceGroupFilters(groupId, {
           ...base,
-          ...(defaults.filters as CGroupFilterSettings),
+          ...defaults.filters,
         })
       } else {
         logger.debug('[groups] no defaults to apply', { groupId })
@@ -487,7 +469,7 @@ export default class GroupManager {
         const base = this.settingsManager.settings.defaultFilterSettings
         this.replaceGroupFilters(groupId, {
           ...base,
-          ...(last.filters as CGroupFilterSettings),
+          ...last.filters,
         })
       } else {
         logger.debug('[groups] no lastUsedState to apply', { groupId })
@@ -516,7 +498,7 @@ export default class GroupManager {
   /** Check if current filter settings differ from group's defaults. */
   public hasUnsavedFilterChanges(groupId: string): boolean {
     try {
-      if (groupId === GroupType.All) {
+      if (groupId === String(GroupType.All)) {
         // For "All" group, compare current global defaults with saved defaults
         const currentFilters =
           this.settingsManager.settings.defaultFilterSettings
@@ -527,10 +509,7 @@ export default class GroupManager {
         // (first time setup - current settings are the implicit defaults)
         if (!savedDefaults) return false
 
-        return !this.isEqualFilters(
-          currentFilters as CGroupFilterSettings,
-          savedDefaults
-        )
+        return !this.isEqualFilters(currentFilters, savedDefaults)
       }
 
       const group = this.getGroup(groupId)
@@ -554,10 +533,9 @@ export default class GroupManager {
   /** Save current filter settings as group's defaults. */
   public saveCurrentFiltersAsDefaults(groupId: string): void {
     try {
-      if (groupId === GroupType.All) {
+      if (groupId === String(GroupType.All)) {
         // For "All" group, save current global defaults
-        const currentFilters =
-          this.settingsManager.settings.defaultFilterSettings
+        const currentFilters = this.settingsManager.settings.defaultFilterSettings
         this.settingsManager.updateSettings({
           allGroupDefaultFilters: { ...currentFilters } as CGroupFilterSettings,
         })
@@ -592,7 +570,7 @@ export default class GroupManager {
   /** Reset current filter settings to group's defaults. */
   public resetFiltersToDefaults(groupId: string): void {
     try {
-      if (groupId === GroupType.All) {
+      if (groupId === String(GroupType.All)) {
         // For "All" group, restore saved defaults to global settings
         const savedDefaults =
           this.settingsManager.settings.allGroupDefaultFilters
@@ -657,31 +635,31 @@ export default class GroupManager {
     const nextGroups = this.groups.map(g => {
       const normalizedFilters: CGroupFilterSettings = {
         ...base,
-        ...(g.filterSettings || ({} as CGroupFilterSettings)),
+        ...(g.filterSettings || {}),
       }
 
       // Normalize optional defaults snapshot if present
       const prevDefaults = g.defaults
       const normalizedDefaults = prevDefaults
-        ? ({
+        ? {
             ...prevDefaults,
             filters: {
               ...base,
               ...(prevDefaults.filters || normalizedFilters),
-            } as CGroupFilterSettings,
-          } as GroupViewState)
+            },
+          }
         : undefined
 
       // Normalize optional last-used snapshot if present
       const prevLast = g.lastUsedState
       const normalizedLastUsed = prevLast
-        ? ({
+        ? {
             ...prevLast,
             filters: {
               ...base,
               ...(prevLast.filters || normalizedFilters),
-            } as CGroupFilterSettings,
-          } as GroupViewState)
+            },
+          }
         : undefined
 
       const groupOut: CGroup = {
@@ -709,10 +687,8 @@ export default class GroupManager {
 
   /** Get group's onOpen behavior; allow 'all' as a special pseudo-group. */
   getGroupBehavior(groupId: string): 'default' | 'dynamic' {
-    if (groupId === GroupType.All) {
-      return (this.settingsManager.settings.allGroupOnOpen || 'default') as
-        | 'default'
-        | 'dynamic'
+    if (groupId === String(GroupType.All)) {
+      return (this.settingsManager.settings.allGroupOnOpen || 'default')
     }
     const g = this.getGroup(groupId)
     return g?.behavior?.onOpen === 'dynamic' ? 'dynamic' : 'default'
@@ -720,7 +696,7 @@ export default class GroupManager {
 
   /** Set group's onOpen behavior; allow 'all' to store in settings. */
   setGroupBehavior(groupId: string, mode: 'default' | 'dynamic'): void {
-    if (groupId === GroupType.All) {
+    if (groupId === String(GroupType.All)) {
       this.settingsManager.updateSettings({ allGroupOnOpen: mode })
       return
     }
@@ -739,9 +715,8 @@ export default class GroupManager {
     try {
       const base = this.settingsManager.settings.defaultFilterSettings
       const filters: CGroupFilterSettings = {
-        ...(base as CGroupFilterSettings),
-        ...((state?.filters as CGroupFilterSettings) ||
-          ({} as CGroupFilterSettings)),
+        ...base,
+        ...(state?.filters || {}),
       }
       // Store in simple filters key to avoid nested state issues; defer write to next tick to avoid flush conflicts
       setTimeout(() => {
@@ -757,15 +732,9 @@ export default class GroupManager {
   /** Apply saved All Commands defaults into global defaultFilterSettings. */
   applyDefaultsToAllFilters(): void {
     try {
-      const filters =
-        (this.settingsManager.settings.allGroupDefaultFilters as
-          | CGroupFilterSettings
-          | undefined) ||
-        ((
-          this.settingsManager.settings.allGroupDefaults as
-            | GroupViewState
-            | undefined
-        )?.filters as CGroupFilterSettings | undefined)
+      const filters: CGroupFilterSettings | undefined =
+        this.settingsManager.settings.allGroupDefaultFilters ||
+        this.settingsManager.settings.allGroupDefaults?.filters
       if (filters) {
         const base = this.settingsManager.settings.defaultFilterSettings
         const nextFilters: CGroupFilterSettings = {
@@ -773,7 +742,7 @@ export default class GroupManager {
           ...filters,
         }
         // Skip write if no actual change to avoid effect loops
-        if (this.isEqualFilters(base as CGroupFilterSettings, nextFilters)) {
+        if (this.isEqualFilters(base, nextFilters)) {
           return
         }
         this.settingsManager.updateSettings({

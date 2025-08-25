@@ -84,6 +84,11 @@ export default tseslint.config(
       '**/*.d.ts',
       '*.config.{js,ts,mjs,cjs,mts,cts}',
       '**/.svelte-kit/**',
+      // Dataview JS example script (not part of plugin build)
+      '**/dw_example.js',
+      // Utility JS (not part of TS project service)
+      'src/utils/clickOutside.js',
+      'src/utils/longpress.js',
     ],
   }
 )

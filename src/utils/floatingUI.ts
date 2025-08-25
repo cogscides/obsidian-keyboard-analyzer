@@ -3,13 +3,7 @@
  * Common middleware setups and helper functions for consistent floating UI behavior
  */
 
-import {
-  offset,
-  flip,
-  shift,
-  arrow,
-  autoUpdate,
-} from '@skeletonlabs/floating-ui-svelte'
+import { offset, flip, shift, arrow } from '@skeletonlabs/floating-ui-svelte'
 import type { Middleware, Placement } from '@floating-ui/dom'
 
 /**
@@ -99,7 +93,7 @@ export const placements = {
  * Calculate arrow position from middleware data
  */
 export function calculateArrowPosition(
-  middlewareData: any,
+  middlewareData: { arrow?: { x?: number | null; y?: number | null } },
   placement: string
 ): Record<string, string> {
   if (!middlewareData.arrow) return {}
@@ -136,7 +130,7 @@ export const zIndex = {
 /**
  * Debounce function for hover interactions
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

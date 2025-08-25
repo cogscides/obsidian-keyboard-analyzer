@@ -45,7 +45,8 @@ export const displayModifierMap: Record<ModifierKey, string> = {
 // }
 
 export function convertModifier(modifier: string): Modifier {
-  return (modifierMap[modifier as ModifierKey] || modifier) as Modifier
+  const mapped = modifierMap[modifier as ModifierKey]
+  return mapped ?? (modifier as unknown as Modifier)
 }
 
 export function getDisplayModifier(modifier: string): string {

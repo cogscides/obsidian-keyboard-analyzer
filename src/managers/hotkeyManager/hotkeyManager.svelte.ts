@@ -35,10 +35,9 @@ export default class HotkeyManager {
     return HotkeyManager.instance
   }
 
-  public async initialize() {
+  public initialize(): void {
     // No local cache to populate. Consumers should query CommandsManager.getCommandsIndex().
-    // Keep initialize async in case future hotkey-related init is needed.
-    return
+    // Kept simple for now; ready to evolve if future init is needed.
   }
 
   /**

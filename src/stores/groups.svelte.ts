@@ -72,7 +72,7 @@ export function createGroupsStore(groupManager: GroupManager): GroupsStore {
   return {
     get groups() {
       // expose reactive getter
-      groupManager.groups
+      void groupManager.groups
       return groupManager.getGroups()
     },
 

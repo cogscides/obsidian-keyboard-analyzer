@@ -81,13 +81,13 @@ export class ActiveKeysStore {
     // First, try OS-aware modifier mapping by code
     const obsidianModifier =
       this.visualKeyboardManager.mapCodeToObsidianModifier(keyIdentifier)
-    if (obsidianModifier) {
-      this.toggleModifier(obsidianModifier as unknown as ModifierKey)
+    if (obsidianModifier && this.isModifier(obsidianModifier)) {
+      this.toggleModifier(obsidianModifier)
       return
     }
     const normalizedKey = this.normalizeKeyIdentifier(keyIdentifier)
     if (this.isModifier(normalizedKey)) {
-      this.toggleModifier(normalizedKey as ModifierKey)
+      this.toggleModifier(normalizedKey)
     } else {
       this.activeKey = this.activeKey === normalizedKey ? '' : normalizedKey
     }
@@ -102,7 +102,7 @@ export class ActiveKeysStore {
         // Remove the last modifier based on sorted order for consistent UX
         const sorted = sortModifiers(this.activeModifiers)
         sorted.pop()
-        this.activeModifiers = sorted as unknown as Modifier[]
+        this.activeModifiers = sorted as Modifier[]
       }
       logger.debug('[keys] backspace applied', this.state)
       return
@@ -173,7 +173,7 @@ export class ActiveKeysStore {
     }
     const normalizedKey = this.normalizeKeyIdentifier(e.code || e.key)
     if (this.isModifier(normalizedKey)) {
-      const m = convertModifier(normalizedKey as ModifierKey)
+      const m = convertModifier(normalizedKey)
       const has = this.activeModifiers.includes(m)
       this.activeModifiers = has
         ? this.activeModifiers.filter(x => x !== m)

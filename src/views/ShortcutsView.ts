@@ -25,21 +25,21 @@ export default class ShortcutsView extends ItemView {
     )
   }
 
-  async onload(): Promise<void> {
+  onload(): void {
     super.onload()
   }
 
-  async onOpen() {
-    await this.refresh()
+  onOpen(): void {
+    this.refresh()
   }
 
-  async refresh() {
+  refresh(): void {
     // First, re-initialize the managers to get the latest data
-    await this.plugin.hotkeyManager.initialize()
+    this.plugin.hotkeyManager.initialize()
     this.plugin.commandsManager.initialize()
 
     // Then, redraw the view
-    await this.draw()
+    this.draw()
   }
   // async focus(): Promise<void> {
   //   await this.app.workspace.getLeafById(this.id)
@@ -58,7 +58,7 @@ export default class ShortcutsView extends ItemView {
     return 'keyboard'
   }
 
-  async draw(): Promise<void> {
+  draw(): void {
     const { contentEl } = this
 
     contentEl.empty()
@@ -78,7 +78,7 @@ export default class ShortcutsView extends ItemView {
 
   onClose(): Promise<void> {
     if (this.component) {
-      unmount(this.component)
+      void unmount(this.component)
       this.component = null
     }
     return Promise.resolve()

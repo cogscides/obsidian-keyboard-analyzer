@@ -261,15 +261,15 @@ export default class CommandsManager {
    * @returns commandEntry[]
    */
   public getGroupCommands(groupID: string): commandEntry[] {
-    if (groupID === GroupType.All) {
+    if (groupID === String(GroupType.All)) {
       return Object.values(this.commands)
     }
-    if (groupID === GroupType.Featured) {
+    if (groupID === String(GroupType.Featured)) {
       return Array.from(this.featuredCommandIds)
         .map(id => this.commands[id])
         .filter(Boolean)
     }
-    if (groupID === GroupType.Recent) {
+    if (groupID === String(GroupType.Recent)) {
       return this.recentCommandIds.map(id => this.commands[id]).filter(Boolean)
     }
 
@@ -530,7 +530,7 @@ export default class CommandsManager {
    * @returns commandEntry[]
    */
   public getCommandsForGroup(selectedGroupID?: string): commandEntry[] {
-    if (!selectedGroupID || selectedGroupID === GroupType.All) {
+    if (!selectedGroupID || selectedGroupID === String(GroupType.All)) {
       return Object.values(this.commands)
     }
 
@@ -559,10 +559,10 @@ export default class CommandsManager {
     selectedGroupID?: string
   ): boolean {
     if (!selectedGroupID) return true
-    if (selectedGroupID === GroupType.Featured) {
+    if (selectedGroupID === String(GroupType.Featured)) {
       return this.featuredCommandIds.has(command.id)
     }
-    if (selectedGroupID === GroupType.Recent) {
+    if (selectedGroupID === String(GroupType.Recent)) {
       return this.recentCommandIds.includes(command.id)
     }
 

@@ -87,8 +87,9 @@ export default class SettingsManager {
 
   async loadSettings(): Promise<void> {
     try {
-      const loadedData = await this.plugin.loadData()
-      if (loadedData && typeof loadedData === 'object') {
+      const raw = (await this.plugin.loadData()) as unknown
+      if (raw && typeof raw === 'object') {
+        const loadedData = raw as Partial<PluginSettings>
         this.settings = { ...DEFAULT_PLUGIN_SETTINGS, ...loadedData }
       } else {
         // If file is empty or invalid, reset to defaults and persist to repair data.json
@@ -111,33 +112,22 @@ export default class SettingsManager {
       // Apply runtime flags from settings
       setDevLoggingEnabled(!!this.settings.devLoggingEnabled)
       setKeyboardDevTooltipsEnabled(!!this.settings.keyboardDevTooltipsEnabled)
-      setEmulatedOS(
-        (this.settings.emulatedOS || 'none') as
-          | 'none'
-          | 'windows'
-          | 'macos'
-          | 'linux'
-      )
+      setEmulatedOS(this.settings.emulatedOS || 'none')
       setLogLevel('debug')
       // Apply keyboard behavior flags
-      setKeyListenerScope(
-        (this.settings.keyListenerScope || 'activeView') as
-          | 'activeView'
-          | 'global'
-      )
+      setKeyListenerScope(this.settings.keyListenerScope || 'activeView')
       // Migrate legacy setting if present
       if (
-        (this.settings as any).chordPreviewMode !== undefined &&
+        'chordPreviewMode' in (this.settings as object) &&
         this.settings.modifierActivationMode === undefined
       ) {
-        this.settings.modifierActivationMode = (this.settings as any)
+        const legacy = (this.settings as { chordPreviewMode?: unknown })
           .chordPreviewMode
-          ? 'press'
-          : 'click'
+        if (typeof legacy === 'boolean') {
+          this.settings.modifierActivationMode = legacy ? 'press' : 'click'
+        }
       }
-      setModifierActivationMode(
-        (this.settings.modifierActivationMode || 'click') as 'click' | 'press'
-      )
+      setModifierActivationMode(this.settings.modifierActivationMode || 'click')
       setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200))
     } catch (error) {
       logger.error('Failed to Plugin load settings:', error)
@@ -170,10 +160,10 @@ export default class SettingsManager {
     if (this.saveTimer) {
       clearTimeout(this.saveTimer)
     }
-    this.saveTimer = setTimeout(() => {
-      this.saveTimer = null
-      this.flushSaveQueue()
-    }, delay)
+      this.saveTimer = setTimeout(() => {
+        this.saveTimer = null
+        void this.flushSaveQueue()
+      }, delay)
   }
 
   private async flushSaveQueue() {
@@ -255,27 +245,15 @@ export default class SettingsManager {
       )
     }
     if ('emulatedOS' in newSettings) {
-      setEmulatedOS(
-        (this.settings.emulatedOS || 'none') as
-          | 'none'
-          | 'windows'
-          | 'macos'
-          | 'linux'
-      )
+      setEmulatedOS(this.settings.emulatedOS || 'none')
       logger.info('Emulated OS set to', this.settings.emulatedOS || 'none')
     }
     // Live-apply keyboard behavior flags
     if ('keyListenerScope' in newSettings) {
-      setKeyListenerScope(
-        (this.settings.keyListenerScope || 'activeView') as
-          | 'activeView'
-          | 'global'
-      )
+      setKeyListenerScope(this.settings.keyListenerScope || 'activeView')
     }
     if ('modifierActivationMode' in newSettings) {
-      setModifierActivationMode(
-        (this.settings.modifierActivationMode || 'click') as 'click' | 'press'
-      )
+      setModifierActivationMode(this.settings.modifierActivationMode || 'click')
     }
     if ('searchDebounceMs' in newSettings) {
       setSearchDebounceMs(Number(this.settings.searchDebounceMs ?? 200))

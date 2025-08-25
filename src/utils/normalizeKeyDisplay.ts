@@ -1,4 +1,4 @@
-import { type Modifier, Platform } from 'obsidian'
+import { Platform } from 'obsidian'
 import { platformizeModifiers, sortModifiers } from './modifierUtils'
 import { getEmulatedOS } from './runtimeConfig'
 
@@ -10,7 +10,7 @@ function isMac(): boolean {
 }
 
 // Platform-aware, human-friendly modifier labels (text, not glyphs)
-export function getBakedModifierLabel(mod: string | Modifier): string {
+export function getBakedModifierLabel(mod: string): string {
   const m = String(mod)
   const mac = isMac()
   if (mac) {

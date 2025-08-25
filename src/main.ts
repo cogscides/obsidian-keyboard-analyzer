@@ -83,7 +83,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       // Ensure persisted groups are hydrated with full filter shapes before use
       this.groupManager.normalizeAllGroups()
     } catch {}
-    await this.hotkeyManager.initialize()
+    this.hotkeyManager.initialize()
     this.commandsManager.initialize()
 
     // Initialize runtime config from settings
