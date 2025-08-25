@@ -4,7 +4,7 @@
 
 - Source: `src/` (Svelte + TypeScript). Notable folders: `components/`, `managers/`, `views/`, `utils/`, `stores/`, `interfaces/`.
 - Build output: configured in `vite.config.mts` to `../obsidian-keyboard-analyzer-dev/`.
-- Config: `tsconfig.json`, `uno.config.ts`, `biome.json`.
+- Config: `tsconfig.json`, `uno.config.ts`, `.prettierrc`, `eslint.config.js`.
 - Assets: `public/`, styles in `src/styles.css` and UnoCSS utilities.
 - Local vault for manual testing: `test-vault/`.
 
@@ -26,7 +26,11 @@
 - Obsidian API typings: import from the official `obsidian` package; internal members are declared via `src/types/obsidian-augmentations.d.ts`.
 - Components: PascalCase (e.g., `KeyboardLayoutComponent.svelte`). Utilities/managers: camelCase filenames (e.g., `hotkeyManager`).
 - Indentation: 2 spaces; prefer explicit types and `const` where possible.
-- Formatting/Linting: Biome config present (`biome.json`). Example: `npx @biomejs/biome check .` and `npx @biomejs/biome format .`.
+- Formatting/Linting: Use ESLint + Prettier.
+  - Lint: `npm run lint` (ESLint check + Prettier check)
+  - Autofix: `npm run lint:fix` (ESLint --fix + Prettier write)
+  - Format only: `npm run format`
+  - Format check only: `npm run format:check`
 
 ## Commit & Pull Request Guidelines
 
