@@ -69,10 +69,10 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     return leaf?.view instanceof ShortcutsView ? leaf.view : null
   }
 
-  async focusView(_type: string) {
+  focusView(_type: string) {
     const leafView = this.full
     if (leafView) {
-      this.app.workspace.revealLeaf(leafView.leaf)
+      void this.app.workspace.revealLeaf(leafView.leaf)
     }
   }
   // openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
@@ -92,13 +92,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       !!this.settingsManager.getSetting('keyboardDevTooltipsEnabled')
     )
     setLogLevel('debug')
-    setEmulatedOS(
-      (this.settingsManager.getSetting('emulatedOS') || 'none') as
-        | 'none'
-        | 'windows'
-        | 'macos'
-        | 'linux'
-    )
+    setEmulatedOS(this.settingsManager.getSetting('emulatedOS') || 'none')
 
     this.registerPluginHotkeys()
     this.registerGroupOpenCommand()
@@ -121,17 +115,15 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         .forEach(leaf => {
           if (leaf.view instanceof ShortcutsView) {
             leaf.view.plugin = this // Update the plugin instance
-            leaf.view.onOpen() // Re-run onOpen to refresh the view
+            void leaf.view.onOpen() // Re-run onOpen to refresh the view
           }
         })
     })
   }
 
-  async onunload() {
+  onunload() {
     // Try to flush any pending settings writes to avoid truncated JSON on shutdown
-    try {
-      await this.settingsManager.flushAllSaves()
-    } catch {}
+    void this.settingsManager.flushAllSaves().catch(() => {})
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_SHORTCUTS_ANALYZER)
   }
 
@@ -162,7 +154,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     })
   }
 
-  async onStatusBarClick(evt: MouseEvent) {
+  onStatusBarClick(evt: MouseEvent) {
     const isMeta = evt.ctrlKey === true || evt.metaKey === true
     const useSplit = evt.altKey === true
 
@@ -175,7 +167,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     if (isMeta) {
       let leafBehavior: boolean | 'split' = false
       leafBehavior = useSplit ? 'split' : true
-      this.addShortcutsView(leafBehavior)
+      void this.addShortcutsView(leafBehavior)
       return
     }
 
@@ -197,7 +189,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     )
 
     if (existingLeaves.length > 0 && !leafBehavior) {
-      this.app.workspace.revealLeaf(existingLeaves[0])
+      void this.app.workspace.revealLeaf(existingLeaves[0])
       return
     }
 
@@ -220,7 +212,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         if (checkResult) {
           // Only perform work when checking is false
           if (!checking) {
-            this.addShortcutsView()
+            void this.addShortcutsView()
             // openView(this.app, VIEW_TYPE_SHORTCUTS_ANALYZER, ShortcutsView)
           }
           return true
@@ -292,12 +284,14 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         } catch {}
       }
       // Ensure we have an anchor; fallback to status bar container if not set
-      const anchor =
+      const anchorCandidate =
         this.quickViewAnchorEl ||
-        (document.querySelector(
+        document.querySelector(
           '.status-bar-item.plugin-keyboard-analyzer span.icon'
-        ) as HTMLElement | null)
-      this.quickViewAnchorEl = anchor || this.quickViewAnchorEl
+        )
+      if (anchorCandidate instanceof HTMLElement) {
+        this.quickViewAnchorEl = anchorCandidate
+      }
 
       if (listenOnOpen) {
         this.quickViewListenNonce++
@@ -312,10 +306,14 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       if (armFromCommand) {
         try {
           const fullId = `${this.manifest.id}:open-quick-view`
-          const defaults =
-            this.app.hotkeyManager.getDefaultHotkeys(fullId) || []
-          const customs =
-            (this.app.hotkeyManager.customKeys as any)[fullId] || []
+          type SimpleHotkey = { modifiers?: string[] | string; key?: string | null }
+          const defaults = (this.app.hotkeyManager.getDefaultHotkeys(
+            fullId
+          ) || []) as unknown as SimpleHotkey[]
+          const customMap = (this.app.hotkeyManager as unknown as {
+            customKeys?: Record<string, SimpleHotkey[]>
+          }).customKeys
+          const customs: SimpleHotkey[] = (customMap && customMap[fullId]) || []
           const map = new Map<string, { modifiers: string[]; key: string }>()
           const toMods = (mods: unknown): string[] => {
             if (Array.isArray(mods)) return mods as string[]
@@ -327,10 +325,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
             const sorted = [...m].sort().join(',')
             map.set(`${sorted}|${key}`, { modifiers: m, key })
           }
-          for (const hk of defaults)
-            add((hk as any).modifiers, (hk as any).key || '')
-          for (const hk of customs)
-            add((hk as any).modifiers, (hk as any).key || '')
+          for (const hk of defaults) add(hk.modifiers, hk.key ?? '')
+          for (const hk of customs) add(hk.modifiers, hk.key ?? '')
           const triggers = Array.from(map.values())
           if (triggers.length) {
             this.quickViewArm = { triggers, until: Date.now() + 900 }
@@ -372,7 +368,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
   private closeQuickView(opts?: { restoreFocus?: boolean; reason?: string }) {
     if (this.quickViewComponent) {
       try {
-        unmount(this.quickViewComponent)
+        void unmount(this.quickViewComponent)
       } catch {}
       this.quickViewComponent = null
     }
@@ -387,8 +383,8 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       let restored = false
       try {
         const el = this.quickViewPrevActiveEl
-        if (el && (el as any).isConnected) {
-          ;(el as HTMLElement).focus?.({ preventScroll: true } as any)
+        if (el && el.isConnected) {
+          el.focus?.({ preventScroll: true })
           restored = document.activeElement === el
         }
       } catch {}
@@ -396,7 +392,7 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       if (!restored) {
         try {
           const md = this.app.workspace.getActiveViewOfType(MarkdownView)
-          ;(md as any)?.editor?.focus?.()
+          md?.editor?.focus()
         } catch {}
       }
     }
@@ -411,26 +407,32 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
     this.quickViewListeningActive = true
     this.quickViewListenNonce++
     try {
-      this.quickViewComponent?.update?.({
-        listenToggle: this.quickViewListenNonce,
-      })
+      const comp = this.quickViewComponent as unknown as {
+        update?: (props: Record<string, unknown>) => void
+      }
+      comp.update?.({ listenToggle: this.quickViewListenNonce })
     } catch {
       this.closeQuickView()
       this.openQuickView(true)
     }
   }
 
-  private async openGroupPicker() {
-    const plugin = this
+  private openGroupPicker() {
     const groups = [
       { id: 'all', name: 'All Commands' },
-      ...plugin.settingsManager.settings.commandGroups,
+      ...this.settingsManager.settings.commandGroups,
     ]
     class GroupSuggest extends SuggestModal<{ id: string; name: string }> {
       available: { id: string; name: string }[]
-      constructor(app: App, items: { id: string; name: string }[]) {
+      pluginRef: KeyboardAnalyzerPlugin
+      constructor(
+        app: App,
+        items: { id: string; name: string }[],
+        pluginRef: KeyboardAnalyzerPlugin
+      ) {
         super(app)
         this.available = items
+        this.pluginRef = pluginRef
         this.setPlaceholder('Open group…')
       }
       getSuggestions(query: string) {
@@ -443,15 +445,13 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
         el.setText(value.name)
       }
       onChooseSuggestion(item: { id: string; name: string }) {
-        plugin.openWithGroup(item.id)
+        void this.pluginRef.openWithGroup(item.id)
       }
     }
     const modal = new GroupSuggest(
       this.app,
-      groups.map(g => ({
-        id: String(g.id),
-        name: g.name,
-      }))
+      groups.map(g => ({ id: String(g.id), name: g.name })),
+      this
     )
     modal.open()
   }
@@ -491,7 +491,9 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       this.addCommand({
         id: localId,
         name: `Open: ${g.name}`,
-        callback: () => this.openWithGroup(String(g.id)),
+        callback: () => {
+          void this.openWithGroup(String(g.id))
+        },
       })
       this.registeredGroupCommandIds.add(fullId)
     }

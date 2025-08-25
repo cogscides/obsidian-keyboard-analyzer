@@ -97,13 +97,7 @@
   const devLoggingEnabled = $derived(
     Boolean(settingsManager.settings.devLoggingEnabled)
   )
-  let emulatedOS = $derived(
-    (settingsManager.settings.emulatedOS || 'none') as
-      | 'none'
-      | 'windows'
-      | 'macos'
-      | 'linux'
-  )
+  let emulatedOS = $derived(settingsManager.settings.emulatedOS || 'none')
 </script>
 
 <div
@@ -126,7 +120,7 @@
         <span class={`chevron ${panelCollapsed ? 'is-collapsed' : ''}`}>⌄</span>
         <span class="toggle-label">Keyboard</span>
       </button>
-      {#if !panelCollapsed && selectedGroupID !== GroupType.All}
+      {#if !panelCollapsed && selectedGroupID !== String(GroupType.All)}
         <button
           class="scope-toggle"
           aria-label="Toggle heatmap scope"
@@ -313,7 +307,7 @@
             </div>
           {/each}
         </div>
-        {#key activeKeysStore}
+        <!-- {#key activeKeysStore}
           {@const _last = activeKeysStore.getDevLastCommand()}
           {#if _last}
             <div class="dev-row">
@@ -330,7 +324,7 @@
               </div>
             {/each}
           {/if}
-        {/key}
+        {/key} -->
       </div>
     {/if}
   </div>

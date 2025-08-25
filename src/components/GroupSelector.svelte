@@ -22,7 +22,7 @@
   // Resolve plugin via prop first, then context as fallback (safely)
   function resolvePluginFromContext(): KeyboardAnalyzerPlugin | undefined {
     try {
-      return getContext('keyboard-analyzer-plugin') as KeyboardAnalyzerPlugin
+      return getContext('keyboard-analyzer-plugin')
     } catch (err) {
       logger.error('[GroupSelector] failed to resolve plugin from context', err)
       return undefined

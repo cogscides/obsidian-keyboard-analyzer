@@ -3,13 +3,7 @@
 <script lang="ts">
   import { getContext, onMount, onDestroy } from 'svelte'
   import { X } from 'lucide-svelte'
-  import {
-    useFloating,
-    flip,
-    shift,
-    offset,
-    arrow,
-  } from '@skeletonlabs/floating-ui-svelte'
+  import { useFloating, flip, shift, offset } from '@skeletonlabs/floating-ui-svelte'
   import type KeyboardAnalyzerPlugin from '../main'
 
   interface Props {
@@ -33,7 +27,7 @@
   let arrowElement = $state<HTMLDivElement | null>(null)
 
   // Floating UI configuration - arrow will be added via effect when element is ready
-  const floating = useFloating({
+  const floating: ReturnType<typeof useFloating> = useFloating({
     placement: 'bottom-start',
     middleware: [
       offset(8), // 8px distance from trigger
@@ -44,7 +38,7 @@
 
   // Set the reference element to the parent anchor
   onMount(() => {
-    if (rootEl && rootEl.parentElement) {
+    if (rootEl && rootEl.parentElement instanceof HTMLElement) {
       floating.elements.reference = rootEl.parentElement
     }
   })

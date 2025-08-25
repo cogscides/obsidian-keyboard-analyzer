@@ -1,4 +1,3 @@
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <script lang="ts">
   import type { Modifier } from 'obsidian'
   import { getContext } from 'svelte'
@@ -549,19 +548,29 @@
     <div slot="content" class="popup-filter-menu">
       {#each Object.values(ViewSettingsKeyValues) as setting}
         <div class="setting-item mod-toggle">
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="checkbox-container"
             class:is-enabled={filterSettings[
-              setting as unknown as keyof FilterSettings
+              setting as keyof FilterSettings
             ]}
+            role="button"
+            tabindex="0"
             onclick={() =>
               setFilterSetting(
-                setting as unknown as keyof CGroupFilterSettings,
-                !(filterSettings[
-                  setting as unknown as keyof FilterSettings
-                ] as boolean)
+                setting as keyof CGroupFilterSettings,
+                !(
+                  filterSettings[setting as keyof FilterSettings]
+                )
               )}
+            onkeydown={(e: KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setFilterSetting(
+                  setting as keyof CGroupFilterSettings,
+                  !(filterSettings[setting as keyof FilterSettings])
+                )
+              }
+            }}
           >
             <input
               type="checkbox"

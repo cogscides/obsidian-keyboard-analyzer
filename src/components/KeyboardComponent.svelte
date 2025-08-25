@@ -34,7 +34,7 @@
     view: ShortcutsView
   }
 
-  const { plugin, view }: Props = $props()
+  const { plugin, view: _view }: Props = $props()
 
   // Managers and stores
   const commandsManager: CommandsManager = plugin.commandsManager
@@ -51,10 +51,10 @@
   // Always attach listeners; handlers no-op unless listener is active
   const down = (e: KeyboardEvent) => {
     // Only treat shortcuts as ours when event originates inside this view
-    const insideView = rootEl?.contains(e.target as Node) === true
-    const focusWithin = !!(
-      rootEl && (rootEl as HTMLElement).matches(':focus-within')
-    )
+    // const insideView = rootEl?.contains(e.target as Node) === true
+    // const focusWithin = !!(
+    //   rootEl && (rootEl as HTMLElement).matches(':focus-within')
+    // )
     const isActiveView: boolean = (() => {
       try {
         const v = plugin.app.workspace.activeLeaf?.view as
@@ -216,12 +216,12 @@
   // For now, we apply only filter state since that's what's persisted.
   // Apply on-open behavior only when group changes (not on every settings flush)
   $effect(() => {
-    const gid = selectedGroupID || GroupType.All
+    const gid = selectedGroupID || String(GroupType.All)
     // Run in a microtask to avoid tracking reactive reads of groups/settings here.
     queueMicrotask(() => {
       try {
         const mode = groupManager.getGroupBehavior(gid)
-        if (gid === GroupType.All) {
+        if (gid === String(GroupType.All)) {
           if (mode === 'default') {
             groupManager.applyDefaultsToAllFilters()
           }
@@ -386,7 +386,7 @@
 
     if (
       activeKeysStore.ActiveModifiers.every(modifier =>
-        duplicativeModifiers.includes(modifier as Modifier)
+        duplicativeModifiers.includes(modifier)
       ) &&
       activeKeysStore.ActiveKey.toLowerCase() === key.toLowerCase()
     ) {

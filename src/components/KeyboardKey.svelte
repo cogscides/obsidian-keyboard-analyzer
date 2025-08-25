@@ -4,7 +4,7 @@
   import FloatingTooltip from './floating/FloatingTooltip.svelte'
   import { TOOLTIP_GROUPS } from '../utils/tooltipGroups'
   import { isKeyboardDevTooltipsEnabled } from '../utils/runtimeConfig'
-  import type { Key } from '../interfaces/Interfaces'
+  import type { Key, KeyboardKeyState } from '../interfaces/Interfaces'
   import type { VisualKeyboardManager } from '../managers/visualKeyboardsManager/visualKeyboardsManager.svelte.ts'
   import type { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
 
@@ -58,7 +58,7 @@
   )
 
   // let keyOutput = $derived(key.unicode || key.label)
-  const _smallText = $derived(key.smallText || false)
+  // const _smallText = $derived(key.smallText || false)
 
   const _width = $derived(key.width || 1)
   const _height = $derived(key.height || 1)
@@ -74,7 +74,7 @@
   function _spreadWeights(weight: number) {
     const maxWeight = Math.max(
       ...Object.values(visualKeyboardManager.keyStates).map(
-        (state: any) => state.weight || 0
+        (state: KeyboardKeyState) => state.weight || 0
       )
     )
     const step = maxWeight / maxWeightSteps
@@ -90,7 +90,7 @@
 
   function _handleClick(key: Key) {
     const keyIdentifier = key.code || key.label || ''
-    ;(async () => {
+    void (async () => {
       const { default: logger } = await import('../utils/logger')
       logger.debug('Clicked key:', keyIdentifier)
     })()

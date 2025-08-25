@@ -19,14 +19,13 @@
     onClose = $bindable(() => {}),
   }: Props = $props()
 
-  if (!plugin) {
-    plugin = getContext('keyboard-analyzer-plugin') as KeyboardAnalyzerPlugin
-  }
+  const pluginResolved: KeyboardAnalyzerPlugin =
+    plugin ?? getContext('keyboard-analyzer-plugin')
 
-  const groupManager = (plugin as KeyboardAnalyzerPlugin).groupManager
-  const commandsManager = (plugin as KeyboardAnalyzerPlugin).commandsManager
-  const settingsManager = (plugin as KeyboardAnalyzerPlugin).settingsManager
-  const hotkeyManager = (plugin as KeyboardAnalyzerPlugin).hotkeyManager
+  const groupManager = pluginResolved.groupManager
+  const commandsManager = pluginResolved.commandsManager
+  const settingsManager = pluginResolved.settingsManager
+  const hotkeyManager = pluginResolved.hotkeyManager
 
   const groups = $derived.by(() => groupManager.getGroups())
 
@@ -140,7 +139,7 @@
     const g = groupManager.getGroup(selectedGroupId)
     if (!g) return
     groupManager.setGroupDefaults(selectedGroupId, {
-      filters: g.filterSettings as CGroupFilterSettings,
+      filters: g.filterSettings,
     })
   }
   function resetFiltersToDefaults() {
@@ -155,7 +154,7 @@
       if (!base || typeof base !== 'object') return
       // Shallow clone is enough (flat booleans)
       groupManager.setAllGroupDefaults({
-        filters: { ...(base as CGroupFilterSettings) } as CGroupFilterSettings,
+        filters: { ...(base as CGroupFilterSettings) },
       })
     } catch (err) {
       // Swallow to avoid uncaught runtime errors from UI click
@@ -172,7 +171,7 @@
     if (!selectedGroupId || selectedGroupId === 'all') return
     groupManager.setGroupRegisterCommand(selectedGroupId, !!val)
     ;(
-      plugin as unknown as { syncPerGroupCommands?: () => void }
+      pluginResolved as unknown as { syncPerGroupCommands?: () => void }
     ).syncPerGroupCommands?.()
   }
 

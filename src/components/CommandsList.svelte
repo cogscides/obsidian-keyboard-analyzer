@@ -220,7 +220,6 @@
       </div>
       {#each groupedByPlugin as group (group.pluginName)}
         <div class="plugin-group">
-          <!-- svelte-ignore a11y_interactive_supports_focus a11y_click_events_have_key_events a11y_no_static_element_interactions -->
           <div
             class="plugin-group-header {group.isBuiltIn &&
             groupSettings?.HighlightBuiltIns
@@ -268,7 +267,6 @@
                           cmdEntry.pluginName
                         )}</span
                       >
-                      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                       <div class="action-icons">
                         <div
                           class="star-icon icon"
@@ -281,7 +279,6 @@
                         >
                           <StarIcon size={16} />
                         </div>
-                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                         <div class="menu-anchor">
                           <div
                             class="folder-plus-icon icon"
@@ -318,7 +315,6 @@
                   >
                     <div class="setting-command-hotkeys">
                       {#each cmdEntry.hotkeys as hotkey}
-                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                         <span
                           class="kbanalizer-setting-hotkey setting-hotkey"
                           class:is-duplicate={hotkeyManager.isHotkeyDuplicate(
@@ -372,7 +368,6 @@
                   cmdEntry.pluginName
                 )}</span
               >
-              <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
               <div class="action-icons">
                 <FloatingTooltip
                   content={featuredIds.has(cmdEntry.id)
@@ -394,7 +389,6 @@
                     <StarIcon size={16} />
                   </div>
                 </FloatingTooltip>
-                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                 <div class="menu-anchor">
                   <FloatingTooltip
                     content="Add command to a group for better organization"
@@ -436,7 +430,6 @@
           <div class="kbanalizer-setting-item-control setting-item-control">
             <div class="setting-command-hotkeys">
               {#each cmdEntry.hotkeys as hotkey}
-                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
                 <span
                   class="kbanalizer-setting-hotkey setting-hotkey"
                   class:is-duplicate={hotkeyManager.isHotkeyDuplicate(

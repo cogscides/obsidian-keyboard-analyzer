@@ -71,7 +71,9 @@
       if (projectedLeft + dx < 0) dx += -(projectedLeft + dx) + 8
 
       offsetX += dx
-    } catch {}
+    } catch {
+      // ignore layout computation errors (element may be detaching)
+    }
   }
 
   let ro: ResizeObserver | null = null

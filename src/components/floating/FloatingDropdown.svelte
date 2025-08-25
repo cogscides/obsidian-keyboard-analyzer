@@ -245,11 +245,17 @@
 </script>
 
 <!-- Trigger element slot with event handlers -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
   bind:this={floating.elements.reference}
+  role="button"
+  tabindex="0"
   onclick={handleTriggerClick}
+  onkeydown={(e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleTriggerClick()
+    }
+  }}
   onmouseenter={handleTriggerMouseEnter}
   onmouseleave={handleTriggerMouseLeave}
   class="floating-dropdown-trigger"
@@ -259,7 +265,6 @@
 
 <!-- Dropdown content -->
 {#if open}
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     bind:this={floating.elements.floating}
     style={floating.isPositioned

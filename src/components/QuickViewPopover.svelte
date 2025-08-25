@@ -13,10 +13,12 @@
   import { ActiveKeysStore } from '../stores/activeKeysStore.svelte.ts'
   import {
     convertModifiers,
+    unconvertModifiers,
     unconvertModifier,
     matchHotkey,
     normalizeKey,
     platformizeModifiers,
+    sortModifiers,
   } from '../utils/modifierUtils'
   import {
     formatHotkeyBaked,
@@ -57,31 +59,37 @@
     if (typeof window !== 'undefined') {
       window.addEventListener(
         'error',
-        (ev: any) => {
+        (ev: ErrorEvent) => {
           try {
             const data = {
-              message: (ev && ev.message) ?? undefined,
-              filename: (ev && ev.filename) ?? undefined,
-              lineno: (ev && ev.lineno) ?? undefined,
-              colno: (ev && ev.colno) ?? undefined,
-              error: (ev && ev.error) ?? undefined,
+              message: ev.message,
+              filename: ev.filename,
+              lineno: ev.lineno,
+              colno: ev.colno,
+              error: ev.error instanceof Error ? ev.error.message : String(ev.error ?? ''),
             }
             logger.error('[qv] early window error', data)
-          } catch {}
+          } catch {
+            // swallow logging failures
+          }
         },
         { once: true }
       )
       window.addEventListener(
         'unhandledrejection',
-        (ev: any) => {
+        (ev: PromiseRejectionEvent) => {
           try {
-            logger.error('[qv] early unhandledrejection', ev && ev.reason)
-          } catch {}
+            logger.error('[qv] early unhandledrejection', ev.reason)
+          } catch {
+            // swallow logging failures
+          }
         },
         { once: true }
       )
     }
-  } catch {}
+  } catch {
+    // ignore early init errors
+  }
   // Provide plugin for children that expect it via context (GroupSelector)
   try {
     setContext('keyboard-analyzer-plugin', plugin)
@@ -331,7 +339,9 @@
     try {
       if (anchorEl)
         anchorOffsetX = coords.left - anchorEl.getBoundingClientRect().left
-    } catch {}
+    } catch {
+      // ignore anchor read during resize
+    }
     settingsManager.updateSettings({
       quickViewWidth: width,
       quickViewHeight: height,
@@ -392,7 +402,9 @@
     try {
       if (anchorEl)
         anchorOffsetX = coords.left - anchorEl.getBoundingClientRect().left
-    } catch {}
+    } catch {
+      // ignore activeKeysStore errors
+    }
     settingsManager.updateSettings({ quickViewWidth: width })
   }
   function onLeftUp() {
@@ -488,13 +500,14 @@
         return
       }
       try {
-        ;(activeKeysStore as any).handlePhysicalKeyDown?.(e, {
-          inActiveView: true,
-        })
-      } catch {}
-      activeKey = (activeKeysStore as any)?.ActiveKey
-      activeModifiers =
-        ((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []
+        activeKeysStore?.handlePhysicalKeyDown(e, { inActiveView: true })
+      } catch {
+        // ignore key handling errors
+      }
+      activeKey = activeKeysStore?.ActiveKey || ''
+      activeModifiers = unconvertModifiers(
+        activeKeysStore?.ActiveModifiers || []
+      )
       refilter()
       return
     }
@@ -558,16 +571,17 @@
       String(search || '').trim() === ''
     ) {
       if (activeKey) {
-        ;(activeKeysStore as any)?.clearActiveKey?.()
+        activeKeysStore?.clearActiveKey()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
-        const mods = [
-          ...(((activeKeysStore as any)
-            ?.sortedModifiers as unknown as string[]) || []),
-        ]
-        mods.pop()
-        ;(activeKeysStore as any).ActiveModifiers = mods
-        activeModifiers = mods
+        if (activeKeysStore) {
+          const current = sortModifiers(
+            unconvertModifiers(activeKeysStore.ActiveModifiers)
+          )
+          current.pop()
+          activeKeysStore.ActiveModifiers = convertModifiers(current)
+          activeModifiers = current
+        }
       }
       refilter()
       e.preventDefault()
@@ -605,21 +619,22 @@
     e.stopPropagation()
     e.stopImmediatePropagation?.()
     try {
-      ;(activeKeysStore as any)?.handlePhysicalKeyUp?.(e, {
-        inActiveView: true,
-      })
-    } catch {}
+      activeKeysStore?.handlePhysicalKeyUp(e, { inActiveView: true })
+    } catch {
+      // ignore key handling errors
+    }
     // Reflect cleared key/modifiers immediately
-    activeKey = (activeKeysStore as any)?.ActiveKey
-    activeModifiers =
-      ((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || []
+    activeKey = activeKeysStore?.ActiveKey || ''
+    activeModifiers = unconvertModifiers(
+      activeKeysStore?.ActiveModifiers || []
+    )
     refilter()
   }
 
   // UI helpers
   function clearSearch() {
     if (search.trim() === '') {
-      ;(activeKeysStore as any)?.reset?.()
+      activeKeysStore?.reset()
       activeKey = ''
       activeModifiers = []
     } else {
@@ -689,7 +704,7 @@
 
   // Note: no reactive effects here to avoid nested update loops.
   function openFull(mode: boolean | 'split') {
-    plugin.addShortcutsView(mode)
+    void plugin.addShortcutsView(mode)
     onClose?.({ restoreFocus: false, reason: 'open-full' })
   }
   function openFullByModifiers(e: MouseEvent) {
@@ -724,7 +739,10 @@
       },
     ]
   function setFilter(key: keyof CGroupFilterSettings, val: boolean) {
-    groupManager.updateGroupFilterSettings(selectedGroup, { [key]: val } as any)
+    const patch: Partial<CGroupFilterSettings> = { [key]: val } as Partial<
+      CGroupFilterSettings
+    >
+    groupManager.updateGroupFilterSettings(selectedGroup, patch)
     refilter()
   }
 
@@ -947,20 +965,18 @@
         role="group"
       >
         <div class="modifiers-wrapper">
-          {#each ((activeKeysStore as any)?.sortedModifiers as unknown as string[]) || [] as m}
+          {#each sortModifiers(unconvertModifiers(activeKeysStore?.ActiveModifiers || [])) as m}
             <kbd
               class="modifier setting-hotkey"
               role="button"
               tabindex="0"
               onclick={() => {
                 try {
-                  ;(activeKeysStore as any)?.handleKeyClick?.(
-                    unconvertModifier(m as any)
+                  activeKeysStore?.handleKeyClick(unconvertModifier(m))
+                  activeModifiers = sortModifiers(
+                    unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
                   )
-                  activeModifiers =
-                    ((activeKeysStore as any)
-                      ?.sortedModifiers as unknown as string[]) || []
-                  activeKey = (activeKeysStore as any)?.ActiveKey || ''
+                  activeKey = activeKeysStore?.ActiveKey || ''
                 } catch {}
                 refilter()
               }}
@@ -968,20 +984,20 @@
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   try {
-                    ;(activeKeysStore as any)?.handleKeyClick?.(
-                      unconvertModifier(m as any)
+                    activeKeysStore?.handleKeyClick(unconvertModifier(m))
+                    activeModifiers = sortModifiers(
+                      unconvertModifiers(
+                        activeKeysStore?.ActiveModifiers || []
+                      )
                     )
-                    activeModifiers =
-                      ((activeKeysStore as any)
-                        ?.sortedModifiers as unknown as string[]) || []
-                    activeKey = (activeKeysStore as any)?.ActiveKey || ''
+                    activeKey = activeKeysStore?.ActiveKey || ''
                   } catch {}
                   refilter()
                 }
               }}
             >
               {settingsManager.settings.useBakedKeyNames
-                ? getBakedModifierLabel(m as any)
+                ? getBakedModifierLabel(m)
                 : m}
             </kbd>
           {/each}
@@ -992,31 +1008,31 @@
               tabindex="0"
               onclick={() => {
                 try {
-                  ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
+                  activeKeysStore?.handleKeyClick(activeKey)
                 } catch {}
-                activeModifiers =
-                  ((activeKeysStore as any)
-                    ?.sortedModifiers as unknown as string[]) || []
-                activeKey = (activeKeysStore as any)?.ActiveKey || ''
+                activeModifiers = sortModifiers(
+                  unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
+                )
+                activeKey = activeKeysStore?.ActiveKey || ''
                 refilter()
               }}
               onkeydown={(e: KeyboardEvent) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   try {
-                    ;(activeKeysStore as any)?.handleKeyClick?.(activeKey)
+                    activeKeysStore?.handleKeyClick(activeKey)
                   } catch {}
-                  activeModifiers =
-                    ((activeKeysStore as any)
-                      ?.sortedModifiers as unknown as string[]) || []
-                  activeKey = (activeKeysStore as any)?.ActiveKey || ''
+                  activeModifiers = sortModifiers(
+                    unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
+                  )
+                  activeKey = activeKeysStore?.ActiveKey || ''
                   refilter()
                 }
               }}
             >
               {settingsManager.settings.useBakedKeyNames
                 ? getBakedKeyLabel(activeKey)
-                : (activeKeysStore as any)?.getDisplayKey?.() || activeKey}
+                : activeKey}
             </kbd>
           {/if}
         </div>
@@ -1088,10 +1104,8 @@
               {#each cmd.hotkeys as hk}
                 <span class="hk"
                   >{settingsManager.settings.useBakedKeyNames
-                    ? formatHotkeyBaked(hk as hotkeyEntry)
-                    : plugin.hotkeyManager.renderHotkey(
-                        hk as hotkeyEntry
-                      )}</span
+                    ? formatHotkeyBaked(hk)
+                    : plugin.hotkeyManager.renderHotkey(hk)}</span
                 >
               {/each}
             </div>
