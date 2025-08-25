@@ -29,7 +29,21 @@ export default tseslint.config(
       globals: { ...globals.browser },
     },
     rules: {
+      // Allow common Svelte ergonomics without weakening safety in TS/JS files
       'svelte/no-unused-svelte-ignore': 'error',
+      // Svelte 5 reactive reads (e.g., `store.value`) can look like unused expressions
+      '@typescript-eslint/no-unused-expressions': 'off',
+      // Permit underscore-prefixed unused args in inline handlers
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // Avoid errors for empty catch blocks used to defensively guard UI updates
+      'no-empty': ['warn', { allowEmptyCatch: true }],
+      // Soften unsafe-any rules within Svelte scripts where interop with DOM/Obsidian is looser
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/require-await': 'off',
     },
   },
 
