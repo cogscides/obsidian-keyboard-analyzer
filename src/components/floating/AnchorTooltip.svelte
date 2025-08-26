@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import type { Snippet } from 'svelte'
 
   interface Props {
     /** The content to display in the tooltip */
@@ -14,6 +15,8 @@
     class?: string
     /** Custom style for the trigger element */
     style?: string
+    /** Child content (trigger) */
+    children?: Snippet
   }
 
   const {
@@ -23,6 +26,7 @@
     maxWidth = '300px',
     class: className = '',
     style: triggerStyle = '',
+    children,
   }: Props = $props()
 
   // State for tooltip visibility
@@ -95,7 +99,7 @@
     ? `anchor-name: --${anchorId};`
     : ''}"
 >
-  <slot />
+  {@render children?.()}
 </span>
 
 <!-- Tooltip element -->

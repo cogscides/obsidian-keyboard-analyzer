@@ -123,7 +123,7 @@
   let filtered: commandEntry[] = $state([])
   let selectedIndex = $state(0)
   let listEl: HTMLDivElement | null = $state(null)
-  let inputEl: HTMLInputElement | null = $state(null)
+  let inputEl = $state<HTMLInputElement | null>(null)
 
   // Persisted size and anchoring
   let rootEl: HTMLDivElement | null = $state(null)
@@ -691,9 +691,9 @@
         activeKeysStore?.clearActiveKey()
         activeKey = ''
       } else if ((activeModifiers?.length || 0) > 0) {
-        const mods = [...(activeKeysStore?.sortedModifiers ?? [])]
+        const mods: string[] = [...(activeKeysStore?.sortedModifiers ?? [])]
         mods.pop()
-        if (activeKeysStore) activeKeysStore.ActiveModifiers = mods
+        if (activeKeysStore) activeKeysStore.ActiveModifiers = convertModifiers(mods)
         activeModifiers = mods
       }
       refilter()
@@ -979,7 +979,7 @@
               tabindex="0"
               onclick={() => {
                 try {
-                  activeKeysStore?.handleKeyClick(unconvertModifier(m))
+                  activeKeysStore?.handleKeyClick(m)
                   activeModifiers = sortModifiers(
                     unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
                   )
@@ -991,7 +991,7 @@
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   try {
-                    activeKeysStore?.handleKeyClick(unconvertModifier(m))
+                    activeKeysStore?.handleKeyClick(m)
                     activeModifiers = sortModifiers(
                       unconvertModifiers(activeKeysStore?.ActiveModifiers || [])
                     )

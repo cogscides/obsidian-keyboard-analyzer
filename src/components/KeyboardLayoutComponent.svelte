@@ -137,77 +137,76 @@
     </div>
     <div class="toolbar-right">
       {#if devOptionsEnabled}
-        <FloatingDropdown
-          bind:open={devMenuOpen}
-          placement="bottom-end"
-          class="dev-dropdown"
-        >
-          <button
-            class="dev-gear"
-            aria-haspopup="true"
-            aria-expanded={devMenuOpen}
-            title="Developer options"
-            slot="trigger"
-          >
-            <SettingsIcon size={16} />
-          </button>
+        <FloatingDropdown bind:open={devMenuOpen} placement="bottom-end" class="dev-dropdown">
+          {#snippet trigger()}
+            <button
+              class="dev-gear"
+              aria-haspopup="true"
+              aria-expanded={devMenuOpen}
+              title="Developer options"
+            >
+              <SettingsIcon size={16} />
+            </button>
+          {/snippet}
 
-          <div slot="content" role="menu">
-            <div class="dev-item">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={devLoggingEnabled}
+          {#snippet content()}
+            <div role="menu">
+              <div class="dev-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={devLoggingEnabled}
+                    oninput={(e: Event) => {
+                      const v = (e.currentTarget as HTMLInputElement).checked
+                      settingsManager.updateSettings({ devLoggingEnabled: v })
+                    }}
+                  />
+                  <span>Dev logging</span>
+                </label>
+              </div>
+              <div class="dev-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(settingsManager.settings.useBakedKeyNames)}
+                    oninput={(e: Event) => {
+                      const v = (e.currentTarget as HTMLInputElement).checked
+                      settingsManager.updateSettings({ useBakedKeyNames: v })
+                    }}
+                  />
+                  <span>Use baked key names</span>
+                </label>
+              </div>
+              <div class="dev-item">
+                <button
+                  class="link"
+                  onclick={() => (showInspector = !showInspector)}
+                >
+                  {showInspector ? 'Hide' : 'Show'} Active Keys inspector
+                </button>
+              </div>
+              <div class="dev-item">
+                <label class="inline" for="kbd-emu-os-select">Emulated OS:</label>
+                <select
+                  id="kbd-emu-os-select"
+                  bind:value={emulatedOS}
                   oninput={(e: Event) => {
-                    const v = (e.currentTarget as HTMLInputElement).checked
-                    settingsManager.updateSettings({ devLoggingEnabled: v })
+                    const val = (e.currentTarget as HTMLSelectElement).value as
+                      | 'none'
+                      | 'windows'
+                      | 'macos'
+                      | 'linux'
+                    settingsManager.updateSettings({ emulatedOS: val })
                   }}
-                />
-                <span>Dev logging</span>
-              </label>
+                >
+                  <option value="none">None</option>
+                  <option value="windows">Windows</option>
+                  <option value="macos">macOS</option>
+                  <option value="linux">Linux</option>
+                </select>
+              </div>
             </div>
-            <div class="dev-item">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={Boolean(settingsManager.settings.useBakedKeyNames)}
-                  oninput={(e: Event) => {
-                    const v = (e.currentTarget as HTMLInputElement).checked
-                    settingsManager.updateSettings({ useBakedKeyNames: v })
-                  }}
-                />
-                <span>Use baked key names</span>
-              </label>
-            </div>
-            <div class="dev-item">
-              <button
-                class="link"
-                onclick={() => (showInspector = !showInspector)}
-              >
-                {showInspector ? 'Hide' : 'Show'} Active Keys inspector
-              </button>
-            </div>
-            <div class="dev-item">
-              <label class="inline" for="kbd-emu-os-select">Emulated OS:</label>
-              <select
-                id="kbd-emu-os-select"
-                bind:value={emulatedOS}
-                oninput={(e: Event) => {
-                  const val = (e.currentTarget as HTMLSelectElement).value as
-                    | 'none'
-                    | 'windows'
-                    | 'macos'
-                    | 'linux'
-                  settingsManager.updateSettings({ emulatedOS: val })
-                }}
-              >
-                <option value="none">None</option>
-                <option value="windows">Windows</option>
-                <option value="macos">macOS</option>
-                <option value="linux">Linux</option>
-              </select>
-            </div>
-          </div>
+          {/snippet}
         </FloatingDropdown>
       {/if}
       <button

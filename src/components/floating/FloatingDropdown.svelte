@@ -9,6 +9,7 @@
   } from '@skeletonlabs/floating-ui-svelte'
   import type { Placement } from '@floating-ui/dom'
   import { createEventDispatcher } from 'svelte'
+  import type { Snippet } from 'svelte'
 
   interface Props {
     /** Whether the dropdown is open */
@@ -25,6 +26,10 @@
     hoverTrigger?: boolean
     /** Delay for hover trigger */
     hoverDelay?: number
+    /** Snippet: trigger element */
+    trigger?: Snippet
+    /** Snippet: dropdown content */
+    content?: Snippet
   }
 
   let {
@@ -35,6 +40,8 @@
     class: className = '',
     hoverTrigger = false,
     hoverDelay = 200,
+    trigger,
+    content,
   }: Props = $props()
 
   // Event dispatcher for custom events
@@ -110,7 +117,6 @@
     if (hoverDelay > 0) {
       hoverTimeout = setTimeout(() => {
         open = true
-        _showContent = true
         startOpenAnimation()
         dispatch('open')
       }, hoverDelay)
@@ -247,7 +253,7 @@
   onmouseleave={handleTriggerMouseLeave}
   class="floating-dropdown-trigger"
 >
-  <slot name="trigger" />
+  {@render trigger?.()}
 </div>
 
 <!-- Dropdown content -->
@@ -267,7 +273,7 @@
     tabindex="-1"
     aria-hidden="false"
   >
-    <slot name="content" />
+    {@render content?.()}
   </div>
 {/if}
 

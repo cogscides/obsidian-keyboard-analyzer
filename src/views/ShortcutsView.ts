@@ -29,8 +29,9 @@ export default class ShortcutsView extends ItemView {
     super.onload()
   }
 
-  onOpen(): void {
+  onOpen(): Promise<void> {
     this.refresh()
+    return Promise.resolve()
   }
 
   refresh(): void {

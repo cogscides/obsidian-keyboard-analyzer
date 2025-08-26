@@ -348,22 +348,20 @@
       </div>
     </div>
   </div>
-  <FloatingDropdown
-    bind:open={filterIsOpen}
-    placement="bottom-start"
-    class="filter-dropdown"
-  >
-    <button
-      id="hotkey-filter-button"
-      class={filterIsOpen ? 'is-active' : ''}
-      aria-label="Filter Commands"
-      aria-pressed={filterIsOpen}
-      slot="trigger"
-    >
-      <FilterIcon size={16} />
-    </button>
+  <FloatingDropdown bind:open={filterIsOpen} placement="bottom-start" class="filter-dropdown">
+    {#snippet trigger()}
+      <button
+        id="hotkey-filter-button"
+        class={filterIsOpen ? 'is-active' : ''}
+        aria-label="Filter Commands"
+        aria-pressed={filterIsOpen}
+      >
+        <FilterIcon size={16} />
+      </button>
+    {/snippet}
 
-    <div slot="content" class="popup-filter-menu">
+    {#snippet content()}
+      <div class="popup-filter-menu">
       <div class="setting-item mod-toggle">
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div
@@ -519,7 +517,8 @@
           </span>
         </div>
       </div>
-    </div>
+      </div>
+    {/snippet}
   </FloatingDropdown>
 
   <!-- COMPONENT: View Dropdown -->
@@ -529,16 +528,18 @@
     placement="bottom-start"
     class="view-dropdown"
   >
-    <button
-      id="hotkey-view-button"
-      aria-label="View Options"
-      class={viewDropdownOpen ? 'is-active' : ''}
-      aria-pressed={viewDropdownOpen}
-      slot="trigger"
-      >View
-    </button>
+    {#snippet trigger()}
+      <button
+        id="hotkey-view-button"
+        aria-label="View Options"
+        class={viewDropdownOpen ? 'is-active' : ''}
+        aria-pressed={viewDropdownOpen}
+        >View
+      </button>
+    {/snippet}
 
-    <div slot="content" class="popup-filter-menu">
+    {#snippet content()}
+      <div class="popup-filter-menu">
       {#each Object.values(ViewSettingsKeyValues) as setting}
         <div class="setting-item mod-toggle">
           <div
@@ -584,7 +585,8 @@
           </div>
         </div>
       {/each}
-    </div>
+      </div>
+    {/snippet}
   </FloatingDropdown>
 
   <!-- Modules dropdown removed intentionally -->

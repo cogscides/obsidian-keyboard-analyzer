@@ -26,7 +26,7 @@
   // Internal state
   let search = $state('')
   let newGroupName = $state('')
-  let rootEl: HTMLDivElement | null = $state(null)
+  let rootEl = $state<HTMLDivElement | null>(null)
 
   // Arrow element for floating-ui
   let arrowElement = $state<HTMLDivElement | null>(null)

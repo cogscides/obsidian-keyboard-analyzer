@@ -8,6 +8,7 @@
     offset,
   } from '@skeletonlabs/floating-ui-svelte'
   import type { Placement } from '@floating-ui/dom'
+  import type { Snippet } from 'svelte'
   import {
     tooltipDelayManager,
     type TooltipGroupId,
@@ -30,6 +31,8 @@
     style?: string
     /** Tooltip group for coordinated delays */
     group?: TooltipGroupId
+    /** Child content (trigger) */
+    children?: Snippet
   }
 
   const {
@@ -41,6 +44,7 @@
     class: className = '',
     style: triggerStyle = '',
     group,
+    children,
   }: Props = $props()
 
   // State for tooltip visibility
@@ -188,7 +192,7 @@
   class="floating-tooltip-trigger"
   style={triggerStyle}
 >
-  <slot />
+  {@render children?.()}
 </span>
 
 <!-- Tooltip element -->
