@@ -609,6 +609,37 @@ kbd.modifier:hover {
   margin-right: 8px;
 }
 
+/* Make Edit/Refresh buttons visually consistent with search input action icons */
+#hotkey-edit-button,
+#hotkey-refresh-button {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-modifier-form-field);
+  color: var(--text-faint);
+}
+#hotkey-edit-button:hover,
+#hotkey-edit-button:focus-visible,
+#hotkey-refresh-button:hover,
+#hotkey-refresh-button:focus-visible {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
+/* Small animation hint for refresh */
+#hotkey-refresh-button.animation-is-active {
+  animation: kba-refresh-spin 0.9s linear 1;
+}
+@keyframes kba-refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* A bit more space before the summary */
 #keyboard-component .community-plugin-search-summary.u-muted {
   margin-left: 8px;

@@ -2,7 +2,7 @@
 title: Temporal pinning and hotkey editing in Commands list
 status: in_progress
 owner: "@agent"
-updated: 2025-08-29 00:45 UTC
+updated: 2025-08-29 01:55 UTC
 related: []
 ---
 
@@ -41,6 +41,32 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
 - [2025-08-28] Hotkey conversion fix — `convertKeymapInfoToHotkey` now supports both array and string modifiers; prevents empty hotkeys caused by wrong conversion.
 
 - [2025-08-29] UI polish and pinning fixes — Edit and Refresh buttons now use the same compact icon style as the Search header actions; Restore/Add per-row controls match that style. Restore is shown only when a command has a Custom entry (hidden for System Shortcuts and when already at defaults). Pinned section now live-updates by subscribing to CommandsManager index changes. The “Hotkeys updated” banner spans the list width, includes a beta warning, and provides quick actions: Undo and Open Vault Folder.
+
+- [2025-08-29] Vault folder opener — Implemented robust folder open with logging and Electron fallback: try `app.openWithDefaultApp` on `…/.obsidian`, then `hotkeys.json`, then vault root; additionally call `electron.shell.showItemInFolder(hotkeys.json)` or `shell.openPath` to guarantee Finder/Explorer opens.
+
+## Progress (2025-08-29)
+
+- Pinned section now reliably updates after add/remove/restore via `commandsManager.subscribe` invalidation.
+- Restore/Add icons restyled to match search input action buttons; per-row icon hover/active states normalized.
+- “Hotkeys updated” banner made full-width, sticky, and more prominent; includes Undo and Open vault folder actions with robust open logic and detailed logs.
+- Search group-change effect made microtask-based to avoid re-entrant onSearch during mount/init.
+
+## New Items / Follow-ups
+
+- Refresh button styling: refresh still sometimes renders visually like a bare icon (not a button) depending on theme/selector precedence. Investigate specificity and ensure `#hotkey-refresh-button` picks up the same styles as `#hotkey-edit-button` and `.meta-search-wrapper .icon`.
+- Beta banner timing: show the banner as soon as Edit mode is activated (not only after a change). Update the copy to clearly warn that hotkey editing is in beta and may cause issues; keep Undo hidden until there is a change. Provide an “Open vault folder” button. Consider an expandable details panel listing recent hotkey changes.
+- Restore/Removal semantics:
+  - Hide “Restore defaults” when a command is in default-only state (no custom entry) — implemented.
+  - Allow removing default-assigned hotkeys by writing a Custom set that equals Defaults minus the removed chord — supported by current `removeHotkeySingle` behavior; add explicit UX hint and verify edge cases.
+
+## Next Steps
+
+- [ ] Refresh button: ensure button styling applies consistently across themes; raise selector specificity if needed; add snapshot in styles for `#hotkey-refresh-button`. At the moment it looks like a bare icon in all themes (might be an issue in our css file or in component styles).
+- [ ] Beta banner: render as soon as Edit mode toggles on; update copy; suppress Undo until a change occurs; add a disclosure to expand and list recent changes (command name + hotkey diff).
+- [ ] Hotkey changes list: maintain an in-memory list of applied changes during the session to populate the expandable details.
+- [ ] Restore visibility QA: verify no restore button appears for default-only commands and system shortcuts; confirm tooltip shows defaults (baked names) when present.
+- [ ] Default removal QA: validate that removing a default hotkey results in a Custom set persisting and surviving reload; add an inline hint when removing from a default-only command.
+- [ ] Docs: update README with beta notice and the location of `hotkeys.json`; note the “Open vault folder” helper.
 
 ## Next Steps
 

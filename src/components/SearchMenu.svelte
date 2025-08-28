@@ -277,10 +277,13 @@
   //   handleSearchInput()
   // })
 
-  // Re-filter when the selected group changes so existing search text applies
+  // Re-filter when the selected group changes so existing search text applies.
+  // Schedule in a microtask to avoid synchronous re-entrancy with parent onSearch.
   $effect(() => {
-    selectedGroup
-    handleSearchInput()
+    const gid = selectedGroup
+    queueMicrotask(() => {
+      if (selectedGroup === gid) handleSearchInput()
+    })
   })
 </script>
 

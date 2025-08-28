@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from 'svelte'
+  import { getContext, onMount } from 'svelte'
   import FloatingTooltip from './floating/FloatingTooltip.svelte'
   import { TOOLTIP_GROUPS } from '../utils/tooltipGroups'
   import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
@@ -29,6 +29,7 @@
   import { sortModifiers, normalizeKey } from '../utils/modifierUtils'
   import { editModeStore } from '../stores/uiState.svelte.ts'
   import { removeHotkeySingle } from '../utils/hotkeyActions'
+  import logger from '../utils/logger'
 
   interface Props {
     filteredCommands: commandEntry[]
@@ -55,6 +56,14 @@
     'visualKeyboardManager'
   )
   const activeKeysStore: ActiveKeysStore = getContext('activeKeysStore')
+  // Track commands index changes to keep pinned section in sync
+  let indexTick = $state(0)
+  onMount(() => {
+    const unsub = plugin.commandsManager.subscribe(() => {
+      indexTick++
+    })
+    return () => { try { unsub?.() } catch {} }
+  })
 
   // Using callback props instead of component events (Svelte 5)
 
@@ -183,6 +192,7 @@
   }
 
   const pinnedEntries = $derived.by(() => {
+    indexTick
     const index = commandsManager.getCommandsIndex()
     return Array.from(pinnedIds)
       .map(id => index[id])
@@ -192,6 +202,109 @@
   // Remove single hotkey
   async function handleRemoveHotkey(commandId: string, hotkey: hotkeyEntry) {
     await removeHotkeySingle(plugin.app, commandsManager, commandId, hotkey)
+  }
+
+  function isSystemShortcut(cmd?: commandEntry): boolean {
+    return (cmd?.pluginName || '') === 'System Shortcuts'
+  }
+
+  function shouldShowRestore(cmd: commandEntry): boolean {
+    if (isSystemShortcut(cmd)) return false
+    const customCount = (cmd.customHotkeys || []).length
+    return customCount > 0
+  }
+
+  function defaultHotkeysTooltip(cmd: commandEntry): string {
+    const defaults = cmd.defaultHotkeys || []
+    if (defaults.length === 0) return 'Restore default'
+    const pretty = defaults.map(d => renderHotkey(d)).join(', ')
+    return `Restore default (${pretty})`
+  }
+
+  async function openVaultFolder() {
+    logger.debug('[hotkeys] openVaultFolder: invoked')
+    try {
+      const adapter: any = plugin.app.vault.adapter as any
+      const basePath: string | undefined = adapter?.basePath
+      const opener = (plugin.app as any)?.openWithDefaultApp as
+        | ((path: string) => Promise<void> | void)
+        | undefined
+      logger.debug('[hotkeys] openVaultFolder: adapter/basePath/opener', {
+        hasAdapter: Boolean(adapter),
+        basePath,
+        hasOpener: typeof opener === 'function',
+      })
+      if (!basePath) {
+        logger.warn('[hotkeys] openVaultFolder: missing basePath on adapter')
+        return
+      }
+      if (typeof opener !== 'function') {
+        logger.warn('[hotkeys] openVaultFolder: app.openWithDefaultApp not available')
+        return
+      }
+
+      const sep = basePath.includes('\\') ? '\\' : '/'
+      const vaultRoot = basePath.replace(/[\\/]+$/,'')
+      const obsidianDir = `${vaultRoot}${sep}.obsidian`
+      const hotkeysJson = `${obsidianDir}${sep}hotkeys.json`
+
+      logger.debug('[hotkeys] openVaultFolder: trying .obsidian dir', obsidianDir)
+      try {
+        await (opener as any).call(plugin.app, obsidianDir)
+        logger.info('[hotkeys] openVaultFolder: opened .obsidian directory')
+        // Even if the API reports success, on macOS opening a directory may do nothing in some cases.
+        // Use Electron shell to reveal a file in Finder/Explorer for consistency.
+        try {
+          const shell = (globalThis as any)?.require?.('electron')?.shell
+          if (shell?.showItemInFolder) {
+            shell.showItemInFolder(hotkeysJson)
+            logger.info('[hotkeys] openVaultFolder: reveal via shell.showItemInFolder(hotkeys.json)')
+          } else if (shell?.openPath) {
+            const err: string | undefined = await shell.openPath(obsidianDir)
+            logger.info('[hotkeys] openVaultFolder: shell.openPath(.obsidian) =>', err || 'ok')
+          }
+        } catch (shellErr) {
+          logger.warn('[hotkeys] openVaultFolder: electron shell fallback failed', { err: shellErr })
+        }
+        return
+      } catch (err1) {
+        logger.warn('[hotkeys] openVaultFolder: failed opening .obsidian, try hotkeys.json', { err: err1 })
+      }
+      try {
+        await (opener as any).call(plugin.app, hotkeysJson)
+        logger.info('[hotkeys] openVaultFolder: opened hotkeys.json')
+        try {
+          const shell = (globalThis as any)?.require?.('electron')?.shell
+          if (shell?.showItemInFolder) {
+            shell.showItemInFolder(hotkeysJson)
+            logger.info('[hotkeys] openVaultFolder: reveal via shell.showItemInFolder(hotkeys.json)')
+          }
+        } catch (shellErr2) {
+          logger.warn('[hotkeys] openVaultFolder: electron shell fallback 2 failed', { err: shellErr2 })
+        }
+        return
+      } catch (err2) {
+        logger.warn('[hotkeys] openVaultFolder: failed opening hotkeys.json, fallback to vault root', { err: err2 })
+      }
+      try {
+        await (opener as any).call(plugin.app, vaultRoot)
+        logger.info('[hotkeys] openVaultFolder: opened vault root')
+        try {
+          const shell = (globalThis as any)?.require?.('electron')?.shell
+          if (shell?.openPath) {
+            const err: string | undefined = await shell.openPath(vaultRoot)
+            logger.info('[hotkeys] openVaultFolder: shell.openPath(vaultRoot) =>', err || 'ok')
+          }
+        } catch (shellErr3) {
+          logger.warn('[hotkeys] openVaultFolder: electron shell fallback 3 failed', { err: shellErr3 })
+        }
+        return
+      } catch (err3) {
+        logger.error('[hotkeys] openVaultFolder: failed opening vault root', { err: err3 })
+      }
+    } catch (err) {
+      logger.error('[hotkeys] openVaultFolder: fatal error', { err })
+    }
   }
 
   // Hover preview for hotkeys on the visual keyboard
@@ -408,11 +521,11 @@
                   <div
                     class="kbanalizer-setting-item-control setting-item-control"
                   >
-                    {#if editMode}
+                    {#if editMode && shouldShowRestore(cmdEntry)}
                       <span
-                        class="clickable-icon setting-restore-hotkey-button"
-                        aria-label="Restore default"
-                        title="Restore default"
+                        class="clear-icon icon setting-restore-hotkey-button"
+                        aria-label={defaultHotkeysTooltip(cmdEntry)}
+                        title={defaultHotkeysTooltip(cmdEntry)}
                         onclick={() => handleRestore(cmdEntry.id)}
                       ><RestoreIcon size={16} /></span>
                     {/if}
@@ -438,7 +551,7 @@
                           onmouseleave={handleHotkeyMouseLeave}
                         >
                           {renderHotkey(hotkey)}
-                          {#if editMode}
+                          {#if editMode && !isSystemShortcut(cmdEntry)}
                             <span
                               class="chip-remove"
                               role="button"
@@ -450,14 +563,14 @@
                           {/if}
                         </span>
                       {/each}
-                      {#if editMode}
+                      {#if editMode && !isSystemShortcut(cmdEntry)}
                         {#if captureForId === cmdEntry.id}
                           <span class="kbanalizer-setting-hotkey setting-hotkey mod-active">
                             {captureLabel || 'Press hotkey...'}
                           </span>
                         {:else}
                           <span
-                            class="clickable-icon setting-add-hotkey-button"
+                            class="clear-icon icon setting-add-hotkey-button"
                             aria-label="Customize this command"
                             title="Customize this command"
                             onclick={() => startCapture(cmdEntry.id)}
@@ -498,11 +611,11 @@
                 </div>
               </div>
               <div class="kbanalizer-setting-item-control setting-item-control">
-                {#if editMode}
+                {#if editMode && shouldShowRestore(cmdEntry)}
                   <span
-                    class="clickable-icon setting-restore-hotkey-button"
-                    aria-label="Restore default"
-                    title="Restore default"
+                    class="clear-icon icon setting-restore-hotkey-button"
+                    aria-label={defaultHotkeysTooltip(cmdEntry)}
+                    title={defaultHotkeysTooltip(cmdEntry)}
                     onclick={() => handleRestore(cmdEntry.id)}
                   ><RestoreIcon size={16} /></span>
                 {/if}
@@ -510,7 +623,7 @@
                   {#each cmdEntry.hotkeys as hotkey}
                     <span class="kbanalizer-setting-hotkey setting-hotkey">
                       {renderHotkey(hotkey)}
-                      {#if editMode}
+                      {#if editMode && !isSystemShortcut(cmdEntry)}
                         <span
                           class="chip-remove"
                           role="button"
@@ -522,14 +635,14 @@
                       {/if}
                     </span>
                   {/each}
-                  {#if editMode}
+                  {#if editMode && !isSystemShortcut(cmdEntry)}
                     {#if captureForId === cmdEntry.id}
                       <span class="kbanalizer-setting-hotkey setting-hotkey mod-active">
                         {captureLabel || 'Press hotkey...'}
                       </span>
                     {:else}
                       <span
-                        class="clickable-icon setting-add-hotkey-button"
+                        class="clear-icon icon setting-add-hotkey-button"
                         aria-label="Customize this command"
                         title="Customize this command"
                         onclick={() => startCapture(cmdEntry.id)}
@@ -701,9 +814,14 @@
   </div>
 
   {#if $lastHotkeyChange}
-    <div class="undo-banner">
-      <span>Hotkeys updated.</span>
-      <span class="clickable-icon" role="button" tabindex="0" onclick={handleUndo} title="Undo last hotkey change">↶ Undo</span>
+    <div class="hotkey-update-banner" role="status" aria-live="polite">
+      <div class="banner-text">
+        <strong>Hotkeys updated</strong> — This editing feature is in beta and may cause issues. Consider backing up your vault’s .obsidian/hotkeys.json.
+      </div>
+      <div class="banner-actions">
+        <button class="btn-banner" onclick={openVaultFolder} title="Open your vault folder in the system file explorer">Open vault folder</button>
+        <button class="btn-banner is-accent" onclick={handleUndo} title="Undo last hotkey change">Undo</button>
+      </div>
     </div>
   {/if}
 
@@ -761,18 +879,35 @@
     background: var(--background-modifier-hover);
   }
 
-  .undo-banner {
+  .hotkey-update-banner {
     position: sticky;
     bottom: 8px;
-    display: inline-flex;
+    width: 100%;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    padding: 6px 10px;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 10px 12px;
     border: 1px solid var(--background-modifier-border);
     background: var(--background-secondary);
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  }
+  .hotkey-update-banner .banner-text { color: var(--text-normal); }
+  .hotkey-update-banner .banner-actions { display: inline-flex; gap: 8px; }
+  .btn-banner {
+    height: 28px;
+    padding: 0 10px;
     border-radius: 6px;
-    float: right;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-modifier-form-field);
+    color: var(--text-normal);
+  }
+  .btn-banner.is-accent {
+    border-color: var(--interactive-accent);
+    background: var(--interactive-accent);
+    color: var(--text-primary);
   }
 
   /* Add-to-group popover anchored to icon group */
@@ -813,4 +948,23 @@
   .kbanalizer-setting-item:hover .action-icons .icon { opacity: 0.85; }
   .action-icons .icon:first-child { margin-left: 0; }
   .action-icons .icon:hover { opacity: 1; }
+
+  /* Normalize inline edit icons to match search input action buttons */
+  .setting-item-control .icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-modifier-form-field);
+    color: var(--text-faint);
+  }
+  .setting-item-control .icon:hover,
+  .setting-item-control .icon:focus-visible {
+    border-color: var(--interactive-accent);
+    color: var(--text-normal);
+  }
 </style>
