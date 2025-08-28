@@ -110,8 +110,21 @@ export type KeymapInfoToHotkey = KeymapInfo & {
 
 // Helper function to convert KeymapInfo to Hotkey
 export function convertKeymapInfoToHotkey(keymapInfo: KeymapInfo): Hotkey {
+  let mods: Modifier[] = []
+  const m = (keymapInfo as any).modifiers
+  if (Array.isArray(m)) {
+    mods = m as Modifier[]
+  } else if (typeof m === 'string') {
+    mods = (m || '').split(',') as Modifier[]
+  } else if (m && typeof m === 'object' && 'split' in m) {
+    try {
+      mods = String(m).split(',') as Modifier[]
+    } catch {
+      mods = []
+    }
+  }
   return {
-    modifiers: (keymapInfo.modifiers || '').split(',') as Modifier[],
-    key: keymapInfo.key !== null ? keymapInfo.key : '',
+    modifiers: mods,
+    key: (keymapInfo as any).key !== null ? (keymapInfo as any).key : '',
   }
 }

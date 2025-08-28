@@ -11,6 +11,8 @@
 
 import type { App, Command } from 'obsidian'
 import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
+import { platformizeModifiers, sortModifiers, normalizeKey } from './modifierUtils'
+import { convertKeymapInfoToHotkey } from '../interfaces/Interfaces'
 import { getPluginName, isInternalCommand } from './commandMeta'
 
 export function buildCommandEntry(
@@ -26,7 +28,7 @@ export function buildCommandEntry(
 ): commandEntry {
   const id = (command as { id: string }).id || ''
   const name = (command as { name?: string }).name || ''
-  // Retrieve hotkeys safely
+  // Retrieve hotkeys from Obsidian's app.hotkeyManager to ensure live state
   let hotkeyResult: {
     all: hotkeyEntry[]
     default: hotkeyEntry[]
@@ -37,9 +39,31 @@ export function buildCommandEntry(
     custom: [],
   }
   try {
-    // Use the modern hotkeyManager.getHotkeysForCommand API if available,
-    // or fall back to legacy getAllHotkeysForCommand.
-    if (
+    const hm = (app as unknown as { hotkeyManager?: any }).hotkeyManager
+    if (hm) {
+      const defRaw = (hm.getDefaultHotkeys && hm.getDefaultHotkeys(id)) || []
+      const cusRaw = (hm.customKeys && hm.customKeys[id]) || []
+      const toEntry = (arr: any[], isCustom: boolean): hotkeyEntry[] =>
+        (arr || []).map(info => ({ ...convertKeymapInfoToHotkey(info), isCustom }))
+      const defaultEntries = toEntry(defRaw, false)
+      const customEntries = toEntry(cusRaw, true)
+      // De-dupe all by normalized signature (platformized, sorted modifiers + normalized key)
+      const map = new Map<string, hotkeyEntry>()
+      const push = (hk: hotkeyEntry) => {
+        const mods = sortModifiers(
+          platformizeModifiers((hk.modifiers as unknown as string[]) || [])
+        )
+        const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
+        map.set(sig, hk)
+      }
+      defaultEntries.forEach(push)
+      customEntries.forEach(push)
+      hotkeyResult = {
+        all: Array.from(map.values()),
+        default: defaultEntries,
+        custom: customEntries,
+      }
+    } else if (
       hotkeyManager &&
       typeof hotkeyManager.getHotkeysForCommand === 'function'
     ) {
@@ -90,14 +114,15 @@ export function buildCommandEntry(
   const allHotkeys =
     Array.isArray(hotkeyResult.all) && hotkeyResult.all.length > 0
       ? hotkeyResult.all
-      : // fallback: merge default + custom, de-dupe by key+modifiers
+      : // fallback: merge default + custom, de-dupe by normalized signature
         (() => {
           const map = new Map<string, hotkeyEntry>()
           const push = (hk: hotkeyEntry) => {
-            const key = `${(hk.modifiers || []).slice().sort().join(',')}|${
-              hk.key || ''
-            }`
-            map.set(key, hk)
+            const mods = sortModifiers(
+              platformizeModifiers((hk.modifiers as unknown as string[]) || [])
+            )
+            const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
+            map.set(sig, hk)
           }
           defaultHotkeys.forEach(push)
           customHotkeys.forEach(push)

@@ -117,6 +117,53 @@ export function sortModifiers(modifiers: string[]): string[] {
   })
 }
 
+/**
+ * canonicalizeModifiersForPersist
+ * - Normalize synonyms; expand 'Mod' to platform primary first (Meta on macOS, Ctrl on Win/Linux)
+ * - If both primaries present, collapse the platform primary to 'Mod' and keep the other explicit
+ *   - macOS: Meta+Ctrl -> Mod+Ctrl
+ *   - Windows/Linux: Ctrl+Meta -> Mod+Meta
+ * - Else collapse the single primary to 'Mod'
+ */
+export function canonicalizeModifiersForPersist(mods: string[]): string[] {
+  const primary = isMac() ? 'Meta' : 'Ctrl'
+  const normalized = (mods || [])
+    .map(m => String(m))
+    .map(m => {
+      if (m === 'Control') return 'Ctrl'
+      if (m === 'Option') return 'Alt'
+      if (m === 'Cmd' || m === 'Win') return 'Meta'
+      if (m === 'Mod') return primary
+      return m
+    })
+
+  const set = new Set<string>(normalized)
+  const hasMeta = set.has('Meta')
+  const hasCtrl = set.has('Ctrl')
+
+  if (hasMeta && hasCtrl) {
+    if (primary === 'Meta') {
+      set.delete('Meta')
+      set.add('Mod')
+      set.add('Ctrl')
+    } else {
+      set.delete('Ctrl')
+      set.add('Mod')
+      set.add('Meta')
+    }
+  } else {
+    if (primary === 'Meta' && hasMeta) {
+      set.delete('Meta')
+      set.add('Mod')
+    } else if (primary === 'Ctrl' && hasCtrl) {
+      set.delete('Ctrl')
+      set.add('Mod')
+    }
+  }
+
+  return sortModifiers(Array.from(set))
+}
+
 export function modifiersToString(modifiers: string[], sort = true): string {
   const mods = sort ? sortModifiers(modifiers) : modifiers
   return mods.map(convertModifier).join(' + ')

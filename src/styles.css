@@ -595,14 +595,16 @@ kbd.modifier:hover {
 
 /* Mirror active state for other dropdown buttons */
 #hotkey-view-button.is-active,
-#hotkey-modules-button.is-active {
+#hotkey-modules-button.is-active,
+#hotkey-edit-button.is-active {
   color: var(--text-primary);
   background-color: var(--interactive-accent);
 }
 
 /* Spacing and sizing for view and modules buttons */
 #hotkey-view-button,
-#hotkey-modules-button {
+#hotkey-modules-button,
+#hotkey-edit-button {
   height: 32px;
   margin-right: 8px;
 }
@@ -1154,7 +1156,6 @@ button#hotkey-refresh-button:hover {
 
 .floating-dropdown .dev-item select {
   width: 120px;
-}
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1202,4 +1203,3 @@ button#hotkey-refresh-button:hover {
   border: none;
   background-color: transparent;
 }
-*/

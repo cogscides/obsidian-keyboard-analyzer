@@ -2,7 +2,7 @@
 title: Temporal pinning and hotkey editing in Commands list
 status: in_progress
 owner: "@agent"
-updated: 2025-08-28 19:10 UTC
+updated: 2025-08-28 21:05 UTC
 related: []
 ---
 
@@ -35,6 +35,10 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
   - Else collapse the single primary to `Mod`. Uppercase single-letter keys for persistence.
 - [2025-08-28] Default-equivalent assignment — Match Obsidian: if user assigns the same chord as default, still write a Custom entry (not a no‑op).
 - [2025-08-28] Logging format — Emit single‑line logs for hotkey actions to simplify sharing and triage.
+- [2025-08-28] Edit/Refresh UI — Place Edit first, then Refresh, both styled like input action icons (`clear-icon icon`) for visual consistency.
+- [2025-08-28] Temporal pinning — Pin icon aligned with action icons, visible only in Edit mode and on row hover; pinned commands render in a dedicated “Pinned” section above the list, excluded from the main list and unaffected by filters; pins are cleared when Edit mode exits (non-persistent).
+- [2025-08-28] Live reads & auto-refresh — Rebuild uses Obsidian’s `app.hotkeyManager.getDefaultHotkeys(id)` and `customKeys[id]` to construct hotkeys live; after write actions call `save()→load()→bake()`; the view subscribes to CommandsManager updates and re-filters to reflect changes immediately.
+- [2025-08-28] Hotkey conversion fix — `convertKeymapInfoToHotkey` now supports both array and string modifiers; prevents empty hotkeys caused by wrong conversion.
 
 ## Investigation Plan (Hotkeys)
 
@@ -60,6 +64,7 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
 - [ ] Verify on macOS/Windows/Linux layouts and common modifiers (Cmd/Ctrl/Alt/Opt) (owner)
 - [x] Update README with feature usage notes and any settings (owner)
 - [ ] Collect user feedback on inline editing UX, Hyper behavior, and log readability (owner)
+- [ ] Convert remaining clickable spans (restore/add/undo) to real buttons for a11y and consistent styling (owner)
 
 ## Recent Issues/Findings
 
@@ -75,6 +80,45 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
 - [2025-08-28] Logging. Done: hotkeyActions now logs before/after states for assign, remove, and restore when dev logging is enabled.
 - [2025-08-28] Grouped view parity. Done: restore icon now appears before hotkey chips; add icon after chips; system/default guards applied same as flat view.
 - [2025-08-28] Per‑chip delete. Done: added “×” control on chips in Edit mode; removes a single binding using internal APIs; Undo banner supports quick revert.
+- [2025-08-28] Hotkeys missing after rebuild. Root cause: KeymapInfo → Hotkey conversion assumed string modifiers causing empty results; Fix: support array/string forms; use live `app.hotkeyManager` reads in builder and de‑dup by normalized signature.
+- [2025-08-28] Auto-refresh not updating. Fix: after `set/remove`, call `save()→load()→bake()` then `commandsManager.refreshIndex()`; view subscribes to CommandsManager to recompute filters on updates.
+- [2025-08-28] Edit/Refresh style mismatch. Fix: both are icon-only using `clear-icon icon`; Edit placed before Refresh with small spacing.
+- [2025-08-28] Pin icon visibility & behavior. Fix: pin shows only in Edit mode, aligned with star/folder icons on hover; pinned section rendered above list; pins cleared on Edit off.
+
+## Implementation Notes (for next developer)
+
+- Hotkey writes pipeline (internal APIs):
+  - `setHotkeys(id, next)` / `removeHotkeys(id)` → `save()` → `load()` (if available) → `bake()` → `commandsManager.refreshIndex()`.
+  - Rationale: ensures Obsidian’s in-memory state is updated before we rebuild the index.
+
+- Rebuild source of truth:
+  - Builder reads defaults via `app.hotkeyManager.getDefaultHotkeys(id)` and custom via `app.hotkeyManager.customKeys[id]`.
+  - Convert via `convertKeymapInfoToHotkey` (array or string modifiers supported).
+  - De‑dup “all” hotkeys by normalized signature: platformized + sorted modifiers with normalized key.
+
+- Normalization & persistence:
+  - Use `canonicalizeModifiersForPersist()` when saving (collapse primary→Mod, keep both primaries explicit as `Mod+Ctrl` on macOS / `Mod+Meta` on Win/Linux).
+  - Uppercase single-letter keys for persistence to align with core.
+
+- UI states:
+  - Edit mode uses `editModeStore` (src/stores/uiState.svelte.ts).
+  - Edit has restore-before-chips and add/capture after chips; chip-level delete “×” available only in Edit.
+  - Pinning: session-only Set of ids; dedicated “Pinned” container; clear pins when Edit toggles off.
+
+- Logging:
+  - All hotkey actions produce single-line logs:
+    - `assign:start id=... new=... defaults=[...] custom=[...]`
+    - `assign:apply id=... add=... next=[...] persisted=[...]`
+    - `remove:start id=... target=... base=[...] next=[...] equalsDefaults=...`
+    - `restore:start id=... prevCustom=[...]` and `restore:done id=...`.
+  - Enable via Dev logging in settings; level controlled by runtimeConfig.
+
+## Acceptance
+
+- Commands list shows hotkey chips for commands with bindings (beyond system shortcuts).
+- Add/remove/restore updates chips immediately; Refresh button updates immediately.
+- Edit/Refresh buttons visually match input action icons; Edit appears first.
+- Pin icon only in Edit, aligned and hover-triggered; Pinned section above list; pins clear on Edit off.
 
 ## Links
 

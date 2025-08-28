@@ -169,6 +169,15 @@
   }
 
   onMount(() => {
+    // Subscribe to commands index changes to live-refresh visibleCommands
+    const unsubscribe = plugin.commandsManager.subscribe(() => {
+      visibleCommands = plugin.commandsManager.filterCommands(
+        search,
+        activeKeysStore.ActiveModifiers,
+        activeKeysStore.ActiveKey,
+        selectedGroupID
+      )
+    })
     const w = window as WindowWithKb
     // Remove any stale listeners from previous mounts/reloads
     const prevDown = w.__kb_analyzer_keys_down as
@@ -195,6 +204,7 @@
       if (w.__kb_analyzer_keys_down === down)
         w.__kb_analyzer_keys_down = undefined
       if (w.__kb_analyzer_keys_up === up) w.__kb_analyzer_keys_up = undefined
+      try { unsubscribe?.() } catch {}
     }
   })
 

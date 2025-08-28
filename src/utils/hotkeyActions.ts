@@ -135,6 +135,7 @@ export async function assignHotkeyAdditive(
 
   hm.setHotkeys(id, persistedNext)
   hm.save()
+  if (typeof hm.load === 'function') hm.load()
   hm.bake()
 
   // Push undo entry
@@ -163,6 +164,7 @@ export async function restoreDefaults(
   )
   hm.removeHotkeys(id)
   hm.save()
+  if (typeof hm.load === 'function') hm.load()
   hm.bake()
 
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
@@ -227,6 +229,7 @@ export async function removeHotkeySingle(
     hm.setHotkeys(id, persistedNext)
   }
   hm.save()
+  if (typeof hm.load === 'function') hm.load()
   hm.bake()
 
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
@@ -254,6 +257,7 @@ export async function undoLastChange(app: App, cm: CommandsManager): Promise<boo
     hm.removeHotkeys(snapshot.id)
   }
   hm.save()
+  if (typeof hm.load === 'function') hm.load()
   hm.bake()
   cm.refreshIndex()
   undone = true
