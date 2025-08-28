@@ -2,7 +2,7 @@
 title: Temporal pinning and hotkey editing in Commands list
 status: in_progress
 owner: "@agent"
-updated: 2025-08-28 21:05 UTC
+updated: 2025-08-29 00:45 UTC
 related: []
 ---
 
@@ -39,6 +39,14 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
 - [2025-08-28] Temporal pinning — Pin icon aligned with action icons, visible only in Edit mode and on row hover; pinned commands render in a dedicated “Pinned” section above the list, excluded from the main list and unaffected by filters; pins are cleared when Edit mode exits (non-persistent).
 - [2025-08-28] Live reads & auto-refresh — Rebuild uses Obsidian’s `app.hotkeyManager.getDefaultHotkeys(id)` and `customKeys[id]` to construct hotkeys live; after write actions call `save()→load()→bake()`; the view subscribes to CommandsManager updates and re-filters to reflect changes immediately.
 - [2025-08-28] Hotkey conversion fix — `convertKeymapInfoToHotkey` now supports both array and string modifiers; prevents empty hotkeys caused by wrong conversion.
+
+- [2025-08-29] UI polish and pinning fixes — Edit and Refresh buttons now use the same compact icon style as the Search header actions; Restore/Add per-row controls match that style. Restore is shown only when a command has a Custom entry (hidden for System Shortcuts and when already at defaults). Pinned section now live-updates by subscribing to CommandsManager index changes. The “Hotkeys updated” banner spans the list width, includes a beta warning, and provides quick actions: Undo and Open Vault Folder.
+
+## Next Steps
+
+- [ ] Verify no redundant refreshes are triggered during chip remove/add and restore across grouped and flat views.
+- [ ] Cross-check System Shortcuts rows: no edit/remove/add/restore controls shown.
+- [ ] QA on macOS/Windows/Linux: tooltip shows default chords correctly with baked names.
 
 ## Investigation Plan (Hotkeys)
 

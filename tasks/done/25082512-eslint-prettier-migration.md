@@ -1,6 +1,6 @@
 ---
 title: Migrate to ESLint flat config + Prettier
-status: in_progress
+status: done
 owner: "@agent"
 updated: 2025-08-24 22:40 UTC
 related:
@@ -25,7 +25,7 @@ Replace Biome with ESLint (flat) + Prettier, remove ad‑hoc VS Code/task workar
 - [x] Run `npm run lint` to validate config; capture findings (owner)
 - [ ] Try `npm run build` and verify success (owner)
 - [ ] Confirm VS Code ESLint diagnostics show with flat config (owner)
-- [ ] Close task after commit/push; follow-up task for fixes: [[25080812-fix-eslint-findings]]
+- [ ] Close task after commit/push; follow-up task for fixes: [[25082512-fix-eslint-findings]]
 
 ## Links
 

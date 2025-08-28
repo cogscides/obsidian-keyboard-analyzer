@@ -1,6 +1,6 @@
 ---
 title: SPRINT — Aug 11, 2025: Small-screen UX, Heatmap tuning, Bugfixes
-status: in_progress
+status: done
 owner: "@agent"
 updated: 2025-08-11 13:05 UTC
 related:

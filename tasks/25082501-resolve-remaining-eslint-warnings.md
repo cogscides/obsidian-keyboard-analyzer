@@ -4,8 +4,8 @@ status: done
 owner: "@agent"
 updated: 2025-08-26 09:10 UTC
 related:
-  - [[25080812-eslint-prettier-migration]]
-  - [[25080812-fix-eslint-findings]]
+  - [[25082512-eslint-prettier-migration]]
+  - [[25082512-fix-eslint-findings]]
 ---
 
 ## Context
@@ -81,6 +81,6 @@ After the successful ESLint warning cleanup (commit `be36ba5`), we reduced warni
 
 ## Links
 
-- [[25080812-eslint-prettier-migration]] - Original migration task
-- [[25080812-fix-eslint-findings]] - Previous ESLint fixes
+- [[25082512-eslint-prettier-migration]] - Original migration task
+- [[25082512-fix-eslint-findings]] - Previous ESLint fixes
 - Commit: `be36ba5` - Major ESLint cleanup (34 warnings fixed)

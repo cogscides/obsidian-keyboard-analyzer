@@ -1,6 +1,6 @@
 ---
 title: Preserve editor focus after Quick View interaction
-status: in_progress
+status: done
 owner: "@agent"
 updated: 2025-08-20 13:55 UTC
 related:

@@ -1,10 +1,10 @@
 ---
 title: Fix ESLint findings and tune Svelte/TS rules
-status: in_progress
+status: done
 owner: "@agent"
 updated: 2025-08-25 13:55 UTC
 related:
-  - [[25080812-eslint-prettier-migration]]
+  - [[25082512-eslint-prettier-migration]]
 ---
 
 ## Context
@@ -28,7 +28,7 @@ After migrating to ESLint flat config + Prettier, the repo has several linter er
 
 ## Links
 
-- [[25080812-eslint-prettier-migration]]
+- [[25082512-eslint-prettier-migration]]
 
 ## Progress Log
 
