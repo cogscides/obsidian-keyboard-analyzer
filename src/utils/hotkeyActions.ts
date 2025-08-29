@@ -157,6 +157,10 @@ export async function assignHotkeyAdditive(
 
   // Refresh our view of commands
   cm.refreshIndex()
+  // Schedule a second refresh shortly after to pick up async core updates
+  setTimeout(() => {
+    try { cm.refreshIndex() } catch {}
+  }, 100)
 }
 
 export async function restoreDefaults(
@@ -183,6 +187,9 @@ export async function restoreDefaults(
 
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
   cm.refreshIndex()
+  setTimeout(() => {
+    try { cm.refreshIndex() } catch {}
+  }, 100)
   logger.info(`[hotkeys] restore:done id=${id}`)
   try {
     const name = (cm.getCommandsIndex()[id]?.name || id)
@@ -283,6 +290,9 @@ export async function removeHotkeySingle(
 
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
   cm.refreshIndex()
+  setTimeout(() => {
+    try { cm.refreshIndex() } catch {}
+  }, 100)
   logger.info(`[hotkeys] remove:done id=${id}`)
   try {
     const name = (cm.getCommandsIndex()[id]?.name || id)
