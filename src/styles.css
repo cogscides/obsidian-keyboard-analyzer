@@ -786,9 +786,14 @@ button#hotkey-refresh-button:hover {
   padding-left: 12px;
 }
 
-/* #keyboard-component .hotkey-list-container .setting-item:hover {
-  background-color: var(--background-secondary, --color-d-gray-60);
-} */
+/* Subtle hover highlight for command rows (normal view) */
+#keyboard-component .hotkey-list-container .setting-item:hover,
+#keyboard-component .kbanalizer-setting-item.setting-item:hover {
+  background-color: var(--background-modifier-hover);
+}
+#keyboard-component .kbanalizer-setting-item.setting-item:focus-within {
+  background-color: var(--background-modifier-hover);
+}
 
 #keyboard-component.xs .setting-item {
   flex-direction: row;
