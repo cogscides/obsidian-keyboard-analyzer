@@ -143,6 +143,31 @@ export async function assignHotkeyAdditive(
   if (typeof hm.load === 'function') hm.load()
   hm.bake()
 
+  // Ensure a custom override is recorded even when equal to defaults
+  try {
+    const persistedDefaultSet = new Set(
+      (entry?.defaultHotkeys || []).map(d => {
+        const s: SimpleHotkey = makeSimple((d as any).modifiers, (d as any).key)
+        const mods = canonicalizeModifiersForPersist(s.modifiers)
+        return `${mods.join(',')}|${normalizeKey(s.key)}`
+      })
+    )
+    const persistedNextSet = new Set(
+      (persistedNext || []).map(d => `${d.modifiers.join(',')}|${normalizeKey(d.key)}`)
+    )
+    const equalToDefaults =
+      persistedDefaultSet.size === persistedNextSet.size &&
+      [...persistedDefaultSet].every(v => persistedNextSet.has(v))
+    const hasOverride = !!((hm as any)?.customKeys && (id in (hm as any).customKeys))
+    if (equalToDefaults && !hasOverride) {
+      // Force explicit custom override identical to defaults
+      if ((hm as any).customKeys) (hm as any).customKeys[id] = persistedNext
+      hm.save()
+      if (typeof hm.load === 'function') hm.load()
+      hm.bake()
+    }
+  } catch {}
+
   // Push undo entry
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
   try {
