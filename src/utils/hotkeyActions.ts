@@ -250,6 +250,18 @@ export async function removeHotkeySingle(
         return acc
       }, [])
     hm.setHotkeys(id, persistedNext)
+    // If we tried to remove the only default (persistedNext empty) and core ignored it,
+    // force an explicit empty override and retry persistence.
+    try {
+      if (persistedNext.length === 0) {
+        const eff = (hm.getHotkeys && hm.getHotkeys(id)) || []
+        if (Array.isArray(eff) && eff.length > 0) {
+          if (hm.customKeys) {
+            hm.customKeys[id] = []
+          }
+        }
+      }
+    } catch {}
   }
   hm.save()
   if (typeof hm.load === 'function') hm.load()
