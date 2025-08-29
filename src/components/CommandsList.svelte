@@ -111,6 +111,21 @@
     return hotkeyManager.renderHotkey(hotkey)
   }
 
+  function isEffectivelyDefault(cmd: commandEntry, hk: hotkeyEntry): boolean {
+    try {
+      const mods = sortModifiers(
+        (hk.modifiers as unknown as string[])
+      )
+      const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
+      for (const d of cmd.defaultHotkeys || []) {
+        const dm = sortModifiers((d.modifiers as unknown as string[]) || [])
+        const ds = `${dm.join(',')}|${normalizeKey(d.key || '')}`
+        if (ds === sig) return true
+      }
+    } catch {}
+    return false
+  }
+
   const featuredIds = $derived.by(
     () => new Set(settingsManager.settings.featuredCommandIDs || [])
   )
@@ -630,7 +645,7 @@
                     <span
                       class="kbanalizer-setting-hotkey setting-hotkey"
                       class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
-                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
                     >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
@@ -818,7 +833,7 @@
                             hotkey
                           ) && groupSettings?.HighlightDuplicates}
                           class:is-customized={hotkey.isCustom &&
-                            groupSettings?.HighlightCustom}
+                            groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
                           role="button"
                           tabindex="0"
                           onclick={() =>
@@ -943,7 +958,7 @@
                     <span
                       class="kbanalizer-setting-hotkey setting-hotkey"
                       class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
-                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
                     >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
@@ -1114,7 +1129,7 @@
                     hotkey
                   ) && groupSettings?.HighlightDuplicates}
                   class:is-customized={hotkey.isCustom &&
-                    groupSettings?.HighlightCustom}
+                    groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
                   role="button"
                   tabindex="0"
                   onclick={() => handleDuplicateHotkeyClick(hotkey, cmdEntry)}
@@ -1321,9 +1336,12 @@
   .hotkey-update-banner {
     position: fixed;
     bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(768px, calc(100vw - 32px));
+    left: 8px;
+    right: 8px;
+    transform: none;
+    width: auto;
+    max-width: 768px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     align-items: stretch;

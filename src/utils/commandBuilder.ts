@@ -43,23 +43,30 @@ export function buildCommandEntry(
     if (hm) {
       const defRaw = (hm.getDefaultHotkeys && hm.getDefaultHotkeys(id)) || []
       const cusRaw = (hm.customKeys && hm.customKeys[id]) || []
+      const hasCustomOverride = !!(hm.customKeys && Object.prototype.hasOwnProperty.call(hm.customKeys, id))
       const toEntry = (arr: any[], isCustom: boolean): hotkeyEntry[] =>
         (arr || []).map(info => ({ ...convertKeymapInfoToHotkey(info), isCustom }))
       const defaultEntries = toEntry(defRaw, false)
       const customEntries = toEntry(cusRaw, true)
-      // De-dupe all by normalized signature (platformized, sorted modifiers + normalized key)
-      const map = new Map<string, hotkeyEntry>()
-      const push = (hk: hotkeyEntry) => {
-        const mods = sortModifiers(
-          platformizeModifiers((hk.modifiers as unknown as string[]) || [])
-        )
-        const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
-        map.set(sig, hk)
+      // If explicit custom override exists (including empty array), use custom as authoritative
+      let allEntries: hotkeyEntry[]
+      if (hasCustomOverride) {
+        allEntries = customEntries
+      } else {
+        const map = new Map<string, hotkeyEntry>()
+        const push = (hk: hotkeyEntry) => {
+          const mods = sortModifiers(
+            platformizeModifiers((hk.modifiers as unknown as string[]) || [])
+          )
+          const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
+          map.set(sig, hk)
+        }
+        defaultEntries.forEach(push)
+        customEntries.forEach(push)
+        allEntries = Array.from(map.values())
       }
-      defaultEntries.forEach(push)
-      customEntries.forEach(push)
       hotkeyResult = {
-        all: Array.from(map.values()),
+        all: allEntries,
         default: defaultEntries,
         custom: customEntries,
       }
