@@ -645,7 +645,7 @@
                     <span
                       class="kbanalizer-setting-hotkey setting-hotkey"
                       class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
-                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
+                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
                     >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
@@ -833,7 +833,7 @@
                             hotkey
                           ) && groupSettings?.HighlightDuplicates}
                           class:is-customized={hotkey.isCustom &&
-                            groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
+                            groupSettings?.HighlightCustom}
                           role="button"
                           tabindex="0"
                           onclick={() =>
@@ -958,7 +958,7 @@
                     <span
                       class="kbanalizer-setting-hotkey setting-hotkey"
                       class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
-                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
+                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
                     >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
@@ -1129,7 +1129,7 @@
                     hotkey
                   ) && groupSettings?.HighlightDuplicates}
                   class:is-customized={hotkey.isCustom &&
-                    groupSettings?.HighlightCustom && !isEffectivelyDefault(cmdEntry, hotkey)}
+                    groupSettings?.HighlightCustom}
                   role="button"
                   tabindex="0"
                   onclick={() => handleDuplicateHotkeyClick(hotkey, cmdEntry)}
