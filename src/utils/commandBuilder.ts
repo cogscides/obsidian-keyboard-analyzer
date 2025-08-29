@@ -130,23 +130,22 @@ export function buildCommandEntry(
   const customHotkeys = Array.isArray(hotkeyResult.custom)
     ? hotkeyResult.custom
     : []
-  const allHotkeys =
-    Array.isArray(hotkeyResult.all) && hotkeyResult.all.length > 0
-      ? hotkeyResult.all
-      : // fallback: merge default + custom, de-dupe by normalized signature
-        (() => {
-          const map = new Map<string, hotkeyEntry>()
-          const push = (hk: hotkeyEntry) => {
-            const mods = sortModifiers(
-              platformizeModifiers((hk.modifiers as unknown as string[]) || [])
-            )
-            const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
-            map.set(sig, hk)
-          }
-          defaultHotkeys.forEach(push)
-          customHotkeys.forEach(push)
-          return Array.from(map.values())
-        })()
+  const allHotkeys = Array.isArray(hotkeyResult.all)
+    ? hotkeyResult.all // empty array is valid: means effectively no hotkeys
+    : // fallback: merge default + custom, de-dupe by normalized signature
+      (() => {
+        const map = new Map<string, hotkeyEntry>()
+        const push = (hk: hotkeyEntry) => {
+          const mods = sortModifiers(
+            platformizeModifiers((hk.modifiers as unknown as string[]) || [])
+          )
+          const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
+          map.set(sig, hk)
+        }
+        defaultHotkeys.forEach(push)
+        customHotkeys.forEach(push)
+        return Array.from(map.values())
+      })()
 
   const entry: commandEntry = {
     id,
