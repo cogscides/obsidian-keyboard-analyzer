@@ -175,7 +175,7 @@ export async function assignHotkeyAdditive(
     changeLogStore.update(arr => [`${chordToStr(add)} — ${name}`, ...arr].slice(0, 20))
     revertBufferStore.update(map => {
       const next = new Map(map)
-      next.set(id, { id, prevCustom: prevCustomOrNull, name })
+      if (!next.has(id)) next.set(id, { id, prevCustom: prevCustomOrNull, name })
       return next
     })
   } catch {}
@@ -221,7 +221,7 @@ export async function restoreDefaults(
     changeLogStore.update(arr => [`defaults — ${name}`, ...arr].slice(0, 20))
     revertBufferStore.update(map => {
       const next = new Map(map)
-      next.set(id, { id, prevCustom: prevCustomOrNull, name })
+      if (!next.has(id)) next.set(id, { id, prevCustom: prevCustomOrNull, name })
       return next
     })
   } catch {}
@@ -324,7 +324,7 @@ export async function removeHotkeySingle(
     changeLogStore.update(arr => [`− ${chordToStr(target)} — ${name}`, ...arr].slice(0, 20))
     revertBufferStore.update(map => {
       const next = new Map(map)
-      next.set(id, { id, prevCustom: prevCustomOrNull, name })
+      if (!next.has(id)) next.set(id, { id, prevCustom: prevCustomOrNull, name })
       return next
     })
   } catch {}
