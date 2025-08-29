@@ -1193,7 +1193,7 @@
       <!-- Row 1: Notice -->
       <div class="banner-row notice-row">
         <div class="banner-text">
-          <strong>Edit mode is ON</strong> — This editor is beta/unstable. For safety, prefer the built‑in Hotkeys settings for assignments.
+          <strong>Edit mode is ON</strong> — This editor is beta/unstable. For safety, prefer the built‑in Hotkeys settings for assignments. Important: back up your vault’s <code>.obsidian/hotkeys.json</code> before using Edit mode.
         </div>
       </div>
       <!-- Row 2: Controls and Latest changes toggle -->
