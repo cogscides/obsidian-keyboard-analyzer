@@ -221,20 +221,33 @@
 }
 
 /* Add-to-group icon mirrors star behavior: hidden until hover */
+#keyboard-component .setting-item .star-icon,
 #keyboard-component .setting-item .folder-plus-icon {
-  display: none;
+  /* Keep a stable slot so rows don't jump on hover */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
   margin-left: 6px;
   line-height: 0;
 }
 
+/* Folder-plus is subtle by default, becomes visible on row hover */
+#keyboard-component .setting-item .folder-plus-icon {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
 #keyboard-component .setting-item:hover .folder-plus-icon {
   cursor: pointer;
-  display: flex;
-  align-items: center;
+  visibility: visible;
+  opacity: 0.85;
+  transition-duration: 0.05s; /* faster fade-in */
 }
-
 #keyboard-component .setting-item .folder-plus-icon:hover {
   color: var(--text-accent);
+  opacity: 1;
 }
 
 .shortcuts-wrapper {
@@ -787,12 +800,18 @@ button#hotkey-refresh-button:hover {
 }
 
 /* Subtle hover highlight for command rows (normal view) */
+#keyboard-component .hotkey-list-container .setting-item,
+#keyboard-component .kbanalizer-setting-item.setting-item {
+  transition: background-color 0.1s ease; /* slower fade-out */
+}
 #keyboard-component .hotkey-list-container .setting-item:hover,
 #keyboard-component .kbanalizer-setting-item.setting-item:hover {
   background-color: var(--background-modifier-hover);
+  transition-duration: 0.05s; /* faster fade-in */
 }
 #keyboard-component .kbanalizer-setting-item.setting-item:focus-within {
   background-color: var(--background-modifier-hover);
+  transition-duration: 0.05s;
 }
 
 #keyboard-component.xs .setting-item {
