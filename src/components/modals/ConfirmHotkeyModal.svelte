@@ -8,12 +8,19 @@
     conflicts: commandEntry[]
     onConfirm: () => void
     onCancel: () => void
+    onConfirmPin?: () => void
   }
 
-  let { title, chord, message, conflicts = [], onConfirm, onCancel }: Props = $props()
+  let { title, chord, message, conflicts = [], onConfirm, onCancel, onConfirmPin }: Props = $props()
 </script>
 
-<div class="kba-modal-backdrop" onclick={onCancel} />
+<div
+  class="kba-modal-backdrop"
+  role="button"
+  tabindex="0"
+  onclick={onCancel}
+  onkeydown={(e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onCancel())}
+></div>
 <div class="kba-modal" role="dialog" aria-modal="true" aria-label={title}>
   <div class="kba-modal-header">
     <h3>{title}</h3>
@@ -31,8 +38,14 @@
         {/each}
       </div>
     {/if}
+    {#if onConfirmPin}
+      <div class="kba-note u-muted">“Pin and confirm” will pin this command and all conflicting ones.</div>
+    {/if}
   </div>
   <div class="kba-modal-footer">
+    {#if onConfirmPin}
+      <button class="mod-cta" onclick={onConfirmPin}>Pin and confirm</button>
+    {/if}
     <button class="mod-cta" onclick={onConfirm}>Confirm</button>
     <button onclick={onCancel}>Cancel</button>
   </div>
@@ -65,7 +78,7 @@
   .kba-conflicts { margin-top: 8px; }
   .kba-conflicts-title { font-weight: 600; margin-bottom: 4px; }
   .kba-conflict-item { padding: 2px 0; }
+  .kba-note { margin-top: 8px; font-size: 12px; }
   .u-muted { color: var(--text-muted); }
   .mod-cta { background: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
 </style>
-

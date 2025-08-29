@@ -15,7 +15,7 @@
     "strict": true,
     "target": "es6",
     "useDefineForClassFields": true,
-    "types": ["obsidian", "svelte", "node"],
+    "types": ["obsidian", "obsidian-typings", "svelte", "node"],
     "noEmit": true,
     "allowImportingTsExtensions": true
   },

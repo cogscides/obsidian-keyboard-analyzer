@@ -29,7 +29,28 @@
   import { sortModifiers, normalizeKey } from '../utils/modifierUtils'
   import { editModeStore } from '../stores/uiState.svelte.ts'
   import { removeHotkeySingle } from '../utils/hotkeyActions'
+  import CommandsManager from '../managers/commandsManager'
   import logger from '../utils/logger'
+  import ConfirmHotkeyModal from './modals/ConfirmHotkeyModal.svelte'
+  import { changeLogStore, revertBufferStore, revertChangeForId } from '../utils/hotkeyActions'
+  let changeLog: string[] = $state([])
+  let lastChangeSummary: string = $state('')
+  let modifiedIds: Set<string> = $state(new Set())
+  onMount(() => {
+    const unsubLog = changeLogStore.subscribe(v => {
+      changeLog = v
+      lastChangeSummary = v?.[0] || ''
+    })
+    const unsubBuf = revertBufferStore.subscribe((map: Map<string, any>) => {
+      modifiedIds = new Set(map.keys())
+    })
+    return () => {
+      try {
+        unsubLog?.()
+        unsubBuf?.()
+      } catch {}
+    }
+  })
 
   interface Props {
     filteredCommands: commandEntry[]
@@ -62,7 +83,11 @@
     const unsub = plugin.commandsManager.subscribe(() => {
       indexTick++
     })
-    return () => { try { unsub?.() } catch {} }
+    return () => {
+      try {
+        unsub?.()
+      } catch {}
+    }
   })
 
   // Using callback props instead of component events (Svelte 5)
@@ -136,15 +161,35 @@
   // Minimal inline capture to add a hotkey
   let captureForId: string | null = $state(null)
   let captureLabel: string = $state('')
+  // Confirmation modal state
+  type PendingAssign = {
+    id: string
+    chord: string
+    mods: string[]
+    key: string
+    conflicts: commandEntry[]
+  }
+  type PendingRestore = { id: string; name: string }
+  let pendingAssign: PendingAssign | null = $state(null)
+  let pendingRestore: PendingRestore | null = $state(null)
   function startCapture(id: string) {
     captureForId = id
     captureLabel = 'Press hotkey...'
     window.addEventListener('keydown', onCaptureKeydown, true)
+    window.addEventListener('keypress', onCaptureBlocker, true)
+    window.addEventListener('keyup', onCaptureBlocker, true)
   }
   function endCapture() {
     window.removeEventListener('keydown', onCaptureKeydown, true)
+    window.removeEventListener('keypress', onCaptureBlocker, true)
+    window.removeEventListener('keyup', onCaptureBlocker, true)
     captureForId = null
     captureLabel = ''
+  }
+  function onCaptureBlocker(e: KeyboardEvent) {
+    // Block propagation to avoid triggering Obsidian commands while capturing
+    e.preventDefault()
+    e.stopPropagation()
   }
   async function onCaptureKeydown(e: KeyboardEvent) {
     e.preventDefault()
@@ -153,7 +198,12 @@
       endCapture()
       return
     }
-    if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') {
+    if (
+      e.key === 'Shift' ||
+      e.key === 'Control' ||
+      e.key === 'Alt' ||
+      e.key === 'Meta'
+    ) {
       captureLabel = 'Press hotkey...'
       return
     }
@@ -168,11 +218,38 @@
     const id = captureForId
     endCapture()
     if (!id) return
-    await assignHotkeyAdditive(plugin.app, commandsManager, id, { modifiers: sorted, key })
+    try {
+      const hkKey = CommandsManager.makeHotkeyKey({ modifiers: sorted, key })
+      const conflicts = commandsManager
+        .getCommandsByHotkeyKey(hkKey)
+        .filter(c => c && c.id !== id)
+      if (conflicts.length > 0) {
+        pendingAssign = {
+          id,
+          chord: captureLabel,
+          mods: sorted,
+          key,
+          conflicts,
+        }
+      } else {
+        await assignHotkeyAdditive(plugin.app, commandsManager, id, {
+          modifiers: sorted,
+          key,
+        })
+      }
+    } catch (err) {
+      logger.error('[hotkeys] assign: error', { err })
+    }
   }
 
   async function handleRestore(id: string) {
-    await restoreDefaults(plugin.app, commandsManager, id)
+    try {
+      const entry = commandsManager.getCommandsIndex()[id]
+      if (!entry) return
+      pendingRestore = { id, name: entry.name }
+    } catch (err) {
+      logger.error('[hotkeys] restore: prep error', { err })
+    }
   }
 
   async function handleUndo() {
@@ -190,6 +267,11 @@
   function isPinned(commandId: string): boolean {
     return pinnedIds.has(commandId)
   }
+  function pinMany(ids: string[]) {
+    const next = new Set(pinnedIds)
+    for (const id of ids) next.add(id)
+    pinnedIds = next
+  }
 
   const pinnedEntries = $derived.by(() => {
     indexTick
@@ -202,6 +284,36 @@
   // Remove single hotkey
   async function handleRemoveHotkey(commandId: string, hotkey: hotkeyEntry) {
     await removeHotkeySingle(plugin.app, commandsManager, commandId, hotkey)
+  }
+
+  function openHotkeysSettings() {
+    try {
+      const appAny: any = plugin.app as any
+      if (typeof appAny?.setting?.openTabById === 'function') {
+        appAny.setting.openTabById('hotkeys')
+        return
+      }
+      if (typeof appAny?.setting?.open === 'function') {
+        appAny.setting.open()
+      }
+    } catch {}
+  }
+
+  function scrollToCommand(id: string) {
+    try {
+      const el = document.getElementById(`cmd-row-${id}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('flash')
+        setTimeout(() => el.classList.remove('flash'), 800)
+      }
+    } catch {}
+  }
+
+  function keepChanges() {
+    // Clear the revert buffer and exit edit mode
+    try { revertBufferStore.set(new Map()) } catch {}
+    try { editModeStore.set(false) } catch {}
   }
 
   function isSystemShortcut(cmd?: commandEntry): boolean {
@@ -239,16 +351,21 @@
         return
       }
       if (typeof opener !== 'function') {
-        logger.warn('[hotkeys] openVaultFolder: app.openWithDefaultApp not available')
+        logger.warn(
+          '[hotkeys] openVaultFolder: app.openWithDefaultApp not available'
+        )
         return
       }
 
       const sep = basePath.includes('\\') ? '\\' : '/'
-      const vaultRoot = basePath.replace(/[\\/]+$/,'')
+      const vaultRoot = basePath.replace(/[\\/]+$/, '')
       const obsidianDir = `${vaultRoot}${sep}.obsidian`
       const hotkeysJson = `${obsidianDir}${sep}hotkeys.json`
 
-      logger.debug('[hotkeys] openVaultFolder: trying .obsidian dir', obsidianDir)
+      logger.debug(
+        '[hotkeys] openVaultFolder: trying .obsidian dir',
+        obsidianDir
+      )
       try {
         await (opener as any).call(plugin.app, obsidianDir)
         logger.info('[hotkeys] openVaultFolder: opened .obsidian directory')
@@ -258,17 +375,28 @@
           const shell = (globalThis as any)?.require?.('electron')?.shell
           if (shell?.showItemInFolder) {
             shell.showItemInFolder(hotkeysJson)
-            logger.info('[hotkeys] openVaultFolder: reveal via shell.showItemInFolder(hotkeys.json)')
+            logger.info(
+              '[hotkeys] openVaultFolder: reveal via shell.showItemInFolder(hotkeys.json)'
+            )
           } else if (shell?.openPath) {
             const err: string | undefined = await shell.openPath(obsidianDir)
-            logger.info('[hotkeys] openVaultFolder: shell.openPath(.obsidian) =>', err || 'ok')
+            logger.info(
+              '[hotkeys] openVaultFolder: shell.openPath(.obsidian) =>',
+              err || 'ok'
+            )
           }
         } catch (shellErr) {
-          logger.warn('[hotkeys] openVaultFolder: electron shell fallback failed', { err: shellErr })
+          logger.warn(
+            '[hotkeys] openVaultFolder: electron shell fallback failed',
+            { err: shellErr }
+          )
         }
         return
       } catch (err1) {
-        logger.warn('[hotkeys] openVaultFolder: failed opening .obsidian, try hotkeys.json', { err: err1 })
+        logger.warn(
+          '[hotkeys] openVaultFolder: failed opening .obsidian, try hotkeys.json',
+          { err: err1 }
+        )
       }
       try {
         await (opener as any).call(plugin.app, hotkeysJson)
@@ -277,14 +405,22 @@
           const shell = (globalThis as any)?.require?.('electron')?.shell
           if (shell?.showItemInFolder) {
             shell.showItemInFolder(hotkeysJson)
-            logger.info('[hotkeys] openVaultFolder: reveal via shell.showItemInFolder(hotkeys.json)')
+            logger.info(
+              '[hotkeys] openVaultFolder: reveal via shell.showItemInFolder(hotkeys.json)'
+            )
           }
         } catch (shellErr2) {
-          logger.warn('[hotkeys] openVaultFolder: electron shell fallback 2 failed', { err: shellErr2 })
+          logger.warn(
+            '[hotkeys] openVaultFolder: electron shell fallback 2 failed',
+            { err: shellErr2 }
+          )
         }
         return
       } catch (err2) {
-        logger.warn('[hotkeys] openVaultFolder: failed opening hotkeys.json, fallback to vault root', { err: err2 })
+        logger.warn(
+          '[hotkeys] openVaultFolder: failed opening hotkeys.json, fallback to vault root',
+          { err: err2 }
+        )
       }
       try {
         await (opener as any).call(plugin.app, vaultRoot)
@@ -293,14 +429,22 @@
           const shell = (globalThis as any)?.require?.('electron')?.shell
           if (shell?.openPath) {
             const err: string | undefined = await shell.openPath(vaultRoot)
-            logger.info('[hotkeys] openVaultFolder: shell.openPath(vaultRoot) =>', err || 'ok')
+            logger.info(
+              '[hotkeys] openVaultFolder: shell.openPath(vaultRoot) =>',
+              err || 'ok'
+            )
           }
         } catch (shellErr3) {
-          logger.warn('[hotkeys] openVaultFolder: electron shell fallback 3 failed', { err: shellErr3 })
+          logger.warn(
+            '[hotkeys] openVaultFolder: electron shell fallback 3 failed',
+            { err: shellErr3 }
+          )
         }
         return
       } catch (err3) {
-        logger.error('[hotkeys] openVaultFolder: failed opening vault root', { err: err3 })
+        logger.error('[hotkeys] openVaultFolder: failed opening vault root', {
+          err: err3,
+        })
       }
     } catch (err) {
       logger.error('[hotkeys] openVaultFolder: fatal error', { err })
@@ -357,8 +501,9 @@
   const groupedByPlugin: PluginGroup[] = $derived.by(() => {
     // Track changes
     groupSettings
+    // Exclude pinned commands from the grouped list (they appear in the pinned section)
     const map = new Map<string, commandEntry[]>()
-    for (const cmd of filteredCommands) {
+    for (const cmd of filteredCommands.filter(c => !pinnedIds.has(c.id))) {
       const key = cmd.pluginName || 'Unknown'
       const arr = map.get(key) || []
       arr.push(cmd)
@@ -422,6 +567,117 @@
         {/if}
       </div>
     {:else if groupSettings?.GroupByPlugin}
+      {#if pinnedIds.size > 0}
+        <div class="pinned-container">
+          <div class="pinned-header">Pinned</div>
+          {#each pinnedEntries as cmdEntry (cmdEntry.id)}
+            <div id={`cmd-row-${cmdEntry.id}`} class="kbanalizer-setting-item setting-item is-pinned" class:is-starred={featuredIds.has(cmdEntry.id)}>
+              <div class="setting-item-info">
+                <div class="setting-item-name">
+                  {#if groupSettings?.ShowPluginBadges}
+                    <button
+                      class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
+                      onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
+                    >
+                      {cmdEntry.pluginName}
+                    </button>
+                  {/if}
+                  <span class="command-name" class:is-modified={modifiedIds.has(cmdEntry.id)}
+                    >{getDisplayCommandName(
+                      cmdEntry.name,
+                      cmdEntry.pluginName
+                    )}</span
+                  >
+                  <div class="action-icons">
+                    {#if editMode}
+                      <div
+                        class="pin-icon icon"
+                        role="button"
+                        tabindex="0"
+                        title="Unpin from top"
+                        onclick={() => togglePin(cmdEntry.id)}
+                        onkeydown={(e: KeyboardEvent) =>
+                          (e.key === 'Enter' || e.key === ' ') &&
+                          (e.preventDefault(), togglePin(cmdEntry.id))}
+                      >
+                        <PinIcon size={16} />
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+                {#if groupSettings?.DisplayIDs}
+                  <small>{cmdEntry.id}</small>
+                {/if}
+              </div>
+              <div class="kbanalizer-setting-item-control setting-item-control">
+                {#if editMode && shouldShowRestore(cmdEntry)}
+                  <span
+                    class="row-action-icon setting-restore-hotkey-button"
+                    role="button"
+                    tabindex="0"
+                    aria-label={defaultHotkeysTooltip(cmdEntry)}
+                    title={defaultHotkeysTooltip(cmdEntry)}
+                    onclick={() => handleRestore(cmdEntry.id)}
+                    onkeydown={(e: KeyboardEvent) =>
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      (e.preventDefault(), handleRestore(cmdEntry.id))}
+                    ><RestoreIcon size={16} /></span
+                  >
+                {/if}
+                <div class="setting-command-hotkeys">
+                  {#each cmdEntry.hotkeys as hotkey}
+                    <span
+                      class="kbanalizer-setting-hotkey setting-hotkey"
+                      class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
+                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                    >
+                      {renderHotkey(hotkey)}
+                      {#if editMode && !isSystemShortcut(cmdEntry)}
+                        <span
+                          class="chip-remove"
+                          role="button"
+                          tabindex="0"
+                          title="Remove this hotkey"
+                          onclick={(e: MouseEvent) => {
+                            e.stopPropagation()
+                            handleRemoveHotkey(cmdEntry.id, hotkey)
+                          }}
+                          onkeydown={(e: KeyboardEvent) =>
+                            (e.key === 'Enter' || e.key === ' ') &&
+                            (e.preventDefault(),
+                            handleRemoveHotkey(cmdEntry.id, hotkey))}>×</span
+                        >
+                      {/if}
+                    </span>
+                  {/each}
+                  {#if editMode && !isSystemShortcut(cmdEntry)}
+                    {#if captureForId === cmdEntry.id}
+                      <span
+                        class="kbanalizer-setting-hotkey setting-hotkey mod-active"
+                      >
+                        {captureLabel || 'Press hotkey...'}
+                      </span>
+                    {:else}
+                      <span
+                        class="row-action-icon setting-add-hotkey-button"
+                        role="button"
+                        tabindex="0"
+                        aria-label="Customize this command"
+                        title="Customize this command"
+                        onclick={() => startCapture(cmdEntry.id)}
+                        onkeydown={(e: KeyboardEvent) =>
+                          (e.key === 'Enter' || e.key === ' ') &&
+                          (e.preventDefault(), startCapture(cmdEntry.id))}
+                        ><PlusIcon size={16} /></span
+                      >
+                    {/if}
+                  {/if}
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
       <div class="plugin-groups-toolbar">
         <button class="btn-filter" onclick={collapseAll}>Collapse all</button>
         <button class="btn-filter" onclick={expandAll}>Expand all</button>
@@ -463,19 +719,36 @@
             >
               {#each group.commands as cmdEntry (cmdEntry.id)}
                 <div
+                  id={`cmd-row-${cmdEntry.id}`}
                   class="kbanalizer-setting-item setting-item compact"
                   class:is-starred={featuredIds.has(cmdEntry.id)}
                   class:show-actions={openPopoverFor === cmdEntry.id}
                 >
                   <div class="setting-item-info">
                     <div class="setting-item-name">
-                      <span class="command-name"
+                      <span class="command-name" class:is-modified={modifiedIds.has(cmdEntry.id)}
                         >{getDisplayCommandName(
                           cmdEntry.name,
                           cmdEntry.pluginName
                         )}</span
                       >
                       <div class="action-icons">
+                        {#if editMode}
+                          <div
+                            class="pin-icon icon"
+                            role="button"
+                            tabindex="0"
+                            title={isPinned(cmdEntry.id)
+                              ? 'Unpin from top'
+                              : 'Pin to top'}
+                            onclick={() => togglePin(cmdEntry.id)}
+                            onkeydown={(e: KeyboardEvent) =>
+                              (e.key === 'Enter' || e.key === ' ') &&
+                              (e.preventDefault(), togglePin(cmdEntry.id))}
+                          >
+                            <PinIcon size={16} />
+                          </div>
+                        {/if}
                         <div
                           class="star-icon icon"
                           role="button"
@@ -523,11 +796,17 @@
                   >
                     {#if editMode && shouldShowRestore(cmdEntry)}
                       <span
-                        class="clear-icon icon setting-restore-hotkey-button"
+                        class="row-action-icon setting-restore-hotkey-button"
+                        role="button"
+                        tabindex="0"
                         aria-label={defaultHotkeysTooltip(cmdEntry)}
                         title={defaultHotkeysTooltip(cmdEntry)}
                         onclick={() => handleRestore(cmdEntry.id)}
-                      ><RestoreIcon size={16} /></span>
+                        onkeydown={(e: KeyboardEvent) =>
+                          (e.key === 'Enter' || e.key === ' ') &&
+                          (e.preventDefault(), handleRestore(cmdEntry.id))}
+                        ><RestoreIcon size={16} /></span
+                      >
                     {/if}
                     <div class="setting-command-hotkeys">
                       {#each cmdEntry.hotkeys as hotkey}
@@ -557,24 +836,39 @@
                               role="button"
                               tabindex="0"
                               title="Remove this hotkey"
-                              onclick={(e) => { e.stopPropagation(); handleRemoveHotkey(cmdEntry.id, hotkey) }}
-                              onkeydown={(e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleRemoveHotkey(cmdEntry.id, hotkey))}
-                            >×</span>
+                              onclick={(e: MouseEvent) => {
+                                e.stopPropagation()
+                                handleRemoveHotkey(cmdEntry.id, hotkey)
+                              }}
+                              onkeydown={(e: KeyboardEvent) =>
+                                (e.key === 'Enter' || e.key === ' ') &&
+                                (e.preventDefault(),
+                                handleRemoveHotkey(cmdEntry.id, hotkey))}
+                              >×</span
+                            >
                           {/if}
                         </span>
                       {/each}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
                         {#if captureForId === cmdEntry.id}
-                          <span class="kbanalizer-setting-hotkey setting-hotkey mod-active">
+                          <span
+                            class="kbanalizer-setting-hotkey setting-hotkey mod-active"
+                          >
                             {captureLabel || 'Press hotkey...'}
                           </span>
                         {:else}
                           <span
-                            class="clear-icon icon setting-add-hotkey-button"
+                            class="row-action-icon setting-add-hotkey-button"
+                            role="button"
+                            tabindex="0"
                             aria-label="Customize this command"
                             title="Customize this command"
                             onclick={() => startCapture(cmdEntry.id)}
-                          ><PlusIcon size={16} /></span>
+                            onkeydown={(e: KeyboardEvent) =>
+                              (e.key === 'Enter' || e.key === ' ') &&
+                              (e.preventDefault(), startCapture(cmdEntry.id))}
+                            ><PlusIcon size={16} /></span
+                          >
                         {/if}
                       {/if}
                     </div>
@@ -590,10 +884,23 @@
         <div class="pinned-container">
           <div class="pinned-header">Pinned</div>
           {#each pinnedEntries as cmdEntry (cmdEntry.id)}
-            <div class="kbanalizer-setting-item setting-item is-pinned">
+            <div id={`cmd-row-${cmdEntry.id}`} class="kbanalizer-setting-item setting-item is-pinned" class:is-starred={featuredIds.has(cmdEntry.id)}>
               <div class="setting-item-info">
                 <div class="setting-item-name">
-                  <span class="command-name">{getDisplayCommandName(cmdEntry.name, cmdEntry.pluginName)}</span>
+                  {#if groupSettings?.ShowPluginBadges}
+                    <button
+                      class={`suggestion-prefix ${cmdEntry.isInternalModule && groupSettings?.HighlightBuiltIns ? 'is-builtin' : ''}`}
+                      onclick={() => handlePluginNameClick(cmdEntry.pluginName)}
+                    >
+                      {cmdEntry.pluginName}
+                    </button>
+                  {/if}
+                  <span class="command-name" class:is-modified={modifiedIds.has(cmdEntry.id)}
+                    >{getDisplayCommandName(
+                      cmdEntry.name,
+                      cmdEntry.pluginName
+                    )}</span
+                  >
                   <div class="action-icons">
                     {#if editMode}
                       <div
@@ -602,26 +909,41 @@
                         tabindex="0"
                         title="Unpin from top"
                         onclick={() => togglePin(cmdEntry.id)}
-                        onkeydown={(e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), togglePin(cmdEntry.id))}
+                        onkeydown={(e: KeyboardEvent) =>
+                          (e.key === 'Enter' || e.key === ' ') &&
+                          (e.preventDefault(), togglePin(cmdEntry.id))}
                       >
                         <PinIcon size={16} />
                       </div>
                     {/if}
                   </div>
                 </div>
+                {#if groupSettings?.DisplayIDs}
+                  <small>{cmdEntry.id}</small>
+                {/if}
               </div>
               <div class="kbanalizer-setting-item-control setting-item-control">
                 {#if editMode && shouldShowRestore(cmdEntry)}
                   <span
-                    class="clear-icon icon setting-restore-hotkey-button"
+                    class="row-action-icon setting-restore-hotkey-button"
+                    role="button"
+                    tabindex="0"
                     aria-label={defaultHotkeysTooltip(cmdEntry)}
                     title={defaultHotkeysTooltip(cmdEntry)}
                     onclick={() => handleRestore(cmdEntry.id)}
-                  ><RestoreIcon size={16} /></span>
+                    onkeydown={(e: KeyboardEvent) =>
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      (e.preventDefault(), handleRestore(cmdEntry.id))}
+                    ><RestoreIcon size={16} /></span
+                  >
                 {/if}
                 <div class="setting-command-hotkeys">
                   {#each cmdEntry.hotkeys as hotkey}
-                    <span class="kbanalizer-setting-hotkey setting-hotkey">
+                    <span
+                      class="kbanalizer-setting-hotkey setting-hotkey"
+                      class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
+                      class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                    >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
                         <span
@@ -629,24 +951,38 @@
                           role="button"
                           tabindex="0"
                           title="Remove this hotkey"
-                          onclick={(e) => { e.stopPropagation(); handleRemoveHotkey(cmdEntry.id, hotkey) }}
-                          onkeydown={(e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleRemoveHotkey(cmdEntry.id, hotkey))}
-                        >×</span>
+                          onclick={(e: MouseEvent) => {
+                            e.stopPropagation()
+                            handleRemoveHotkey(cmdEntry.id, hotkey)
+                          }}
+                          onkeydown={(e: KeyboardEvent) =>
+                            (e.key === 'Enter' || e.key === ' ') &&
+                            (e.preventDefault(),
+                            handleRemoveHotkey(cmdEntry.id, hotkey))}>×</span
+                        >
                       {/if}
                     </span>
                   {/each}
                   {#if editMode && !isSystemShortcut(cmdEntry)}
                     {#if captureForId === cmdEntry.id}
-                      <span class="kbanalizer-setting-hotkey setting-hotkey mod-active">
+                      <span
+                        class="kbanalizer-setting-hotkey setting-hotkey mod-active"
+                      >
                         {captureLabel || 'Press hotkey...'}
                       </span>
                     {:else}
                       <span
-                        class="clear-icon icon setting-add-hotkey-button"
+                        class="row-action-icon setting-add-hotkey-button"
+                        role="button"
+                        tabindex="0"
                         aria-label="Customize this command"
                         title="Customize this command"
                         onclick={() => startCapture(cmdEntry.id)}
-                      ><PlusIcon size={16} /></span>
+                        onkeydown={(e: KeyboardEvent) =>
+                          (e.key === 'Enter' || e.key === ' ') &&
+                          (e.preventDefault(), startCapture(cmdEntry.id))}
+                        ><PlusIcon size={16} /></span
+                      >
                     {/if}
                   {/if}
                 </div>
@@ -657,6 +993,7 @@
       {/if}
       {#each filteredCommands.filter(c => !isPinned(c.id)) as cmdEntry (cmdEntry.id)}
         <div
+          id={`cmd-row-${cmdEntry.id}`}
           class="kbanalizer-setting-item setting-item"
           class:is-starred={featuredIds.has(cmdEntry.id)}
           class:show-actions={openPopoverFor === cmdEntry.id}
@@ -671,7 +1008,7 @@
                   {cmdEntry.pluginName}
                 </button>
               {/if}
-              <span class="command-name"
+              <span class="command-name" class:is-modified={modifiedIds.has(cmdEntry.id)}
                 >{getDisplayCommandName(
                   cmdEntry.name,
                   cmdEntry.pluginName
@@ -683,7 +1020,9 @@
                     class="pin-icon icon"
                     role="button"
                     tabindex="0"
-                    title={isPinned(cmdEntry.id) ? 'Unpin from top' : 'Pin to top'}
+                    title={isPinned(cmdEntry.id)
+                      ? 'Unpin from top'
+                      : 'Pin to top'}
                     onclick={() => togglePin(cmdEntry.id)}
                     onkeydown={(e: KeyboardEvent) =>
                       (e.key === 'Enter' || e.key === ' ') &&
@@ -753,11 +1092,17 @@
           <div class="kbanalizer-setting-item-control setting-item-control">
             {#if editMode}
               <span
-                class="clickable-icon setting-restore-hotkey-button"
+                class="row-action-icon setting-restore-hotkey-button"
+                role="button"
+                tabindex="0"
                 aria-label="Restore default"
                 title="Restore default"
                 onclick={() => handleRestore(cmdEntry.id)}
-              ><RestoreIcon size={16} /></span>
+                onkeydown={(e: KeyboardEvent) =>
+                  (e.key === 'Enter' || e.key === ' ') &&
+                  (e.preventDefault(), handleRestore(cmdEntry.id))}
+                ><RestoreIcon size={16} /></span
+              >
             {/if}
             <div class="setting-command-hotkeys">
               {#each cmdEntry.hotkeys as hotkey}
@@ -786,24 +1131,38 @@
                       role="button"
                       tabindex="0"
                       title="Remove this hotkey"
-                      onclick={(e) => { e.stopPropagation(); handleRemoveHotkey(cmdEntry.id, hotkey) }}
-                      onkeydown={(e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleRemoveHotkey(cmdEntry.id, hotkey))}
-                    >×</span>
+                      onclick={(e: MouseEvent) => {
+                        e.stopPropagation()
+                        handleRemoveHotkey(cmdEntry.id, hotkey)
+                      }}
+                      onkeydown={(e: KeyboardEvent) =>
+                        (e.key === 'Enter' || e.key === ' ') &&
+                        (e.preventDefault(),
+                        handleRemoveHotkey(cmdEntry.id, hotkey))}>×</span
+                    >
                   {/if}
                 </span>
               {/each}
               {#if editMode}
                 {#if captureForId === cmdEntry.id}
-                  <span class="kbanalizer-setting-hotkey setting-hotkey mod-active">
+                  <span
+                    class="kbanalizer-setting-hotkey setting-hotkey mod-active"
+                  >
                     {captureLabel || 'Press hotkey...'}
                   </span>
                 {:else}
                   <span
-                    class="clickable-icon setting-add-hotkey-button"
+                    class="row-action-icon setting-add-hotkey-button"
+                    role="button"
+                    tabindex="0"
                     aria-label="Customize this command"
                     title="Customize this command"
                     onclick={() => startCapture(cmdEntry.id)}
-                  ><PlusIcon size={16} /></span>
+                    onkeydown={(e: KeyboardEvent) =>
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      (e.preventDefault(), startCapture(cmdEntry.id))}
+                    ><PlusIcon size={16} /></span
+                  >
                 {/if}
               {/if}
             </div>
@@ -813,19 +1172,88 @@
     {/if}
   </div>
 
-  {#if $lastHotkeyChange}
-    <div class="hotkey-update-banner" role="status" aria-live="polite">
-      <div class="banner-text">
-        <strong>Hotkeys updated</strong> — This editing feature is in beta and may cause issues. Consider backing up your vault’s .obsidian/hotkeys.json.
+  {#if editMode || $lastHotkeyChange}
+    <div class="hotkey-update-banner is-fixed" role="status" aria-live="polite">
+      <!-- Row 1: Notice -->
+      <div class="banner-row notice-row">
+        <div class="banner-text">
+          <strong>Edit mode is ON</strong> — This editor is beta/unstable. For safety, prefer the built‑in Hotkeys settings for assignments.
+        </div>
       </div>
-      <div class="banner-actions">
-        <button class="btn-banner" onclick={openVaultFolder} title="Open your vault folder in the system file explorer">Open vault folder</button>
-        <button class="btn-banner is-accent" onclick={handleUndo} title="Undo last hotkey change">Undo</button>
+      <!-- Row 2: Controls and Latest changes toggle -->
+      <div class="banner-row controls-row">
+        <details class="changes-toggle">
+          <summary>Latest changes</summary>
+          <!-- Row 3: Expanded list (revertable changes) -->
+          <ul class="log-list">
+            {#each Array.from(modifiedIds) as id}
+              {#if commandsManager.getCommandsIndex()[id]}
+                {@const c = commandsManager.getCommandsIndex()[id]}
+                <li>
+                  <button class="linkish" onclick={() => scrollToCommand(id)}><em>{c.name}</em></button>
+                  —
+                  {#each c.hotkeys as hk, j}
+                    <strong>{renderHotkey(hk)}{j < c.hotkeys.length - 1 ? ', ' : ''}</strong>
+                  {/each}
+                  <button class="btn-banner" onclick={() => revertChangeForId(plugin.app, commandsManager, id)} title="Revert this change">Revert</button>
+                </li>
+              {/if}
+            {/each}
+          </ul>
+        </details>
+        <div class="banner-actions">
+          <button class="btn-banner" onclick={openVaultFolder} title="Open your vault folder in the system file explorer">Open vault folder</button>
+          {#if modifiedIds.size > 0}
+            <button class="btn-banner" onclick={keepChanges} title="Clear revert list and exit Edit mode">Keep changes</button>
+          {/if}
+          {#if $lastHotkeyChange}
+            <button class="btn-banner is-accent" onclick={handleUndo} title="Undo last hotkey change">Undo</button>
+          {/if}
+        </div>
       </div>
     </div>
   {/if}
-
 </div>
+
+{#if pendingAssign}
+  <ConfirmHotkeyModal
+    title="Duplicate hotkey"
+    chord={pendingAssign.chord}
+    message="This hotkey is already used by the following commands. Proceed to add anyway?"
+    conflicts={pendingAssign.conflicts}
+    onConfirmPin={async () => {
+      const p = pendingAssign; pendingAssign = null; if (!p) return;
+      pinMany([p.id, ...p.conflicts.map(c => c.id)])
+      await assignHotkeyAdditive(plugin.app, commandsManager, p.id, { modifiers: p.mods, key: p.key })
+    }}
+    onConfirm={async () => {
+      const p = pendingAssign
+      pendingAssign = null
+      if (!p) return
+      await assignHotkeyAdditive(plugin.app, commandsManager, p.id, {
+        modifiers: p.mods,
+        key: p.key,
+      })
+    }}
+    onCancel={() => (pendingAssign = null)}
+  />
+{/if}
+
+{#if pendingRestore}
+  <ConfirmHotkeyModal
+    title="Restore default hotkeys"
+    chord=""
+    message={`Restore \"${pendingRestore.name}\" to its default hotkeys?`}
+    conflicts={[]}
+    onConfirm={async () => {
+      const p = pendingRestore
+      pendingRestore = null
+      if (!p) return
+      await restoreDefaults(plugin.app, commandsManager, p.id)
+    }}
+    onCancel={() => (pendingRestore = null)}
+  />
+{/if}
 
 <style>
   /* Centered, polished empty state */
@@ -860,8 +1288,18 @@
     margin: 0;
     padding-left: 18px;
   }
-  .pinned-header { font-weight: 600; color: var(--text-muted); margin: 4px 0 6px 0; }
-  .pinned-container { border: 1px solid var(--background-modifier-border); background: var(--background-secondary); border-radius: 8px; padding: 4px 8px 8px 8px; margin: 6px 0 10px 0; }
+  .pinned-header {
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 4px 0 6px 0;
+  }
+  .pinned-container {
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 4px 8px 8px 8px;
+    margin: 6px 0 10px 0;
+  }
 
   .clickable-icon {
     display: inline-flex;
@@ -880,22 +1318,40 @@
   }
 
   .hotkey-update-banner {
-    position: sticky;
-    bottom: 8px;
-    width: 100%;
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(768px, calc(100vw - 32px));
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
     margin-top: 12px;
     padding: 10px 12px;
     border: 1px solid var(--background-modifier-border);
     background: var(--background-secondary);
     border-radius: 8px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    z-index: 150000;
   }
-  .hotkey-update-banner .banner-text { color: var(--text-normal); }
+  .hotkey-update-banner .banner-text {
+    color: var(--text-normal);
+  }
+  .banner-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .controls-row { align-items: flex-start; }
+  .changes-toggle { margin: 0; }
+  .changes-toggle > summary { cursor: pointer; color: var(--text-muted); }
+  .log-list { margin: 6px 0 0 16px; padding: 0; }
+  .log-list li { margin: 2px 0; }
   .hotkey-update-banner .banner-actions { display: inline-flex; gap: 8px; }
+  .linkish { background: none; border: none; color: var(--text-accent); cursor: pointer; padding: 0; }
+  .command-name.is-modified { font-style: italic; }
+  #hotkeys-wrapper .flash { animation: flash-bg 0.8s ease; }
+  @keyframes flash-bg {
+    0% { background: var(--background-modifier-hover); }
+    100% { background: transparent; }
+  }
   .btn-banner {
     height: 28px;
     padding: 0 10px;
@@ -943,28 +1399,51 @@
     background: var(--background-modifier-hover);
     color: var(--text-normal);
   }
-  .action-icons { position: relative; display: inline-flex; align-items: center; overflow: visible; }
-  .action-icons .icon { margin-left: 6px; cursor: pointer; opacity: 0; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; }
-  .kbanalizer-setting-item:hover .action-icons .icon { opacity: 0.85; }
-  .action-icons .icon:first-child { margin-left: 0; }
-  .action-icons .icon:hover { opacity: 1; }
-
-  /* Normalize inline edit icons to match search input action buttons */
-  .setting-item-control .icon {
-    width: 28px;
-    height: 28px;
+  .action-icons {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    overflow: visible;
+  }
+  .action-icons .icon {
+    margin-left: 6px;
+    cursor: pointer;
+    opacity: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    background: var(--background-modifier-form-field);
-    color: var(--text-faint);
+    width: 24px;
+    height: 24px;
   }
-  .setting-item-control .icon:hover,
-  .setting-item-control .icon:focus-visible {
-    border-color: var(--interactive-accent);
+  .kbanalizer-setting-item:hover .action-icons .icon {
+    opacity: 0.85;
+  }
+  .action-icons .icon:first-child {
+    margin-left: 0;
+  }
+  .action-icons .icon:hover {
+    opacity: 1;
+  }
+
+  /* Low-emphasis row action icons (Add / Restore) */
+  .row-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-left: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    background: transparent;
+    opacity: 0.7;
+  }
+  .row-action-icon:hover,
+  .row-action-icon:focus-visible {
+    opacity: 1;
+    background: var(--background-modifier-hover);
     color: var(--text-normal);
+    outline: none;
   }
 </style>

@@ -2,7 +2,7 @@ import type { App } from 'obsidian'
 import type { commandEntry, hotkeyEntry } from '../interfaces/Interfaces'
 import type CommandsManager from '../managers/commandsManager'
 import { normalizeKey, sortModifiers, canonicalizeModifiersForPersist } from './modifierUtils'
-import { writable } from 'svelte/store'
+import { writable, get } from 'svelte/store'
 import logger from './logger'
 
 export type SimpleHotkey = { modifiers: string[]; key: string }
@@ -15,6 +15,11 @@ type UndoEntry = {
 // Store the last change for quick undo. Keep only one-level undo for simplicity.
 const lastChangeStore = writable<UndoEntry | null>(null)
 export const lastHotkeyChange = lastChangeStore
+// Append-only, in-memory log of applied hotkey changes for the banner (most recent first)
+export const changeLogStore = writable<string[]>([])
+// Revert buffer: commands with changes we can revert (id -> previous custom state)
+export type RevertEntry = { id: string; prevCustom: SimpleHotkey[] | null; name?: string }
+export const revertBufferStore = writable<Map<string, RevertEntry>>(new Map())
 
 function toSimple(hk: hotkeyEntry): SimpleHotkey {
   const mods = sortModifiers((hk.modifiers as unknown as string[]) || [])
@@ -140,6 +145,15 @@ export async function assignHotkeyAdditive(
 
   // Push undo entry
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
+  try {
+    const name = (cm.getCommandsIndex()[id]?.name || id)
+    changeLogStore.update(arr => [`${chordToStr(add)} — ${name}`, ...arr].slice(0, 20))
+    revertBufferStore.update(map => {
+      const next = new Map(map)
+      next.set(id, { id, prevCustom: prevCustomOrNull, name })
+      return next
+    })
+  } catch {}
 
   // Refresh our view of commands
   cm.refreshIndex()
@@ -170,6 +184,15 @@ export async function restoreDefaults(
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
   cm.refreshIndex()
   logger.info(`[hotkeys] restore:done id=${id}`)
+  try {
+    const name = (cm.getCommandsIndex()[id]?.name || id)
+    changeLogStore.update(arr => [`defaults — ${name}`, ...arr].slice(0, 20))
+    revertBufferStore.update(map => {
+      const next = new Map(map)
+      next.set(id, { id, prevCustom: prevCustomOrNull, name })
+      return next
+    })
+  } catch {}
 }
 
 /** Remove a single hotkey from a command (per-chip delete). */
@@ -235,15 +258,21 @@ export async function removeHotkeySingle(
   lastChangeStore.set({ id, prevCustom: prevCustomOrNull })
   cm.refreshIndex()
   logger.info(`[hotkeys] remove:done id=${id}`)
+  try {
+    const name = (cm.getCommandsIndex()[id]?.name || id)
+    changeLogStore.update(arr => [`− ${chordToStr(target)} — ${name}`, ...arr].slice(0, 20))
+    revertBufferStore.update(map => {
+      const next = new Map(map)
+      next.set(id, { id, prevCustom: prevCustomOrNull, name })
+      return next
+    })
+  } catch {}
 }
 
 export async function undoLastChange(app: App, cm: CommandsManager): Promise<boolean> {
   let undone = false
-  let snapshot: UndoEntry | null = null
-  lastChangeStore.update(v => {
-    snapshot = v
-    return null
-  })
+  const snapshot: UndoEntry | null = get(lastChangeStore)
+  lastChangeStore.set(null)
   if (!snapshot) return false
 
   const apis = hasAPIs(app)
@@ -261,5 +290,48 @@ export async function undoLastChange(app: App, cm: CommandsManager): Promise<boo
   hm.bake()
   cm.refreshIndex()
   undone = true
+  try {
+    const name = (cm.getCommandsIndex()[snapshot.id]?.name || snapshot.id)
+    changeLogStore.update(arr => [`undo — ${name}`, ...arr].slice(0, 20))
+    revertBufferStore.update(map => {
+      const next = new Map(map)
+      next.delete(snapshot!.id)
+      return next
+    })
+  } catch {}
   return undone
+}
+
+/** Revert a specific command back to its pre-change custom state from the buffer. */
+export async function revertChangeForId(app: App, cm: CommandsManager, id: string): Promise<boolean> {
+  const apis = hasAPIs(app)
+  if (!apis.save || !apis.bake) return false
+  let entry: RevertEntry | undefined
+  revertBufferStore.update(map => {
+    entry = map.get(id)
+    return map
+  })
+  if (!entry) return false
+  const hm = (app as any).hotkeyManager
+  if (entry.prevCustom && entry.prevCustom.length) {
+    hm.setHotkeys(id, entry.prevCustom)
+  } else {
+    if (!apis.remove) return false
+    hm.removeHotkeys(id)
+  }
+  hm.save()
+  if (typeof hm.load === 'function') hm.load()
+  hm.bake()
+  cm.refreshIndex()
+  // Remove from buffer and log
+  revertBufferStore.update(map => {
+    const next = new Map(map)
+    next.delete(id)
+    return next
+  })
+  try {
+    const name = (cm.getCommandsIndex()[id]?.name || id)
+    changeLogStore.update(arr => [`revert — ${name}`, ...arr].slice(0, 20))
+  } catch {}
+  return true
 }

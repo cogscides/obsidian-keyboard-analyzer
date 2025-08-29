@@ -242,6 +242,9 @@
   padding-left: 24px;
   padding-right: 24px;
   margin: 0px auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* .hotkey-search-menu {

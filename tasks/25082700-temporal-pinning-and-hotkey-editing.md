@@ -2,8 +2,9 @@
 title: Temporal pinning and hotkey editing in Commands list
 status: in_progress
 owner: "@agent"
-updated: 2025-08-29 01:55 UTC
-related: []
+updated: 2025-08-29 02:25 UTC
+related:
+  - [[25082901-hide-restore-when-custom-equals-defaults]]
 ---
 
 ## Context
@@ -139,6 +140,16 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
   - Edit has restore-before-chips and add/capture after chips; chip-level delete “×” available only in Edit.
   - Pinning: session-only Set of ids; dedicated “Pinned” container; clear pins when Edit toggles off.
 
+- [2025-08-29] Pinning implementation — Pinned section now appears above both grouped and flat lists; pinned commands are excluded from the main lists and are unaffected by filters. Pin icon added to grouped rows (Edit mode + hover) alongside Star/Folder actions. Per-row Restore/Add icons standardized to match toolbar button styling.
+
+## Next Steps
+
+- [ ] Conflicts check on assign — detect existing commands using the same chord and prompt to proceed/cancel; optionally auto-remove conflicting custom chords from other commands when overriding.
+- [ ] Confirmation on restore — show explicit diff (custom → defaults) and confirm before applying.
+- [ ] Optional: hide Restore when custom equals defaults (needs equivalence check against defaults with canonicalization).
+- [ ] Verify grouped view pin UX across platforms (hover + keyboard accessibility).
+- [ ] Consider persistence of revert buffer across view close or edit-off. Current behavior: changes apply immediately; revert buffer clears if user presses Keep/clears list (future), or after undo/revert. Add note reminding users to verify hotkeys after editing.
+
 - Logging:
   - All hotkey actions produce single-line logs:
     - `assign:start id=... new=... defaults=[...] custom=[...]`
@@ -158,4 +169,14 @@ Add two related UX features to the Commands list: (1) temporal pinning of select
 
 - Obsidian Hotkeys docs: https://docs.obsidian.md/Files+and+folders/Customize+keyboard+shortcuts
 - [[design-note]] (add details/visuals as decided)
+- [2025-08-29] Banner UX — Show an Edit-mode banner (fixed bottom):
+  - Copy: “Edit mode is ON — This editor is beta/unstable. For safety, prefer the built‑in Hotkeys settings for assignments.”
+  - Layout: Row 1 notice; Row 2 latest changes toggle + Open vault folder + Undo (only when applicable); Row 3 list of revertable recent changes (expanded).
+  - “Latest changes” shows only commands with revertable changes (excludes “undo” lines). Each item: italic command title (click to scroll to row), bold current hotkeys, and a Revert button.
+  - Modified commands in list are italicized inline until reverted.
+
+- [2025-08-29] Duplicate modal — Add “Pin and confirm” as the primary CTA, which assigns the hotkey and pins both the target and conflicting commands.
+
+- [2025-08-29] Capture safety — While assigning a hotkey, intercept keydown/keypress/keyup with capture, stopPropagation + preventDefault to avoid triggering Obsidian shortcuts during capture.
+
 ---
