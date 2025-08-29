@@ -363,6 +363,42 @@ export async function undoLastChange(app: App, cm: CommandsManager): Promise<boo
   return undone
 }
 
+/** Undo all accumulated changes in the revert buffer in one shot. Returns number of changes undone. */
+export async function undoAllChanges(app: App, cm: CommandsManager): Promise<number> {
+  const apis = hasAPIs(app)
+  if (!apis.save || !apis.bake) return 0
+  const hm = (app as any).hotkeyManager
+  const snapshot: Map<string, RevertEntry> = get(revertBufferStore)
+  if (!snapshot || snapshot.size === 0) return 0
+
+  // Apply all reverts without saving each time; save/bake once at the end.
+  let count = 0
+  for (const [id, entry] of snapshot.entries()) {
+    try {
+      if (entry.prevCustom && entry.prevCustom.length) {
+        hm.setHotkeys(id, entry.prevCustom)
+      } else {
+        if (!apis.remove) continue
+        hm.removeHotkeys(id)
+      }
+      count++
+    } catch {
+      // continue
+    }
+  }
+  hm.save()
+  if (typeof hm.load === 'function') hm.load()
+  hm.bake()
+  cm.refreshIndex()
+  setTimeout(() => { try { cm.refreshIndex() } catch {} }, 100)
+
+  // Clear buffers and log
+  revertBufferStore.set(new Map())
+  lastChangeStore.set(null)
+  try { changeLogStore.update(arr => [`undo-all n=${count}`, ...arr].slice(0, 20)) } catch {}
+  return count
+}
+
 /** Revert a specific command back to its pre-change custom state from the buffer. */
 export async function revertChangeForId(app: App, cm: CommandsManager, id: string): Promise<boolean> {
   const apis = hasAPIs(app)

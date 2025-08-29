@@ -32,7 +32,7 @@
   import CommandsManager from '../managers/commandsManager'
   import logger from '../utils/logger'
   import ConfirmHotkeyModal from './modals/ConfirmHotkeyModal.svelte'
-  import { changeLogStore, revertBufferStore, revertChangeForId } from '../utils/hotkeyActions'
+  import { changeLogStore, revertBufferStore, revertChangeForId, undoAllChanges } from '../utils/hotkeyActions'
   let changeLog: string[] = $state([])
   let lastChangeSummary: string = $state('')
   let modifiedIds: Set<string> = $state(new Set())
@@ -268,7 +268,7 @@
   }
 
   async function handleUndo() {
-    await undoLastChange(plugin.app, commandsManager)
+    await undoAllChanges(plugin.app, commandsManager)
   }
 
   // Pinning state (session-only)
@@ -1222,8 +1222,8 @@
           {#if modifiedIds.size > 0}
             <button class="btn-banner" onclick={keepChanges} title="Clear revert list and exit Edit mode">Keep changes</button>
           {/if}
-          {#if $lastHotkeyChange}
-            <button class="btn-banner is-accent" onclick={handleUndo} title="Undo last hotkey change">Undo</button>
+          {#if modifiedIds.size > 0}
+            <button class="btn-banner is-accent" onclick={handleUndo} title="Undo all hotkey changes">Undo all</button>
           {/if}
         </div>
       </div>
