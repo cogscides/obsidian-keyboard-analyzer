@@ -313,6 +313,7 @@
   function keepChanges() {
     // Clear the revert buffer and exit edit mode
     try { revertBufferStore.set(new Map()) } catch {}
+    try { lastHotkeyChange.set(null) } catch {}
     try { editModeStore.set(false) } catch {}
   }
 
