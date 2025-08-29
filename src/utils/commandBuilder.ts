@@ -49,33 +49,31 @@ export function buildCommandEntry(
         (arr || []).map(info => ({ ...convertKeymapInfoToHotkey(info), isCustom }))
       const defaultEntries = toEntry(defRaw, false)
       const customEntries = toEntry(cusRaw, true)
-      // If explicit custom override exists (including empty array), use custom as authoritative
+      // Prefer effective hotkeys from Obsidian; compute isCustom by matching against custom entries
       let allEntries: hotkeyEntry[]
-      if (hasCustomOverride) {
+      const sig = (hk: hotkeyEntry) => {
+        const mods = sortModifiers(
+          platformizeModifiers((hk.modifiers as unknown as string[]) || [])
+        )
+        return `${mods.join(',')}|${normalizeKey(hk.key || '')}`
+      }
+      if (Array.isArray(effRaw)) {
+        const eff = (effRaw || []).map(info => ({
+          ...convertKeymapInfoToHotkey(info as any),
+          isCustom: false,
+        }))
+        const customSig = new Set(customEntries.map(h => sig(h)))
+        allEntries = eff.map(h => ({ ...h, isCustom: customSig.has(sig(h)) }))
+      } else if (hasCustomOverride) {
+        // No effective available, but override present → custom only
         allEntries = customEntries
       } else {
+        // Legacy fallback: union default + custom
         const map = new Map<string, hotkeyEntry>()
-        const push = (hk: hotkeyEntry) => {
-          const mods = sortModifiers(
-            platformizeModifiers((hk.modifiers as unknown as string[]) || [])
-          )
-          const sig = `${mods.join(',')}|${normalizeKey(hk.key || '')}`
-          map.set(sig, hk)
-        }
+        const push = (hk: hotkeyEntry) => map.set(sig(hk), hk)
         defaultEntries.forEach(push)
         customEntries.forEach(push)
         allEntries = Array.from(map.values())
-        // Fallback to effective hotkeys from Obsidian if they differ from union
-        try {
-          const toSig = (arr: hotkeyEntry[]) => arr.map(h => {
-            const mods = sortModifiers(platformizeModifiers((h.modifiers as unknown as string[]) || []))
-            return `${mods.join(',')}|${normalizeKey(h.key || '')}`
-          }).sort().join(';')
-          const effEntries = effRaw.map(info => ({ ...convertKeymapInfoToHotkey(info as any), isCustom: false }))
-          if (toSig(effEntries) !== toSig(allEntries)) {
-            allEntries = effEntries
-          }
-        } catch {}
       }
       hotkeyResult = {
         all: allEntries,
