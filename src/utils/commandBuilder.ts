@@ -43,7 +43,8 @@ export function buildCommandEntry(
     if (hm) {
       const defRaw = (hm.getDefaultHotkeys && hm.getDefaultHotkeys(id)) || []
       const cusRaw = (hm.customKeys && hm.customKeys[id]) || []
-      const hasCustomOverride = !!(hm.customKeys && Object.prototype.hasOwnProperty.call(hm.customKeys, id))
+      const effRaw = (hm.getHotkeys && hm.getHotkeys(id)) || []
+      const hasCustomOverride = !!(hm.customKeys && (id in hm.customKeys))
       const toEntry = (arr: any[], isCustom: boolean): hotkeyEntry[] =>
         (arr || []).map(info => ({ ...convertKeymapInfoToHotkey(info), isCustom }))
       const defaultEntries = toEntry(defRaw, false)
@@ -64,6 +65,17 @@ export function buildCommandEntry(
         defaultEntries.forEach(push)
         customEntries.forEach(push)
         allEntries = Array.from(map.values())
+        // Fallback to effective hotkeys from Obsidian if they differ from union
+        try {
+          const toSig = (arr: hotkeyEntry[]) => arr.map(h => {
+            const mods = sortModifiers(platformizeModifiers((h.modifiers as unknown as string[]) || []))
+            return `${mods.join(',')}|${normalizeKey(h.key || '')}`
+          }).sort().join(';')
+          const effEntries = effRaw.map(info => ({ ...convertKeymapInfoToHotkey(info as any), isCustom: false }))
+          if (toSig(effEntries) !== toSig(allEntries)) {
+            allEntries = effEntries
+          }
+        } catch {}
       }
       hotkeyResult = {
         all: allEntries,
