@@ -646,6 +646,10 @@
                       class="kbanalizer-setting-hotkey setting-hotkey"
                       class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
                       class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                      role="button"
+                      tabindex="0"
+                      onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
+                      onmouseleave={handleHotkeyMouseLeave}
                     >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
@@ -959,6 +963,10 @@
                       class="kbanalizer-setting-hotkey setting-hotkey"
                       class:is-duplicate={hotkeyManager.isHotkeyDuplicate(cmdEntry.id, hotkey) && groupSettings?.HighlightDuplicates}
                       class:is-customized={hotkey.isCustom && groupSettings?.HighlightCustom}
+                      role="button"
+                      tabindex="0"
+                      onmouseenter={() => handleHotkeyMouseEnter(hotkey)}
+                      onmouseleave={handleHotkeyMouseLeave}
                     >
                       {renderHotkey(hotkey)}
                       {#if editMode && !isSystemShortcut(cmdEntry)}
