@@ -462,6 +462,31 @@ export default class CommandsManager {
       return this.sortByFeaturedFirst(filteredCommands)
     }
 
+    // If System Shortcuts are displayed, hide duplicates that mirror real commands' chords
+    if (filterSettings?.DisplaySystemShortcuts) {
+      try {
+        const sig = (hk: hotkeyEntry) => {
+          const normMods = sortModifiers(
+            platformizeModifiers(hk.modifiers as unknown as string[])
+          )
+          return `${normMods.join(',')}|${normalizeKey(hk.key || '')}`
+        }
+        const realChords = new Set<string>()
+        for (const c of filteredCommands) {
+          if (c.pluginName === 'System Shortcuts') continue
+          for (const hk of c.hotkeys || []) realChords.add(sig(hk))
+        }
+        const deduped = filteredCommands.filter(c => {
+          if (c.pluginName !== 'System Shortcuts') return true
+          // keep only system entries whose chords are not present on real commands
+          return !(c.hotkeys || []).some(hk => realChords.has(sig(hk)))
+        })
+        return deduped
+      } catch {
+        // fall back to original list on any error
+      }
+    }
+
     return filteredCommands
   }
 
