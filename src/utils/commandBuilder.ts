@@ -43,38 +43,13 @@ export function buildCommandEntry(
     if (hm) {
       const defRaw = (hm.getDefaultHotkeys && hm.getDefaultHotkeys(id)) || []
       const cusRaw = (hm.customKeys && hm.customKeys[id]) || []
-      const effRaw = (hm.getHotkeys && hm.getHotkeys(id)) || []
       const hasCustomOverride = !!(hm.customKeys && (id in hm.customKeys))
       const toEntry = (arr: any[], isCustom: boolean): hotkeyEntry[] =>
         (arr || []).map(info => ({ ...convertKeymapInfoToHotkey(info), isCustom }))
       const defaultEntries = toEntry(defRaw, false)
       const customEntries = toEntry(cusRaw, true)
-      // Prefer effective hotkeys from Obsidian; compute isCustom by matching against custom entries
-      let allEntries: hotkeyEntry[]
-      const sig = (hk: hotkeyEntry) => {
-        const mods = sortModifiers(
-          platformizeModifiers((hk.modifiers as unknown as string[]) || [])
-        )
-        return `${mods.join(',')}|${normalizeKey(hk.key || '')}`
-      }
-      if (Array.isArray(effRaw)) {
-        const eff = (effRaw || []).map(info => ({
-          ...convertKeymapInfoToHotkey(info as any),
-          isCustom: false,
-        }))
-        const customSig = new Set(customEntries.map(h => sig(h)))
-        allEntries = eff.map(h => ({ ...h, isCustom: customSig.has(sig(h)) }))
-      } else if (hasCustomOverride) {
-        // No effective available, but override present → custom only
-        allEntries = customEntries
-      } else {
-        // Legacy fallback: union default + custom
-        const map = new Map<string, hotkeyEntry>()
-        const push = (hk: hotkeyEntry) => map.set(sig(hk), hk)
-        defaultEntries.forEach(push)
-        customEntries.forEach(push)
-        allEntries = Array.from(map.values())
-      }
+      // Effective hotkeys rule: if custom override exists → custom; else → defaults.
+      const allEntries: hotkeyEntry[] = hasCustomOverride ? customEntries : defaultEntries
       hotkeyResult = {
         all: allEntries,
         default: defaultEntries,
