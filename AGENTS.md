@@ -18,7 +18,7 @@
 ## Coding Style & Naming Conventions
 
 - Language: TypeScript (strict) + Svelte 5.
-- If `contex7` mcp tool available, you may use it to gather online documentations. Try to control the amount of information retrieved (less is better, max 6000 tokens). Use when facing unexpected issues, or need specific information.
+- If `context7` mcp tool available, you may use it to gather online documentations. Try to control the amount of information retrieved (less is better, max 6000 tokens). Use when facing unexpected issues, or need specific information.
   - Preferred libs:
     - `svelte5-llm-compact`
     - `/sveltejs/svelte`

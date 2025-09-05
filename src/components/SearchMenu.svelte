@@ -163,6 +163,13 @@
     setting: keyof CGroupFilterSettings,
     value: boolean
   ) {
+    // Early exit if value is already current to avoid redundant updates and re-renders
+    try {
+      const current = Boolean(
+        (groupManager.getGroupSettings(selectedGroup) as any)?.[setting]
+      )
+      if (current === Boolean(value)) return
+    } catch {}
     logger.debug('SearchMenu setFilterSetting called', {
       selectedGroup,
       setting,

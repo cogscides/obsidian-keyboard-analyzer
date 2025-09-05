@@ -228,6 +228,24 @@ export default class KeyboardAnalyzerPlugin extends Plugin {
       },
     })
 
+    // Always open a fresh Shortcuts view in a new tab
+    this.addCommand({
+      id: 'open-shortcuts-analyzer-view-new-tab',
+      name: 'Open keyboard shortcuts view (new tab)',
+      callback: () => {
+        void this.addShortcutsView(true)
+      },
+    })
+
+    // Open a fresh Shortcuts view in a split pane
+    this.addCommand({
+      id: 'open-shortcuts-analyzer-view-split',
+      name: 'Open keyboard shortcuts view (split)',
+      callback: () => {
+        void this.addShortcutsView('split')
+      },
+    })
+
     this.addCommand({
       id: 'focus-shortcuts-analyzer-view',
       name: 'Focus keyboard shortcuts view',

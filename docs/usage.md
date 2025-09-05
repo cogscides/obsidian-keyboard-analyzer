@@ -4,6 +4,8 @@ Open
 
 - Status bar: click the keyboard icon (Cmd/Ctrl+Click opens new pane)
 - Command: “Keyboard Analyzer: Open Shortcuts View”
+- Command: “Keyboard Analyzer: Open keyboard shortcuts view (new tab)”
+- Command: “Keyboard Analyzer: Open keyboard shortcuts view (split)”
 
 Search and filter
 

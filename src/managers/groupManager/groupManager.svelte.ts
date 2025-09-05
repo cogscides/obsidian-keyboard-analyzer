@@ -254,9 +254,15 @@ export default class GroupManager {
       }
 
       // Fallback: if group doesn't exist (e.g., default "all" group), update global defaults
+      const baseDefaults = this.settingsManager.settings.defaultFilterSettings
       const updatedDefaults = {
-        ...this.settingsManager.settings.defaultFilterSettings,
+        ...baseDefaults,
         ...newSettings,
+      }
+      // Skip write if nothing actually changed to avoid rerender loops
+      if (this.isEqualFilters(baseDefaults, updatedDefaults)) {
+        logger.debug('[groups] updateGroupFilterSettings noop (all/defaults no change)')
+        return
       }
       this.settingsManager.updateSettings({
         defaultFilterSettings: updatedDefaults,

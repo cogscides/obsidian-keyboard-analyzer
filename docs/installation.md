@@ -23,3 +23,5 @@ Verify
 
 - Status bar shows a keyboard icon
 - Command palette: “Keyboard Analyzer: Open Shortcuts View”
+- Command palette: “Keyboard Analyzer: Open keyboard shortcuts view (new tab)”
+- Command palette: “Keyboard Analyzer: Open keyboard shortcuts view (split)”
