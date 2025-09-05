@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.0](https://github.com/cogscides/obsidian-keyboard-analyzer/compare/0.3.1...0.4.0) (2025-09-05)
+
+### Features
+
+* **plugin:** add commands to open analyzer in new tab and split ([08e901e](https://github.com/cogscides/obsidian-keyboard-analyzer/commit/08e901eaa9b376a93e9b48961c9f3d24c14ecdc3))
+
 ### [0.3.1](https://github.com/cogscides/obsidian-keyboard-analyzer/compare/0.3.0...0.3.1) (2025-09-05)
 
 
