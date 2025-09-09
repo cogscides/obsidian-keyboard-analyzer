@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.1](https://github.com/cogscides/obsidian-keyboard-analyzer/compare/0.3.0...0.4.1) (2025-09-09)
+
+Highlights
+
+- Experimental/unstable: Edit command hotkeys within the plugin.
+- New commands to open the plugin in a new tab or split.
+- Latest changes history with Keep changes and Undo all.
+- Visual polish and reliability fixes across hotkey handling and UI.
+
+Unstable feature — Hotkey Editing (experimental)
+
+- Assign, remove, and restore hotkeys for commands directly from the list.
+- Accurately distinguishes defaults vs custom overrides; default-equivalent customs are saved explicitly to appear as custom.
+- Supports removing default-only hotkeys using explicit empty overrides when needed by core.
+- Reliable pipeline: derive effective hotkeys via `app.hotkeyManager`, then save → load → bake to ensure consistency.
+- Latest changes panel with revert buffer, Keep changes, and Undo all to restore original sets across multiple edits.
+- Safety: recommend backing up `.obsidian/hotkeys.json` before extensive edits. Behavior may change in subsequent patches.
+
+New
+
+- Plugin: commands to open the keyboard shortcuts view in a new tab and as a split.
+- UI/UX: subtle row hover highlight, stabilized row height, reserved space for action icons, improved refresh control with animation.
+- Hover previews: visual keyboard preview when hovering hotkeys (incl. pinned sections).
+- Command list hygiene: dedupe System Shortcuts vs real commands by chord signature.
+
+Fixes & internal
+
+- Ensure defaults reappear after restore; do not merge defaults when a custom override exists.
+- Double-refresh commands index after edits to capture async core updates.
+- Close edit-mode banner on Keep changes; fix hover/animation jitter; small-screen layout tweaks.
+- Migrate to ESLint + Prettier for Svelte 5; floating-ui adoption and related style updates.
+
+Compatibility
+
+- Obsidian minAppVersion: 0.12.10. Desktop and mobile supported.
+
 ### [0.4.0](https://github.com/cogscides/obsidian-keyboard-analyzer/compare/0.3.1...0.4.0) (2025-09-05)
 
 ### Features
