@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 build
+.env
 
 test-vault/.obsidian/workspace.json
 test-vault/.obsidian/plugins/obsidian-svelte-plugin/*.css
