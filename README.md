@@ -11,6 +11,7 @@ Install from Community Plugins: https://obsidian.md/plugins?id=keyboard-analyzer
 ## Features
 
 - Visual keyboard `[REFACTOR]`: see which keys are used and by which commands
+- Hotkey eduit mode `[ALPHA]`: test feature for editing hotkeys 
 - Powerful search: by key combo (e.g., `Ctrl+K`), command name, plugin
 - Duplicates and gaps: highlight conflicts and unassigned areas
 - Grouping `[NEW]` `[WIP]`: Assign commands to groups, configure group settings and filtration
@@ -22,7 +23,7 @@ Install from Community Plugins: https://obsidian.md/plugins?id=keyboard-analyzer
 
 ## Roadmap
 
-- [ ] Hotkey assignment management: allow users to create, edit, and delete hotkey assignments
+- [x] Hotkey assignment management: allow users to create, edit, and delete hotkey assignments
 - [ ] Settings migration: persist user settings across updates
 - [ ] Visual Keyboard Configuration: allow users to customize the visual keyboard layout
 - [ ] Additional key support: allow support of F13-F24, Meh and Hyper Keys
